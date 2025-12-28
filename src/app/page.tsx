@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PricingCards } from "@/components/pricing-cards";
 import { type Plan, type BillingCycle } from "@/lib/pricing-plans";
+import { SiteHeader } from "@/components/site-header";
 import Player from "@vimeo/player";
 
 const videoIds = ["1149880629", "1149880641", "1149880649", "1149881437"];
@@ -141,6 +142,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      <SiteHeader />
+
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* Background gradient */}
