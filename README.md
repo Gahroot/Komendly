@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Komendly
 
-## Getting Started
+Turn customer reviews into professional video testimonials using AI avatars. No cameras, no actors, no hassle.
 
-First, run the development server:
+## What is this?
+
+Komendly takes your text reviews and transforms them into engaging video testimonials featuring realistic AI-generated avatars. Perfect for businesses that want social proof without the logistical nightmare of coordinating video shoots with customers.
+
+## How it works
+
+1. **Paste a review** - Drop in any customer review or testimonial text
+2. **Pick an AI creator** - Choose from our library of realistic AI avatars
+3. **Generate** - Our AI writes a natural script and creates the video
+4. **Download & share** - Get your video in 4K, ready for social media
+
+## Tech stack
+
+- **Next.js 16** with App Router
+- **React 19** + TypeScript
+- **Prisma** + PostgreSQL for data
+- **Stripe** for subscriptions
+- **FAL AI** & **Mirage AI** for video generation
+- **Tailwind CSS** + shadcn/ui for the UI
+
+## Getting started
 
 ```bash
+# Install dependencies
+npm install
+
+# Set up your environment variables (see below)
+cp .env.example .env.local
+
+# Run database migrations
+npx prisma migrate dev
+
+# Start the dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+You'll need these in your `.env.local`:
 
-## Learn More
+```bash
+# Database
+DATABASE_URL="postgresql://..."
 
-To learn more about Next.js, take a look at the following resources:
+# Auth
+SESSION_SECRET="generate-a-random-string"
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Stripe
+STRIPE_SECRET_KEY="sk_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_..."
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# AI Services
+FAL_KEY="..."
+MIRAGE_API_KEY="..."
+OPENAI_API_KEY="..."
 
-## Deploy on Vercel
+# App
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+├── app/           # Pages and API routes
+├── components/    # React components
+├── hooks/         # Custom hooks
+└── lib/           # Utilities and integrations
+```
+
+Check out `CLAUDE.md` for more detailed docs on the codebase structure.
+
+## Scripts
+
+```bash
+npm run dev      # Start dev server
+npm run build    # Production build
+npm run lint     # Run ESLint
+npm run start    # Start production server
+```
+
+## License
+
+Private - all rights reserved.
