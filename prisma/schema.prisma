@@ -17,6 +17,7 @@ model User {
   passwordHash String
   name         String?
   plan         Plan             @default(pending)
+  isAdmin      Boolean          @default(false)
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 

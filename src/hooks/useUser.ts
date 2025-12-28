@@ -11,6 +11,7 @@ export interface User {
   minutesUsed: number;
   minutesLimit: number;
   bonusMinutes: number;
+  isAdmin: boolean;
   createdAt: string;
 }
 
