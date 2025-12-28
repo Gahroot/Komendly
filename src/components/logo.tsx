@@ -1,11 +1,11 @@
-import { Video } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export function Logo({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <Video className="h-6 w-6 text-primary" />
-      <span className="font-bold text-xl">Komendly</span>
+      <Image src="/logo.svg" alt="Komendly" width={32} height={32} />
+      <span className="font-bold text-xl tracking-wide">KOMENDLY</span>
     </div>
   );
 }

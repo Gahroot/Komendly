@@ -1,4 +1,8 @@
+// Server-only Stripe utilities
+// DO NOT import this file in client components
+
 import Stripe from "stripe";
+import { PLAN_CONFIG, type PlanKey } from "./stripe-config";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error("STRIPE_SECRET_KEY is not set in environment variables");
@@ -8,55 +12,46 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   typescript: true,
 });
 
-// Subscription Plans Configuration (TEST MODE)
-export const SUBSCRIPTION_PLANS = {
+// Stripe Price IDs from environment variables
+// Configure these in .env.local (test) and production env vars (live)
+export const STRIPE_PRICE_IDS = {
   starter: {
-    name: "Starter",
-    productId: "prod_Tgm9MW5OORTI7o",
-    prices: {
-      monthly: "price_1SjObSKjuiGf4unh0njyorCR",
-      yearly: "price_1SjObUKjuiGf4unhZLUdFD0N",
-    },
-    minutesPerMonth: 3,
-    features: [
-      "3 minutes of video generation per month",
-      "HD quality exports",
-      "Basic AI avatars",
-      "Email support",
-    ],
+    monthly: process.env.STRIPE_STARTER_MONTHLY_PRICE_ID!,
+    yearly: process.env.STRIPE_STARTER_YEARLY_PRICE_ID!,
   },
   pro: {
-    name: "Pro",
-    productId: "prod_Tgm91way1Wn3Di",
-    prices: {
-      monthly: "price_1SjObkKjuiGf4unhHjZzjjU0",
-      yearly: "price_1SjObrKjuiGf4unhSFMHUvtf",
-    },
-    minutesPerMonth: 20,
-    features: [
-      "20 minutes of video generation per month",
-      "4K quality exports",
-      "Premium AI avatars",
-      "Priority support",
-      "API access",
-    ],
+    monthly: process.env.STRIPE_PRO_MONTHLY_PRICE_ID!,
+    yearly: process.env.STRIPE_PRO_YEARLY_PRICE_ID!,
   },
   enterprise: {
-    name: "Enterprise",
-    productId: "prod_Tgm9N6T05IiC4Z",
-    prices: {
-      monthly: "price_1SjObuKjuiGf4unhvddauQaz",
-      yearly: "price_1SjObwKjuiGf4unhDE4KZvXG",
-    },
-    minutesPerMonth: 60,
-    features: [
-      "60 minutes (1 hour) of video generation per month",
-      "4K quality exports",
-      "All premium AI avatars",
-      "Dedicated support",
-      "Full API access",
-      "Custom integrations",
-    ],
+    monthly: process.env.STRIPE_ENTERPRISE_MONTHLY_PRICE_ID!,
+    yearly: process.env.STRIPE_ENTERPRISE_YEARLY_PRICE_ID!,
+  },
+} as const;
+
+// Stripe Product IDs from environment variables
+export const STRIPE_PRODUCT_IDS = {
+  starter: process.env.STRIPE_STARTER_PRODUCT_ID!,
+  pro: process.env.STRIPE_PRO_PRODUCT_ID!,
+  enterprise: process.env.STRIPE_ENTERPRISE_PRODUCT_ID!,
+} as const;
+
+// Subscription Plans Configuration (server-side with Stripe IDs)
+export const SUBSCRIPTION_PLANS = {
+  starter: {
+    ...PLAN_CONFIG.starter,
+    productId: STRIPE_PRODUCT_IDS.starter,
+    prices: STRIPE_PRICE_IDS.starter,
+  },
+  pro: {
+    ...PLAN_CONFIG.pro,
+    productId: STRIPE_PRODUCT_IDS.pro,
+    prices: STRIPE_PRICE_IDS.pro,
+  },
+  enterprise: {
+    ...PLAN_CONFIG.enterprise,
+    productId: STRIPE_PRODUCT_IDS.enterprise,
+    prices: STRIPE_PRICE_IDS.enterprise,
   },
 } as const;
 
@@ -68,17 +63,17 @@ export const CREDIT_PURCHASE = {
 };
 
 // Helper to get plan from price ID
-export function getPlanFromPriceId(priceId: string): keyof typeof SUBSCRIPTION_PLANS | null {
+export function getPlanFromPriceId(priceId: string): PlanKey | null {
   for (const [planKey, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
     if (plan.prices.monthly === priceId || plan.prices.yearly === priceId) {
-      return planKey as keyof typeof SUBSCRIPTION_PLANS;
+      return planKey as PlanKey;
     }
   }
   return null;
 }
 
 // Helper to get minutes limit from plan
-export function getMinutesForPlan(plan: keyof typeof SUBSCRIPTION_PLANS): number {
+export function getMinutesForPlan(plan: PlanKey): number {
   return SUBSCRIPTION_PLANS[plan].minutesPerMonth;
 }
 
@@ -105,4 +100,12 @@ export function mapStripeStatus(status: Stripe.Subscription.Status): string {
     paused: "paused",
   };
   return statusMap[status] || "incomplete";
+}
+
+// Get all valid price IDs (for validation)
+export function getAllValidPriceIds(): string[] {
+  return Object.values(SUBSCRIPTION_PLANS).flatMap((plan) => [
+    plan.prices.monthly,
+    plan.prices.yearly,
+  ]);
 }

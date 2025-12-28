@@ -34,15 +34,11 @@ function PricingContent() {
     setError(null);
 
     try {
-      const priceId = billingCycle === "monthly"
-        ? plan.priceIds.monthly
-        : plan.priceIds.yearly;
-
       const response = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          priceId,
+          planKey: plan.key,
           userId,
           email,
           billingCycle,

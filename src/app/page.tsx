@@ -25,7 +25,7 @@ function VideoShowcase() {
       <p className="text-sm text-zinc-400 mb-4">See what AI-generated testimonials look like:</p>
       <div className="relative w-full">
         <div
-          className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth"
+          className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth justify-center sm:justify-center"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
         >
           {videoIds.map((id) => {
@@ -62,6 +62,7 @@ function VideoShowcase() {
             );
           })}
         </div>
+        <p className="text-xs text-zinc-500 text-center mt-2 sm:hidden">Swipe to see more</p>
       </div>
     </motion.div>
   );
@@ -455,8 +456,8 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <div className="flex items-center gap-2">
-              <Video className="h-6 w-6 text-purple-400" />
-              <span className="text-lg font-semibold">Komendly</span>
+              <img src="/logo.svg" alt="Komendly" className="h-6 w-6" />
+              <span className="text-lg font-bold tracking-wide">KOMENDLY</span>
             </div>
             <p className="text-sm text-zinc-500">
               &copy; {new Date().getFullYear()} Komendly. All rights reserved.
