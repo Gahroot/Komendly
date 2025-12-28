@@ -48,11 +48,12 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           <Image
             src="/logo.svg"
             alt="Komendly"
-            width={140}
+            width={32}
             height={32}
-            className="h-8 w-auto"
+            className="h-8 w-8"
             priority
           />
+          <span className="text-xl font-bold tracking-tight">KOMENDLY</span>
         </Link>
       </div>
 

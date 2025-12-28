@@ -53,7 +53,7 @@ export default function CreateVideoPage() {
             Create Video Testimonial
           </h1>
           <p className="text-muted-foreground mt-2">
-            Import a Google review or enter one manually to transform it into a
+            Paste a review or enter one manually to transform it into a
             stunning video testimonial.
           </p>
         </motion.div>

@@ -162,8 +162,15 @@ export async function GET(request: NextRequest) {
 
       if (plan) {
         const minutesLimit = getMinutesForPlan(plan);
-        const periodStart = (subscription as unknown as { current_period_start: number }).current_period_start;
-        const periodEnd = (subscription as unknown as { current_period_end: number }).current_period_end;
+        // Access subscription period timestamps (Stripe returns Unix seconds)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const subData = subscription as any;
+        const periodStart = subData.current_period_start as number | undefined;
+        const periodEnd = subData.current_period_end as number | undefined;
+
+        // Validate timestamps exist before converting to Date
+        const periodStartDate = periodStart ? new Date(periodStart * 1000) : new Date();
+        const periodEndDate = periodEnd ? new Date(periodEnd * 1000) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
         // Sync subscription data (webhook may have missed or been delayed)
         user = await prisma.user.update({
@@ -176,8 +183,8 @@ export async function GET(request: NextRequest) {
             plan: plan,
             minutesLimit: minutesLimit,
             minutesUsed: 0,
-            currentPeriodStart: new Date(periodStart * 1000),
-            currentPeriodEnd: new Date(periodEnd * 1000),
+            currentPeriodStart: periodStartDate,
+            currentPeriodEnd: periodEndDate,
             lastUsageReset: new Date(),
           },
           select: {

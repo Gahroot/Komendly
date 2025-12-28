@@ -106,9 +106,13 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   const minutesLimit = getMinutesForPlan(plan);
 
-  // Get period dates from subscription
-  const periodStart = (subscription as unknown as { current_period_start: number }).current_period_start;
-  const periodEnd = (subscription as unknown as { current_period_end: number }).current_period_end;
+  // Get period dates from subscription (with validation)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const subData = subscription as any;
+  const periodStart = subData.current_period_start as number | undefined;
+  const periodEnd = subData.current_period_end as number | undefined;
+  const periodStartDate = periodStart ? new Date(periodStart * 1000) : new Date();
+  const periodEndDate = periodEnd ? new Date(periodEnd * 1000) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
   // Update user with subscription details
   await prisma.user.update({
@@ -121,8 +125,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       plan: plan,
       minutesLimit: minutesLimit,
       minutesUsed: 0,
-      currentPeriodStart: new Date(periodStart * 1000),
-      currentPeriodEnd: new Date(periodEnd * 1000),
+      currentPeriodStart: periodStartDate,
+      currentPeriodEnd: periodEndDate,
       lastUsageReset: new Date(),
     },
   });
@@ -144,15 +148,19 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     return;
   }
 
-  // Get period dates from subscription
-  const periodStart = (subscription as unknown as { current_period_start: number }).current_period_start;
-  const periodEnd = (subscription as unknown as { current_period_end: number }).current_period_end;
+  // Get period dates from subscription (with validation)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const subData = subscription as any;
+  const periodStart = subData.current_period_start as number | undefined;
+  const periodEnd = subData.current_period_end as number | undefined;
+  const periodStartDate = periodStart ? new Date(periodStart * 1000) : new Date();
+  const periodEndDate = periodEnd ? new Date(periodEnd * 1000) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
   const updateData: Record<string, unknown> = {
     subscriptionStatus: mapStripeStatus(subscription.status),
     subscriptionPriceId: priceId,
-    currentPeriodStart: new Date(periodStart * 1000),
-    currentPeriodEnd: new Date(periodEnd * 1000),
+    currentPeriodStart: periodStartDate,
+    currentPeriodEnd: periodEndDate,
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
   };
 
