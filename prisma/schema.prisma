@@ -1,0 +1,222 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String           @id @default(cuid())
+  email        String           @unique
+  passwordHash String
+  name         String?
+  plan         Plan             @default(pending)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  // Stripe integration
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  subscriptionStatus   SubscriptionStatus @default(incomplete)
+  subscriptionPriceId  String?
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+
+  // Usage tracking (minutes-based)
+  minutesUsed       Int       @default(0)  // Minutes used in current period
+  minutesLimit      Int       @default(0)  // Total minutes allowed (plan + credits)
+  bonusMinutes      Int       @default(0)  // Extra purchased minutes
+  lastUsageReset    DateTime?              // When usage was last reset
+
+  sessions        Session[]
+  apiKeys         ApiKey[]
+  reviews         Review[]
+  generatedVideos GeneratedVideo[]
+  actorPresets    ActorPreset[]
+  webhooks        Webhook[]
+  creditPurchases CreditPurchase[]
+
+  @@index([email])
+  @@index([plan])
+  @@index([stripeCustomerId])
+  @@index([subscriptionStatus])
+}
+
+enum Plan {
+  free        // Legacy - treat same as pending
+  pending     // User registered but hasn't subscribed
+  starter     // 3 minutes/month
+  pro         // 20 minutes/month
+  enterprise  // 60 minutes/month
+}
+
+enum SubscriptionStatus {
+  incomplete          // Checkout started but not completed
+  incomplete_expired  // Checkout expired
+  trialing           // In trial period
+  active             // Subscription is active
+  past_due           // Payment failed but not yet canceled
+  canceled           // Subscription was canceled
+  unpaid             // Invoice unpaid
+  paused             // Subscription paused
+}
+
+model CreditPurchase {
+  id              String   @id @default(cuid())
+  userId          String
+  stripePaymentId String   @unique
+  minutes         Int      // Minutes purchased
+  amountPaid      Int      // Amount in cents
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([stripePaymentId])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  key       String   @unique
+  service   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([key])
+  @@index([service])
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  userId       String
+  businessName String
+  reviewerName String
+  reviewText   String
+  rating       Int
+  source       String
+  createdAt    DateTime @default(now())
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generatedVideos GeneratedVideo[]
+
+  @@index([userId])
+  @@index([source])
+  @@index([rating])
+}
+
+model GeneratedVideo {
+  id           String      @id @default(cuid())
+  userId       String
+  reviewId     String
+  url          String?
+  thumbnailUrl String?
+  avatarStyle  String
+  duration     Int?
+  aspectRatio  String      @default("9:16")
+  status       VideoStatus @default(pending)
+  createdAt    DateTime    @default(now())
+  completedAt  DateTime?
+
+  // Mirage/Captions.ai specific fields
+  mirageOperationId  String?   @unique  // Operation ID for polling
+  mirageCreatorName  String?            // AI Creator used
+  mirageResolution   String?   @default("4k")
+  generatedScript    String?            // AI-generated UGC script
+  creditsUsed        Int?               // Mirage credits consumed
+  errorMessage       String?            // Error details if failed
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([reviewId])
+  @@index([status])
+  @@index([mirageOperationId])
+  @@index([userId, status])
+}
+
+enum VideoStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+model ActorPreset {
+  id             String   @id @default(cuid())
+  userId         String
+  name           String
+  description    String?
+  avatarStyle    String
+  category       String   // "male", "female", "neutral"
+  ethnicity      String?
+  ageGroup       String?  // "young-adult", "adult", "middle-aged", "senior"
+  voiceSettings  Json     // VoiceSettings object
+  visualSettings Json     // VisualSettings object
+  thumbnailUrl   String?
+  isDefault      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isDefault])
+  @@index([category])
+}
+
+model Webhook {
+  id          String        @id @default(cuid())
+  userId      String
+  name        String        // Friendly name for the webhook
+  type        WebhookType   @default(custom)
+  webhookUrl  String
+  events      String[]      // Array of event types: ["video.completed", "video.failed", etc.]
+  active      Boolean       @default(true)
+  secret      String?       // Optional secret for signature verification
+  metadata    Json?         // Additional configuration (e.g., Slack channel, Discord settings)
+  lastTriggeredAt DateTime?
+  failureCount    Int       @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, active])
+  @@index([type])
+  @@index([active])
+}
+
+enum WebhookType {
+  slack
+  discord
+  email
+  custom
+}

@@ -1,65 +1,469 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Star, Video, Zap, Download, Play, Sparkles, XCircle, Clock, DollarSign, Volume2, VolumeX } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { PricingCards } from "@/components/pricing-cards";
+import { type Plan, type BillingCycle } from "@/lib/pricing-plans";
+
+const videoIds = ["1149880629", "1149880641", "1149880649", "1149881437"];
+
+function VideoShowcase() {
+  const [activeVideo, setActiveVideo] = useState<string | null>(null);
+
+  return (
+    <motion.div
+      className="mt-16 w-full"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.5 }}
+    >
+      <p className="text-sm text-zinc-400 mb-4">See what AI-generated testimonials look like:</p>
+      <div className="relative w-full">
+        <div
+          className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+        >
+          {videoIds.map((id) => {
+            const isActive = activeVideo === id;
+            return (
+              <div
+                key={id}
+                className="flex-none w-[200px] sm:w-[240px] snap-center"
+              >
+                <div
+                  className="relative rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-purple-500/50 transition-colors cursor-pointer group"
+                  onClick={() => setActiveVideo(isActive ? null : id)}
+                >
+                  <div className="aspect-[9/16]">
+                    <iframe
+                      key={`${id}-${isActive}`}
+                      src={`https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&background=1&muted=${isActive ? '0' : '1'}`}
+                      className="w-full h-full pointer-events-none"
+                      frameBorder="0"
+                      allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+                      title={`Testimonial video`}
+                    />
+                  </div>
+                  {/* Mute indicator overlay */}
+                  <div className={`absolute bottom-3 right-3 p-2 rounded-full transition-all ${isActive ? 'bg-purple-600' : 'bg-black/60 group-hover:bg-black/80'}`}>
+                    {isActive ? (
+                      <Volume2 className="w-4 h-4 text-white" />
+                    ) : (
+                      <VolumeX className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true },
+  transition: { duration: 0.5 },
+};
+
+const staggerContainer = {
+  initial: {},
+  whileInView: {
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
 
 export default function Home() {
+  const router = useRouter();
+
+  const handleSelectPlan = (plan: Plan, billingCycle: BillingCycle) => {
+    // Store selected plan info and redirect to register
+    const params = new URLSearchParams({
+      plan: plan.key,
+      billing: billingCycle,
+    });
+    router.push(`/register?${params.toString()}`);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="min-h-screen bg-black text-white">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-black to-black" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-600/20 via-transparent to-transparent" />
+
+        <div className="relative mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-32 lg:py-40">
+          <motion.div
+            className="flex flex-col items-center text-center"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            {/* Badge */}
+            <motion.div
+              className="mb-6 inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-1.5 text-sm text-purple-300"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              <Sparkles className="h-4 w-4" />
+              Your Reviews Deserve to Be Seen
+            </motion.div>
+
+            {/* Headline */}
+            <h1 className="max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+              Your Customers{" "}
+              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                Won&apos;t Go On Camera.
+              </span>{" "}
+              We Fixed That.
+            </h1>
+
+            {/* Subheadline */}
+            <p className="mt-6 max-w-2xl text-lg text-zinc-400 sm:text-xl">
+              Turn your existing 5-star reviews into video testimonials. No filming. No begging customers. No awkward asks.
+            </p>
+
+            {/* CTAs */}
+            <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
+              <Button
+                asChild
+                size="lg"
+                className="h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-8 text-base font-semibold hover:from-purple-500 hover:to-pink-500"
+              >
+                <Link href="/dashboard">
+                  <Play className="mr-2 h-5 w-5" />
+                  Create Your First Video
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="ghost"
+                size="lg"
+                className="h-12 text-base text-zinc-400 hover:text-white"
+              >
+                <Link href="#how-it-works">
+                  See how it works
+                </Link>
+              </Button>
+            </div>
+
+            {/* Pain point reminder instead of fake social proof */}
+            <motion.p
+              className="mt-12 max-w-lg text-sm text-zinc-500"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
             >
-              Learning
-            </a>{" "}
-            center.
+              Video testimonials convert better than text. You know this. But getting customers on camera? Almost impossible.
+            </motion.p>
+
+            {/* Video Testimonials Showcase */}
+            <VideoShowcase />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Problem Section */}
+      <section className="relative py-24 sm:py-32">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <motion.div
+            className="text-center"
+            {...fadeInUp}
+          >
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              The Problem With{" "}
+              <span className="text-purple-400">Video Testimonials</span>
+            </h2>
+            <p className="mt-4 text-lg text-zinc-400">
+              You already know video works. Here&apos;s why you don&apos;t have any.
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="mt-16 grid gap-6 md:grid-cols-3"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="whileInView"
+            viewport={{ once: true }}
+          >
+            {/* Problem 1 */}
+            <motion.div variants={fadeInUp}>
+              <Card className="group h-full border-zinc-800 bg-zinc-900/50 transition-all hover:border-purple-500/50 hover:bg-zinc-900">
+                <CardHeader>
+                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-red-500/10 text-red-400 transition-colors group-hover:bg-red-500/20">
+                    <XCircle className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-xl text-white">Customers Say No</CardTitle>
+                  <CardDescription className="text-zinc-400">
+                    They love you. Left a 5-star review. But ask them to go on camera? &quot;Sorry, I&apos;m too busy.&quot; Every. Single. Time.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </motion.div>
+
+            {/* Problem 2 */}
+            <motion.div variants={fadeInUp}>
+              <Card className="group h-full border-zinc-800 bg-zinc-900/50 transition-all hover:border-purple-500/50 hover:bg-zinc-900">
+                <CardHeader>
+                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-red-500/10 text-red-400 transition-colors group-hover:bg-red-500/20">
+                    <DollarSign className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-xl text-white">Actors Cost a Fortune</CardTitle>
+                  <CardDescription className="text-zinc-400">
+                    Big brands pay thousands for actors to fake testimonials. You shouldn&apos;t have to. Your real reviews are better anyway.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </motion.div>
+
+            {/* Problem 3 */}
+            <motion.div variants={fadeInUp}>
+              <Card className="group h-full border-zinc-800 bg-zinc-900/50 transition-all hover:border-purple-500/50 hover:bg-zinc-900">
+                <CardHeader>
+                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-red-500/10 text-red-400 transition-colors group-hover:bg-red-500/20">
+                    <Clock className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-xl text-white">Reviews Just Sit There</CardTitle>
+                  <CardDescription className="text-zinc-400">
+                    You have dozens of amazing reviews. They&apos;re buried on Google. Nobody sees them. What a waste.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Solution Section */}
+      <section className="relative py-24 sm:py-32 border-t border-zinc-800">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <motion.div
+            className="text-center"
+            {...fadeInUp}
+          >
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              The Fix Is{" "}
+              <span className="text-purple-400">Stupid Simple</span>
+            </h2>
+            <p className="mt-4 text-lg text-zinc-400">
+              Use your real reviews. Let AI do the video part.
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="mt-16 grid gap-6 md:grid-cols-3"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="whileInView"
+            viewport={{ once: true }}
+          >
+            {/* Solution 1 */}
+            <motion.div variants={fadeInUp}>
+              <Card className="group h-full border-zinc-800 bg-zinc-900/50 transition-all hover:border-purple-500/50 hover:bg-zinc-900">
+                <CardHeader>
+                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400 transition-colors group-hover:bg-purple-500/20">
+                    <Star className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-xl text-white">Your Real Words</CardTitle>
+                  <CardDescription className="text-zinc-400">
+                    Paste your actual Google reviews. These are real people saying real things about your business. That&apos;s powerful.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </motion.div>
+
+            {/* Solution 2 */}
+            <motion.div variants={fadeInUp}>
+              <Card className="group h-full border-zinc-800 bg-zinc-900/50 transition-all hover:border-purple-500/50 hover:bg-zinc-900">
+                <CardHeader>
+                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400 transition-colors group-hover:bg-purple-500/20">
+                    <Zap className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-xl text-white">AI Brings It To Life</CardTitle>
+                  <CardDescription className="text-zinc-400">
+                    Pick a realistic avatar. It reads your review naturally. Looks like a real person. Because the words ARE from a real person.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </motion.div>
+
+            {/* Solution 3 */}
+            <motion.div variants={fadeInUp}>
+              <Card className="group h-full border-zinc-800 bg-zinc-900/50 transition-all hover:border-purple-500/50 hover:bg-zinc-900">
+                <CardHeader>
+                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400 transition-colors group-hover:bg-purple-500/20">
+                    <Download className="h-6 w-6" />
+                  </div>
+                  <CardTitle className="text-xl text-white">Post Everywhere</CardTitle>
+                  <CardDescription className="text-zinc-400">
+                    Download and post to TikTok, Instagram, YouTube, your website. Wherever your customers are scrolling.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section id="how-it-works" className="relative py-24 sm:py-32">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/10 to-transparent" />
+
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
+          <motion.div
+            className="text-center"
+            {...fadeInUp}
+          >
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              60 Seconds. That&apos;s It.
+            </h2>
+            <p className="mt-4 text-lg text-zinc-400">
+              Three clicks. One video. Zero hassle.
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="mt-16 grid gap-8 md:grid-cols-3"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="whileInView"
+            viewport={{ once: true }}
+          >
+            {/* Step 1 */}
+            <motion.div variants={fadeInUp} className="relative text-center">
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-pink-600 text-2xl font-bold">
+                1
+              </div>
+              <h3 className="text-xl font-semibold">Grab Your Review</h3>
+              <p className="mt-3 text-zinc-400">
+                Copy any 5-star review from Google. The ones your customers already wrote. No new work required.
+              </p>
+              {/* Connector line (hidden on mobile) */}
+              <div className="absolute right-0 top-8 hidden h-0.5 w-1/3 bg-gradient-to-r from-purple-600 to-transparent md:block" />
+            </motion.div>
+
+            {/* Step 2 */}
+            <motion.div variants={fadeInUp} className="relative text-center">
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-pink-600 text-2xl font-bold">
+                2
+              </div>
+              <h3 className="text-xl font-semibold">Pick a Face</h3>
+              <p className="mt-3 text-zinc-400">
+                Choose an AI avatar. They look real. They sound real. Because the words they&apos;re saying are real.
+              </p>
+              {/* Connector lines (hidden on mobile) */}
+              <div className="absolute left-0 top-8 hidden h-0.5 w-1/3 bg-gradient-to-l from-purple-600 to-transparent md:block" />
+              <div className="absolute right-0 top-8 hidden h-0.5 w-1/3 bg-gradient-to-r from-purple-600 to-transparent md:block" />
+            </motion.div>
+
+            {/* Step 3 */}
+            <motion.div variants={fadeInUp} className="relative text-center">
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-pink-600 text-2xl font-bold">
+                3
+              </div>
+              <h3 className="text-xl font-semibold">Download. Post. Done.</h3>
+              <p className="mt-3 text-zinc-400">
+                Get your video. Put it on social. Watch people actually stop scrolling. That&apos;s it.
+              </p>
+              {/* Connector line (hidden on mobile) */}
+              <div className="absolute left-0 top-8 hidden h-0.5 w-1/3 bg-gradient-to-l from-purple-600 to-transparent md:block" />
+            </motion.div>
+          </motion.div>
+
+          <motion.div
+            className="mt-12 text-center"
+            {...fadeInUp}
+          >
+            <Button
+              asChild
+              size="lg"
+              className="h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-8 text-base font-semibold hover:from-purple-500 hover:to-pink-500"
+            >
+              <Link href="/dashboard">
+                Make Your First Video
+              </Link>
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="relative py-24 sm:py-32">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <motion.div
+            className="text-center mb-12"
+            {...fadeInUp}
+          >
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              No Contracts. No Hidden Fees.
+            </h2>
+            <p className="mt-4 text-lg text-zinc-400">
+              Choose a plan that fits your needs.
+            </p>
+          </motion.div>
+
+          <PricingCards onSelectPlan={handleSelectPlan} />
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="relative py-24 sm:py-32">
+        <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 to-transparent" />
+
+        <motion.div
+          className="relative mx-auto max-w-4xl px-4 text-center sm:px-6"
+          {...fadeInUp}
+        >
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+            Your Reviews Are Already Written.
+          </h2>
+          <p className="mt-4 text-2xl font-semibold text-purple-400">
+            Now make them work for you.
           </p>
+          <p className="mt-6 text-lg text-zinc-400">
+            Every day without video testimonials is a day your competitors look more trustworthy than you. Fix that now.
+          </p>
+          <div className="mt-10">
+            <Button
+              asChild
+              size="lg"
+              className="h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-10 text-lg font-semibold hover:from-purple-500 hover:to-pink-500"
+            >
+              <Link href="/dashboard">
+                <Video className="mr-2 h-5 w-5" />
+                Create Your First Video
+              </Link>
+            </Button>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-zinc-800 py-12">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+            <div className="flex items-center gap-2">
+              <Video className="h-6 w-6 text-purple-400" />
+              <span className="text-lg font-semibold">Komendly</span>
+            </div>
+            <p className="text-sm text-zinc-500">
+              &copy; {new Date().getFullYear()} Komendly. All rights reserved.
+            </p>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </footer>
     </div>
   );
 }
