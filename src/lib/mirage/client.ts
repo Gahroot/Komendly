@@ -22,16 +22,24 @@ import type {
  * Authentication: x-api-key header
  */
 
-const MIRAGE_API_KEY = process.env.MIRAGE_API_KEY;
 const MIRAGE_BASE_URL = 'https://api.captions.ai/api';
+
+/**
+ * Get Mirage API key at runtime (required for serverless environments)
+ */
+function getMirageApiKey(): string {
+  const apiKey = process.env.MIRAGE_API_KEY;
+  if (!apiKey) {
+    throw new Error('MIRAGE_API_KEY not set in environment variables');
+  }
+  return apiKey;
+}
 
 /**
  * List all available AI creators and AI Twins
  */
 export async function listCreators(): Promise<ListCreatorsResponse> {
-  if (!MIRAGE_API_KEY) {
-    throw new Error('MIRAGE_API_KEY not set in environment variables');
-  }
+  const apiKey = getMirageApiKey();
 
   try {
     logger.info('Fetching available Mirage AI creators');
@@ -40,7 +48,7 @@ export async function listCreators(): Promise<ListCreatorsResponse> {
       method: 'POST',
       url: `${MIRAGE_BASE_URL}/creator/list`,
       headers: {
-        'x-api-key': MIRAGE_API_KEY,
+        'x-api-key': apiKey,
         'Content-Type': 'application/json',
       },
       data: {},
@@ -105,9 +113,7 @@ export async function listCreators(): Promise<ListCreatorsResponse> {
 export async function submitVideoGeneration(
   request: SubmitVideoRequest
 ): Promise<SubmitVideoResponse> {
-  if (!MIRAGE_API_KEY) {
-    throw new Error('MIRAGE_API_KEY not set in environment variables');
-  }
+  const apiKey = getMirageApiKey();
 
   // Validate script length
   if (request.script.length > 800) {
@@ -143,7 +149,7 @@ export async function submitVideoGeneration(
       method: 'POST',
       url: `${MIRAGE_BASE_URL}/creator/submit`,
       headers: {
-        'x-api-key': MIRAGE_API_KEY,
+        'x-api-key': apiKey,
         'Content-Type': 'application/json',
       },
       data: requestData,
@@ -222,9 +228,7 @@ function mapApiStateToStatus(state: string | undefined): 'pending' | 'processing
  * Poll every 5-10 seconds until status is 'completed' or 'failed'
  */
 export async function checkVideoStatus(operationId: string): Promise<VideoStatus> {
-  if (!MIRAGE_API_KEY) {
-    throw new Error('MIRAGE_API_KEY not set in environment variables');
-  }
+  const apiKey = getMirageApiKey();
 
   try {
     logger.debug({ operationId }, 'Checking video generation status');
@@ -233,7 +237,7 @@ export async function checkVideoStatus(operationId: string): Promise<VideoStatus
       method: 'POST',
       url: `${MIRAGE_BASE_URL}/creator/poll`,
       headers: {
-        'x-api-key': MIRAGE_API_KEY,
+        'x-api-key': apiKey,
         'Content-Type': 'application/json',
       },
       data: { operationId },
