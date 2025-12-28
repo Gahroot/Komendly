@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/hooks/useUser";
 
 const navItems = [
   {
@@ -39,6 +40,16 @@ interface SidebarProps {
 
 export function Sidebar({ onNavigate }: SidebarProps) {
   const pathname = usePathname();
+  const { user, logout } = useUser();
+
+  const displayName = user?.name || user?.email?.split("@")[0] || "User";
+  const displayEmail = user?.email || "";
+  const initials = displayName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <div className="flex h-full flex-col bg-zinc-950 text-zinc-100">
@@ -102,16 +113,16 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       <div className="p-4">
         <div className="flex items-center gap-3 rounded-lg bg-zinc-900 p-3">
           <Avatar className="h-9 w-9">
-            <AvatarImage src="" alt="User" />
+            <AvatarImage src="" alt={displayName} />
             <AvatarFallback className="bg-zinc-800 text-zinc-400">
-              <User className="h-4 w-4" />
+              {initials || <User className="h-4 w-4" />}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 overflow-hidden">
             <p className="truncate text-sm font-medium text-zinc-100">
-              John Doe
+              {displayName}
             </p>
-            <p className="truncate text-xs text-zinc-500">john@example.com</p>
+            <p className="truncate text-xs text-zinc-500">{displayEmail}</p>
           </div>
         </div>
 
@@ -123,6 +134,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           <Button
             variant="ghost"
             className="w-full justify-start gap-3 text-zinc-400 hover:bg-zinc-900 hover:text-red-400"
+            onClick={logout}
           >
             <LogOut className="h-4 w-4" />
             Logout

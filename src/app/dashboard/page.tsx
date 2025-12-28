@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { VideoCard } from "@/components/video-card";
 import { VideoModal } from "@/components/video-modal";
 import { useVideos, deleteVideo, type Video as VideoType } from "@/hooks/useVideos";
+import { useUser } from "@/hooks/useUser";
 
 const stats = [
   {
@@ -57,7 +58,10 @@ const itemVariants = {
 
 export default function DashboardPage() {
   const { videos, total, isLoading, refresh } = useVideos(1, 4);
+  const { user } = useUser();
   const [selectedVideo, setSelectedVideo] = useState<VideoType | null>(null);
+
+  const firstName = user?.name?.split(" ")[0] || user?.email?.split("@")[0] || "there";
 
   const handleDeleteVideo = async (id: string) => {
     const success = await deleteVideo(id);
@@ -77,7 +81,7 @@ export default function DashboardPage() {
       {/* Welcome Section */}
       <motion.div variants={itemVariants} className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight text-zinc-100">
-          Welcome back, John!
+          Welcome back, {firstName}!
         </h1>
         <p className="text-zinc-400">
           Transform your Google Reviews into engaging video testimonials.
