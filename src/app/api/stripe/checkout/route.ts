@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
         planKey: planKey,
       },
       success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/pricing?canceled=true`,
+      cancel_url: `${origin}/pricing?canceled=true&userId=${encodeURIComponent(userId)}&email=${encodeURIComponent(email)}`,
       subscription_data: {
         metadata: {
           userId: userId,
