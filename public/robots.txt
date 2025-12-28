@@ -1,0 +1,27 @@
+# Robots.txt for Komendly
+# https://komendly.com
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /checkout/
+
+# Allow social media and search crawlers full access to public pages
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+# Sitemap location
+Sitemap: https://komendly.com/sitemap.xml
