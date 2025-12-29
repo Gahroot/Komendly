@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Star, Video, Zap, Download, Play, Sparkles, XCircle, Clock, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { PricingCards } from "@/components/pricing-cards";
 import { type Plan, type BillingCycle } from "@/lib/pricing-plans";
 import { SiteHeader } from "@/components/site-header";
@@ -32,6 +34,7 @@ const staggerContainer = {
 
 export default function Home() {
   const router = useRouter();
+  const [videoOpen, setVideoOpen] = useState(false);
 
   const handleSelectPlan = (plan: Plan, billingCycle: BillingCycle) => {
     // Store selected plan info and redirect to register
@@ -96,15 +99,13 @@ export default function Home() {
                 </Link>
               </Button>
               <Button
-                asChild
                 variant="outline"
                 size="lg"
                 className="h-12 gap-1.5 rounded-full border-zinc-700 bg-transparent px-8 text-base text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                onClick={() => setVideoOpen(true)}
               >
-                <Link href="#how-it-works">
-                  <Play className="size-5" />
-                  See how it works
-                </Link>
+                <Play className="size-5" />
+                See how it works
               </Button>
             </div>
 
@@ -399,6 +400,22 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
+
+      {/* How It Works Video Modal */}
+      <Dialog open={videoOpen} onOpenChange={setVideoOpen}>
+        <DialogContent className="max-w-4xl border-zinc-800 bg-black p-0 overflow-hidden">
+          <div className="aspect-video w-full">
+            {videoOpen && (
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube.com/embed/zm1_uKOaA94?autoplay=1&controls=0&loop=1&playlist=zm1_uKOaA94&modestbranding=1&showinfo=0&rel=0&playsinline=1&disablekb=1"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <SiteFooter />
     </div>
