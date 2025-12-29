@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { Star, Video, Zap, Download, Play, Sparkles, XCircle, Clock, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { PricingCards } from "@/components/pricing-cards";
 import { type Plan, type BillingCycle } from "@/lib/pricing-plans";
 import { SiteHeader } from "@/components/site-header";
@@ -412,6 +412,7 @@ export default function Home() {
       {/* How It Works Video Modal */}
       <Dialog open={videoOpen} onOpenChange={setVideoOpen}>
         <DialogContent className="w-full max-w-[95vw] sm:max-w-[90vw] lg:max-w-6xl border-zinc-800 bg-black p-0 overflow-hidden">
+          <DialogTitle className="sr-only">How Komendly Works</DialogTitle>
           <div className="aspect-video w-full">
             {videoOpen && (
               <iframe

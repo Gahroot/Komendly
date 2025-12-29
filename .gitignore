@@ -47,4 +47,5 @@ next-env.d.ts
 
 # Local images
 image.png
+image copy.png
 .env.vercel
