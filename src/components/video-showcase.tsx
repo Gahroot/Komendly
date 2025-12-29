@@ -4,8 +4,6 @@ import { useState, useRef, useEffect, useCallback, memo } from "react";
 import { motion } from "framer-motion";
 import { Volume2, VolumeX } from "lucide-react";
 import Player from "@vimeo/player";
-import useEmblaCarousel from "embla-carousel-react";
-import AutoScroll from "embla-carousel-auto-scroll";
 import { cn } from "@/lib/utils";
 
 interface VideoShowcaseProps {
@@ -44,7 +42,7 @@ const VimeoCard = memo(function VimeoCard({
   }, [id, onPlayerReady]);
 
   return (
-    <div className="flex-[0_0_200px] min-w-0 sm:flex-[0_0_240px]">
+    <div className="flex-shrink-0 w-[200px] sm:w-[240px]">
       <div
         className={cn(
           "relative rounded-xl overflow-hidden bg-zinc-900 border transition-colors cursor-pointer group",
@@ -81,17 +79,8 @@ const VimeoCard = memo(function VimeoCard({
 
 export function VideoShowcase({ videoIds, className }: VideoShowcaseProps) {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
   const playersRef = useRef<Map<string, Player>>(new Map());
-
-  const [emblaRef] = useEmblaCarousel({ loop: true, dragFree: true }, [
-    AutoScroll({
-      playOnInit: true,
-      speed: 0.8,
-      direction: "backward",
-      stopOnInteraction: false,
-      stopOnMouseEnter: true,
-    }),
-  ]);
 
   const handlePlayerReady = useCallback((id: string, player: Player) => {
     playersRef.current.set(id, player);
@@ -111,6 +100,9 @@ export function VideoShowcase({ videoIds, className }: VideoShowcaseProps) {
     });
   }, [activeVideo]);
 
+  // Duplicate videos for seamless loop
+  const duplicatedVideos = [...videoIds, ...videoIds];
+
   return (
     <motion.div
       className={cn("mt-16 w-full", className)}
@@ -118,24 +110,45 @@ export function VideoShowcase({ videoIds, className }: VideoShowcaseProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.5 }}
     >
+      <style jsx>{`
+        @keyframes marquee-scroll {
+          from {
+            transform: translateX(0);
+          }
+          to {
+            transform: translateX(-50%);
+          }
+        }
+        .marquee-content {
+          animation: marquee-scroll 40s linear infinite;
+        }
+        .marquee-content:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
       <p className="text-sm text-zinc-400 mb-4">
         See what AI-generated testimonials look like:
       </p>
       <div
-        className="relative w-full [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]"
+        className="relative w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
       >
-        <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex gap-4">
-            {videoIds.map((id) => (
-              <VimeoCard
-                key={id}
-                id={id}
-                isActive={activeVideo === id}
-                onToggle={handleToggle}
-                onPlayerReady={handlePlayerReady}
-              />
-            ))}
-          </div>
+        <div
+          className={cn(
+            "flex gap-4 w-max marquee-content",
+            isPaused && "[animation-play-state:paused]"
+          )}
+        >
+          {duplicatedVideos.map((id, index) => (
+            <VimeoCard
+              key={`${id}-${index}`}
+              id={id}
+              isActive={activeVideo === id}
+              onToggle={handleToggle}
+              onPlayerReady={handlePlayerReady}
+            />
+          ))}
         </div>
       </div>
     </motion.div>
