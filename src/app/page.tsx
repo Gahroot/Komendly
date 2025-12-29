@@ -14,7 +14,25 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { VideoShowcase } from "@/components/video-showcase";
 
-const videoIds = ["1149880629", "1149880641", "1149880649", "1149881437"];
+const videoIds = ["1149880629", "1149880641", "1149880649", "1149881437", "1150126195", "1150126210"];
+
+const steps = [
+  {
+    videoId: "1150131353",
+    title: "Grab Your Review",
+    description: "Copy any 5-star review from Google. The ones your customers already wrote. No new work required.",
+  },
+  {
+    videoId: "1150131333",
+    title: "Pick a Face",
+    description: "Choose an AI avatar. They look real. They sound real. Because the words they're saying are real.",
+  },
+  {
+    videoId: "1150131316",
+    title: "Download. Post. Done.",
+    description: "Get your video. Put it on social. Watch people actually stop scrolling. That's it.",
+  },
+];
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -291,45 +309,35 @@ export default function Home() {
             whileInView="whileInView"
             viewport={{ once: true }}
           >
-            {/* Step 1 */}
-            <motion.div variants={fadeInUp} className="relative text-center">
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-pink-600 text-2xl font-bold">
-                1
-              </div>
-              <h3 className="text-xl font-semibold">Grab Your Review</h3>
-              <p className="mt-3 text-zinc-400">
-                Copy any 5-star review from Google. The ones your customers already wrote. No new work required.
-              </p>
-              {/* Connector line (hidden on mobile) */}
-              <div className="absolute right-0 top-8 hidden h-0.5 w-1/3 bg-gradient-to-r from-purple-600 to-transparent md:block" />
-            </motion.div>
-
-            {/* Step 2 */}
-            <motion.div variants={fadeInUp} className="relative text-center">
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-pink-600 text-2xl font-bold">
-                2
-              </div>
-              <h3 className="text-xl font-semibold">Pick a Face</h3>
-              <p className="mt-3 text-zinc-400">
-                Choose an AI avatar. They look real. They sound real. Because the words they&apos;re saying are real.
-              </p>
-              {/* Connector lines (hidden on mobile) */}
-              <div className="absolute left-0 top-8 hidden h-0.5 w-1/3 bg-gradient-to-l from-purple-600 to-transparent md:block" />
-              <div className="absolute right-0 top-8 hidden h-0.5 w-1/3 bg-gradient-to-r from-purple-600 to-transparent md:block" />
-            </motion.div>
-
-            {/* Step 3 */}
-            <motion.div variants={fadeInUp} className="relative text-center">
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-pink-600 text-2xl font-bold">
-                3
-              </div>
-              <h3 className="text-xl font-semibold">Download. Post. Done.</h3>
-              <p className="mt-3 text-zinc-400">
-                Get your video. Put it on social. Watch people actually stop scrolling. That&apos;s it.
-              </p>
-              {/* Connector line (hidden on mobile) */}
-              <div className="absolute left-0 top-8 hidden h-0.5 w-1/3 bg-gradient-to-l from-purple-600 to-transparent md:block" />
-            </motion.div>
+            {steps.map((step, index) => (
+              <motion.div key={step.videoId} variants={fadeInUp} className="relative text-center">
+                <div className="mx-auto mb-6 w-[180px] overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+                  <div className="aspect-[9/16]">
+                    <iframe
+                      src={`https://player.vimeo.com/video/${step.videoId}?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&background=1&muted=1`}
+                      className="w-full h-full pointer-events-none"
+                      frameBorder="0"
+                      allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+                      title={step.title}
+                    />
+                  </div>
+                </div>
+                <h3 className="text-xl font-semibold">{step.title}</h3>
+                <p className="mt-3 text-zinc-400">{step.description}</p>
+                {index === 0 && (
+                  <div className="absolute right-0 top-[120px] hidden h-0.5 w-1/3 bg-gradient-to-r from-purple-600 to-transparent md:block" />
+                )}
+                {index === 1 && (
+                  <>
+                    <div className="absolute left-0 top-[120px] hidden h-0.5 w-1/3 bg-gradient-to-l from-purple-600 to-transparent md:block" />
+                    <div className="absolute right-0 top-[120px] hidden h-0.5 w-1/3 bg-gradient-to-r from-purple-600 to-transparent md:block" />
+                  </>
+                )}
+                {index === 2 && (
+                  <div className="absolute left-0 top-[120px] hidden h-0.5 w-1/3 bg-gradient-to-l from-purple-600 to-transparent md:block" />
+                )}
+              </motion.div>
+            ))}
           </motion.div>
 
           <motion.div
@@ -403,7 +411,7 @@ export default function Home() {
 
       {/* How It Works Video Modal */}
       <Dialog open={videoOpen} onOpenChange={setVideoOpen}>
-        <DialogContent className="max-w-4xl border-zinc-800 bg-black p-0 overflow-hidden">
+        <DialogContent className="w-full max-w-[95vw] sm:max-w-[90vw] lg:max-w-6xl border-zinc-800 bg-black p-0 overflow-hidden">
           <div className="aspect-video w-full">
             {videoOpen && (
               <iframe
