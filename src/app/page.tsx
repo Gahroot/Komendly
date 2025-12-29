@@ -408,7 +408,7 @@ export default function Home() {
             {videoOpen && (
               <iframe
                 className="w-full h-full"
-                src="https://www.youtube.com/embed/zm1_uKOaA94?autoplay=1&controls=0&loop=1&playlist=zm1_uKOaA94&modestbranding=1&showinfo=0&rel=0&playsinline=1&disablekb=1"
+                src="https://www.youtube.com/embed/CY-D_0Yvq08?autoplay=1&controls=0&loop=1&playlist=CY-D_0Yvq08&modestbranding=1&showinfo=0&rel=0&playsinline=1&disablekb=1"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
