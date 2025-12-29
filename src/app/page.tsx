@@ -1,116 +1,18 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Star, Video, Zap, Download, Play, Sparkles, XCircle, Clock, DollarSign, Volume2, VolumeX } from "lucide-react";
+import { Star, Video, Zap, Download, Play, Sparkles, XCircle, Clock, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PricingCards } from "@/components/pricing-cards";
 import { type Plan, type BillingCycle } from "@/lib/pricing-plans";
 import { SiteHeader } from "@/components/site-header";
-import Player from "@vimeo/player";
+import { SiteFooter } from "@/components/site-footer";
+import { VideoShowcase } from "@/components/video-showcase";
 
 const videoIds = ["1149880629", "1149880641", "1149880649", "1149881437"];
-
-function VideoShowcase() {
-  const [activeVideo, setActiveVideo] = useState<string | null>(null);
-  const iframeRefs = useRef<Map<string, HTMLIFrameElement>>(new Map());
-  const playerRefs = useRef<Map<string, Player>>(new Map());
-  const [playersReady, setPlayersReady] = useState(false);
-
-  // Initialize Vimeo players from iframes
-  useEffect(() => {
-    const initPlayers = () => {
-      iframeRefs.current.forEach((iframe, id) => {
-        if (!playerRefs.current.has(id) && iframe) {
-          const player = new Player(iframe);
-          playerRefs.current.set(id, player);
-        }
-      });
-      setPlayersReady(true);
-    };
-
-    // Small delay to ensure iframes are rendered
-    const timer = setTimeout(initPlayers, 500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Handle mute state changes via Player API (works on mobile)
-  useEffect(() => {
-    if (!playersReady) return;
-
-    playerRefs.current.forEach((player, id) => {
-      const shouldUnmute = activeVideo === id;
-      player.setMuted(!shouldUnmute).catch(() => {
-        // Ignore errors (e.g., if video not ready yet)
-      });
-    });
-  }, [activeVideo, playersReady]);
-
-  const handleVideoClick = useCallback((id: string) => {
-    setActiveVideo((prev) => (prev === id ? null : id));
-  }, []);
-
-  const setIframeRef = useCallback((id: string, el: HTMLIFrameElement | null) => {
-    if (el) {
-      iframeRefs.current.set(id, el);
-    }
-  }, []);
-
-  return (
-    <motion.div
-      className="mt-16 w-full"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.5 }}
-    >
-      <p className="text-sm text-zinc-400 mb-4">See what AI-generated testimonials look like:</p>
-      <div className="relative w-full">
-        <div
-          className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth justify-center sm:justify-center"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
-        >
-          {videoIds.map((id) => {
-            const isActive = activeVideo === id;
-            return (
-              <div
-                key={id}
-                className="flex-none w-[200px] sm:w-[240px] snap-center"
-              >
-                <div
-                  className="relative rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-purple-500/50 transition-colors cursor-pointer group"
-                  onClick={() => handleVideoClick(id)}
-                >
-                  <div className="aspect-[9/16]">
-                    <iframe
-                      ref={(el) => setIframeRef(id, el)}
-                      src={`https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&background=1&muted=1`}
-                      className="w-full h-full pointer-events-none"
-                      frameBorder="0"
-                      allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-                      title={`Testimonial video`}
-                    />
-                  </div>
-                  {/* Mute indicator overlay */}
-                  <div className={`absolute bottom-3 right-3 p-2 rounded-full transition-all ${isActive ? 'bg-purple-600' : 'bg-black/60 group-hover:bg-black/80'}`}>
-                    {isActive ? (
-                      <Volume2 className="w-4 h-4 text-white" />
-                    ) : (
-                      <VolumeX className="w-4 h-4 text-white" />
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <p className="text-xs text-zinc-500 text-center mt-2 sm:hidden">Swipe to see more</p>
-      </div>
-    </motion.div>
-  );
-}
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -170,11 +72,10 @@ export default function Home() {
 
             {/* Headline */}
             <h1 className="max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-              Your Customers{" "}
+              Turn Reviews Into{" "}
               <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-                Won&apos;t Go On Camera.
-              </span>{" "}
-              We Fixed That.
+                Video Testimonials
+              </span>
             </h1>
 
             {/* Subheadline */}
@@ -187,37 +88,38 @@ export default function Home() {
               <Button
                 asChild
                 size="lg"
-                className="h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-8 text-base font-semibold hover:from-purple-500 hover:to-pink-500"
+                className="h-12 gap-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-8 text-base font-semibold text-white hover:from-purple-500 hover:to-pink-500"
               >
                 <Link href="/register">
-                  <Play className="mr-2 h-5 w-5" />
+                  <Play className="size-5" />
                   Create Your First Video
                 </Link>
               </Button>
               <Button
                 asChild
-                variant="ghost"
+                variant="outline"
                 size="lg"
-                className="h-12 text-base text-zinc-400 hover:text-white"
+                className="h-12 gap-1.5 rounded-full border-zinc-700 bg-transparent px-8 text-base text-zinc-300 hover:bg-zinc-800 hover:text-white"
               >
                 <Link href="#how-it-works">
+                  <Play className="size-5" />
                   See how it works
                 </Link>
               </Button>
             </div>
 
-            {/* Pain point reminder instead of fake social proof */}
+            {/* Social proof */}
             <motion.p
-              className="mt-12 max-w-lg text-sm text-zinc-500"
+              className="mt-6 text-sm text-zinc-500"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              Video testimonials convert better than text. You know this. But getting customers on camera? Almost impossible.
+              Join 1,000+ happy creators
             </motion.p>
 
             {/* Video Testimonials Showcase */}
-            <VideoShowcase />
+            <VideoShowcase videoIds={videoIds} />
           </motion.div>
         </div>
       </section>
@@ -294,7 +196,7 @@ export default function Home() {
       </section>
 
       {/* Solution Section */}
-      <section className="relative py-24 sm:py-32 border-t border-zinc-800">
+      <section className="relative py-24 sm:py-32">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <motion.div
             className="text-center"
@@ -436,9 +338,10 @@ export default function Home() {
             <Button
               asChild
               size="lg"
-              className="h-12 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-8 text-base font-semibold hover:from-purple-500 hover:to-pink-500"
+              className="h-12 gap-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-8 text-base font-semibold text-white hover:from-purple-500 hover:to-pink-500"
             >
               <Link href="/register">
+                <Play className="size-5" />
                 Make Your First Video
               </Link>
             </Button>
@@ -486,10 +389,10 @@ export default function Home() {
             <Button
               asChild
               size="lg"
-              className="h-14 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-10 text-lg font-semibold hover:from-purple-500 hover:to-pink-500"
+              className="h-14 gap-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-10 text-lg font-semibold text-white hover:from-purple-500 hover:to-pink-500"
             >
               <Link href="/register">
-                <Video className="mr-2 h-5 w-5" />
+                <Video className="size-6" />
                 Create Your First Video
               </Link>
             </Button>
@@ -497,20 +400,7 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-800 py-12">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <div className="flex items-center gap-2">
-              <img src="/logo.svg" alt="Komendly" className="h-6 w-6" />
-              <span className="text-lg font-bold tracking-wide">KOMENDLY</span>
-            </div>
-            <p className="text-sm text-zinc-500">
-              &copy; {new Date().getFullYear()} Komendly. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

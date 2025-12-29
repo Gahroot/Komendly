@@ -40,13 +40,13 @@ export function PricingCards({
       {/* Billing Toggle */}
       {showBillingToggle && (
         <div className="flex justify-center mb-12">
-          <div className="bg-gray-800 rounded-full p-1 flex">
+          <div className="bg-zinc-800 rounded-full p-1 flex">
             <button
               onClick={() => setBillingCycle("monthly")}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                 billingCycle === "monthly"
                   ? "bg-purple-600 text-white"
-                  : "text-gray-400 hover:text-white"
+                  : "text-zinc-400 hover:text-white"
               }`}
             >
               Monthly
@@ -56,7 +56,7 @@ export function PricingCards({
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                 billingCycle === "yearly"
                   ? "bg-purple-600 text-white"
-                  : "text-gray-400 hover:text-white"
+                  : "text-zinc-400 hover:text-white"
               }`}
             >
               Yearly
@@ -80,8 +80,8 @@ export function PricingCards({
             variants={fadeInUp}
             className={`relative rounded-2xl p-8 ${
               plan.popular
-                ? "bg-gradient-to-b from-purple-900/50 to-gray-900 border-2 border-purple-500"
-                : "bg-gray-800/50 border border-gray-700"
+                ? "bg-gradient-to-b from-purple-900/50 to-zinc-900 border-2 border-purple-500"
+                : "bg-zinc-800/50 border border-zinc-700"
             }`}
           >
             {plan.popular && (
@@ -94,7 +94,7 @@ export function PricingCards({
 
             <div className="text-center mb-6">
               <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-              <p className="text-gray-400 text-sm">{plan.description}</p>
+              <p className="text-zinc-400 text-sm">{plan.description}</p>
             </div>
 
             <div className="text-center mb-6">
@@ -102,10 +102,10 @@ export function PricingCards({
                 <span className="text-5xl font-bold">
                   ${billingCycle === "monthly" ? plan.monthlyPrice : Math.round(plan.yearlyPrice / 12)}
                 </span>
-                <span className="text-gray-400 ml-2">/month</span>
+                <span className="text-zinc-400 ml-2">/month</span>
               </div>
               {billingCycle === "yearly" && (
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="text-sm text-zinc-400 mt-1">
                   ${plan.yearlyPrice} billed annually
                 </p>
               )}
@@ -118,7 +118,7 @@ export function PricingCards({
               {plan.features.map((feature, idx) => (
                 <li key={idx} className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300 text-sm">{feature}</span>
+                  <span className="text-zinc-300 text-sm">{feature}</span>
                 </li>
               ))}
             </ul>
@@ -129,7 +129,7 @@ export function PricingCards({
               className={`w-full py-6 text-lg font-semibold ${
                 plan.popular
                   ? "bg-purple-600 hover:bg-purple-700"
-                  : "bg-gray-700 hover:bg-gray-600"
+                  : "bg-zinc-700 hover:bg-zinc-600"
               }`}
             >
               {loading === plan.key ? (
