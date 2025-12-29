@@ -311,8 +311,8 @@ export default function Home() {
           >
             {steps.map((step, index) => (
               <motion.div key={step.videoId} variants={fadeInUp} className="relative text-center">
-                <div className="mx-auto mb-6 w-[180px] overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
-                  <div className="aspect-[9/16]">
+                <div className="mx-auto mb-6 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+                  <div className="aspect-video">
                     <iframe
                       src={`https://player.vimeo.com/video/${step.videoId}?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&background=1&muted=1`}
                       className="w-full h-full pointer-events-none"
@@ -325,16 +325,16 @@ export default function Home() {
                 <h3 className="text-xl font-semibold">{step.title}</h3>
                 <p className="mt-3 text-zinc-400">{step.description}</p>
                 {index === 0 && (
-                  <div className="absolute right-0 top-[120px] hidden h-0.5 w-1/3 bg-gradient-to-r from-purple-600 to-transparent md:block" />
+                  <div className="absolute right-0 top-[90px] hidden h-0.5 w-1/6 bg-gradient-to-r from-purple-600 to-transparent md:block" />
                 )}
                 {index === 1 && (
                   <>
-                    <div className="absolute left-0 top-[120px] hidden h-0.5 w-1/3 bg-gradient-to-l from-purple-600 to-transparent md:block" />
-                    <div className="absolute right-0 top-[120px] hidden h-0.5 w-1/3 bg-gradient-to-r from-purple-600 to-transparent md:block" />
+                    <div className="absolute left-0 top-[90px] hidden h-0.5 w-1/6 bg-gradient-to-l from-purple-600 to-transparent md:block" />
+                    <div className="absolute right-0 top-[90px] hidden h-0.5 w-1/6 bg-gradient-to-r from-purple-600 to-transparent md:block" />
                   </>
                 )}
                 {index === 2 && (
-                  <div className="absolute left-0 top-[120px] hidden h-0.5 w-1/3 bg-gradient-to-l from-purple-600 to-transparent md:block" />
+                  <div className="absolute left-0 top-[90px] hidden h-0.5 w-1/6 bg-gradient-to-l from-purple-600 to-transparent md:block" />
                 )}
               </motion.div>
             ))}
