@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { VideoPreview } from "@/components/video-preview";
+import { VideoPreview, useVideoMetadata } from "@/components/video-preview";
 import type { Video } from "@/hooks/useVideos";
 
 interface VideoModalProps {
@@ -42,6 +42,7 @@ export function VideoModal({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [copied, setCopied] = useState(false);
+  const videoMetadata = useVideoMetadata(video?.videoUrl || "");
 
   if (!video) return null;
 
@@ -205,7 +206,7 @@ export function VideoModal({
                     <span className="text-xs">Duration</span>
                   </div>
                   <p className="text-sm text-zinc-200 font-medium">
-                    {formatDuration(video.duration)}
+                    {formatDuration(Math.round(videoMetadata?.duration || video.duration))}
                   </p>
                 </div>
                 <div className="bg-zinc-900/50 rounded-lg p-3 border border-zinc-800">

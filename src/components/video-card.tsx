@@ -5,6 +5,7 @@ import { Play, Star, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { VideoThumbnail } from "@/components/video-thumbnail";
+import { useVideoMetadata } from "@/components/video-preview";
 import type { Video } from "@/hooks/useVideos";
 
 interface VideoCardProps {
@@ -13,6 +14,9 @@ interface VideoCardProps {
 }
 
 export function VideoCard({ video, onClick }: VideoCardProps) {
+  const videoMetadata = useVideoMetadata(video.videoUrl);
+  const duration = Math.round(videoMetadata?.duration || video.duration);
+
   const formattedDate = new Date(video.createdAt).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -74,7 +78,7 @@ export function VideoCard({ video, onClick }: VideoCardProps) {
 
           {/* Duration badge */}
           <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-            {Math.floor(video.duration / 60)}:{String(video.duration % 60).padStart(2, "0")}
+            {Math.floor(duration / 60)}:{String(duration % 60).padStart(2, "0")}
           </div>
         </div>
 
