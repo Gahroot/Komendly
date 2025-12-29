@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Play, Star, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { VideoThumbnail } from "@/components/video-thumbnail";
 import type { Video } from "@/hooks/useVideos";
 
 interface VideoCardProps {
@@ -45,14 +46,12 @@ export function VideoCard({ video, onClick }: VideoCardProps) {
           {/* Placeholder gradient background */}
           <div className="absolute inset-0 bg-gradient-to-br from-zinc-700 via-zinc-800 to-zinc-900" />
 
-          {/* Thumbnail image */}
-          {video.thumbnailUrl && (
-            <img
-              src={video.thumbnailUrl}
-              alt={`${video.reviewerName} testimonial`}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          )}
+          {/* Video thumbnail - uses first frame of video */}
+          <VideoThumbnail
+            videoUrl={video.videoUrl}
+            thumbnailUrl={video.thumbnailUrl}
+            alt={`${video.reviewerName} testimonial`}
+          />
 
           {/* Play overlay */}
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
