@@ -29,6 +29,14 @@ const MIRAGE_BASE_URL = 'https://api.captions.ai/api';
  */
 function getMirageApiKey(): string {
   const apiKey = process.env.MIRAGE_API_KEY;
+
+  // Diagnostic logging for production debugging
+  console.log('[Mirage] API Key check:', {
+    exists: !!apiKey,
+    length: apiKey?.length || 0,
+    prefix: apiKey?.substring(0, 8) || 'NONE',
+  });
+
   if (!apiKey) {
     throw new Error('MIRAGE_API_KEY not set in environment variables');
   }
@@ -80,10 +88,19 @@ export async function listCreators(): Promise<ListCreatorsResponse> {
         data?: { message?: string; error?: string; detail?: string };
       };
       message?: string;
+      code?: string;
     };
 
     const status = axiosError.response?.status;
     const responseData = axiosError.response?.data;
+
+    // Detailed diagnostic logging for production debugging
+    console.log('[Mirage] listCreators ERROR:', {
+      status,
+      responseData: JSON.stringify(responseData),
+      errorMessage: axiosError.message,
+      errorCode: axiosError.code,
+    });
 
     let userMessage = 'Failed to list Mirage creators';
 
