@@ -36,13 +36,14 @@ model User {
   bonusMinutes      Int       @default(0)  // Extra purchased minutes
   lastUsageReset    DateTime?              // When usage was last reset
 
-  sessions        Session[]
-  apiKeys         ApiKey[]
-  reviews         Review[]
-  generatedVideos GeneratedVideo[]
-  actorPresets    ActorPreset[]
-  webhooks        Webhook[]
-  creditPurchases CreditPurchase[]
+  sessions           Session[]
+  apiKeys            ApiKey[]
+  reviews            Review[]
+  generatedVideos    GeneratedVideo[]
+  actorPresets       ActorPreset[]
+  webhooks           Webhook[]
+  creditPurchases    CreditPurchase[]
+  falCompositeVideos FalCompositeVideo[]
 
   @@index([email])
   @@index([plan])
@@ -124,8 +125,9 @@ model Review {
   source       String
   createdAt    DateTime @default(now())
 
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  generatedVideos GeneratedVideo[]
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generatedVideos    GeneratedVideo[]
+  falCompositeVideos FalCompositeVideo[]
 
   @@index([userId])
   @@index([source])
@@ -221,4 +223,117 @@ enum WebhookType {
   discord
   email
   custom
+}
+
+// ============================================================================
+// FAL AI Lip-Sync Video Generation (SadTalker)
+// ============================================================================
+
+model FalActor {
+  id                String   @id @default(cuid())
+  name              String   // Display name: "Sarah - Professional"
+  slug              String   @unique // URL-friendly: "sarah-professional"
+  gender            String   // "male", "female"
+  style             String   // "professional", "casual", "energetic", "friendly"
+  referenceImageUrl String   // Front-facing pose for SadTalker consistency
+  thumbnailUrl      String   // Preview image for UI grid
+  voiceId           String?  // OpenAI TTS voice: "alloy", "nova", "shimmer", etc.
+  description       String?  // Optional description for the actor
+  isActive          Boolean  @default(true)
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  compositeVideos FalCompositeVideo[]
+
+  @@index([isActive])
+  @@index([gender])
+  @@index([style])
+  @@index([sortOrder])
+}
+
+model FalCompositeVideo {
+  id              String              @id @default(cuid())
+  userId          String
+  reviewId        String
+  actorId         String
+
+  // Scripts
+  fullScript        String            // Complete generated script
+  hookScript        String            // Hook portion (5-6s)
+  testimonialScript String            // Main testimonial (10-20s)
+  ctaScript         String            // Call to action (5-6s)
+
+  // Configuration
+  aspectRatio     String              @default("9:16")
+  targetDuration  Int                 // Total target duration in seconds (20-35)
+  voiceId         String              @default("nova") // OpenAI TTS voice used
+
+  // Output
+  finalVideoUrl   String?
+  thumbnailUrl    String?
+  actualDuration  Int?                // Actual duration after generation
+
+  // Status tracking
+  status          FalCompositeStatus  @default(pending)
+  currentClip     Int                 @default(0) // Which clip is being generated
+  totalClips      Int                 @default(3) // Total clips to generate
+  errorMessage    String?
+
+  // Timestamps
+  createdAt       DateTime            @default(now())
+  completedAt     DateTime?
+
+  // Relations
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  actor  FalActor @relation(fields: [actorId], references: [id])
+  clips  FalClip[]
+
+  @@index([userId])
+  @@index([reviewId])
+  @@index([actorId])
+  @@index([status])
+  @@index([userId, status])
+}
+
+model FalClip {
+  id               String   @id @default(cuid())
+  compositeVideoId String
+  clipType         String   // "hook", "testimonial", "cta"
+  clipIndex        Int      // Order within composite (0, 1, 2, ...)
+  scriptContent    String   // The text for this clip
+
+  // TTS tracking
+  audioUrl         String?  // URL of generated TTS audio
+
+  // FAL SadTalker tracking
+  falRequestId     String?  @unique // FAL request ID for polling
+
+  // Output
+  videoUrl         String?  // URL of generated video clip
+  duration         Int?     // Actual duration in seconds
+
+  // Status
+  status           String   @default("pending") // pending, generating_audio, generating_video, completed, failed
+  errorMessage     String?
+
+  // Timestamps
+  createdAt        DateTime @default(now())
+  completedAt      DateTime?
+
+  // Relations
+  compositeVideo FalCompositeVideo @relation(fields: [compositeVideoId], references: [id], onDelete: Cascade)
+
+  @@index([compositeVideoId])
+  @@index([falRequestId])
+  @@index([status])
+}
+
+enum FalCompositeStatus {
+  pending           // Initial state
+  generating_clips  // Clips being generated (TTS + SadTalker)
+  stitching         // FFmpeg combining clips
+  completed
+  failed
 }

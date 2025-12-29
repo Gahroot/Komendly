@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Plus, Video, Settings, LogOut, User, CreditCard } from "lucide-react";
+import { Plus, Video, Settings, LogOut, User, CreditCard, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -16,6 +16,11 @@ const navItems = [
     label: "Create Video",
     href: "/dashboard/create",
     icon: Plus,
+  },
+  {
+    label: "Create (Beta)",
+    href: "/dashboard/create-fal",
+    icon: Zap,
   },
   {
     label: "My Videos",
@@ -73,7 +78,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
           const Icon = item.icon;
 
           return (
