@@ -5,25 +5,26 @@ import { motion } from "framer-motion";
 import { Volume2, VolumeX } from "lucide-react";
 import Player from "@vimeo/player";
 import { cn } from "@/lib/utils";
+import { Marquee } from "@/components/ui/marquee";
 
 interface VideoShowcaseProps {
   videoIds: string[];
   className?: string;
 }
 
-interface VimeoCardProps {
+interface TestimonialVideoCardProps {
   id: string;
   isActive: boolean;
   onToggle: (id: string) => void;
   onPlayerReady: (id: string, player: Player) => void;
 }
 
-const VimeoCard = memo(function VimeoCard({
+const TestimonialVideoCard = memo(function TestimonialVideoCard({
   id,
   isActive,
   onToggle,
   onPlayerReady,
-}: VimeoCardProps) {
+}: TestimonialVideoCardProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const playerRef = useRef<Player | null>(null);
 
@@ -42,44 +43,56 @@ const VimeoCard = memo(function VimeoCard({
   }, [id, onPlayerReady]);
 
   return (
-    <div className="flex-shrink-0 w-[200px] sm:w-[240px]">
+    <div
+      className={cn(
+        "relative w-[200px] shrink-0 cursor-pointer overflow-hidden rounded-xl border bg-zinc-900 transition-all duration-300 sm:w-[240px]",
+        isActive
+          ? "border-purple-500 ring-2 ring-purple-500/20"
+          : "border-zinc-800 hover:border-purple-500/50 hover:scale-[1.02]"
+      )}
+      onClick={() => onToggle(id)}
+    >
+      <div className="aspect-[9/16]">
+        <iframe
+          ref={iframeRef}
+          src={`https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&background=1&muted=1`}
+          className="pointer-events-none h-full w-full"
+          frameBorder="0"
+          allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+          title="Testimonial video"
+        />
+      </div>
+
+      {/* Volume indicator */}
       <div
         className={cn(
-          "relative rounded-xl overflow-hidden bg-zinc-900 border transition-colors cursor-pointer group",
-          isActive ? "border-purple-500" : "border-zinc-800 hover:border-purple-500/50"
+          "absolute bottom-3 right-3 rounded-full p-2 transition-all duration-200",
+          isActive
+            ? "bg-purple-600 shadow-lg shadow-purple-500/25"
+            : "bg-black/60 hover:bg-black/80"
         )}
-        onClick={() => onToggle(id)}
       >
-        <div className="aspect-[9/16]">
-          <iframe
-            ref={iframeRef}
-            src={`https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&background=1&muted=1`}
-            className="w-full h-full pointer-events-none"
-            frameBorder="0"
-            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-            title="Testimonial video"
-          />
-        </div>
-        <div
-          className={cn(
-            "absolute bottom-3 right-3 p-2 rounded-full transition-all",
-            isActive ? "bg-purple-600" : "bg-black/60 group-hover:bg-black/80"
-          )}
-        >
-          {isActive ? (
-            <Volume2 className="w-4 h-4 text-white" />
-          ) : (
-            <VolumeX className="w-4 h-4 text-white" />
-          )}
-        </div>
+        {isActive ? (
+          <Volume2 className="h-4 w-4 text-white" />
+        ) : (
+          <VolumeX className="h-4 w-4 text-white" />
+        )}
       </div>
+
+      {/* Click hint overlay */}
+      {!isActive && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-opacity duration-200 hover:bg-black/20 hover:opacity-100">
+          <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+            Click to unmute
+          </span>
+        </div>
+      )}
     </div>
   );
 });
 
 export function VideoShowcase({ videoIds, className }: VideoShowcaseProps) {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
-  const [isPaused, setIsPaused] = useState(false);
   const playersRef = useRef<Map<string, Player>>(new Map());
 
   const handlePlayerReady = useCallback((id: string, player: Player) => {
@@ -100,9 +113,6 @@ export function VideoShowcase({ videoIds, className }: VideoShowcaseProps) {
     });
   }, [activeVideo]);
 
-  // Duplicate videos for seamless loop
-  const duplicatedVideos = [...videoIds, ...videoIds];
-
   return (
     <motion.div
       className={cn("mt-16 w-full", className)}
@@ -110,46 +120,26 @@ export function VideoShowcase({ videoIds, className }: VideoShowcaseProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.5 }}
     >
-      <style jsx>{`
-        @keyframes marquee-scroll {
-          from {
-            transform: translateX(0);
-          }
-          to {
-            transform: translateX(-50%);
-          }
-        }
-        .marquee-content {
-          animation: marquee-scroll 40s linear infinite;
-        }
-        .marquee-content:hover {
-          animation-play-state: paused;
-        }
-      `}</style>
-      <p className="text-sm text-zinc-400 mb-4">
+      <p className="mb-4 text-sm text-zinc-400">
         See what AI-generated testimonials look like:
       </p>
-      <div
-        className="relative w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-      >
-        <div
-          className={cn(
-            "flex gap-4 w-max marquee-content",
-            isPaused && "[animation-play-state:paused]"
-          )}
+
+      <div className="relative w-full [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+        <Marquee
+          pauseOnHover
+          className="[--duration:30s] [--gap:1rem]"
+          repeat={2}
         >
-          {duplicatedVideos.map((id, index) => (
-            <VimeoCard
-              key={`${id}-${index}`}
+          {videoIds.map((id) => (
+            <TestimonialVideoCard
+              key={id}
               id={id}
               isActive={activeVideo === id}
               onToggle={handleToggle}
               onPlayerReady={handlePlayerReady}
             />
           ))}
-        </div>
+        </Marquee>
       </div>
     </motion.div>
   );
