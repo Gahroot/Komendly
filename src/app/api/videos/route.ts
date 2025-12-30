@@ -4,6 +4,20 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
+interface MappedVideo {
+  id: string;
+  reviewerName: string;
+  businessName: string;
+  reviewText: string;
+  rating: number;
+  thumbnailUrl: string;
+  videoUrl: string;
+  aspectRatio: "9:16" | "16:9" | "1:1";
+  style: string;
+  duration: number;
+  createdAt: string;
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Validate session
@@ -25,8 +39,8 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || "";
     const sortOrder = (searchParams.get("sortOrder") || "desc") as "asc" | "desc";
 
-    // Build search filter
-    const searchFilter = search
+    // Build search filter for GeneratedVideo
+    const generatedSearchFilter = search
       ? {
           OR: [
             { review: { businessName: { contains: search, mode: "insensitive" as const } } },
@@ -35,39 +49,76 @@ export async function GET(request: NextRequest) {
         }
       : {};
 
-    // Fetch videos from database
-    const videos = await prisma.generatedVideo.findMany({
-      where: {
-        userId: session.user.id,
-        status: "completed",
-        ...searchFilter,
-      },
-      orderBy: { createdAt: sortOrder },
-      take: pageSize,
-      skip: (page - 1) * pageSize,
-      include: {
-        review: {
-          select: {
-            reviewerName: true,
-            businessName: true,
-            reviewText: true,
-            rating: true,
+    // Build search filter for FalCompositeVideo
+    const falSearchFilter = search
+      ? {
+          OR: [
+            { review: { businessName: { contains: search, mode: "insensitive" as const } } },
+            { review: { reviewerName: { contains: search, mode: "insensitive" as const } } },
+          ],
+        }
+      : {};
+
+    // Fetch both video types in parallel
+    const [generatedVideos, falVideos, generatedCount, falCount] = await Promise.all([
+      prisma.generatedVideo.findMany({
+        where: {
+          userId: session.user.id,
+          status: "completed",
+          ...generatedSearchFilter,
+        },
+        include: {
+          review: {
+            select: {
+              reviewerName: true,
+              businessName: true,
+              reviewText: true,
+              rating: true,
+            },
           },
         },
-      },
-    });
+      }),
+      prisma.falCompositeVideo.findMany({
+        where: {
+          userId: session.user.id,
+          status: "completed",
+          ...falSearchFilter,
+        },
+        include: {
+          review: {
+            select: {
+              reviewerName: true,
+              businessName: true,
+              reviewText: true,
+              rating: true,
+            },
+          },
+          actor: {
+            select: {
+              name: true,
+              style: true,
+            },
+          },
+        },
+      }),
+      prisma.generatedVideo.count({
+        where: {
+          userId: session.user.id,
+          status: "completed",
+          ...generatedSearchFilter,
+        },
+      }),
+      prisma.falCompositeVideo.count({
+        where: {
+          userId: session.user.id,
+          status: "completed",
+          ...falSearchFilter,
+        },
+      }),
+    ]);
 
-    // Get total count for pagination
-    const total = await prisma.generatedVideo.count({
-      where: {
-        userId: session.user.id,
-        status: "completed",
-        ...searchFilter,
-      },
-    });
-
-    // Map to expected format
-    const mappedVideos = videos.map((video) => ({
+    // Map GeneratedVideo to common format
+    const mappedGenerated: MappedVideo[] = generatedVideos.map((video) => ({
       id: video.id,
       reviewerName: video.review.reviewerName,
       businessName: video.review.businessName,
@@ -81,8 +132,34 @@ export async function GET(request: NextRequest) {
       createdAt: video.createdAt.toISOString(),
     }));
 
+    // Map FalCompositeVideo to common format
+    const mappedFal: MappedVideo[] = falVideos.map((video) => ({
+      id: video.id,
+      reviewerName: video.review.reviewerName,
+      businessName: video.review.businessName,
+      reviewText: video.review.reviewText,
+      rating: video.review.rating,
+      thumbnailUrl: video.thumbnailUrl || "",
+      videoUrl: video.finalVideoUrl || "",
+      aspectRatio: video.aspectRatio as "9:16" | "16:9" | "1:1",
+      style: video.actor?.name || video.actor?.style || "AI Avatar",
+      duration: video.actualDuration || 0,
+      createdAt: video.createdAt.toISOString(),
+    }));
+
+    // Combine and sort all videos
+    const allVideos = [...mappedGenerated, ...mappedFal].sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    });
+
+    // Apply pagination to combined results
+    const total = generatedCount + falCount;
+    const paginatedVideos = allVideos.slice((page - 1) * pageSize, page * pageSize);
+
     return NextResponse.json({
-      videos: mappedVideos,
+      videos: paginatedVideos,
       total,
       page,
       pageSize,

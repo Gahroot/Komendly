@@ -1,0 +1,6 @@
+<!-- Google tag (gtag.js) event -->
+<script>
+  gtag('event', 'purchase', {
+    // <event_parameters>
+  });
+</script>

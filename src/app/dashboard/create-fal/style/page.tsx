@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Clock, Sparkles, Star, Mic, Zap } from "lucide-react";
+import { ArrowLeft, Clock, Sparkles, Star, Zap } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -12,16 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import { FalActorSelector } from "@/components/fal-actor-selector";
 import { DURATIONS, type DurationId } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import type { TTSVoice } from "@/lib/fal-lipsync/types";
-
-const TTS_VOICES: { id: TTSVoice; name: string; description: string }[] = [
-  { id: "nova", name: "Nova", description: "Warm, engaging female voice" },
-  { id: "alloy", name: "Alloy", description: "Neutral, balanced voice" },
-  { id: "echo", name: "Echo", description: "Smooth male voice" },
-  { id: "fable", name: "Fable", description: "Expressive, storytelling voice" },
-  { id: "onyx", name: "Onyx", description: "Deep, authoritative male voice" },
-  { id: "shimmer", name: "Shimmer", description: "Bright, energetic female voice" },
-];
 
 function StylePageContent() {
   const searchParams = useSearchParams();
@@ -36,7 +26,6 @@ function StylePageContent() {
   // State for selections
   const [selectedActor, setSelectedActor] = useState<string | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<DurationId>("30");
-  const [selectedVoice, setSelectedVoice] = useState<TTSVoice>("nova");
   const [isGenerating, setIsGenerating] = useState(false);
 
   const canGenerate = selectedActor !== null;
@@ -47,6 +36,7 @@ function StylePageContent() {
     setIsGenerating(true);
 
     // Build query params for the generation page
+    // Note: VEO 3.1 generates its own audio with lip-sync, so no voice selection needed
     const params = new URLSearchParams({
       review: reviewText,
       author: reviewAuthor,
@@ -54,7 +44,6 @@ function StylePageContent() {
       business: businessName,
       actor: selectedActor,
       duration: selectedDuration,
-      voice: selectedVoice,
     });
 
     // Navigate to generation page
@@ -79,7 +68,7 @@ function StylePageContent() {
                 Beta
               </Badge>
             </div>
-            <p className="text-muted-foreground">Select an AI actor and voice for your testimonial</p>
+            <p className="text-muted-foreground">Select an AI actor for your testimonial</p>
           </div>
         </div>
 
@@ -131,52 +120,11 @@ function StylePageContent() {
           />
         </motion.section>
 
-        {/* Voice Selection */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-10"
-        >
-          <h2 className="text-xl font-semibold text-foreground mb-4">Voice</h2>
-          <p className="text-muted-foreground mb-4">
-            Choose a voice for text-to-speech generation.
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {TTS_VOICES.map((voice) => {
-              const isSelected = selectedVoice === voice.id;
-
-              return (
-                <motion.div
-                  key={voice.id}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Button
-                    variant={isSelected ? "default" : "outline"}
-                    className={cn(
-                      "gap-2 flex-col h-auto py-3 px-4 w-full",
-                      isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                    )}
-                    onClick={() => setSelectedVoice(voice.id)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Mic className="h-4 w-4" />
-                      {voice.name}
-                    </div>
-                    <span className="text-xs opacity-70">{voice.description}</span>
-                  </Button>
-                </motion.div>
-              );
-            })}
-          </div>
-        </motion.section>
-
         {/* Duration Selection */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.2 }}
           className="mb-10"
         >
           <h2 className="text-xl font-semibold text-foreground mb-4">Duration</h2>
@@ -214,7 +162,7 @@ function StylePageContent() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.3 }}
           className="flex justify-center pt-4"
         >
           <Button

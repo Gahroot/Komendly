@@ -1,0 +1,219 @@
+{
+  "generatedAt": "2025-12-30T19:00:16.723Z",
+  "version": "1.0",
+  "actors": [
+    {
+      "name": "Tyler",
+      "slug": "tyler",
+      "description": "Young man with wavy brown hair in a casual t-shirt",
+      "age": "early 30s",
+      "ethnicity": "Caucasian",
+      "gender": "male",
+      "style": "casual",
+      "voiceId": "alloy",
+      "voicePrompt": "Friendly, youthful male voice with relaxed California vibe. Casual American accent, slightly laid-back. Natural conversational pace around 150 words per minute. Genuine enthusiasm with easy-going delivery. Slightly higher register, clear and bright. Authentic and unpolished feel.",
+      "looks": [
+        {
+          "index": 1,
+          "path": "tyler/look-1.png",
+          "description": "Casual look with simple t-shirt"
+        },
+        {
+          "index": 2,
+          "path": "tyler/look-2.png",
+          "description": "Alternative casual style"
+        }
+      ]
+    },
+    {
+      "name": "Madison",
+      "slug": "madison",
+      "description": "Young woman with long blonde hair and natural makeup",
+      "age": "mid 30s",
+      "ethnicity": "Caucasian",
+      "gender": "female",
+      "style": "friendly",
+      "voiceId": "nova",
+      "voicePrompt": "Bright, warm female voice with girl-next-door authenticity. Natural American accent with friendly Midwest influence. Conversational pace around 150 words per minute. Clear mid-range with natural warmth. Genuine and relatable delivery with easy smile in the voice.",
+      "looks": [
+        {
+          "index": 1,
+          "path": "madison/look-1.png",
+          "description": "Natural everyday look"
+        }
+      ]
+    },
+    {
+      "name": "Jamal",
+      "slug": "jamal",
+      "description": "Young man with short fade haircut and trimmed beard",
+      "age": "mid 30s",
+      "ethnicity": "African American",
+      "gender": "male",
+      "style": "professional",
+      "voiceId": "onyx",
+      "voicePrompt": "Deep, confident male voice with professional presence. Clear American accent with smooth delivery. Measured pace around 140 words per minute. Rich baritone with natural authority. Trustworthy and engaging tone with occasional warmth.",
+      "looks": [
+        {
+          "index": 1,
+          "path": "jamal/look-1.png",
+          "description": "Professional business look"
+        },
+        {
+          "index": 2,
+          "path": "jamal/look-2.png",
+          "description": "Smart casual style"
+        }
+      ]
+    },
+    {
+      "name": "Priya",
+      "slug": "priya",
+      "description": "Young woman with long dark hair and elegant features",
+      "age": "early 30s",
+      "ethnicity": "South Asian",
+      "gender": "female",
+      "style": "professional",
+      "voiceId": "shimmer",
+      "voicePrompt": "Elegant, articulate female voice with international sophistication. Clear American accent with subtle South Asian musicality. Refined pace around 140 words per minute. Smooth alto with cultured polish. Confident yet gracious delivery with precise enunciation.",
+      "looks": [
+        {
+          "index": 1,
+          "path": "priya/look-1.png",
+          "description": "Elegant professional look"
+        }
+      ]
+    },
+    {
+      "name": "Kevin",
+      "slug": "kevin",
+      "description": "Young man with black hair, clean shaven look",
+      "age": "late 20s",
+      "ethnicity": "East Asian",
+      "gender": "male",
+      "style": "casual",
+      "voiceId": "echo",
+      "voicePrompt": "Clear, friendly male voice with modern tech-savvy vibe. Neutral American accent, West Coast influence. Natural pace around 145 words per minute. Mid-range tone with approachable quality. Genuine and enthusiastic delivery without being over the top.",
+      "looks": [
+        {
+          "index": 1,
+          "path": "kevin/look-1.png",
+          "description": "Clean casual look"
+        }
+      ]
+    },
+    {
+      "name": "Sofia",
+      "slug": "sofia",
+      "description": "Young woman with brown curly hair and warm smile",
+      "age": "mid 30s",
+      "ethnicity": "Latina",
+      "gender": "female",
+      "style": "friendly",
+      "voiceId": "nova",
+      "voicePrompt": "Warm, melodic female voice with natural charm. American accent with subtle Latin warmth. Relaxed pace around 145 words per minute. Rich alto tones with expressive quality. Genuine and approachable delivery with occasional passionate emphasis.",
+      "looks": [
+        {
+          "index": 1,
+          "path": "sofia/look-1.png",
+          "description": "Warm friendly look"
+        }
+      ]
+    },
+    {
+      "name": "Marcus",
+      "slug": "marcus",
+      "description": "Man with short dreadlocks and stylish glasses",
+      "age": "late 30s",
+      "ethnicity": "African American",
+      "gender": "male",
+      "style": "friendly",
+      "voiceId": "fable",
+      "voicePrompt": "Rich, charismatic male voice with natural storytelling ability. American accent with warm undertones. Engaging pace around 145 words per minute. Deep baritone with dynamic range. Captivating delivery that draws listeners in with expressive emphasis.",
+      "looks": [
+        {
+          "index": 1,
+          "path": "marcus/look-1.png",
+          "description": "Stylish creative look"
+        }
+      ]
+    },
+    {
+      "name": "Emma",
+      "slug": "emma",
+      "description": "Woman with auburn hair and freckles",
+      "age": "early 40s",
+      "ethnicity": "Caucasian",
+      "gender": "female",
+      "style": "casual",
+      "voiceId": "shimmer",
+      "voicePrompt": "Refined, warm female voice with natural elegance. American accent with subtle warmth. Unhurried pace around 140 words per minute. Smooth mezzo-soprano with cultured quality. Effortlessly friendly delivery with understated confidence.",
+      "looks": [
+        {
+          "index": 1,
+          "path": "emma/look-1.png",
+          "description": "Natural everyday look"
+        }
+      ]
+    },
+    {
+      "name": "Hiroshi",
+      "slug": "hiroshi",
+      "description": "Man with styled black hair and designer stubble",
+      "age": "early 40s",
+      "ethnicity": "Japanese",
+      "gender": "male",
+      "style": "professional",
+      "voiceId": "echo",
+      "voicePrompt": "Composed, professional male voice with international business presence. Clear American accent, neutral and cosmopolitan. Measured pace around 135 words per minute. Steady mid-range baritone with calm authority. Thoughtful, precise delivery with reserved confidence.",
+      "looks": [
+        {
+          "index": 1,
+          "path": "hiroshi/look-1.png",
+          "description": "Modern professional look"
+        }
+      ]
+    },
+    {
+      "name": "Aaliyah",
+      "slug": "aaliyah",
+      "description": "Woman with natural curly hair and expressive eyes",
+      "age": "late 30s",
+      "ethnicity": "Middle Eastern",
+      "gender": "female",
+      "style": "professional",
+      "voiceId": "nova",
+      "voicePrompt": "Clear, confident female voice with executive polish. Crisp American accent with international sophistication. Articulate pace around 145 words per minute. Alto range with authoritative presence. Warm but businesslike delivery with strategic emphasis.",
+      "looks": [
+        {
+          "index": 1,
+          "path": "aaliyah/look-1.png",
+          "description": "Elegant professional look"
+        }
+      ]
+    },
+    {
+      "name": "Madisyn",
+      "slug": "madisyn",
+      "description": "Young woman with stylish modern look",
+      "age": "late 20s",
+      "ethnicity": "Caucasian",
+      "gender": "female",
+      "style": "casual",
+      "voiceId": "shimmer",
+      "voicePrompt": "Bright, youthful female voice with modern energy. Natural American accent with trendy influence. Conversational pace around 155 words per minute. Clear soprano range with occasional upspeak. Genuine and relatable delivery with easy confidence.",
+      "looks": [
+        {
+          "index": 1,
+          "path": "madisyn/look-1.png",
+          "description": "Modern trendy look"
+        },
+        {
+          "index": 2,
+          "path": "madisyn/look-2.png",
+          "description": "Alternative casual style"
+        }
+      ]
+    }
+  ]
+}

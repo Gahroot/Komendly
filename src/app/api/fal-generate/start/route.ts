@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { generateUGCScript, generateSimpleScript } from "@/lib/openai-script";
-import { segmentScript, simpleSegmentScript, validateSegmentation } from "@/lib/fal-lipsync";
+import { segmentScript, simpleSegmentScript, validateSegmentation, startBackgroundProcessing } from "@/lib/fal-lipsync";
 import type { FalGenerateStartResponse } from "@/lib/fal-lipsync/types";
 
 interface StartRequest {
@@ -129,13 +129,14 @@ export async function POST(request: Request) {
       });
     }
 
-    // Start background processing (in a real implementation, this would be a queue job)
-    // For now, we just mark as generating_clips - actual generation happens via polling/webhook
-
+    // Update status and start background processing
     await prisma.falCompositeVideo.update({
       where: { id: compositeVideo.id },
       data: { status: "generating_clips" },
     });
+
+    // Start background processing (non-blocking)
+    startBackgroundProcessing(compositeVideo.id);
 
     logger.info(
       {

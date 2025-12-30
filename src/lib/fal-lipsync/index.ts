@@ -71,3 +71,63 @@ export {
   createTransition,
   DEFAULTS as VIDEO_DEFAULTS,
 } from "./video-editor";
+
+// Clip Processor
+export {
+  processClip,
+  processCompositeVideo,
+  startBackgroundProcessing,
+  processPendingVideos,
+} from "./clip-processor";
+
+// Video Stitcher
+export {
+  stitchVideos,
+  simpleConcatVideos,
+} from "./video-stitcher";
+export type { StitchInput, StitchResult } from "./video-stitcher";
+
+// Live Avatar (Higher Quality Alternative to SadTalker)
+export {
+  LIVE_AVATAR_MODEL,
+  LATENTSYNC_MODEL,
+  generateLiveAvatarVideo,
+  generateLatentSyncVideo,
+  calculateNumClips,
+  estimateLiveAvatarCost,
+  estimateLatentSyncCost,
+} from "./live-avatar";
+export type {
+  LiveAvatarInput,
+  LiveAvatarResult,
+  LatentSyncInput,
+  LatentSyncResult,
+} from "./live-avatar";
+
+// VEO 3.1 Fast (Best Quality - Excellent Lip Sync)
+export {
+  VEO3_IMAGE_TO_VIDEO_MODEL,
+  VEO3_TEXT_TO_VIDEO_MODEL,
+  generateVeo3Video,
+  buildTestimonialPrompt,
+  calculateOptimalDuration,
+  estimateVeo3Cost,
+  getMaxWordCount,
+} from "./veo3";
+export type {
+  Veo3AspectRatio,
+  Veo3Duration,
+  Veo3Resolution,
+  Veo3ImageToVideoInput,
+  Veo3VideoResult,
+} from "./veo3";
+
+// Frame Extractor (for frame continuity between clips)
+export {
+  extractLastFrame,
+  extractFrameAt,
+} from "./frame-extractor";
+export type {
+  FrameExtractionResult,
+  ExtractFrameOptions,
+} from "./frame-extractor";

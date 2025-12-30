@@ -238,6 +238,7 @@ model FalActor {
   referenceImageUrl String   // Front-facing pose for SadTalker consistency
   thumbnailUrl      String   // Preview image for UI grid
   voiceId           String?  // OpenAI TTS voice: "alloy", "nova", "shimmer", etc.
+  voicePrompt       String?  // Detailed voice description for VEO consistency (pitch, tone, accent, pace)
   description       String?  // Optional description for the actor
   isActive          Boolean  @default(true)
   sortOrder         Int      @default(0)

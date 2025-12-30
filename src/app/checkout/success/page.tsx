@@ -39,6 +39,56 @@ function CheckoutSuccessContent() {
           setUserData(data.user);
           setStatus("success");
 
+          // Track purchase conversion in GA4
+          if (typeof window !== "undefined" && typeof window.gtag === "function") {
+            const planPrices: Record<string, number> = {
+              pro: 29,
+              business: 99,
+            };
+            const value = planPrices[data.user.plan?.toLowerCase()] || 29;
+            window.gtag("event", "purchase", {
+              value: value,
+              currency: "USD",
+              transaction_id: sessionId,
+            });
+          }
+
+          // Track purchase conversion via Facebook Conversions API
+          try {
+            const planPrices: Record<string, number> = {
+              pro: 29,
+              business: 99,
+            };
+            const value = planPrices[data.user.plan?.toLowerCase()] || 29;
+
+            // Get Facebook cookies for better attribution
+            const getCookie = (name: string) => {
+              const value = `; ${document.cookie}`;
+              const parts = value.split(`; ${name}=`);
+              if (parts.length === 2) return parts.pop()?.split(";").shift();
+              return undefined;
+            };
+
+            await fetch("/api/facebook-capi", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                eventType: "Purchase",
+                email: data.user.email,
+                value: value,
+                currency: "USD",
+                transactionId: sessionId,
+                contentName: `${data.user.plan} Plan`,
+                sourceUrl: window.location.href,
+                fbc: getCookie("_fbc"),
+                fbp: getCookie("_fbp"),
+              }),
+            });
+          } catch (fbError) {
+            // Don't block on Facebook tracking errors
+            console.error("Facebook CAPI error:", fbError);
+          }
+
           // After successful payment verification, log the user in
           // Create a session for them
           const loginResponse = await fetch("/api/auth/login-after-payment", {

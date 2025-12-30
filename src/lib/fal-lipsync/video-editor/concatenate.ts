@@ -242,6 +242,9 @@ export function generateConcatFilterComplex(config: ConcatConfig): ConcatResult 
   const outputArgs: string[] = [];
   outputArgs.push("-c:v", "libx264");
   outputArgs.push("-preset", "medium");
+  // Ensure browser-compatible H.264 encoding (High profile with yuv420p)
+  outputArgs.push("-profile:v", "high");
+  outputArgs.push("-pix_fmt", "yuv420p");
   outputArgs.push(
     "-crf",
     output.quality === "best" ? "18" : output.quality === "high" ? "20" : "23"
@@ -357,12 +360,20 @@ export function shortFormConcatConfig(
   outputPath: string,
   options?: {
     transitionStyle?: "none" | "quick" | "flashy";
+    /** Clip durations in seconds - REQUIRED for xfade transitions */
+    durations?: number[];
   }
 ): ConcatConfig {
   const style = options?.transitionStyle ?? "quick";
+  const durations = options?.durations;
+
+  // If no durations provided, fall back to simple concat (no transitions)
+  // to avoid the xfade timing bug
+  const hasDurations = durations && durations.length === sources.length;
+  const effectiveStyle = hasDurations ? style : "none";
 
   let transition: Transition;
-  switch (style) {
+  switch (effectiveStyle) {
     case "none":
       transition = createTransition("none");
       break;
@@ -378,6 +389,7 @@ export function shortFormConcatConfig(
   const clips: VideoClip[] = sources.map((source, i) => ({
     id: `clip-${i}`,
     source,
+    duration: durations?.[i],
   }));
 
   return buildConcatConfig(clips, {

@@ -14,7 +14,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { VideoShowcase } from "@/components/video-showcase";
 
-const videoIds = ["1149880629", "1149880641", "1149880649", "1150126210", "1149881437", "1150126195"];
+const videoIds = ["1150452550", "1150452582", "1150452614"];
 
 const steps = [
   {
