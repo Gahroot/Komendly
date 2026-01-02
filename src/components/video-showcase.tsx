@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, memo } from "react";
+import { useState, useRef, useEffect, useCallback, memo, useId } from "react";
 import { motion } from "framer-motion";
 import { Volume2, VolumeX } from "lucide-react";
 import Player from "@vimeo/player";
-import { cn } from "@/lib/utils";
 import { Marquee } from "@/components/ui/marquee";
+import { cn } from "@/lib/utils";
 
 interface VideoShowcaseProps {
   videoIds: string[];
@@ -13,18 +13,21 @@ interface VideoShowcaseProps {
 }
 
 interface TestimonialVideoCardProps {
-  id: string;
+  videoId: string;
   isActive: boolean;
-  onToggle: (id: string) => void;
-  onPlayerReady: (id: string, player: Player) => void;
+  onToggle: (videoId: string) => void;
+  onPlayerReady: (instanceId: string, videoId: string, player: Player) => void;
+  onPlayerUnmount: (instanceId: string) => void;
 }
 
 const TestimonialVideoCard = memo(function TestimonialVideoCard({
-  id,
+  videoId,
   isActive,
   onToggle,
   onPlayerReady,
+  onPlayerUnmount,
 }: TestimonialVideoCardProps) {
+  const instanceId = useId();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const playerRef = useRef<Player | null>(null);
 
@@ -35,12 +38,15 @@ const TestimonialVideoCard = memo(function TestimonialVideoCard({
     const initPlayer = () => {
       const player = new Player(iframe);
       playerRef.current = player;
-      onPlayerReady(id, player);
+      onPlayerReady(instanceId, videoId, player);
     };
 
     const timer = setTimeout(initPlayer, 300);
-    return () => clearTimeout(timer);
-  }, [id, onPlayerReady]);
+    return () => {
+      clearTimeout(timer);
+      onPlayerUnmount(instanceId);
+    };
+  }, [instanceId, videoId, onPlayerReady, onPlayerUnmount]);
 
   return (
     <div
@@ -50,12 +56,12 @@ const TestimonialVideoCard = memo(function TestimonialVideoCard({
           ? "border-purple-500 ring-2 ring-purple-500/20"
           : "border-zinc-800 hover:border-purple-500/50 hover:scale-[1.02]"
       )}
-      onClick={() => onToggle(id)}
+      onClick={() => onToggle(videoId)}
     >
       <div className="aspect-[9/16]">
         <iframe
           ref={iframeRef}
-          src={`https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&background=1&muted=1`}
+          src={`https://player.vimeo.com/video/${videoId}?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&background=1&muted=1`}
           className="pointer-events-none h-full w-full"
           frameBorder="0"
           allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
@@ -91,26 +97,48 @@ const TestimonialVideoCard = memo(function TestimonialVideoCard({
   );
 });
 
+interface PlayerInfo {
+  player: Player;
+  videoId: string;
+}
+
 export function VideoShowcase({ videoIds, className }: VideoShowcaseProps) {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
-  const playersRef = useRef<Map<string, Player>>(new Map());
+  // Map from instanceId -> { player, videoId }
+  const playersRef = useRef<Map<string, PlayerInfo>>(new Map());
 
-  const handlePlayerReady = useCallback((id: string, player: Player) => {
-    playersRef.current.set(id, player);
+  const handlePlayerReady = useCallback((instanceId: string, videoId: string, player: Player) => {
+    playersRef.current.set(instanceId, { player, videoId });
   }, []);
 
-  const handleToggle = useCallback((id: string) => {
-    setActiveVideo((prev) => (prev === id ? null : id));
+  const handlePlayerUnmount = useCallback((instanceId: string) => {
+    playersRef.current.delete(instanceId);
   }, []);
 
-  // Mute/unmute videos based on active state
+  const handleToggle = useCallback((videoId: string) => {
+    setActiveVideo((prev) => (prev === videoId ? null : videoId));
+  }, []);
+
+  // Mute all players, then unmute only ONE instance of the active video
   useEffect(() => {
-    playersRef.current.forEach((player, id) => {
-      const shouldUnmute = activeVideo === id;
-      player.setMuted(!shouldUnmute).catch(() => {
+    // First, mute ALL players
+    playersRef.current.forEach(({ player }) => {
+      player.setMuted(true).catch(() => {
         // Ignore errors if video not ready
       });
     });
+
+    // Then unmute only the FIRST instance of the active video
+    if (activeVideo) {
+      for (const [, { player, videoId }] of playersRef.current) {
+        if (videoId === activeVideo) {
+          player.setMuted(false).catch(() => {
+            // Ignore errors if video not ready
+          });
+          break; // Only unmute the first instance found
+        }
+      }
+    }
   }, [activeVideo]);
 
   return (
@@ -133,10 +161,11 @@ export function VideoShowcase({ videoIds, className }: VideoShowcaseProps) {
           {videoIds.map((id) => (
             <TestimonialVideoCard
               key={id}
-              id={id}
+              videoId={id}
               isActive={activeVideo === id}
               onToggle={handleToggle}
               onPlayerReady={handlePlayerReady}
+              onPlayerUnmount={handlePlayerUnmount}
             />
           ))}
         </Marquee>
