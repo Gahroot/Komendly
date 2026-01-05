@@ -239,6 +239,28 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        {/* Resource hints for performance */}
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://player.vimeo.com" />
+        <link rel="dns-prefetch" href="https://www.youtube.com" />
+
+        {/* Prefetch critical routes */}
+        <link rel="prefetch" href="/pricing" as="fetch" crossOrigin="anonymous" />
+
+        {/* Web app manifest for PWA */}
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Komendly" />
+
+        {/* Performance hints */}
+        <meta httpEquiv="x-ua-compatible" content="ie=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-THCR5EQWY2"
           strategy="afterInteractive"
