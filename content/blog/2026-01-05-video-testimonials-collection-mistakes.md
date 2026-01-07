@@ -1,12 +1,21 @@
 ---
-title: "Why 87% of Businesses Use Video Testimonials (But Most Get Them Wrong)"
-description: "Discover why businesses fail at video testimonials despite knowing they work. Learn the 6 critical mistakes holding your conversions back."
-publishDate: "2026-01-05"
-author: "Komendly Team"
-tags: [video-marketing, customer-testimonials, social-proof, conversion-optimization]
-keywords: "video testimonials, customer testimonials, collecting video testimonials, video marketing strategy, social proof"
-slug: "video-testimonials-collection-mistakes"
+title: Why 87% of Businesses Use Video Testimonials (But Most Get Them Wrong)
+description: >-
+  Discover why businesses fail at video testimonials despite knowing they work.
+  Learn the 6 critical mistakes holding your conversions back.
+publishDate: '2026-01-05'
+author: Komendly Team
+tags:
+  - video-marketing
+  - customer-testimonials
+  - social-proof
+  - conversion-optimization
+keywords: >-
+  video testimonials, customer testimonials, collecting video testimonials,
+  video marketing strategy, social proof
+slug: video-testimonials-collection-mistakes
 featured: false
+image: /blog/2026-01-05-video-testimonials-collection-mistakes.png
 ---
 
 ## The Video Testimonial Paradox
