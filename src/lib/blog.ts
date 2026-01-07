@@ -38,11 +38,11 @@ export function getBlogPosts(): BlogPostMeta[] {
     return []
   }
 
-  const files = fs.readdirSync(BLOG_DIR).filter((file) => file.endsWith('.mdx'))
+  const files = fs.readdirSync(BLOG_DIR).filter((file) => file.endsWith('.mdx') || file.endsWith('.md'))
 
   const posts = files
     .map((file) => {
-      const slug = file.replace(/\.mdx$/, '')
+      const slug = file.replace(/\.mdx?$/, '')
       const filePath = path.join(BLOG_DIR, file)
       const fileContent = fs.readFileSync(filePath, 'utf-8')
       const { data, content } = matter(fileContent)
@@ -70,7 +70,11 @@ export function getBlogPosts(): BlogPostMeta[] {
  * Get a single blog post by slug (with content)
  */
 export function getBlogPost(slug: string): BlogPost | null {
-  const filePath = path.join(BLOG_DIR, `${slug}.mdx`)
+  // Try .mdx first, then .md
+  let filePath = path.join(BLOG_DIR, `${slug}.mdx`)
+  if (!fs.existsSync(filePath)) {
+    filePath = path.join(BLOG_DIR, `${slug}.md`)
+  }
 
   if (!fs.existsSync(filePath)) {
     return null
@@ -106,8 +110,8 @@ export function getBlogSlugs(): string[] {
 
   return fs
     .readdirSync(BLOG_DIR)
-    .filter((file) => file.endsWith('.mdx'))
-    .map((file) => file.replace(/\.mdx$/, ''))
+    .filter((file) => file.endsWith('.mdx') || file.endsWith('.md'))
+    .map((file) => file.replace(/\.mdx?$/, ''))
 }
 
 /**
