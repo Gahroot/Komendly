@@ -1,27 +1,31 @@
 /**
  * VEO 3.1 Fast Client
- * FAL AI VEO 3.1 integration for high-quality talking video generation
+ * KIE.ai VEO 3.1 integration for high-quality talking video generation
  *
  * VEO 3.1 Fast generates videos with excellent lip-sync directly from
  * an image and prompt. The model generates its own audio from the prompt,
  * eliminating the need for separate TTS.
  *
- * Pricing: $0.10/sec (audio off), $0.15/sec (audio on)
+ * Pricing: $0.40/video via KIE.ai (75% cheaper than FAL AI)
+ * API Documentation: https://docs.kie.ai/veo3-api/generate-veo-3-video
  */
 
-import { fal } from "@fal-ai/client";
 import { logger } from "@/lib/logger";
-import { configureFalClient } from "./sadtalker";
+import {
+  generateVideo,
+  toKieAspectRatio,
+  estimateKieCost,
+} from "@/lib/kie/client";
 
 // ============================================================================
 // Configuration
 // ============================================================================
 
-/** FAL VEO 3.1 Fast Image-to-Video model ID */
-export const VEO3_IMAGE_TO_VIDEO_MODEL = "fal-ai/veo3.1/fast/image-to-video";
+/** KIE.ai VEO 3.1 Fast model identifier */
+export const VEO3_IMAGE_TO_VIDEO_MODEL = "veo3_fast";
 
-/** FAL VEO 3.1 Fast Text-to-Video model ID (for reference) */
-export const VEO3_TEXT_TO_VIDEO_MODEL = "fal-ai/veo3.1/fast";
+/** KIE.ai VEO 3.1 Quality model identifier (for reference) */
+export const VEO3_TEXT_TO_VIDEO_MODEL = "veo3";
 
 // ============================================================================
 // Types
@@ -57,34 +61,11 @@ export interface Veo3VideoResult {
 }
 
 // ============================================================================
-// FAL API Types
-// ============================================================================
-
-interface FalVeo3Input {
-  prompt: string;
-  image_url: string;
-  aspect_ratio?: Veo3AspectRatio;
-  duration?: Veo3Duration;
-  resolution?: Veo3Resolution;
-  generate_audio?: boolean;
-  auto_fix?: boolean;
-}
-
-interface FalVeo3Output {
-  video: {
-    url: string;
-    content_type?: string;
-    file_name?: string;
-    file_size?: number;
-  };
-}
-
-// ============================================================================
 // VEO 3.1 Video Generation
 // ============================================================================
 
 /**
- * Generate talking video using VEO 3.1 Fast Image-to-Video
+ * Generate talking video using VEO 3.1 Fast via KIE.ai
  * Takes an image and prompt, produces a video with generated speech and lip-sync
  *
  * @param input - Generation parameters
@@ -100,53 +81,37 @@ export async function generateVeo3Video(
       duration: input.duration,
       generateAudio: input.generateAudio,
     },
-    "Starting VEO 3.1 Fast video generation"
+    "Starting VEO 3.1 Fast video generation via KIE.ai"
   );
 
-  configureFalClient();
-
-  const falInput: FalVeo3Input = {
-    prompt: input.prompt,
-    image_url: input.imageUrl,
-    aspect_ratio: input.aspectRatio ?? "9:16",
-    duration: input.duration ?? "8s",
-    resolution: input.resolution ?? "720p",
-    generate_audio: input.generateAudio ?? true,
-    auto_fix: input.autoFix ?? true,
-  };
-
   try {
-    const result = await fal.subscribe(VEO3_IMAGE_TO_VIDEO_MODEL, {
-      input: falInput,
-      logs: true,
-      onQueueUpdate: (update) => {
-        logger.debug({ status: update.status }, "VEO 3.1 queue update");
-      },
+    // Convert aspect ratio to KIE.ai format
+    const aspectRatio = toKieAspectRatio(input.aspectRatio);
+
+    // Generate video using KIE.ai
+    const result = await generateVideo({
+      imageUrl: input.imageUrl,
+      prompt: input.prompt,
+      aspectRatio,
+      useQualityModel: false, // Use veo3_fast for cost efficiency
     });
 
-    const output = result.data as FalVeo3Output;
-
-    if (!output?.video?.url) {
-      throw new Error("VEO 3.1 did not return a video URL");
-    }
-
-    // Parse duration from the input setting
+    // Parse duration from the input setting (KIE.ai generates ~8s videos)
     const durationSeconds = parseInt(input.duration ?? "8s", 10);
 
     logger.info(
       {
-        videoUrl: output.video.url.substring(0, 50) + "...",
+        videoUrl: result.videoUrl.substring(0, 50) + "...",
+        taskId: result.taskId,
         duration: durationSeconds,
       },
-      "VEO 3.1 video generated successfully"
+      "VEO 3.1 video generated successfully via KIE.ai"
     );
 
     return {
-      videoUrl: output.video.url,
-      requestId: result.requestId,
+      videoUrl: result.videoUrl,
+      requestId: result.taskId,
       duration: durationSeconds,
-      contentType: output.video.content_type,
-      fileSize: output.video.file_size,
     };
   } catch (error) {
     logger.error({ error }, "VEO 3.1 video generation failed");
@@ -230,20 +195,16 @@ export function calculateOptimalDuration(
 }
 
 /**
- * Estimate cost for VEO 3.1 generation
- * Pricing: $0.10/sec (audio off), $0.15/sec (audio on)
+ * Estimate cost for VEO 3.1 generation via KIE.ai
+ * Pricing: $0.40/video (flat rate for veo3_fast)
  *
- * @param duration - Duration setting
- * @param withAudio - Whether audio is enabled
+ * @param _duration - Duration setting (unused - flat rate pricing)
  * @returns Estimated cost in USD
  */
-export function estimateVeo3Cost(
-  duration: Veo3Duration,
-  withAudio = true
-): number {
-  const seconds = parseInt(duration, 10);
-  const ratePerSecond = withAudio ? 0.15 : 0.1;
-  return seconds * ratePerSecond;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function estimateVeo3Cost(_duration: Veo3Duration): number {
+  // KIE.ai uses flat rate pricing: $0.40 per video for veo3_fast
+  return estimateKieCost(false);
 }
 
 /**
