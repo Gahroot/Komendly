@@ -87,6 +87,17 @@ export {
 } from "./video-stitcher";
 export type { StitchInput, StitchResult } from "./video-stitcher";
 
+// Silence Remover
+export {
+  removeSilence,
+  removeSilenceFromClips,
+} from "./silence-remover";
+export type {
+  SilenceRemovalOptions,
+  SilenceRemovalResult,
+  BatchSilenceRemovalResult,
+} from "./silence-remover";
+
 // Live Avatar (Higher Quality Alternative to SadTalker)
 export {
   LIVE_AVATAR_MODEL,

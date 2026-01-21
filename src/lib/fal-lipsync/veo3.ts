@@ -125,52 +125,46 @@ export async function generateVeo3Video(
 
 /**
  * Build a VEO 3.1 prompt for testimonial video generation
- * Includes speaking instructions and the actual testimonial text
+ *
+ * IMPORTANT: For REFERENCE_2_VIDEO mode, the prompt should NOT describe visual style.
+ * The reference image defines the appearance, pose, and setting.
+ * The prompt should ONLY describe what to say and voice characteristics.
  *
  * @param scriptContent - The testimonial text to be spoken
- * @param actorDescription - Description of the actor's appearance/style
- * @param actorGender - Gender of the actor
+ * @param _actorDescription - UNUSED - visual style comes from reference image
+ * @param actorGender - Gender of the actor (used for voice guidance)
  * @param voicePrompt - Detailed voice description for consistency across clips
  * @returns Formatted prompt for VEO 3.1
  */
 export function buildTestimonialPrompt(
   scriptContent: string,
-  actorDescription?: string,
+  _actorDescription?: string,
   actorGender?: "male" | "female",
   voicePrompt?: string
 ): string {
-  const genderTerm = actorGender === "female" ? "woman" : "man";
-  const description = actorDescription || "professional person";
-
   // Build voice consistency guidance - prioritize detailed voicePrompt for consistency
   const voiceGuidance = voicePrompt
     ? voicePrompt
     : `Natural, conversational ${actorGender === "female" ? "female" : "male"} voice, clear American English`;
 
-  // Build a strict prompt with explicit constraints for consistent video generation
-  // IMPORTANT: VEO sometimes adds captions/text - be extremely explicit about avoiding this
-  // IMPORTANT: Voice description is placed prominently to ensure consistency across clips
-  return `A ${description} (${genderTerm}) recording a selfie-style video testimonial on their phone. They speak directly to camera saying: "${scriptContent}"
+  // IMPORTANT: For REFERENCE_2_VIDEO mode, the prompt should NOT describe visual style
+  // The reference image defines the appearance, pose, and setting
+  // The prompt should ONLY describe what to say and voice characteristics
+  return `The person in the image speaks directly to camera, saying: "${scriptContent}"
 
 VOICE CHARACTER:
 ${voiceGuidance}
-Speak naturally and conversationally while maintaining this distinct voice character.
+Deliver the speech naturally and conversationally.
 
-ZERO TOLERANCE - CLEAN VIDEO ONLY:
-- Avoid any captions, subtitles, or text overlays
+CRITICAL REQUIREMENTS:
+- The person maintains their current pose and setting from the reference image
+- Avoid any captions, subtitles, or text overlays on screen
 - Avoid any words, letters, or characters appearing on screen
-- Avoid lower thirds, titles, watermarks, or graphics
-- The frame contains ONLY the person speaking against their background - nothing else
-- This is a raw, unedited phone video with absolutely zero post-production text added
+- Single continuous shot, no cuts or transitions
+- Start speaking immediately from the first frame
+- Lip movements match the spoken words naturally
 
-VIDEO STYLE:
-- Authentic iPhone selfie video, vertical 9:16 format
-- Natural indoor lighting, slightly imperfect framing (real UGC feel)
-- Person fills most of the frame, eye contact with camera
-- Single continuous shot, avoid cuts or transitions
-- Starts speaking immediately from first frame
-
-The person delivers the testimonial naturally and conversationally, like sharing a genuine recommendation with a friend.`;
+The person delivers the testimonial naturally, like sharing a genuine recommendation.`;
 }
 
 /**

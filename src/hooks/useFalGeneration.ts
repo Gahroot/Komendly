@@ -94,16 +94,27 @@ export function useFalGeneration() {
 
       const data = await response.json();
 
+      // Debug logging
+      console.log("[FAL Poll] Status response:", {
+        status: data.status,
+        mappedStatus: mapStatus(data.status),
+        currentClip: data.currentClip,
+        totalClips: data.totalClips,
+        progress: data.progress,
+        finalVideoUrl: data.finalVideoUrl?.substring(0, 50),
+      });
+
       setState((prev) => ({
         ...prev,
         status: mapStatus(data.status),
-        progress: data.progress || prev.progress,
-        currentClip: data.currentClip || prev.currentClip,
-        totalClips: data.totalClips || prev.totalClips,
-        clips: data.clips || prev.clips,
-        finalVideoUrl: data.finalVideoUrl || prev.finalVideoUrl,
-        thumbnailUrl: data.thumbnailUrl || prev.thumbnailUrl,
-        error: data.error || null,
+        // Use nullish coalescing (??) to handle 0 values correctly
+        progress: data.progress ?? prev.progress,
+        currentClip: data.currentClip ?? prev.currentClip,
+        totalClips: data.totalClips ?? prev.totalClips,
+        clips: data.clips ?? prev.clips,
+        finalVideoUrl: data.finalVideoUrl ?? prev.finalVideoUrl,
+        thumbnailUrl: data.thumbnailUrl ?? prev.thumbnailUrl,
+        error: data.error ?? null,
       }));
 
       // Stop polling when complete or failed

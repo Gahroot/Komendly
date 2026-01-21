@@ -58,6 +58,34 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Actor not found" }, { status: 404 });
     }
 
+    // Check for existing in-progress video for this review (deduplication)
+    const existingVideo = await prisma.falCompositeVideo.findFirst({
+      where: {
+        reviewId: review.id,
+        userId: user.id,
+        status: {
+          in: ["pending", "generating_clips", "stitching"],
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (existingVideo) {
+      logger.info(
+        { existingVideoId: existingVideo.id, reviewId: review.id },
+        "Found existing in-progress video, returning instead of creating duplicate"
+      );
+
+      const response: FalGenerateStartResponse = {
+        success: true,
+        compositeVideoId: existingVideo.id,
+        status: existingVideo.status as "pending" | "generating_clips" | "stitching",
+        estimatedTime: (existingVideo.totalClips - existingVideo.currentClip) * 60,
+      };
+
+      return NextResponse.json(response);
+    }
+
     // Generate or use custom script
     let fullScript: string;
 

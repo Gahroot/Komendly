@@ -13,6 +13,7 @@ import * as os from "os";
 import { fal } from "@fal-ai/client";
 import { logger } from "@/lib/logger";
 import { configureFalClient } from "./sadtalker";
+import { removeSilenceFromClips } from "./silence-remover";
 import type { AspectRatio } from "./video-editor/types";
 
 // ============================================================================
@@ -211,16 +212,30 @@ export async function stitchVideos(input: StitchInput): Promise<StitchResult> {
       localPaths.push(localPath);
     }
 
-    // Step 2: Write file list for concat demuxer
+    // Step 2: Trim clips to speech boundaries (removes dead air at start/end)
+    // Uses silencedetect to find where speech actually ends, even with background noise
+    // -20dB threshold catches the background noise/silence after speech ends
+    logger.info({ clipCount: localPaths.length }, "Trimming clips to speech boundaries");
+    const { processedPaths, totalSilenceRemoved } = await removeSilenceFromClips(
+      localPaths,
+      tempDir,
+      { startThreshold: -20, stopThreshold: -20, minSilenceDuration: 0.3, endBuffer: 0.15 }
+    );
+    logger.info(
+      { totalSilenceRemoved: totalSilenceRemoved.toFixed(2) },
+      "Silence removal completed"
+    );
+
+    // Step 3: Write file list for concat demuxer (using processed paths)
     const fileListPath = path.join(tempDir, "filelist.txt");
-    const fileListContent = localPaths
+    const fileListContent = processedPaths
       .map((p) => `file '${p.replace(/'/g, "'\\''")}'`)
       .join("\n");
     fs.writeFileSync(fileListPath, fileListContent, "utf8");
 
-    logger.debug({ fileListPath, clipCount: localPaths.length }, "Created concat file list");
+    logger.debug({ fileListPath, clipCount: processedPaths.length }, "Created concat file list");
 
-    // Step 3: Generate output path and build FFmpeg command
+    // Step 4: Generate output path and build FFmpeg command
     const outputPath = path.join(tempDir, "output.mp4");
     const { width, height } = getResolutionForAspect(aspectRatio);
 
@@ -259,7 +274,7 @@ export async function stitchVideos(input: StitchInput): Promise<StitchResult> {
     const stats = fs.statSync(outputPath);
     logger.info({ outputSize: stats.size }, "FFmpeg produced output file");
 
-    // Step 4: Upload to FAL storage
+    // Step 5: Upload to FAL storage
     const finalVideoUrl = await uploadVideoToFal(outputPath);
 
     // Calculate total duration from clips
