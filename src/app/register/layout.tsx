@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Sign Up Free | Komendly",
+  title: "Sign up free",
+  robots: { index: false, follow: true },
   description: "Create your free Komendly account and start creating AI-powered video testimonials in minutes. No credit card required.",
   openGraph: {
     title: "Sign Up Free | Komendly",

@@ -11,7 +11,7 @@ import { AdsUrlForm } from "@/components/ads/ads-url-form";
 import { StudioOzzySlot } from "@/components/studio/studio-ozzy-slot";
 import { DeviceCookie } from "@/components/ads/device-cookie";
 
-export const metadata = { title: "Home | Komendly Ads" };
+export const metadata = { title: "Home", robots: { index: false, follow: false } };
 
 export default async function AdsAppPage() {
   if (!(await getCurrentUser())) redirect(`/ads/login?next=${encodeURIComponent("/ads/app")}`);

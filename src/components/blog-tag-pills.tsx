@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import { tagSlug } from '@/lib/blog'
 
-/** Tag filter pills for the blog (studio .spell-chip look). `active` is the lowercased tag, or null for all posts. */
+/** Tag filter pills for the blog (studio .spell-chip look). `active` is the tag slug, or null for all posts. */
 export function BlogTagPills({ tags, active }: { tags: string[]; active: string | null }) {
   const cls = 'spell-chip rounded-full px-3 py-1.5 text-sm font-medium'
   return (
@@ -11,10 +12,10 @@ export function BlogTagPills({ tags, active }: { tags: string[]; active: string 
       {tags.map((tag) => (
         <Link
           key={tag}
-          href={`/blog/tag/${tag.toLowerCase()}`}
+          href={`/blog/tag/${tagSlug(tag)}`}
           className={cls}
           role="radio"
-          aria-checked={active === tag.toLowerCase()}
+          aria-checked={active === tagSlug(tag)}
         >
           {tag}
         </Link>

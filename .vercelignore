@@ -1,5 +1,7 @@
 # Website2ads: the engine deploys to Railway, not Vercel
 engine
+# Blog engine: separate Railway service
+blog-engine
 **/__tests__
 **/*.test.ts
 **/*.test.tsx

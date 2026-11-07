@@ -52,7 +52,7 @@ const nextConfig: NextConfig = {
       },
       {
         // Public marketing pages only: never cache API, account or admin responses
-        source: "/((?!api|ads|admin|dashboard|checkout|login|register|ozzy-lab|_next).+)",
+        source: "/((?!api|ads|admin|dashboard|checkout|login|register|ozzy-lab|verify-email|test-video|_next).+)",
         headers: [
           {
             key: "Cache-Control",
@@ -73,6 +73,23 @@ const nextConfig: NextConfig = {
             value: "private, no-store",
           },
         ],
+      },
+      {
+        // Private/transactional pages: never indexed, even if linked (robots.txt also disallows the private ones)
+        source: "/:area(admin|dashboard|checkout|test-video|ozzy-lab|verify-email|login|register)/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/:area(admin|dashboard|checkout|test-video|ozzy-lab|verify-email|login|register)",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/ads/:area(app|billing|brands|runs|start|login|signup)/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/ads/:area(app|billing|brands|runs|start|login|signup)",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
         source: "/static/:path*",

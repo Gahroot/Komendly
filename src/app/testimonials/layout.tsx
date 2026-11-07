@@ -147,14 +147,6 @@ const jsonLd = {
       publisher: {
         "@id": `${siteConfig.url}/#organization`,
       },
-      potentialAction: {
-        "@type": "SearchAction",
-        target: {
-          "@type": "EntryPoint",
-          urlTemplate: `${siteConfig.url}/dashboard/videos?search={search_term_string}`,
-        },
-        "query-input": "required name=search_term_string",
-      },
     },
     {
       "@type": "FAQPage",
@@ -206,13 +198,6 @@ const jsonLd = {
         price: "0",
         priceCurrency: "USD",
         description: "Free plan available",
-      },
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "4.9",
-        ratingCount: "127",
-        bestRating: "5",
-        worstRating: "1",
       },
     },
   ],

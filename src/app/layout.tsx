@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { resolveAuthor } from "@/lib/authors";
+import { graph, jsonLdString, organizationJsonLd, websiteJsonLd } from "@/lib/seo/jsonld";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -75,27 +77,7 @@ export const metadata: Metadata = {
 };
 
 // Site-wide JSON-LD. Product-specific data lives on its page (/ and /testimonials).
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Organization",
-      "@id": `${siteConfig.url}/#organization`,
-      name: siteConfig.name,
-      url: siteConfig.url,
-      logo: { "@type": "ImageObject", url: `${siteConfig.url}/brand/icon-512.png` },
-      sameAs: [],
-    },
-    {
-      "@type": "WebSite",
-      "@id": `${siteConfig.url}/#website`,
-      url: siteConfig.url,
-      name: siteConfig.name,
-      description: siteConfig.description,
-      publisher: { "@id": `${siteConfig.url}/#organization` },
-    },
-  ],
-};
+const jsonLd = graph(organizationJsonLd(resolveAuthor(null)), websiteJsonLd(siteConfig.description));
 
 export default function RootLayout({
   children,
@@ -139,7 +121,7 @@ export default function RootLayout({
         </Script>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdString(jsonLd) }}
         />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>

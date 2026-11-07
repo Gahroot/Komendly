@@ -1,0 +1,611 @@
+[
+  {
+    "name": "AdCreative.ai",
+    "slug": "adcreative-ai",
+    "url": "https://www.adcreative.ai",
+    "category": "AI ad creative generator",
+    "pricing": [
+      {
+        "plan": "Starter",
+        "price": "$39",
+        "period": "month",
+        "notes": "10 credits per 3rd-party reports; one source says 20 credits (conflict)"
+      },
+      {
+        "plan": "Professional",
+        "price": "$249",
+        "period": "month",
+        "notes": "video + creative scoring (3rd-party)"
+      },
+      {
+        "plan": "Ultimate",
+        "price": "$999",
+        "period": "month",
+        "notes": "3rd-party"
+      },
+      {
+        "plan": "Enterprise",
+        "price": "custom",
+        "period": "",
+        "notes": ""
+      }
+    ],
+    "free_trial": "Free trial offered (terms not verified)",
+    "key_features": [
+      "AI static ad creatives",
+      "Creative scoring",
+      "Text/headline generation",
+      "Product photoshoots",
+      "Video ads on higher plans"
+    ],
+    "best_for": "Teams wanting high-volume static variations with scoring",
+    "weaknesses": "Billing/cancellation complaints are the most common negative in reviews; video only on the $249 plan (3rd-party)",
+    "sources": [
+      {
+        "title": "AdCreative.ai review",
+        "url": "https://adroast.ai/blog/adcreative-ai-review",
+        "accessed": "2026-11-07"
+      },
+      {
+        "title": "AdCreative review",
+        "url": "https://zeely.ai/blog/adcreative-review",
+        "accessed": "2026-11-07"
+      },
+      {
+        "title": "AdCreative.ai pricing (official, JS-rendered)",
+        "url": "https://www.adcreative.ai/pricing",
+        "accessed": "2026-11-07"
+      }
+    ],
+    "pricing_verified_official": false,
+    "note": "Seed only. The engine must re-check prices on the official pricing page at draft time and phrase them 'as of <Month YYYY>'. If the official page doesn't show a price, say it isn't published."
+  },
+  {
+    "name": "Creatify",
+    "slug": "creatify",
+    "url": "https://creatify.ai",
+    "category": "AI video/UGC ad generator",
+    "pricing": [
+      {
+        "plan": "Free",
+        "price": "$0",
+        "period": "month",
+        "notes": "10 credits, watermark"
+      },
+      {
+        "plan": "Standard",
+        "price": "$15",
+        "period": "month",
+        "notes": "$10/mo yearly"
+      },
+      {
+        "plan": "Pro",
+        "price": "$55",
+        "period": "month",
+        "notes": "$38/mo yearly"
+      },
+      {
+        "plan": "Max",
+        "price": "$95",
+        "period": "month",
+        "notes": "$66/mo yearly"
+      },
+      {
+        "plan": "Business",
+        "price": "$195",
+        "period": "month",
+        "notes": "$136/mo yearly"
+      }
+    ],
+    "free_trial": "Free plan",
+    "key_features": [
+      "URL-to-video ads",
+      "AI avatars",
+      "Ad agent",
+      "Competitor tracker (Pro+)",
+      "Ad clone (Pro+)"
+    ],
+    "best_for": "Video-first UGC-style ads with AI avatars",
+    "weaknesses": "Advanced features (ad agent, competitor tracker, ad clone) start at Pro",
+    "sources": [
+      {
+        "title": "Creatify pricing",
+        "url": "https://creatify.ai/pricing",
+        "accessed": "2026-11-07"
+      },
+      {
+        "title": "Creatify review",
+        "url": "https://madgicx.com/blog/creatify-review",
+        "accessed": "2026-11-07"
+      }
+    ],
+    "pricing_verified_official": true,
+    "note": "Seed only. The engine must re-check prices on the official pricing page at draft time and phrase them 'as of <Month YYYY>'. If the official page doesn't show a price, say it isn't published."
+  },
+  {
+    "name": "Predis.ai",
+    "slug": "predis-ai",
+    "url": "https://predis.ai",
+    "category": "AI social posts and ads",
+    "pricing": [
+      {
+        "plan": "Enterprise+",
+        "price": "$249",
+        "period": "month",
+        "notes": "$212/mo yearly; seen on official page"
+      },
+      {
+        "plan": "Core",
+        "price": "$32",
+        "period": "month",
+        "notes": "3rd-party, unverified"
+      },
+      {
+        "plan": "Rise",
+        "price": "$79",
+        "period": "month",
+        "notes": "3rd-party, unverified"
+      }
+    ],
+    "free_trial": "3-day free trial",
+    "key_features": [
+      "Social posts and ad creatives",
+      "Carousels and short videos",
+      "Scheduling",
+      "Competitor analysis"
+    ],
+    "best_for": "Social media managers who want posts + ads + scheduling in one tool",
+    "weaknesses": "AI output often needs manual editing to feel less generic (reviews)",
+    "sources": [
+      {
+        "title": "Predis.ai pricing",
+        "url": "https://predis.ai/pricing",
+        "accessed": "2026-11-07"
+      }
+    ],
+    "pricing_verified_official": false,
+    "note": "Seed only. The engine must re-check prices on the official pricing page at draft time and phrase them 'as of <Month YYYY>'. If the official page doesn't show a price, say it isn't published."
+  },
+  {
+    "name": "Pencil",
+    "slug": "pencil",
+    "url": "https://www.trypencil.com",
+    "category": "AI ad creative generator",
+    "pricing": [
+      {
+        "plan": "Core",
+        "price": "$14",
+        "period": "month",
+        "notes": "3rd-party, unverified"
+      },
+      {
+        "plan": "Growth",
+        "price": "$55",
+        "period": "month",
+        "notes": "3rd-party, unverified"
+      },
+      {
+        "plan": "Pro",
+        "price": "custom",
+        "period": "",
+        "notes": ""
+      }
+    ],
+    "free_trial": "No free tier advertised",
+    "key_features": [
+      "Generative ads",
+      "Brand kit",
+      "Performance predictions",
+      "Multi-format variations"
+    ],
+    "best_for": "Brands testing many generative variations",
+    "weaknesses": "Prices not readable on official page by our tools; verify",
+    "sources": [
+      {
+        "title": "Pencil alternatives/pricing",
+        "url": "https://www.superscale.ai",
+        "accessed": "2026-11-07"
+      },
+      {
+        "title": "Pencil pricing",
+        "url": "https://soku.ai",
+        "accessed": "2026-11-07"
+      }
+    ],
+    "pricing_verified_official": false,
+    "note": "Seed only. The engine must re-check prices on the official pricing page at draft time and phrase them 'as of <Month YYYY>'. If the official page doesn't show a price, say it isn't published."
+  },
+  {
+    "name": "Canva (Magic Studio)",
+    "slug": "canva",
+    "url": "https://www.canva.com",
+    "category": "Design platform with AI ad tools",
+    "pricing": [
+      {
+        "plan": "Pro",
+        "price": "$18",
+        "period": "month",
+        "notes": "yearly price reported as $144 or $180 (sources disagree)"
+      },
+      {
+        "plan": "Business",
+        "price": "$25",
+        "period": "per user / month",
+        "notes": "3rd-party"
+      }
+    ],
+    "free_trial": "30-day Pro trial",
+    "key_features": [
+      "Templates",
+      "Magic Studio AI design",
+      "Brand kit",
+      "Resize to every ad size",
+      "Team collaboration"
+    ],
+    "best_for": "DIY designers who want full manual control",
+    "weaknesses": "You design every ad yourself; no website-to-ad strategy or awareness-stage planning",
+    "sources": [
+      {
+        "title": "Canva pricing",
+        "url": "https://www.canva.com/pricing/",
+        "accessed": "2026-11-07"
+      },
+      {
+        "title": "Canva pricing analysis",
+        "url": "https://socialrails.com",
+        "accessed": "2026-11-07"
+      },
+      {
+        "title": "Canva pricing",
+        "url": "https://moda.app",
+        "accessed": "2026-11-07"
+      }
+    ],
+    "pricing_verified_official": false,
+    "note": "Seed only. The engine must re-check prices on the official pricing page at draft time and phrase them 'as of <Month YYYY>'. If the official page doesn't show a price, say it isn't published."
+  },
+  {
+    "name": "Arcads",
+    "slug": "arcads",
+    "url": "https://www.arcads.ai",
+    "category": "AI UGC video ads (AI actors)",
+    "pricing": [
+      {
+        "plan": "Starter",
+        "price": "~$110",
+        "period": "month",
+        "notes": "reported, not published"
+      },
+      {
+        "plan": "Creator",
+        "price": "~$220",
+        "period": "month",
+        "notes": "reported, not published"
+      },
+      {
+        "plan": "Pro",
+        "price": "custom",
+        "period": "",
+        "notes": ""
+      }
+    ],
+    "free_trial": "Homepage says 'Free trial available'; no free plan reported",
+    "key_features": [
+      "AI actors / UGC talking-head videos",
+      "Script-to-video",
+      "Many languages"
+    ],
+    "best_for": "Performance marketers who want AI UGC talking-head ads",
+    "weaknesses": "Pricing not published; outputs raw talking-head clips that still need editing",
+    "sources": [
+      {
+        "title": "Arcads",
+        "url": "https://www.arcads.ai",
+        "accessed": "2026-11-07"
+      },
+      {
+        "title": "Arcads pricing report",
+        "url": "https://ugcvids.ai",
+        "accessed": "2026-11-07"
+      },
+      {
+        "title": "Arcads pricing report",
+        "url": "https://usefastlane.ai",
+        "accessed": "2026-11-07"
+      }
+    ],
+    "pricing_verified_official": false,
+    "note": "Seed only. The engine must re-check prices on the official pricing page at draft time and phrase them 'as of <Month YYYY>'. If the official page doesn't show a price, say it isn't published."
+  },
+  {
+    "name": "Icon",
+    "slug": "icon",
+    "url": "https://icon.me",
+    "category": "Done-for-you UGC ads service + AI tools",
+    "pricing": [
+      {
+        "plan": "Done-for-you",
+        "price": "$1,000",
+        "period": "month",
+        "notes": "6 human-made UGC ads"
+      },
+      {
+        "plan": "Creative Director / white-label",
+        "price": "custom",
+        "period": "",
+        "notes": ""
+      }
+    ],
+    "free_trial": "$0 for 3 days",
+    "key_features": [
+      "Human-made UGC ads",
+      "AI creative tools",
+      "White-label for agencies"
+    ],
+    "best_for": "Brands that want human UGC made for them",
+    "weaknesses": "Adjacent (service) rather than a self-serve generator; high price for SMBs",
+    "sources": [
+      {
+        "title": "Icon pricing",
+        "url": "https://icon.me/pricing",
+        "accessed": "2026-11-07"
+      }
+    ],
+    "pricing_verified_official": true,
+    "note": "Seed only. The engine must re-check prices on the official pricing page at draft time and phrase them 'as of <Month YYYY>'. If the official page doesn't show a price, say it isn't published."
+  },
+  {
+    "name": "Quickads",
+    "slug": "quickads",
+    "url": "https://www.quickads.ai",
+    "category": "AI ad creation + publishing",
+    "pricing": [
+      {
+        "plan": "Trial",
+        "price": "$1",
+        "period": "",
+        "notes": ""
+      },
+      {
+        "plan": "Software",
+        "price": "$199",
+        "period": "month",
+        "notes": ""
+      },
+      {
+        "plan": "Software + AI agents & publishing",
+        "price": "$299",
+        "period": "month",
+        "notes": ""
+      },
+      {
+        "plan": "Managed",
+        "price": "custom",
+        "period": "",
+        "notes": ""
+      }
+    ],
+    "free_trial": "$1 trial",
+    "key_features": [
+      "Ad creation",
+      "Ad inspiration library",
+      "AI agents",
+      "Publishing",
+      "Managed service"
+    ],
+    "best_for": "Teams that want software plus an optional managed service",
+    "weaknesses": "Higher entry price than self-serve tools",
+    "sources": [
+      {
+        "title": "Quickads pricing",
+        "url": "https://www.quickads.ai/pricing",
+        "accessed": "2026-11-07"
+      }
+    ],
+    "pricing_verified_official": true,
+    "note": "Seed only. The engine must re-check prices on the official pricing page at draft time and phrase them 'as of <Month YYYY>'. If the official page doesn't show a price, say it isn't published."
+  },
+  {
+    "name": "Pippit (by CapCut)",
+    "slug": "pippit",
+    "url": "https://www.pippit.ai",
+    "category": "AI video/marketing content (CapCut)",
+    "pricing": [
+      {
+        "plan": "Free",
+        "price": "$0",
+        "period": "",
+        "notes": "daily credits, no card"
+      },
+      {
+        "plan": "Starter",
+        "price": "$101",
+        "period": "year",
+        "notes": ""
+      },
+      {
+        "plan": "Plus",
+        "price": "$246",
+        "period": "year",
+        "notes": ""
+      },
+      {
+        "plan": "Pro",
+        "price": "$2,196",
+        "period": "year",
+        "notes": ""
+      }
+    ],
+    "free_trial": "Free plan",
+    "key_features": [
+      "Product-link-to-video",
+      "AI avatars",
+      "Templates",
+      "CapCut editing"
+    ],
+    "best_for": "Short-form video for ecommerce on a budget",
+    "weaknesses": "Video-first; static ad sets and awareness-stage planning are not its focus",
+    "sources": [
+      {
+        "title": "Pippit pricing",
+        "url": "https://www.pippit.ai/pricing",
+        "accessed": "2026-11-07"
+      }
+    ],
+    "pricing_verified_official": true,
+    "note": "Seed only. The engine must re-check prices on the official pricing page at draft time and phrase them 'as of <Month YYYY>'. If the official page doesn't show a price, say it isn't published."
+  },
+  {
+    "name": "Omneky",
+    "slug": "omneky",
+    "url": "https://www.omneky.com",
+    "category": "AI ad generation + analytics",
+    "pricing": [
+      {
+        "plan": "Lite",
+        "price": "$29",
+        "period": "month",
+        "notes": "$24/mo yearly"
+      },
+      {
+        "plan": "Standard",
+        "price": "$99",
+        "period": "month",
+        "notes": "$79/mo yearly"
+      },
+      {
+        "plan": "Pro",
+        "price": "$249",
+        "period": "month",
+        "notes": "$199/mo yearly"
+      },
+      {
+        "plan": "Enterprise",
+        "price": "custom",
+        "period": "",
+        "notes": ""
+      }
+    ],
+    "free_trial": "7-day trial (3rd-party)",
+    "key_features": [
+      "Generative ads",
+      "Creative analytics",
+      "Multi-channel launch"
+    ],
+    "best_for": "Teams wanting creative generation tied to analytics",
+    "weaknesses": "Official pricing page returned 404; prices from 3rd parties",
+    "sources": [
+      {
+        "title": "Omneky pricing",
+        "url": "https://www.adbot.ai/blog/omneky-pricing",
+        "accessed": "2026-11-07"
+      },
+      {
+        "title": "Omneky on Capterra",
+        "url": "https://www.capterra.com/p/10039324/",
+        "accessed": "2026-11-07"
+      }
+    ],
+    "pricing_verified_official": false,
+    "note": "Seed only. The engine must re-check prices on the official pricing page at draft time and phrase them 'as of <Month YYYY>'. If the official page doesn't show a price, say it isn't published."
+  },
+  {
+    "name": "AdsGPT",
+    "slug": "adsgpt",
+    "url": "https://adsgpt.io",
+    "category": "AI ad copy + creative generator",
+    "pricing": [
+      {
+        "plan": "Free",
+        "price": "$0",
+        "period": "",
+        "notes": "35 creatives, no card"
+      },
+      {
+        "plan": "Starter",
+        "price": "$24",
+        "period": "month",
+        "notes": ""
+      },
+      {
+        "plan": "Individual",
+        "price": "$52",
+        "period": "month",
+        "notes": ""
+      },
+      {
+        "plan": "Creator",
+        "price": "$99",
+        "period": "month",
+        "notes": ""
+      },
+      {
+        "plan": "Growth",
+        "price": "$199",
+        "period": "month",
+        "notes": ""
+      },
+      {
+        "plan": "Scale",
+        "price": "$299",
+        "period": "month",
+        "notes": ""
+      }
+    ],
+    "free_trial": "Free plan",
+    "key_features": [
+      "Ad copy",
+      "Ad creatives",
+      "Ad mockups",
+      "Competitor ad analysis"
+    ],
+    "best_for": "Budget users who mostly need ad copy and mockups",
+    "weaknesses": "Paid tiers via Capterra listing; verify on official page",
+    "sources": [
+      {
+        "title": "AdsGPT pricing",
+        "url": "https://adsgpt.io/pricing",
+        "accessed": "2026-11-07"
+      },
+      {
+        "title": "AdsGPT on Capterra",
+        "url": "https://www.capterra.com/p/10041539/AdsGpt/",
+        "accessed": "2026-11-07"
+      }
+    ],
+    "pricing_verified_official": false,
+    "note": "Seed only. The engine must re-check prices on the official pricing page at draft time and phrase them 'as of <Month YYYY>'. If the official page doesn't show a price, say it isn't published."
+  },
+  {
+    "name": "Smartly",
+    "slug": "smartly",
+    "url": "https://www.smartly.io",
+    "category": "Enterprise ad automation platform",
+    "pricing": [
+      {
+        "plan": "Enterprise",
+        "price": "not published",
+        "period": "",
+        "notes": "reported as % of ad spend with ~$4-5k/mo minimums"
+      }
+    ],
+    "free_trial": "No free trial reported",
+    "key_features": [
+      "Cross-channel ad automation",
+      "Dynamic creative templates",
+      "Media buying automation",
+      "Enterprise reporting"
+    ],
+    "best_for": "Large advertisers with big budgets",
+    "weaknesses": "Priced out of reach for small businesses",
+    "sources": [
+      {
+        "title": "Smartly alternatives",
+        "url": "https://www.superscale.ai/alternatives/smartly",
+        "accessed": "2026-11-07"
+      }
+    ],
+    "pricing_verified_official": false,
+    "note": "Seed only. The engine must re-check prices on the official pricing page at draft time and phrase them 'as of <Month YYYY>'. If the official page doesn't show a price, say it isn't published."
+  }
+]

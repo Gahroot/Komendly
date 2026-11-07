@@ -1,0 +1,17 @@
+{
+  "name": "komendly-blog-engine",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "dependencies": {
+    "pg": "^8.13.1",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "pg-mem": "^3.0.5"
+  }
+}

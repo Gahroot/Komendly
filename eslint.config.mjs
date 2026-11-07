@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Separate packages with their own tooling.
     "engine/**",
+    "blog-engine/**",
   ]),
   {
     rules: {

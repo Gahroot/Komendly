@@ -9,6 +9,8 @@ import "@/components/studio/studio.css";
 export default function BlogLayout({ children }: { children: React.ReactNode }) {
   return (
     <StudioRoot className={`${fraunces.variable} studio-app relative isolate min-h-screen`}>
+      {/* React 19 hoists this into <head>; done here (not metadata.alternates) so page canonicals don't drop it. */}
+      <link rel="alternate" type="application/rss+xml" title="Komendly Journal RSS" href="/blog/feed.xml" />
       <StudioBackdrop />
       <StudioNav signedIn={false} />
       {children}

@@ -15,7 +15,7 @@ import { prisma } from "@/lib/prisma";
 import { BillingActionButton } from "./_components/billing-action-button";
 import { CheckoutReturnTracker } from "@/components/analytics/checkout-return-tracker";
 
-export const metadata: Metadata = { title: "Plan & billing | Website to Ads" };
+export const metadata: Metadata = { title: "Plan & billing", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 const REASON_LABELS: Record<string, string> = {

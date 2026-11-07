@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { AdsNav } from "@/components/ads/ads-nav";
 import { StartRunRunner } from "@/components/ads/start-run-runner";
 
-export const metadata = { title: "Starting your ads | Komendly Ads" };
+export const metadata = { title: "Starting your ads", robots: { index: false, follow: false } };
 
 export default async function AdsStartPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   if (!(await getCurrentUser())) {
