@@ -1,5 +1,4 @@
 import { Check } from "lucide-react";
-import { StudioFloatingAds } from "./studio-floating-ads";
 import { StudioParallax } from "./studio-parallax";
 import { StudioSky } from "./studio-sky";
 import { StudioUrlForm } from "./studio-url-form";
@@ -7,13 +6,13 @@ import { StudioUrlForm } from "./studio-url-form";
 const COPY = {
   control: {
     title: (
-      <>Your website in. <em className="not-italic text-[var(--studio-gold)]">Ready&#8209;to&#8209;run ads</em> out.</>
+      <>Your website in, <em className="not-italic text-[var(--studio-gold)]">ready&#8209;to&#8209;run ads</em> out</>
     ),
     sub: "Ozzy reads your site like a strategist, finds your audience, offer and the pains your customers talk about, then builds on-brand ads for every stage of awareness.",
   },
   companion: {
     title: (
-      <>Meet Ozzy. He turns your website into <em className="italic text-[var(--studio-gold)]">ads that sell</em>.</>
+      <>Meet Ozzy, the wizard who turns your website into <em className="italic text-[var(--studio-gold)]">ads that sell</em></>
     ),
     sub: "Paste your link and your little ad wizard gets to work: audience, offer, customer pains, brand kit, then on-brand ads for every stage of awareness.",
   },
@@ -27,7 +26,6 @@ export function StudioHero({ signedIn, variant }: { signedIn: boolean; variant: 
       <StudioParallax className="absolute inset-0">
         <StudioSky />
         <div className="studio-beam" aria-hidden />
-        <StudioFloatingAds />
         <div className="studio-grain" aria-hidden />
       </StudioParallax>
       <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center px-4 pt-24 text-center sm:px-6 sm:pt-32">

@@ -8,7 +8,8 @@ const SIGNED_IN: AdsNavLink[] = [
   { href: "/ads/billing", label: "Billing" },
 ];
 const SIGNED_OUT: AdsNavLink[] = [
-  { href: "/ads/billing", label: "Pricing" },
+  { href: "/ads/pricing", label: "Pricing" },
+  { href: "/blog", label: "Blog" },
   { href: "/ads/login", label: "Sign in" },
 ];
 const TRY: AdsNavLink = { href: "/ads/signup", label: "Try free" };
@@ -27,7 +28,7 @@ export function AdsNav({ signedIn }: { signedIn: boolean }) {
             {links.map((l) => <Button key={l.href} asChild variant="ghost" size="sm"><Link href={l.href}>{l.label}</Link></Button>)}
           </div>
           {!signedIn && <Button asChild size="sm" className="ml-1"><Link href={TRY.href}>{TRY.label}</Link></Button>}
-          <AdsMobileMenu links={links} />
+          <AdsMobileMenu links={links} cta={signedIn ? undefined : { href: "/ads/signup", label: "Make my free ads" }} />
         </div>
       </nav>
     </header>

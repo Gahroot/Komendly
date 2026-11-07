@@ -18,7 +18,7 @@ export function StudioGallery() {
     <section id="examples" className="relative mx-auto max-w-6xl scroll-mt-8 px-4 py-20 sm:px-6 md:py-28" aria-labelledby="gallery-title">
       <div className="max-w-xl space-y-3">
         <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">Real output</p>
-        <h2 id="gallery-title" className="font-display text-4xl font-medium tracking-[-0.02em] sm:text-5xl">Ads that sound like your customers.</h2>
+        <h2 id="gallery-title" className="font-display text-4xl font-medium tracking-[-0.02em] sm:text-5xl">Ads that sound like your customers</h2>
         <p className="text-muted-foreground">Made from real websites. Every ad targets a different stage of buyer awareness.</p>
       </div>
       <div className="mt-12 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 md:gap-x-7">

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { MailCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,18 +19,18 @@ export function VerifyEmailNotice({ email, onContinue }: { email?: string; onCon
   }
 
   return (
-    <Card className="w-full max-w-md bg-card/70 backdrop-blur">
-      <CardHeader>
-        <MailCheck className="size-6 text-muted-foreground" />
-        <CardTitle>Confirm your email to unlock your free ads</CardTitle>
-        <CardDescription>
-          We sent a link to {email ?? "your inbox"}. Click it, then come back here. Your website is saved.
+    <Card className="w-full pt-8 text-center">
+      <CardHeader className="space-y-2">
+        <CardTitle className="text-2xl">Check your inbox</CardTitle>
+        <CardDescription className="text-base">
+          Ozzy sent a magic link to {email ?? "your email"}. Click it to unlock your free ads, then come back here. Your website is saved.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 sm:flex-row">
-        <Button onClick={onContinue}>I&apos;ve confirmed it</Button>
-        <Button variant="outline" onClick={resend} disabled={sending}>Resend email</Button>
+        <Button size="lg" className="sm:flex-1" onClick={onContinue}>I&apos;ve confirmed it</Button>
+        <Button size="lg" variant="outline" className="sm:flex-1" onClick={resend} disabled={sending}>{sending ? "Sending…" : "Resend email"}</Button>
       </CardContent>
+      <p className="px-6 pb-2 text-xs text-muted-foreground">Can&apos;t find it? Check spam or promotions.</p>
     </Card>
   );
 }

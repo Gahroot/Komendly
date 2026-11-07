@@ -1,14 +1,20 @@
 import { Suspense } from "react";
+import { AdsNav } from "@/components/ads/ads-nav";
 import { VerifyEmailConfirm } from "@/components/ads/verify-email-confirm";
+import { getCurrentUser } from "@/lib/auth";
 
-export const metadata = { title: "Confirm your email | Komendly" };
+export const metadata = { title: "Confirm your email", robots: { index: false } };
 
-export default function VerifyEmailPage() {
+export default async function VerifyEmailPage() {
+  const signedIn = Boolean(await getCurrentUser());
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
-      <Suspense>
-        <VerifyEmailConfirm />
-      </Suspense>
-    </main>
+    <div className="min-h-screen">
+      <AdsNav signedIn={signedIn} />
+      <main className="flex justify-center px-4 py-16 sm:py-24">
+        <Suspense>
+          <VerifyEmailConfirm />
+        </Suspense>
+      </main>
+    </div>
   );
 }

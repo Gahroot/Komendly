@@ -22,6 +22,7 @@ describe("sdf rasterize", () => {
   it("renders a frame in under 5ms on average", () => {
     sdfFrame(INITIAL_OZZY, 0, false, false);
     const n = 30;
+    sdfFrame(INITIAL_OZZY, 0, false, false); // warm-up: parts are built lazily on first use
     const t0 = performance.now();
     for (let i = 0; i < n; i++) sdfFrame(INITIAL_OZZY, i * 0.1, false, false);
     expect((performance.now() - t0) / n).toBeLessThan(5);

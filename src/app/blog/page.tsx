@@ -1,8 +1,8 @@
 import { Metadata } from 'next'
-import Link from 'next/link'
+import Image from 'next/image'
 import { getBlogPosts, getAllTags } from '@/lib/blog'
 import { BlogPostCard } from '@/components/blog-post-card'
-import { ArrowLeft } from 'lucide-react'
+import { BlogTagPills } from '@/components/blog-tag-pills'
 
 export const metadata: Metadata = {
   title: 'Blog | Komendly',
@@ -17,61 +17,49 @@ export const metadata: Metadata = {
 export default function BlogPage() {
   const posts = getBlogPosts()
   const tags = getAllTags()
+  const [featured, ...rest] = posts
 
   return (
-    <div className="min-h-screen">
-      <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-20">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to home
-        </Link>
-
-        <header className="mb-12">
-          <p className="mb-3 text-xs font-medium uppercase tracking-[0.14em] text-primary">Blog</p>
-          <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl mb-4">
-            Blog
+    <main className="relative z-10 mx-auto max-w-6xl px-4 pb-12 pt-10 sm:px-6 sm:pt-16">
+      <header className="studio-rise mb-10 flex items-end justify-between gap-6">
+        <div>
+          <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-[var(--studio-gold)]">Blog</p>
+          <h1 className="font-display mb-4 text-4xl font-medium tracking-[-0.02em] text-foreground sm:text-6xl">
+            The Komendly <em className="italic text-[var(--studio-gold)]">Journal</em>
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl">
-            Insights, tutorials, and updates about AI video testimonials,
-            customer reviews, and growing your business with social proof.
+          <p className="max-w-xl text-lg text-muted-foreground">
+            Notes on ads, social proof and marketing that actually sells.
           </p>
-        </header>
+        </div>
+        <Image
+          src="/brand/ozzy-creator-focused.png"
+          width={112}
+          height={112}
+          unoptimized
+          alt=""
+          className="hidden shrink-0 sm:block"
+          style={{ imageRendering: 'pixelated' }}
+        />
+      </header>
 
-        {tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-8">
-            <Link
-              href="/blog"
-              className="text-sm font-medium text-primary-foreground bg-primary px-3 py-1.5 rounded-full hover:bg-primary/90 transition-colors"
-            >
-              All Posts
-            </Link>
-            {tags.map((tag) => (
-              <Link
-                key={tag}
-                href={`/blog/tag/${tag.toLowerCase()}`}
-                className="text-sm font-medium text-muted-foreground border border-border bg-muted px-3 py-1.5 rounded-full hover:bg-secondary hover:text-foreground transition-colors"
-              >
-                {tag}
-              </Link>
-            ))}
-          </div>
-        )}
+      {tags.length > 0 && <BlogTagPills tags={tags} active={null} />}
 
-        {posts.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg">No blog posts yet. Check back soon!</p>
+      {!featured ? (
+        <div className="py-16 text-center">
+          <p className="text-lg text-muted-foreground">No blog posts yet. Check back soon!</p>
+        </div>
+      ) : (
+        <>
+          <div className="mb-8">
+            <BlogPostCard post={featured} featured />
           </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2">
-            {posts.map((post) => (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {rest.map((post) => (
               <BlogPostCard key={post.slug} post={post} />
             ))}
           </div>
-        )}
-      </div>
-    </div>
+        </>
+      )}
+    </main>
   )
 }

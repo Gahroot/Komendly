@@ -19,7 +19,6 @@ const siteConfig = {
   tagline: "Your website in. Ready-to-run ads out.",
   description: "Paste your website and Ozzy, Komendly's AI ad wizard, builds on-brand, export-ready ads for every stage of awareness. 10 static ads + 1 animated ad free. No card required.",
   url: "https://komendly.com",
-  ogImage: "/og-image.png",
   twitterHandle: "@komendly",
 };
 
@@ -63,13 +62,11 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     title: `${siteConfig.name} - ${siteConfig.tagline}`,
     description: siteConfig.description,
-    images: [{ url: siteConfig.ogImage, width: 1200, height: 630, alt: `${siteConfig.name} - AI ads from your website` }],
   },
   twitter: {
     card: "summary_large_image",
     title: `${siteConfig.name} - ${siteConfig.tagline}`,
     description: siteConfig.description,
-    images: [siteConfig.ogImage],
     creator: siteConfig.twitterHandle,
     site: siteConfig.twitterHandle,
   },
@@ -86,7 +83,7 @@ const jsonLd = {
       "@id": `${siteConfig.url}/#organization`,
       name: siteConfig.name,
       url: siteConfig.url,
-      logo: { "@type": "ImageObject", url: `${siteConfig.url}/logo.svg` },
+      logo: { "@type": "ImageObject", url: `${siteConfig.url}/brand/icon-512.png` },
       sameAs: [],
     },
     {
@@ -116,15 +113,12 @@ export default function RootLayout({
         <link rel="preconnect" href="https://player.vimeo.com" />
         <link rel="dns-prefetch" href="https://www.youtube.com" />
 
-        {/* Prefetch critical routes */}
-        <link rel="prefetch" href="/pricing" as="fetch" crossOrigin="anonymous" />
 
         {/* Web app manifest for PWA */}
-        <link rel="icon" href="/logo.svg" type="image/svg+xml" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14161f" />
-        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f7fb" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0c0820" />
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#0c0820" />
         <meta name="apple-mobile-web-app-title" content="Komendly" />
 
         {/* Performance hints */}

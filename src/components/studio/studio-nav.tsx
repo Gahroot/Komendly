@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdsMobileMenu } from "@/components/ads/ads-mobile-menu";
 
 /** Transparent night nav over the sky. Keeps the same destinations as AdsNav. */
 export function StudioNav({ signedIn }: { signedIn: boolean }) {
@@ -10,16 +11,21 @@ export function StudioNav({ signedIn }: { signedIn: boolean }) {
           Komendly
         </Link>
         <div className="flex items-center gap-1 text-sm">
-          <a href="#examples" className="hidden rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:text-foreground sm:inline-block">Examples</a>
-          <Link href="/ads/billing" className="hidden rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:text-foreground sm:inline-block">Pricing</Link>
+          <Link href="/#examples" className="hidden rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:text-foreground sm:inline-block">Examples</Link>
+          <Link href="/ads/pricing" className="hidden rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:text-foreground sm:inline-block">Pricing</Link>
+          <Link href="/blog" className="hidden rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:text-foreground md:inline-block">Blog</Link>
           {signedIn ? (
             <Link href="/ads/app" className="rounded-lg border border-border px-3 py-2 font-medium text-foreground transition-colors hover:bg-accent">Your studio</Link>
           ) : (
             <>
-              <Link href="/ads/login" className="rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:text-foreground">Sign in</Link>
+              <Link href="/ads/login" className="hidden rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:text-foreground sm:inline-block">Sign in</Link>
               <Link href="/ads/signup" className="hidden rounded-lg border border-border px-3 py-2 font-medium text-foreground transition-colors hover:bg-accent sm:inline-block">Try free</Link>
             </>
           )}
+          <AdsMobileMenu
+            links={signedIn ? [{ href: "/ads/app", label: "Your studio" }, { href: "/#examples", label: "Examples" }, { href: "/ads/pricing", label: "Pricing" }, { href: "/blog", label: "Blog" }] : [{ href: "/#examples", label: "Examples" }, { href: "/ads/pricing", label: "Pricing" }, { href: "/blog", label: "Blog" }, { href: "/ads/login", label: "Sign in" }]}
+            cta={signedIn ? undefined : { href: "/ads/signup", label: "Make my free ads" }}
+          />
         </div>
       </nav>
     </header>

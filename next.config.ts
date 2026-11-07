@@ -24,6 +24,12 @@ const nextConfig: NextConfig = {
     maxInactiveAge: 60 * 1000,
     pagesBufferLength: 5,
   },
+  // OG images read the vendored Fraunces font and Ozzy PNGs from disk at render time.
+  outputFileTracingIncludes: {
+    "/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
+    "/twitter-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
+    "/blog/[slug]/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
+  },
   // The Ads studio is the homepage; /ads (exact) is kept as a permanent alias. /ads/* routes and assets are untouched.
   async redirects() {
     return [{ source: "/ads", destination: "/", permanent: true }];

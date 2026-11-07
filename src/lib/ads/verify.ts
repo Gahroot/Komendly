@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 import { prisma } from "@/lib/prisma";
+import { renderEmailLayout } from "@/lib/email/layout";
 
 const TOKEN_TTL_MINUTES = 60 * 24;
 
@@ -30,14 +31,25 @@ export async function sendVerificationEmail(user: { id: string; email: string; n
   await transporter.sendMail({
     from: SMTP_FROM || SMTP_USER,
     to: user.email,
-    subject: "Confirm your email to get your free ads",
-    text: `Hi${user.name ? ` ${user.name}` : ""},\n\nConfirm your email to start your free Komendly ads trial:\n${link}\n\nThis link expires in 24 hours.`,
-    html: `<p>Hi${user.name ? ` ${escapeHtml(user.name)}` : ""},</p><p>Confirm your email to start your free Komendly ads trial.</p><p><a href="${link}">Confirm my email</a></p><p>This link expires in 24 hours.</p>`,
+    subject: "Confirm your email: Ozzy's ready to make your ads",
+    text: `Hi${user.name ? ` ${user.name}` : ""},\n\nOne click and Ozzy gets to work. Confirm your email to unlock your free Komendly ads: 10 static ads plus 1 animated ad, no card needed.\n\nConfirm my email: ${link}\n\nThis link expires in 24 hours. If you didn't sign up, ignore this email.`,
+    html: verificationEmailHtml(user.name, link, appUrl(origin)),
   });
 }
 
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+export function verificationEmailHtml(name: string | null, link: string, baseUrl: string, imageUrl?: string): string {
+  return renderEmailLayout({
+    appUrl: baseUrl,
+    imageUrl,
+    preheader: "Confirm your email to unlock 10 free static ads and 1 animated ad.",
+    heading: "One click and Ozzy gets to work",
+    paragraphs: [
+      `Hi${name ? ` ${name}` : " there"},`,
+      "Confirm your email and your free trial is unlocked: 10 static ads plus 1 animated ad, made from your website. No card needed.",
+    ],
+    button: { label: "Confirm my email", href: link },
+    note: "This link expires in 24 hours. If you didn't sign up, you can safely ignore this email.",
+  });
 }
 
 export type VerifyResult = { ok: true; userId: string } | { ok: false; reason: "invalid" | "expired" };

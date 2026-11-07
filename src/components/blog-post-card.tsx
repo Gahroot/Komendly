@@ -1,61 +1,51 @@
 import Link from 'next/link'
 import { formatDate, type BlogPostMeta } from '@/lib/blog'
-import { Calendar, Clock, ArrowRight } from 'lucide-react'
 
 interface BlogPostCardProps {
   post: BlogPostMeta
+  featured?: boolean
 }
 
-export function BlogPostCard({ post }: BlogPostCardProps) {
+export function BlogPostCard({ post, featured = false }: BlogPostCardProps) {
   return (
-    <article className="group relative glass rounded-3xl border border-border p-5 transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/40">
-      <Link href={`/blog/${post.slug}`} className="absolute inset-0 z-10">
+    <article
+      className={`studio-frame group relative rounded-2xl p-4 sm:p-5 ${
+        featured ? 'grid gap-6 md:grid-cols-[1.3fr_1fr] md:items-center' : 'flex flex-col'
+      }`}
+    >
+      <Link
+        href={`/blog/${post.slug}`}
+        className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--studio-gold)]"
+      >
         <span className="sr-only">Read {post.title}</span>
       </Link>
 
       {post.image && (
-        <div className="mb-5 overflow-hidden rounded-2xl">
+        <div className={`overflow-hidden rounded-md border border-border bg-[var(--studio-ink)] ${featured ? '' : 'mb-5'}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={post.image}
-            alt={post.title}
-            className="aspect-video w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-          />
+          <img src={post.image} alt="" className="aspect-video w-full object-cover" />
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2 mb-3">
-        {post.tags.slice(0, 3).map((tag) => (
-          <span
-            key={tag}
-            className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full"
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
-
-      <h2 className="text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
-        {post.title}
-      </h2>
-
-      <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-        {post.description}
-      </p>
-
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <div className="flex items-center gap-1">
-          <Calendar className="h-3 w-3" />
+      <div className="flex flex-col">
+        {featured && (
+          <p className="mb-3 font-mono text-xs uppercase tracking-[0.18em] text-[var(--studio-gold)]">Latest</p>
+        )}
+        <h2
+          className={`font-display mb-2 font-medium tracking-[-0.015em] text-foreground transition-colors group-hover:text-primary ${
+            featured ? 'text-3xl sm:text-4xl' : 'text-xl sm:text-2xl'
+          }`}
+        >
+          {post.title}
+        </h2>
+        <p className={`mb-4 text-muted-foreground ${featured ? 'text-base line-clamp-3' : 'text-sm line-clamp-2'}`}>
+          {post.description}
+        </p>
+        <p className="mt-auto font-mono text-xs text-muted-foreground">
           <time dateTime={post.date}>{formatDate(post.date)}</time>
-        </div>
-        <div className="flex items-center gap-1">
-          <Clock className="h-3 w-3" />
-          <span>{post.readingTime}</span>
-        </div>
-      </div>
-
-      <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
-        <ArrowRight className="h-5 w-5 text-primary" />
+          <span aria-hidden> · </span>
+          {post.readingTime}
+        </p>
       </div>
     </article>
   )
