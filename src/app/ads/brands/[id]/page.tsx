@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { AdsNav } from "@/components/ads/ads-nav";
 import { BrandProfileEditor } from "@/components/ads/brand-profile-editor";
 
-export const metadata = { title: "Brand profile | Komendly Ads" };
+export const metadata = { title: "Brand profile", robots: { index: false, follow: false } };
 
 export default async function AdsBrandPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

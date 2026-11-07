@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pricing - Plans for Every Team | Komendly",
+  title: "Pricing",
+  alternates: { canonical: "/pricing" },
   description:
     "Choose the perfect plan for your team. Start free with 1 video per month, or upgrade to Pro/Business for unlimited video generation. Transparent pricing, no hidden fees.",
   openGraph: {

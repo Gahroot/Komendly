@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { FIRST_TOUCH_COOKIE, FIRST_TOUCH_MAX_AGE, firstTouchFromUrl, serializeFirstTouch } from "@/lib/analytics/first-touch";
 import { ANON_ID_COOKIE, EXP_COOKIE, EXP_COOKIE_MAX_AGE, applyOverride, completeAssignments, parseAssignments, serializeAssignments } from "@/lib/analytics/experiments";
 
 /** Give every page visitor a stable anon id + A/B assignments, visible to this same request's server render. */
@@ -11,21 +12,25 @@ function withExperiments(request: NextRequest): NextResponse {
   const before = request.cookies.get(EXP_COOKIE)?.value;
   const assignments = applyOverride(completeAssignments(anonId, parseAssignments(before)), searchParams.get("exp"));
   const serialized = serializeAssignments(assignments);
-  if (!isNew && serialized === before) return NextResponse.next();
+  // First-touch attribution (e.g. a blog CTA's UTM params): recorded once, read at ads sign-up.
+  const firstTouch = request.cookies.has(FIRST_TOUCH_COOKIE) ? null : firstTouchFromUrl(request.nextUrl, new Date());
+  if (!isNew && serialized === before && !firstTouch) return NextResponse.next();
   request.cookies.set(ANON_ID_COOKIE, anonId);
   request.cookies.set(EXP_COOKIE, serialized);
   const res = NextResponse.next({ request: { headers: request.headers } });
   const opts = { path: "/", maxAge: EXP_COOKIE_MAX_AGE, sameSite: "lax" as const, secure: process.env.NODE_ENV === "production" };
   res.cookies.set(ANON_ID_COOKIE, anonId, { ...opts, httpOnly: true });
   res.cookies.set(EXP_COOKIE, serialized, opts);
+  if (firstTouch) res.cookies.set(FIRST_TOUCH_COOKIE, serializeFirstTouch(firstTouch), { ...opts, maxAge: FIRST_TOUCH_MAX_AGE, httpOnly: true });
   return res;
 }
 
 // Routes that don't require authentication
-const publicRoutes = ["/", "/testimonials", "/login", "/register", "/pricing"];
+const publicRoutes = ["/", "/testimonials", "/login", "/register", "/pricing", "/ads/pricing", "/robots.txt", "/sitemap.xml", "/llms.txt", "/llms-full.txt"];
 
 // Routes that start with these prefixes are public
 const publicPrefixes = [
+  "/blog",                 // Blog pages, hubs and /blog/feed.xml (RSS)
   "/api/auth/",
   "/api/stripe/webhooks",  // Stripe webhooks must be public
   "/api/stripe/checkout",  // Checkout API for unauthenticated users
@@ -102,6 +107,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder files
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|txt|xml)$).*)",
   ],
 };

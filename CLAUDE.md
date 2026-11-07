@@ -82,3 +82,12 @@ If changes require server restart:
 - **Payments**: Stripe
 - **AI Services**: FAL AI, Mirage AI, OpenAI
 - **State**: Zustand, SWR
+
+## Blog & SEO
+- **Content contract:** posts are `content/blog/<slug>.md(x)`; frontmatter per `docs/blog-contract.md` (title, description, date, updated, author, type, tags, published, answer, key_takeaways, competitors, cta, faq, sources...). `published: false` = draft (404, not in sitemap/feeds). Body cites `[^n]` = `sources[].id`; the site renders the Sources list and CTAs itself. `blog-engine/` writes posts; don't hand-edit its folder.
+- **Where it lives:** parsing `src/lib/blog.ts` (categories, tag slugs, `ctaHref` UTM links); body transforms (footnotes, TOC, inline CTA slot) `src/lib/blog-content.ts`; authors `src/lib/authors.ts` ("Komendly Team"/missing -> Nolan Grout); JSON-LD builders `src/lib/seo/jsonld.ts`; llms.txt/llms-full.txt/RSS builders `src/lib/seo/llms.ts`; private/noindex paths + AI crawler list `src/lib/seo/crawl.ts` (used by `src/app/robots.ts`; `X-Robots-Tag` headers in `next.config.ts`). Post parts: `src/components/blog/post-parts.tsx`. Hubs: `/blog/category/[type]`, `/blog/author/[slug]`, `/blog/tag/[tag]` (noindex under 2 posts). Tests: `npx vitest run src/lib/__tests__`.
+- Titles: the root template appends ` | Komendly`; never add it in page titles.
+- **Attribution:** middleware stores the first visit's UTM params in the `kmd_ft` cookie; `/api/ads/auth/signup` records `AdsEvent` `signed_up` with `props.firstTouch` (blog CTAs: `utm_campaign` = post slug, `utm_content` = inline|end).
+- IndexNow key file: `public/78c8478292a52ad65d0087edc113df99.txt`.
+
+- `blog-engine/` (separate Railway service `blog-engine`, own Postgres) writes posts as PRs and auto-merges them after its gate. See `blog-engine/README.md`.

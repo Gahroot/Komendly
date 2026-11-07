@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AdsBrandList } from "@/components/ads/ads-brand-list";
 import { AdsNav } from "@/components/ads/ads-nav";
 
-export const metadata = { title: "Brand profiles | Komendly Ads" };
+export const metadata = { title: "Brand profiles", robots: { index: false, follow: false } };
 
 export default async function AdsBrandsPage() {
   if (!(await getCurrentUser())) redirect(`/ads/login?next=${encodeURIComponent("/ads/brands")}`);

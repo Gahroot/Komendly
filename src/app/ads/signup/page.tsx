@@ -3,7 +3,7 @@ import { AdsAuthForm } from "@/components/ads/ads-auth-form";
 import { AdsAuthShell } from "@/components/ads/ads-auth-shell";
 import { AdsNav } from "@/components/ads/ads-nav";
 
-export const metadata = { title: "Sign up | Komendly Ads" };
+export const metadata = { title: "Sign up", robots: { index: false, follow: true } };
 
 export default function AdsSignupPage() {
   return (

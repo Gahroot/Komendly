@@ -4,6 +4,8 @@ import { createSession, createUser, getUserByEmail, setSessionCookie } from "@/l
 import { rateLimit } from "@/lib/ads/abuse";
 import { fingerprintFrom } from "@/lib/ads/run";
 import { sendVerificationEmail } from "@/lib/ads/verify";
+import { FIRST_TOUCH_COOKIE, parseFirstTouch } from "@/lib/analytics/first-touch";
+import { trackAdsEvent } from "@/lib/ads/events";
 import { adsErrorResponse, AdsHttpError, getOrCreateWorkspace } from "@/lib/ads/workspace";
 
 const BodySchema = z.object({
@@ -26,7 +28,10 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) throw new AdsHttpError(400, "invalid_input", "Enter your name, a valid email and a password of at least 8 characters.");
     if (await getUserByEmail(parsed.data.email)) throw new AdsHttpError(409, "email_taken", "An account with this email already exists. Sign in instead.");
     const user = await createUser(parsed.data);
-    await getOrCreateWorkspace(user);
+    const workspace = await getOrCreateWorkspace(user);
+    // Attribution: which blog post / campaign first brought this user (set by middleware from UTM params).
+    const firstTouch = parseFirstTouch(request.cookies.get(FIRST_TOUCH_COOKIE)?.value);
+    await trackAdsEvent("signed_up", { workspaceId: workspace.id, userId: user.id, props: { firstTouch } });
     await setSessionCookie(await createSession(user.id));
     await sendVerificationEmail(user, request.nextUrl.origin).catch((error) => console.error("[ads] verification email failed", error));
     return NextResponse.json({ ok: true }, { status: 201 });

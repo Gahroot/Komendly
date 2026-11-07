@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
 export type AdsEventName =
+  | "signed_up"
   | "trial_started"
   | "extraction_shown"
   | "extraction_retried"
