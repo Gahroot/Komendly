@@ -1,7 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ANON_ID_COOKIE, EXP_COOKIE, EXP_COOKIE_MAX_AGE, applyOverride, completeAssignments, parseAssignments, serializeAssignments } from "@/lib/analytics/experiments";
+
+/** Give every page visitor a stable anon id + A/B assignments, visible to this same request's server render. */
+function withExperiments(request: NextRequest): NextResponse {
+  const { pathname, searchParams } = request.nextUrl;
+  if (pathname.startsWith("/api/")) return NextResponse.next();
+  let anonId = request.cookies.get(ANON_ID_COOKIE)?.value;
+  const isNew = !anonId;
+  anonId ??= crypto.randomUUID();
+  const before = request.cookies.get(EXP_COOKIE)?.value;
+  const assignments = applyOverride(completeAssignments(anonId, parseAssignments(before)), searchParams.get("exp"));
+  const serialized = serializeAssignments(assignments);
+  if (!isNew && serialized === before) return NextResponse.next();
+  request.cookies.set(ANON_ID_COOKIE, anonId);
+  request.cookies.set(EXP_COOKIE, serialized);
+  const res = NextResponse.next({ request: { headers: request.headers } });
+  const opts = { path: "/", maxAge: EXP_COOKIE_MAX_AGE, sameSite: "lax" as const, secure: process.env.NODE_ENV === "production" };
+  res.cookies.set(ANON_ID_COOKIE, anonId, { ...opts, httpOnly: true });
+  res.cookies.set(EXP_COOKIE, serialized, opts);
+  return res;
+}
 
 // Routes that don't require authentication
-const publicRoutes = ["/", "/login", "/register", "/pricing"];
+const publicRoutes = ["/", "/testimonials", "/login", "/register", "/pricing"];
 
 // Routes that start with these prefixes are public
 const publicPrefixes = [
@@ -9,6 +30,9 @@ const publicPrefixes = [
   "/api/stripe/webhooks",  // Stripe webhooks must be public
   "/api/stripe/checkout",  // Checkout API for unauthenticated users
   "/checkout/",            // Checkout pages
+  "/api/ads/auth/",        // Website2ads sign-up / login
+  "/api/ads/device",       // First-party device cookie (pre-auth abuse fingerprint)
+  "/api/ads-billing/webhook", // Stripe webhook for ads billing (signature-verified)
 ];
 
 // Routes that require active subscription (not just authentication)
@@ -31,7 +55,7 @@ export async function middleware(request: NextRequest) {
 
   // Allow public routes and prefixes
   if (isPublicRoute || isPublicPrefix) {
-    return NextResponse.next();
+    return withExperiments(request);
   }
 
   // Check for session token
@@ -66,7 +90,7 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  return NextResponse.next();
+  return withExperiments(request);
 }
 
 export const config = {

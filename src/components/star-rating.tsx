@@ -53,7 +53,7 @@ export function StarRating({
                 sizeMap[size],
                 "transition-all duration-150",
                 isFilled
-                  ? "fill-yellow-400 text-yellow-400"
+                  ? "fill-warning text-warning"
                   : "fill-transparent text-muted-foreground/40 hover:text-muted-foreground/60"
               )}
             />
@@ -66,7 +66,7 @@ export function StarRating({
                 <Star
                   className={cn(
                     sizeMap[size],
-                    "fill-yellow-400 text-yellow-400"
+                    "fill-warning text-warning"
                   )}
                 />
               </motion.div>

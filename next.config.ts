@@ -24,6 +24,10 @@ const nextConfig: NextConfig = {
     maxInactiveAge: 60 * 1000,
     pagesBufferLength: 5,
   },
+  // The Ads studio is the homepage; /ads (exact) is kept as a permanent alias. /ads/* routes and assets are untouched.
+  async redirects() {
+    return [{ source: "/ads", destination: "/", permanent: true }];
+  },
   // Headers for performance and security
   async headers() {
     return [
@@ -31,16 +35,36 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: [
           {
-            key: "Cache-Control",
-            value: "public, max-age=3600, stale-while-revalidate=86400",
-          },
-          {
             key: "X-DNS-Prefetch-Control",
             value: "on",
           },
           {
             key: "X-Content-Type-Options",
             value: "nosniff",
+          },
+        ],
+      },
+      {
+        // Public marketing pages only: never cache API, account or admin responses
+        source: "/((?!api|ads|admin|dashboard|checkout|login|register|ozzy-lab|_next).+)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, stale-while-revalidate=86400",
+          },
+        ],
+      },
+      {
+        // The Ads home is personalised (session + A/B variant): never shared-cache it
+        source: "/",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
+        source: "/:area(api|ads|admin|dashboard|checkout)/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store",
           },
         ],
       },

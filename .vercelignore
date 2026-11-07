@@ -1,0 +1,14 @@
+# Website2ads: the engine deploys to Railway, not Vercel
+engine
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
+node_modules
+.next
+generated-avatars
+tmp
+.claude
+.env*
+tsconfig.tsbuildinfo
+*.png
+!public/**

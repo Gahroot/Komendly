@@ -30,21 +30,21 @@ export default async function TagPage({ params }: PageProps) {
   const formattedTag = tag.charAt(0).toUpperCase() + tag.slice(1)
 
   return (
-    <div className="min-h-screen bg-zinc-950">
-      <div className="container mx-auto px-4 py-16 max-w-5xl">
+    <div className="min-h-screen">
+      <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-20">
         <Link
           href="/blog"
-          className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-100 transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to blog
         </Link>
 
         <header className="mb-12">
-          <h1 className="text-4xl font-bold tracking-tight text-zinc-100 mb-4">
+          <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl mb-4">
             Posts tagged &quot;{formattedTag}&quot;
           </h1>
-          <p className="text-lg text-zinc-400">
+          <p className="text-lg text-muted-foreground">
             {posts.length} {posts.length === 1 ? 'post' : 'posts'} found
           </p>
         </header>
@@ -52,7 +52,7 @@ export default async function TagPage({ params }: PageProps) {
         <div className="flex flex-wrap gap-2 mb-8">
           <Link
             href="/blog"
-            className="text-sm font-medium text-zinc-400 bg-zinc-800/50 px-3 py-1.5 rounded-full hover:bg-zinc-800 hover:text-zinc-100 transition-colors"
+            className="text-sm font-medium text-muted-foreground bg-muted px-3 py-1.5 rounded-full hover:bg-secondary hover:text-foreground transition-colors"
           >
             All Posts
           </Link>
@@ -62,8 +62,8 @@ export default async function TagPage({ params }: PageProps) {
               href={`/blog/tag/${t.toLowerCase()}`}
               className={`text-sm font-medium px-3 py-1.5 rounded-full transition-colors ${
                 t.toLowerCase() === tag
-                  ? 'text-zinc-100 bg-zinc-800'
-                  : 'text-zinc-400 bg-zinc-800/50 hover:bg-zinc-800 hover:text-zinc-100'
+                  ? 'text-foreground bg-secondary'
+                  : 'text-muted-foreground bg-muted hover:bg-secondary hover:text-foreground'
               }`}
             >
               {t}
@@ -73,7 +73,7 @@ export default async function TagPage({ params }: PageProps) {
 
         {posts.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-zinc-400 text-lg">
+            <p className="text-muted-foreground text-lg">
               No posts found with this tag.
             </p>
           </div>

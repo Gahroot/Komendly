@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { plans, type Plan, type BillingCycle } from "@/lib/pricing-plans";
 
 const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 1, y: 12 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true },
   transition: { duration: 0.5 },
@@ -40,27 +40,29 @@ export function PricingCards({
       {/* Billing Toggle */}
       {showBillingToggle && (
         <div className="flex justify-center mb-12">
-          <div className="bg-zinc-800 rounded-full p-1 flex">
+          <div className="glass-subtle flex rounded-full border border-border p-1" role="group" aria-label="Billing cycle">
             <button
               onClick={() => setBillingCycle("monthly")}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+              type="button"
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${
                 billingCycle === "monthly"
-                  ? "bg-purple-600 text-white"
-                  : "text-zinc-400 hover:text-white"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Monthly
             </button>
             <button
               onClick={() => setBillingCycle("yearly")}
-              className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
+              type="button"
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${
                 billingCycle === "yearly"
-                  ? "bg-purple-600 text-white"
-                  : "text-zinc-400 hover:text-white"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Yearly
-              <span className="ml-2 text-xs text-green-400">Save 20%</span>
+              <span className="ml-2 text-xs text-success">Save 20%</span>
             </button>
           </div>
         </div>
@@ -78,47 +80,47 @@ export function PricingCards({
           <motion.div
             key={plan.key}
             variants={fadeInUp}
-            className={`relative rounded-2xl p-8 ${
+            className={`relative flex flex-col rounded-3xl border p-8 ${
               plan.popular
-                ? "bg-gradient-to-b from-purple-900/50 to-zinc-900 border-2 border-purple-500"
-                : "bg-zinc-800/50 border border-zinc-700"
+                ? "glass glow-primary border-primary/50 bg-gradient-to-b from-primary/15 to-card"
+                : "glass border-border"
             }`}
           >
             {plan.popular && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <span className="bg-purple-600 text-white text-sm font-medium px-4 py-1 rounded-full">
+                <span className="bg-brand rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-wider shadow-[var(--glass-rim)]">
                   Most Popular
                 </span>
               </div>
             )}
 
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-              <p className="text-zinc-400 text-sm">{plan.description}</p>
+              <h3 className="mb-2 text-xl font-semibold tracking-tight">{plan.name}</h3>
+              <p className="text-muted-foreground text-sm">{plan.description}</p>
             </div>
 
             <div className="text-center mb-6">
               <div className="flex items-baseline justify-center">
-                <span className="text-5xl font-bold">
+                <span className="text-5xl font-semibold tracking-tight tabular-nums">
                   ${billingCycle === "monthly" ? plan.monthlyPrice : Math.round(plan.yearlyPrice / 12)}
                 </span>
-                <span className="text-zinc-400 ml-2">/month</span>
+                <span className="text-muted-foreground ml-2">/month</span>
               </div>
               {billingCycle === "yearly" && (
-                <p className="text-sm text-zinc-400 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   ${plan.yearlyPrice} billed annually
                 </p>
               )}
-              <div className="mt-2 inline-block bg-purple-600/20 text-purple-400 text-sm px-3 py-1 rounded-full">
+              <div className="mt-3 inline-block rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-sm text-primary">
                 {plan.minutes} minutes/month
               </div>
             </div>
 
-            <ul className="space-y-3 mb-8">
+            <ul className="mb-8 flex-1 space-y-3 border-t border-border pt-6">
               {plan.features.map((feature, idx) => (
                 <li key={idx} className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                  <span className="text-zinc-300 text-sm">{feature}</span>
+                  <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                  <span className="text-foreground/80 text-sm">{feature}</span>
                 </li>
               ))}
             </ul>
@@ -126,11 +128,8 @@ export function PricingCards({
             <Button
               onClick={() => onSelectPlan(plan, billingCycle)}
               disabled={loading !== null}
-              className={`w-full py-6 text-lg font-semibold ${
-                plan.popular
-                  ? "bg-purple-600 hover:bg-purple-700"
-                  : "bg-zinc-700 hover:bg-zinc-600"
-              }`}
+              variant={plan.popular ? "default" : "outline"}
+              className="h-12 w-full text-base font-semibold"
             >
               {loading === plan.key ? (
                 <>

@@ -30,9 +30,9 @@ export function VideoCard({ video, onClick }: VideoCardProps) {
   }[video.aspectRatio];
 
   const aspectRatioColor = {
-    "9:16": "bg-purple-500/10 text-purple-500 border-purple-500/20",
-    "16:9": "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    "1:1": "bg-green-500/10 text-green-500 border-green-500/20",
+    "9:16": "bg-primary/10 text-primary border-primary/20",
+    "16:9": "bg-primary/10 text-primary border-primary/20",
+    "1:1": "bg-success/10 text-success border-success/20",
   }[video.aspectRatio];
 
   return (
@@ -42,13 +42,13 @@ export function VideoCard({ video, onClick }: VideoCardProps) {
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
     >
       <Card
-        className="group cursor-pointer overflow-hidden bg-zinc-900/50 border-zinc-800 hover:border-zinc-700 transition-colors"
+        className="group cursor-pointer overflow-hidden bg-card border-border hover:border-input transition-colors"
         onClick={() => onClick(video)}
       >
         {/* Thumbnail */}
-        <div className="relative aspect-video bg-zinc-800 overflow-hidden">
+        <div className="relative aspect-video bg-secondary overflow-hidden">
           {/* Placeholder gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-zinc-700 via-zinc-800 to-zinc-900" />
+          <div className="absolute inset-0 bg-gradient-to-br from-zinc-700 via-zinc-800 to-card" />
 
           {/* Video thumbnail - uses first frame of video */}
           <VideoThumbnail
@@ -87,12 +87,12 @@ export function VideoCard({ video, onClick }: VideoCardProps) {
           <h3 className="font-semibold text-white truncate mb-1">
             {video.reviewerName}
           </h3>
-          <p className="text-sm text-zinc-400 truncate mb-3">
+          <p className="text-sm text-muted-foreground truncate mb-3">
             {video.businessName}
           </p>
 
           {/* Review snippet */}
-          <p className="text-sm text-zinc-500 line-clamp-2 mb-3">
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
             &ldquo;{video.reviewText}&rdquo;
           </p>
 
@@ -105,15 +105,15 @@ export function VideoCard({ video, onClick }: VideoCardProps) {
                   key={i}
                   className={`w-3.5 h-3.5 ${
                     i < video.rating
-                      ? "text-yellow-500 fill-yellow-500"
-                      : "text-zinc-600"
+                      ? "text-warning fill-warning"
+                      : "text-muted-foreground"
                   }`}
                 />
               ))}
             </div>
 
             {/* Date */}
-            <div className="flex items-center gap-1 text-xs text-zinc-500">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Calendar className="w-3 h-3" />
               <span>{formattedDate}</span>
             </div>

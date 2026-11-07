@@ -77,7 +77,7 @@ function StylePageContent() {
                 <CardTitle className="text-lg">Selected Review</CardTitle>
                 <Badge variant="secondary" className="gap-1">
                   {Array.from({ length: reviewRating }).map((_, i) => (
-                    <Star key={i} className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+                    <Star key={i} className="h-3 w-3 fill-warning text-warning" />
                   ))}
                 </Badge>
               </div>

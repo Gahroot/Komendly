@@ -13,7 +13,7 @@ export default function TestVideoPage() {
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-2">Video Comparison</h1>
-        <p className="text-zinc-400 mb-8">
+        <p className="text-muted-foreground mb-8">
           Compare the new speech-based trimming vs the original. Notice how the new version cuts off the creepy staring at the end.
         </p>
 
@@ -21,8 +21,8 @@ export default function TestVideoPage() {
           {/* New Video */}
           <div>
             <h2 className="text-xl font-semibold mb-2 text-green-400">New (37.1s)</h2>
-            <p className="text-sm text-zinc-400 mb-4">With speech-based trimming - cuts when person stops talking</p>
-            <div className="rounded-xl overflow-hidden border border-zinc-800">
+            <p className="text-sm text-muted-foreground mb-4">With speech-based trimming - cuts when person stops talking</p>
+            <div className="rounded-xl overflow-hidden border border-border">
               <VideoPlayer src={newVideoUrl} aspectRatio="9:16" />
             </div>
           </div>
@@ -30,16 +30,16 @@ export default function TestVideoPage() {
           {/* Original Video */}
           <div>
             <h2 className="text-xl font-semibold mb-2 text-red-400">Original (40.0s)</h2>
-            <p className="text-sm text-zinc-400 mb-4">Without trimming - awkward staring at end of clips</p>
-            <div className="rounded-xl overflow-hidden border border-zinc-800">
+            <p className="text-sm text-muted-foreground mb-4">Without trimming - awkward staring at end of clips</p>
+            <div className="rounded-xl overflow-hidden border border-border">
               <VideoPlayer src={originalVideoUrl} aspectRatio="9:16" />
             </div>
           </div>
         </div>
 
-        <div className="mt-8 p-4 bg-zinc-900 rounded-lg">
+        <div className="mt-8 p-4 bg-card rounded-lg">
           <h3 className="font-semibold mb-2">Changes Made:</h3>
-          <ul className="text-sm text-zinc-400 space-y-1">
+          <ul className="text-sm text-muted-foreground space-y-1">
             <li>• Uses FFmpeg silencedetect to find where speech actually ends</li>
             <li>• -20dB threshold catches background noise as &quot;silence&quot;</li>
             <li>• Trims each clip to end 0.15s after last speech</li>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, Loader2, ShieldAlert } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -10,6 +11,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { AdminSidebar } from "@/components/admin-sidebar";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function AdminLayout({
   children,
@@ -54,18 +56,18 @@ export default function AdminLayout({
 
   if (isChecking) {
     return (
-      <div className="flex h-screen items-center justify-center bg-zinc-950">
+      <div className="flex h-screen items-center justify-center bg-background">
         <div className="text-center">
           {accessError ? (
             <>
-              <ShieldAlert className="h-12 w-12 text-red-500 mx-auto mb-4" />
-              <p className="text-red-400">{accessError}</p>
-              <p className="text-zinc-500 text-sm mt-2">Redirecting to dashboard...</p>
+              <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
+              <p className="text-destructive">{accessError}</p>
+              <p className="text-muted-foreground text-sm mt-2">Redirecting to dashboard...</p>
             </>
           ) : (
             <>
-              <Loader2 className="h-12 w-12 animate-spin text-violet-500 mx-auto mb-4" />
-              <p className="text-zinc-400">Verifying admin access...</p>
+              <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+              <p className="text-muted-foreground">Verifying admin access...</p>
             </>
           )}
         </div>
@@ -74,31 +76,31 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex h-screen bg-zinc-950">
+    <div className="flex h-dvh">
       {/* Desktop Sidebar */}
-      <aside className="hidden w-64 flex-shrink-0 border-r border-zinc-800 lg:block">
+      <aside className="hidden w-64 flex-shrink-0 border-r border-sidebar-border bg-sidebar backdrop-blur-xl lg:block">
         <AdminSidebar />
       </aside>
 
       {/* Mobile Header & Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Mobile Header */}
-        <header className="flex h-16 items-center justify-between border-b border-zinc-800 bg-zinc-950 px-4 lg:hidden">
+        <header className="flex h-16 items-center justify-between sticky top-0 z-30 border-b border-border glass-float px-4 lg:hidden">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
-              <ShieldAlert className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-zinc-100">
-              Admin
+            <Image src="/logo.svg" alt="" width={28} height={28} className="h-7 w-7" />
+            <span className="text-base font-semibold tracking-wide text-foreground">
+              ADMIN
             </span>
           </div>
 
+          <div className="flex items-center gap-1">
+          <ThemeToggle />
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+                className="text-muted-foreground hover:bg-card hover:text-foreground"
               >
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Toggle menu</span>
@@ -106,16 +108,17 @@ export default function AdminLayout({
             </SheetTrigger>
             <SheetContent
               side="left"
-              className="w-64 border-zinc-800 bg-zinc-950 p-0"
+              className="w-72 border-sidebar-border p-0"
             >
               <AdminSidebar onNavigate={() => setSidebarOpen(false)} />
             </SheetContent>
           </Sheet>
+          </div>
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto bg-zinc-950 p-6">
-          {children}
+        <main className="flex-1 overflow-auto">
+          <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-10 lg:py-10">{children}</div>
         </main>
       </div>
     </div>

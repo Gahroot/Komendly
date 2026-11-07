@@ -16,14 +16,14 @@ interface FalActorCardProps {
 }
 
 const STYLE_GRADIENTS: Record<string, string> = {
-  professional: "from-slate-600 to-slate-800",
-  casual: "from-amber-400 to-orange-500",
-  friendly: "from-pink-400 to-rose-500",
-  energetic: "from-yellow-400 to-red-500",
-  calm: "from-cyan-400 to-blue-500",
-  bold: "from-purple-500 to-indigo-600",
-  warm: "from-orange-400 to-red-400",
-  corporate: "from-blue-600 to-blue-800",
+  professional: "from-chart-2/80 to-chart-2/40",
+  casual: "from-chart-4/80 to-chart-4/40",
+  friendly: "from-chart-5/80 to-chart-5/40",
+  energetic: "from-chart-4/90 to-chart-5/60",
+  calm: "from-chart-2/90 to-chart-1/60",
+  bold: "from-chart-1/90 to-chart-1/50",
+  warm: "from-chart-5/80 to-chart-4/50",
+  corporate: "from-chart-1/70 to-chart-2/40",
 };
 
 function getGradientForStyle(style: string): string {
@@ -38,8 +38,8 @@ function getGradientForStyle(style: string): string {
 
 function getGenderBadgeColor(gender: FalActorData["gender"]): string {
   return gender === "female"
-    ? "bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300"
-    : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+    ? "bg-primary/15 text-primary dark:bg-primary/30 dark:text-primary"
+    : "bg-primary/10 text-primary dark:bg-primary/30 dark:text-primary";
 }
 
 export function FalActorCard({ actor, isSelected, onSelect, index = 0 }: FalActorCardProps) {

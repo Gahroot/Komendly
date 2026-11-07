@@ -19,6 +19,7 @@ import {
   AlertCircle,
   Check,
 } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 interface UserSubscription {
   plan: string;
@@ -116,7 +117,7 @@ export default function BillingPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -135,15 +136,10 @@ export default function BillingPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Billing & Usage</h1>
-        <p className="text-zinc-400 mt-1">
-          Manage your subscription and purchase additional video minutes
-        </p>
-      </div>
+      <PageHeader eyebrow="Account" title="Billing & Usage" description="Manage your subscription and purchase additional video minutes" />
 
       {error && (
-        <div className="flex items-center gap-2 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400">
+        <div className="flex items-center gap-2 p-4 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive">
           <AlertCircle className="h-5 w-5 flex-shrink-0" />
           <span>{error}</span>
         </div>
@@ -151,28 +147,28 @@ export default function BillingPage() {
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Current Plan */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card >
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-purple-500" />
+            <CardTitle className="text-foreground flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-primary" />
               Current Plan
             </CardTitle>
             <CardDescription>Your active subscription</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-zinc-400">Plan</span>
-              <span className="text-white font-semibold capitalize">
+              <span className="text-muted-foreground">Plan</span>
+              <span className="text-foreground font-semibold capitalize">
                 {user?.plan || "None"}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-zinc-400">Status</span>
+              <span className="text-muted-foreground">Status</span>
               <span
                 className={`font-semibold flex items-center gap-1 ${
                   user?.subscriptionStatus === "active"
-                    ? "text-green-500"
-                    : "text-yellow-500"
+                    ? "text-success"
+                    : "text-warning"
                 }`}
               >
                 {user?.subscriptionStatus === "active" && (
@@ -183,14 +179,14 @@ export default function BillingPage() {
             </div>
             {periodEndDate && (
               <div className="flex justify-between items-center">
-                <span className="text-zinc-400">
+                <span className="text-muted-foreground">
                   {user?.cancelAtPeriodEnd ? "Ends on" : "Renews on"}
                 </span>
-                <span className="text-white">{periodEndDate}</span>
+                <span className="text-foreground">{periodEndDate}</span>
               </div>
             )}
             {user?.cancelAtPeriodEnd && (
-              <div className="p-3 bg-yellow-500/10 border border-yellow-500/50 rounded-lg text-yellow-400 text-sm">
+              <div className="p-3 bg-warning/10 border border-warning/50 rounded-lg text-warning text-sm">
                 Your subscription will end on {periodEndDate}. You can resubscribe
                 anytime.
               </div>
@@ -199,7 +195,7 @@ export default function BillingPage() {
             <Button
               onClick={handleOpenPortal}
               disabled={openingPortal}
-              className="w-full mt-4 bg-zinc-800 hover:bg-zinc-700"
+              className="w-full mt-4 bg-secondary hover:bg-accent"
             >
               {openingPortal ? (
                 <>
@@ -217,10 +213,10 @@ export default function BillingPage() {
         </Card>
 
         {/* Usage */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card >
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Clock className="h-5 w-5 text-purple-500" />
+            <CardTitle className="text-foreground flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
               Usage This Period
             </CardTitle>
             <CardDescription>Video generation minutes</CardDescription>
@@ -228,14 +224,14 @@ export default function BillingPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-zinc-400">Minutes used</span>
-                <span className="text-white">
+                <span className="text-muted-foreground">Minutes used</span>
+                <span className="text-foreground">
                   {user?.minutesUsed || 0} / {user?.minutesLimit || 0}
                 </span>
               </div>
-              <div className="h-3 bg-zinc-800 rounded-full overflow-hidden">
+              <div className="h-3 bg-secondary rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-purple-600 to-purple-400 transition-all"
+                  className="h-full bg-brand transition-all"
                   style={{
                     width: `${
                       user?.minutesLimit
@@ -251,17 +247,17 @@ export default function BillingPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-2">
-              <div className="text-center p-3 bg-zinc-800/50 rounded-lg">
-                <div className="text-2xl font-bold text-white">
+              <div className="text-center p-3 bg-muted rounded-lg">
+                <div className="text-2xl font-bold text-foreground">
                   {remainingMinutes}
                 </div>
-                <div className="text-xs text-zinc-400">Minutes remaining</div>
+                <div className="text-xs text-muted-foreground">Minutes remaining</div>
               </div>
-              <div className="text-center p-3 bg-zinc-800/50 rounded-lg">
-                <div className="text-2xl font-bold text-purple-400">
+              <div className="text-center p-3 bg-muted rounded-lg">
+                <div className="text-2xl font-bold text-primary">
                   {user?.bonusMinutes || 0}
                 </div>
-                <div className="text-xs text-zinc-400">Bonus minutes</div>
+                <div className="text-xs text-muted-foreground">Bonus minutes</div>
               </div>
             </div>
           </CardContent>
@@ -269,10 +265,10 @@ export default function BillingPage() {
       </div>
 
       {/* Buy More Minutes */}
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card >
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Plus className="h-5 w-5 text-purple-500" />
+          <CardTitle className="text-foreground flex items-center gap-2">
+            <Plus className="h-5 w-5 text-primary" />
             Buy Additional Minutes
           </CardTitle>
           <CardDescription>
@@ -282,7 +278,7 @@ export default function BillingPage() {
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
             <div className="space-y-2 flex-1">
-              <label className="text-sm text-zinc-400">Number of minutes</label>
+              <label className="text-sm text-muted-foreground">Number of minutes</label>
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
@@ -292,9 +288,9 @@ export default function BillingPage() {
                   onChange={(e) =>
                     setMinutesToBuy(Math.max(1, parseInt(e.target.value) || 1))
                   }
-                  className="bg-zinc-800 border-zinc-700 w-24"
+                  className="bg-secondary border-input w-24"
                 />
-                <span className="text-zinc-400">
+                <span className="text-muted-foreground">
                   = ${(minutesToBuy * 20).toFixed(2)}
                 </span>
               </div>
@@ -302,7 +298,7 @@ export default function BillingPage() {
             <Button
               onClick={handleBuyCredits}
               disabled={purchasing}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-primary hover:bg-primary/90"
             >
               {purchasing ? (
                 <>
@@ -317,7 +313,7 @@ export default function BillingPage() {
               )}
             </Button>
           </div>
-          <p className="text-xs text-zinc-500 mt-3">
+          <p className="text-xs text-muted-foreground mt-3">
             Purchased minutes never expire and carry over between billing periods.
             Minimum purchase: 1 minute.
           </p>

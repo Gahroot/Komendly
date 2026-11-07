@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, LineChart, Line } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/page-header";
 
 interface DashboardStats {
   totalUsers: number;
@@ -52,23 +53,23 @@ interface DashboardStats {
 const chartConfig: ChartConfig = {
   revenue: {
     label: "Revenue",
-    color: "hsl(262, 83%, 58%)",
+    color: "var(--chart-1)",
   },
   completed: {
     label: "Completed",
-    color: "hsl(142, 76%, 36%)",
+    color: "var(--chart-3)",
   },
   pending: {
     label: "Pending",
-    color: "hsl(48, 96%, 53%)",
+    color: "var(--chart-4)",
   },
   processing: {
     label: "Processing",
-    color: "hsl(217, 91%, 60%)",
+    color: "var(--chart-2)",
   },
   failed: {
     label: "Failed",
-    color: "hsl(0, 84%, 60%)",
+    color: "var(--chart-5)",
   },
 };
 
@@ -97,18 +98,15 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-zinc-100">Dashboard</h1>
-          <p className="text-zinc-400 mt-1">Overview of your platform</p>
-        </div>
+        <PageHeader eyebrow="Admin" title="Dashboard" description="Overview of your platform" />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="bg-zinc-900 border-zinc-800">
+            <Card key={i} >
               <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-24 bg-zinc-800" />
+                <Skeleton className="h-4 w-24 bg-secondary" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-8 w-20 bg-zinc-800" />
+                <Skeleton className="h-8 w-20 bg-secondary" />
               </CardContent>
             </Card>
           ))}
@@ -150,11 +148,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-zinc-100">Dashboard</h1>
-        <p className="text-zinc-400 mt-1">Overview of your platform</p>
-      </div>
+      <PageHeader eyebrow="Admin" title="Dashboard" description="Overview of your platform" />
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -163,29 +157,29 @@ export default function AdminDashboard() {
           const isPositive = stat.change >= 0;
 
           return (
-            <Card key={stat.title} className="bg-zinc-900 border-zinc-800">
+            <Card key={stat.title} >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-zinc-400">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
-                <Icon className="h-4 w-4 text-zinc-500" />
+                <Icon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-zinc-100">{stat.value}</div>
+                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
                 {stat.change !== 0 && (
-                  <p className="text-xs text-zinc-500 flex items-center gap-1 mt-1">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                     {isPositive ? (
-                      <ArrowUpRight className="h-3 w-3 text-green-500" />
+                      <ArrowUpRight className="h-3 w-3 text-success" />
                     ) : (
-                      <ArrowDownRight className="h-3 w-3 text-red-500" />
+                      <ArrowDownRight className="h-3 w-3 text-destructive" />
                     )}
-                    <span className={isPositive ? "text-green-500" : "text-red-500"}>
+                    <span className={isPositive ? "text-success" : "text-destructive"}>
                       {Math.abs(stat.change)}%
                     </span>
-                    <span className="text-zinc-500">from last month</span>
+                    <span className="text-muted-foreground">from last month</span>
                   </p>
                 )}
-                <p className="text-xs text-zinc-500 mt-1">{stat.description}</p>
+                <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
               </CardContent>
             </Card>
           );
@@ -195,10 +189,10 @@ export default function AdminDashboard() {
       {/* Charts */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Revenue Chart */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card >
           <CardHeader>
-            <CardTitle className="text-zinc-100">Monthly Revenue</CardTitle>
-            <CardDescription className="text-zinc-500">
+            <CardTitle className="text-foreground">Monthly Revenue</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Revenue over the last 6 months
             </CardDescription>
           </CardHeader>
@@ -207,13 +201,13 @@ export default function AdminDashboard() {
               <LineChart data={stats?.monthlyRevenue ?? []}>
                 <XAxis
                   dataKey="month"
-                  stroke="#71717a"
+                  stroke="var(--muted-foreground)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  stroke="#71717a"
+                  stroke="var(--muted-foreground)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -233,10 +227,10 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Videos by Status */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card >
           <CardHeader>
-            <CardTitle className="text-zinc-100">Videos by Status</CardTitle>
-            <CardDescription className="text-zinc-500">
+            <CardTitle className="text-foreground">Videos by Status</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Distribution of video generation status
             </CardDescription>
           </CardHeader>
@@ -245,19 +239,19 @@ export default function AdminDashboard() {
               <BarChart data={stats?.videosByStatus ?? []}>
                 <XAxis
                   dataKey="status"
-                  stroke="#71717a"
+                  stroke="var(--muted-foreground)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  stroke="#71717a"
+                  stroke="var(--muted-foreground)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                 />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="count" fill="hsl(262, 83%, 58%)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ChartContainer>
           </CardContent>
@@ -267,10 +261,10 @@ export default function AdminDashboard() {
       {/* Recent Activity Tables */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Recent Users */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card >
           <CardHeader>
-            <CardTitle className="text-zinc-100">Recent Users</CardTitle>
-            <CardDescription className="text-zinc-500">
+            <CardTitle className="text-foreground">Recent Users</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Latest user registrations
             </CardDescription>
           </CardHeader>
@@ -279,19 +273,19 @@ export default function AdminDashboard() {
               {stats?.recentUsers?.slice(0, 5).map((user) => (
                 <div key={user.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center">
-                      <span className="text-xs font-medium text-zinc-300">
+                    <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
+                      <span className="text-xs font-medium text-foreground/80">
                         {(user.name || user.email)?.[0]?.toUpperCase()}
                       </span>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-zinc-100">
+                      <p className="text-sm font-medium text-foreground">
                         {user.name || user.email.split("@")[0]}
                       </p>
-                      <p className="text-xs text-zinc-500">{user.email}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
-                  <span className="text-xs px-2 py-1 rounded-full bg-zinc-800 text-zinc-400">
+                  <span className="text-xs px-2 py-1 rounded-full bg-secondary text-muted-foreground">
                     {user.plan}
                   </span>
                 </div>
@@ -301,10 +295,10 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Recent Videos */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card >
           <CardHeader>
-            <CardTitle className="text-zinc-100">Recent Videos</CardTitle>
-            <CardDescription className="text-zinc-500">
+            <CardTitle className="text-foreground">Recent Videos</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Latest video generations
             </CardDescription>
           </CardHeader>
@@ -313,14 +307,14 @@ export default function AdminDashboard() {
               {stats?.recentVideos?.slice(0, 5).map((video) => (
                 <div key={video.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center">
-                      <Video className="h-4 w-4 text-zinc-400" />
+                    <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
+                      <Video className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-zinc-100">
+                      <p className="text-sm font-medium text-foreground">
                         {video.user.email}
                       </p>
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-muted-foreground">
                         {new Date(video.createdAt).toLocaleDateString()}
                       </p>
                     </div>
@@ -328,12 +322,12 @@ export default function AdminDashboard() {
                   <span
                     className={`text-xs px-2 py-1 rounded-full ${
                       video.status === "completed"
-                        ? "bg-green-500/20 text-green-400"
+                        ? "bg-success/20 text-success"
                         : video.status === "processing"
-                        ? "bg-blue-500/20 text-blue-400"
+                        ? "bg-primary/20 text-primary"
                         : video.status === "pending"
-                        ? "bg-yellow-500/20 text-yellow-400"
-                        : "bg-red-500/20 text-red-400"
+                        ? "bg-warning/20 text-warning"
+                        : "bg-destructive/20 text-destructive"
                     }`}
                   >
                     {video.status}

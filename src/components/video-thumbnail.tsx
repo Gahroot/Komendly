@@ -20,6 +20,8 @@ export function VideoThumbnail({
   // If thumbnailUrl exists, use it as an image
   if (thumbnailUrl) {
     return (
+      // Remote thumbnails from arbitrary video providers; next/image would need every host allow-listed.
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={thumbnailUrl}
         alt={alt}

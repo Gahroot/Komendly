@@ -24,6 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { VideoCard } from "@/components/video-card";
 import { VideoModal } from "@/components/video-modal";
 import { useVideos, deleteVideo, type Video as VideoType } from "@/hooks/useVideos";
+import { PageHeader } from "@/components/page-header";
 
 export default function VideosPage() {
   const { videos, isLoading, error, refresh } = useVideos();
@@ -75,7 +76,7 @@ export default function VideosPage() {
 
   // Animation variants
   const containerVariants = {
-    hidden: { opacity: 0 },
+    hidden: { opacity: 1 },
     visible: {
       opacity: 1,
       transition: {
@@ -85,7 +86,7 @@ export default function VideosPage() {
   } as const;
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 1, y: 12 },
     visible: {
       opacity: 1,
       y: 0,
@@ -98,51 +99,47 @@ export default function VideosPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div>
+      <div>
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-1">Video Library</h1>
-            <p className="text-zinc-400">
-              {videos.length} testimonial{videos.length !== 1 ? "s" : ""}{" "}
-              generated
-            </p>
-          </div>
-          <Button
-            asChild
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
-          >
-            <a href="/dashboard/create">
-              <Plus className="w-4 h-4 mr-2" />
-              Create New Video
-            </a>
-          </Button>
-        </div>
+        <PageHeader
+          className="mb-8"
+          eyebrow="Library"
+          title="Video Library"
+          description={`${videos.length} testimonial${videos.length !== 1 ? "s" : ""} generated`}
+          actions={
+            <Button asChild>
+              <a href="/dashboard/create">
+                <Plus className="w-4 h-4 mr-2" />
+                Create New Video
+              </a>
+            </Button>
+          }
+        />
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Search by business or reviewer name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-zinc-900 border-zinc-800 text-white placeholder:text-zinc-500 focus:border-purple-500"
+              className="pl-10 bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-primary"
             />
           </div>
           <Select
             value={sortOrder}
             onValueChange={(value: "desc" | "asc") => setSortOrder(value)}
           >
-            <SelectTrigger className="w-[180px] bg-zinc-900 border-zinc-800 text-white">
+            <SelectTrigger className="w-[180px] bg-card border-border text-foreground">
               <SelectValue placeholder="Sort by date" />
             </SelectTrigger>
-            <SelectContent className="bg-zinc-900 border-zinc-800">
+            <SelectContent className="bg-card border-border">
               <SelectItem
                 value="desc"
-                className="text-white focus:bg-zinc-800 focus:text-white"
+                className="text-foreground focus:bg-secondary focus:text-foreground"
               >
                 <div className="flex items-center gap-2">
                   <SortDesc className="w-4 h-4" />
@@ -151,7 +148,7 @@ export default function VideosPage() {
               </SelectItem>
               <SelectItem
                 value="asc"
-                className="text-white focus:bg-zinc-800 focus:text-white"
+                className="text-foreground focus:bg-secondary focus:text-foreground"
               >
                 <div className="flex items-center gap-2">
                   <SortAsc className="w-4 h-4" />
@@ -167,25 +164,25 @@ export default function VideosPage() {
           {isLoading ? (
             // Loading State
             <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 text-purple-500 animate-spin mb-4" />
-              <p className="text-zinc-400">Loading your videos...</p>
+              <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
+              <p className="text-muted-foreground">Loading your videos...</p>
             </div>
           ) : error ? (
             // Error State
             <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
-                <Video className="w-8 h-8 text-red-500" />
+              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+                <Video className="w-8 h-8 text-destructive" />
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 Failed to load videos
               </h3>
-              <p className="text-zinc-400 mb-4">
+              <p className="text-muted-foreground mb-4">
                 Something went wrong while fetching your videos.
               </p>
               <Button
                 variant="outline"
                 onClick={() => refresh()}
-                className="border-zinc-700 text-white hover:bg-zinc-800"
+                className="border-input text-foreground hover:bg-secondary"
               >
                 Try Again
               </Button>
@@ -193,42 +190,42 @@ export default function VideosPage() {
           ) : filteredVideos.length === 0 ? (
             // Empty State
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 1, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center justify-center py-20"
             >
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mb-6">
-                <Film className="w-10 h-10 text-purple-400" />
+              <div className="w-20 h-20 rounded-3xl bg-primary/10 shadow-[var(--glass-rim)] flex items-center justify-center mb-6">
+                <Film className="w-10 h-10 text-primary" />
               </div>
               {searchQuery ? (
                 <>
-                  <h3 className="text-xl font-semibold text-white mb-2">
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
                     No videos found
                   </h3>
-                  <p className="text-zinc-400 text-center max-w-md mb-6">
+                  <p className="text-muted-foreground text-center max-w-md mb-6">
                     No videos match your search for &ldquo;{searchQuery}&rdquo;.
                     Try a different search term.
                   </p>
                   <Button
                     variant="outline"
                     onClick={() => setSearchQuery("")}
-                    className="border-zinc-700 text-white hover:bg-zinc-800"
+                    className="border-input text-foreground hover:bg-secondary"
                   >
                     Clear Search
                   </Button>
                 </>
               ) : (
                 <>
-                  <h3 className="text-xl font-semibold text-white mb-2">
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
                     No videos yet
                   </h3>
-                  <p className="text-zinc-400 text-center max-w-md mb-6">
+                  <p className="text-muted-foreground text-center max-w-md mb-6">
                     You haven&apos;t created any testimonial videos yet.
                     Transform your Google Reviews into engaging video content!
                   </p>
                   <Button
                     asChild
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                    className="bg-brand hover:bg-primary/90 text-primary-foreground"
                   >
                     <a href="/dashboard/create">
                       <Plus className="w-4 h-4 mr-2" />

@@ -1,0 +1,83 @@
+"use client";
+
+import { useState } from "react";
+import { Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AWARENESS_LEVELS, RATIOS, type Ratio } from "@/lib/ads/contracts";
+import type { RunView } from "@/lib/ads/run-types";
+import { track } from "@/lib/analytics/track";
+import { AdCard } from "./ad-card";
+import { AdFailedCard } from "./ad-failed-card";
+import { AwarenessGroupHeader } from "./awareness-group-header";
+import { AdSkeletonCard } from "./ad-skeleton-card";
+import { FirstAdTimer } from "./first-ad-timer";
+import { MetaPublishDialog } from "./meta-publish-dialog";
+
+export function AdGallery({ run }: { run: RunView }) {
+  const ratios = RATIOS.filter((r) => run.ratios.includes(r));
+  const [ratio, setRatio] = useState<Ratio>(ratios[0] ?? "1:1");
+  const ready = run.ads.filter((a) => a.status === "ready").length;
+  const total = run.staticCount + run.motionCount;
+  const missing = Math.max(0, total - run.ads.length);
+  const done = ["completed", "partial", "failed", "canceled"].includes(run.status);
+  const isFailed = (a: RunView["ads"][number]) => a.status === "failed_qc" || a.status === "failed";
+  const rank = (a: RunView["ads"][number]) => (a.status === "ready" ? 0 : 1);
+  const live = run.ads.filter((a) => !isFailed(a)).sort((a, b) => rank(a) - rank(b) || a.index - b.index);
+  const groups = AWARENESS_LEVELS.map((l) => [l, live.filter((a) => a.awareness === l)] as const).filter(([, ads]) => ads.length > 0);
+  const failed = run.ads.filter(isFailed).sort((a, b) => a.index - b.index);
+
+  return (
+    <section className="space-y-8">
+      <div className="glass-float z-20 flex flex-col gap-3 rounded-2xl p-4 sm:sticky sm:top-16 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold tracking-tight">{done ? "Your ads" : "Building your ads"}</h2>
+          <div className="flex items-center gap-3" aria-live="polite">
+            <Progress value={total ? (ready / total) * 100 : 0} className="h-1.5 w-28" />
+            <p className="text-sm tabular-nums text-muted-foreground">{ready} of {total} ready</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <FirstAdTimer confirmedAt={run.confirmedAt} firstAdAt={run.firstAdAt} />
+          {ratios.length > 1 && (
+            <Tabs value={ratio} onValueChange={(v) => setRatio(v as Ratio)}>
+              <TabsList>
+                {ratios.map((r) => <TabsTrigger key={r} value={r}>{r}</TabsTrigger>)}
+              </TabsList>
+            </Tabs>
+          )}
+          {done && <MetaPublishDialog runId={run.id} />}
+          <Button asChild disabled={ready === 0}>
+            <a href={ready ? `/api/ads/runs/${run.id}/download` : undefined} aria-disabled={ready === 0} onClick={() => ready && track("ad_downloaded", { run_id: run.id, scope: "all", ready })}>
+              <Download /> Download all
+            </a>
+          </Button>
+        </div>
+      </div>
+      {run.status === "failed" && <p className="text-sm text-destructive">{run.error ?? "This run failed. Unused credits were refunded."}</p>}
+      {groups.map(([level, ads]) => (
+        <div key={level} className="space-y-4">
+          <AwarenessGroupHeader level={level} count={ads.length} />
+          <div className="columns-1 gap-5 sm:columns-2 lg:columns-3 [&>*]:mb-6 [&>*]:break-inside-avoid">
+            {ads.map((ad) => <AdCard key={ad.id} ad={ad} ratio={ratio} />)}
+          </div>
+        </div>
+      ))}
+      {!done && missing > 0 && (
+        <div className="space-y-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Still planning · {missing}</p>
+          <div className="columns-1 gap-5 sm:columns-2 lg:columns-3 [&>*]:mb-6 [&>*]:break-inside-avoid">
+            {Array.from({ length: missing }, (_, i) => <AdSkeletonCard key={`s${i}`} ratio={ratio} label="Planning…" />)}
+          </div>
+        </div>
+      )}
+      {failed.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">{failed.length} {failed.length === 1 ? "ad" : "ads"} held back</p>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{failed.map((ad) => <AdFailedCard key={ad.id} ad={ad} />)}</div>
+        </div>
+      )}
+    </section>
+  );
+}

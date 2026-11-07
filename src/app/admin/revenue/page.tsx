@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, LineChart, Line } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/page-header";
 
 interface RevenueStats {
   totalRevenue: number;
@@ -59,11 +60,11 @@ interface RevenueStats {
 const chartConfig: ChartConfig = {
   revenue: {
     label: "Revenue",
-    color: "hsl(142, 76%, 36%)",
+    color: "var(--chart-3)",
   },
   purchases: {
     label: "Purchases",
-    color: "hsl(262, 83%, 58%)",
+    color: "var(--chart-1)",
   },
 };
 
@@ -93,18 +94,15 @@ export default function RevenuePage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-zinc-100">Revenue</h1>
-          <p className="text-zinc-400 mt-1">Track platform revenue and purchases</p>
-        </div>
+        <PageHeader eyebrow="Admin" title="Revenue" description="Track platform revenue and purchases" />
         <div className="grid gap-4 md:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="bg-zinc-900 border-zinc-800">
+            <Card key={i} >
               <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-24 bg-zinc-800" />
+                <Skeleton className="h-4 w-24 bg-secondary" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-8 w-20 bg-zinc-800" />
+                <Skeleton className="h-8 w-20 bg-secondary" />
               </CardContent>
             </Card>
           ))}
@@ -142,11 +140,7 @@ export default function RevenuePage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-zinc-100">Revenue</h1>
-        <p className="text-zinc-400 mt-1">Track platform revenue and purchases</p>
-      </div>
+      <PageHeader eyebrow="Admin" title="Revenue" description="Track platform revenue and purchases" />
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -154,16 +148,16 @@ export default function RevenuePage() {
           const Icon = stat.icon;
 
           return (
-            <Card key={stat.title} className="bg-zinc-900 border-zinc-800">
+            <Card key={stat.title} >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-zinc-400">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
-                <Icon className="h-4 w-4 text-zinc-500" />
+                <Icon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-zinc-100">{stat.value}</div>
-                <p className="text-xs text-zinc-500 mt-1">{stat.description}</p>
+                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+                <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
               </CardContent>
             </Card>
           );
@@ -173,10 +167,10 @@ export default function RevenuePage() {
       {/* Charts */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Monthly Revenue Chart */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card >
           <CardHeader>
-            <CardTitle className="text-zinc-100">Revenue Trend</CardTitle>
-            <CardDescription className="text-zinc-500">
+            <CardTitle className="text-foreground">Revenue Trend</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Monthly revenue over time
             </CardDescription>
           </CardHeader>
@@ -185,13 +179,13 @@ export default function RevenuePage() {
               <LineChart data={stats?.revenueByMonth ?? []}>
                 <XAxis
                   dataKey="month"
-                  stroke="#71717a"
+                  stroke="var(--muted-foreground)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  stroke="#71717a"
+                  stroke="var(--muted-foreground)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -211,10 +205,10 @@ export default function RevenuePage() {
         </Card>
 
         {/* Purchases by Plan */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card >
           <CardHeader>
-            <CardTitle className="text-zinc-100">Revenue by Plan</CardTitle>
-            <CardDescription className="text-zinc-500">
+            <CardTitle className="text-foreground">Revenue by Plan</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Revenue distribution across plans
             </CardDescription>
           </CardHeader>
@@ -223,13 +217,13 @@ export default function RevenuePage() {
               <BarChart data={stats?.revenueByPlan ?? []}>
                 <XAxis
                   dataKey="plan"
-                  stroke="#71717a"
+                  stroke="var(--muted-foreground)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  stroke="#71717a"
+                  stroke="var(--muted-foreground)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -244,44 +238,44 @@ export default function RevenuePage() {
       </div>
 
       {/* Recent Purchases Table */}
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card >
         <CardHeader>
-          <CardTitle className="text-zinc-100">Recent Purchases</CardTitle>
-          <CardDescription className="text-zinc-500">
+          <CardTitle className="text-foreground">Recent Purchases</CardTitle>
+          <CardDescription className="text-muted-foreground">
             Latest credit purchases
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border border-zinc-800">
+          <div className="rounded-md border border-border">
             <Table>
               <TableHeader>
-                <TableRow className="border-zinc-800 hover:bg-zinc-800/50">
-                  <TableHead className="text-zinc-400">User</TableHead>
-                  <TableHead className="text-zinc-400">Minutes</TableHead>
-                  <TableHead className="text-zinc-400">Amount</TableHead>
-                  <TableHead className="text-zinc-400">Date</TableHead>
+                <TableRow className="border-border hover:bg-muted">
+                  <TableHead className="text-muted-foreground">User</TableHead>
+                  <TableHead className="text-muted-foreground">Minutes</TableHead>
+                  <TableHead className="text-muted-foreground">Amount</TableHead>
+                  <TableHead className="text-muted-foreground">Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {stats?.recentPurchases?.map((purchase) => (
-                  <TableRow key={purchase.id} className="border-zinc-800 hover:bg-zinc-800/50">
+                  <TableRow key={purchase.id} className="border-border hover:bg-muted">
                     <TableCell>
                       <div>
-                        <p className="font-medium text-zinc-100">
+                        <p className="font-medium text-foreground">
                           {purchase.user.name || purchase.user.email.split("@")[0]}
                         </p>
-                        <p className="text-xs text-zinc-500">{purchase.user.email}</p>
+                        <p className="text-xs text-muted-foreground">{purchase.user.email}</p>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="bg-zinc-800 text-zinc-300 border-zinc-700">
+                      <Badge variant="outline" className="bg-secondary text-foreground/80 border-input">
                         {purchase.minutes} min
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-green-400 font-medium">
+                    <TableCell className="text-success font-medium">
                       ${(purchase.amountPaid / 100).toFixed(2)}
                     </TableCell>
-                    <TableCell className="text-zinc-400">
+                    <TableCell className="text-muted-foreground">
                       {new Date(purchase.createdAt).toLocaleDateString()}
                     </TableCell>
                   </TableRow>
@@ -297,17 +291,17 @@ export default function RevenuePage() {
               size="sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+              className="border-input text-foreground/80 hover:bg-secondary"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm text-zinc-400">Page {page}</span>
+            <span className="text-sm text-muted-foreground">Page {page}</span>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setPage((p) => p + 1)}
               disabled={(stats?.recentPurchases?.length ?? 0) < 10}
-              className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+              className="border-input text-foreground/80 hover:bg-secondary"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>

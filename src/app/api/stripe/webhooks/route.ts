@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { stripe, getPlanFromPriceId, getMinutesForPlan, mapStripeStatus } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import { isAdsStripeObject } from "@/lib/ads/billing-stripe";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -28,6 +29,11 @@ export async function POST(request: NextRequest) {
   }
 
   console.log(`Received Stripe webhook: ${event.type}`);
+
+  // Website2ads events are handled by /api/ads-billing/webhook; ignore them here.
+  if (isAdsStripeObject(event.data.object)) {
+    return NextResponse.json({ received: true, ignored: "ads" });
+  }
 
   try {
     switch (event.type) {

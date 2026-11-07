@@ -117,13 +117,13 @@ function CheckoutSuccessContent() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-16 w-16 animate-spin text-purple-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-semibold text-white mb-2">
+          <Loader2 className="h-16 w-16 animate-spin text-primary mx-auto mb-4" />
+          <h2 className="text-2xl font-semibold text-foreground mb-2">
             Verifying your payment...
           </h2>
-          <p className="text-gray-400">Please wait while we confirm your subscription.</p>
+          <p className="text-muted-foreground">Please wait while we confirm your subscription.</p>
         </div>
       </div>
     );
@@ -131,26 +131,26 @@ function CheckoutSuccessContent() {
 
   if (status === "error") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="h-8 w-8 text-red-500" />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="glass mx-4 w-full max-w-md rounded-3xl border border-border px-8 py-12 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-destructive/10 shadow-[var(--glass-rim)] flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="h-8 w-8 text-destructive" />
           </div>
-          <h2 className="text-2xl font-semibold text-white mb-2">
+          <h2 className="text-2xl font-semibold text-foreground mb-2">
             Payment Verification Failed
           </h2>
-          <p className="text-gray-400 mb-6">{error}</p>
-          <div className="space-x-4">
+          <p className="text-muted-foreground mb-6">{error}</p>
+          <div className="flex flex-wrap justify-center gap-3">
             <Button
               onClick={() => router.push("/pricing")}
-              className="bg-purple-600 hover:bg-purple-700"
+              
             >
               Try Again
             </Button>
             <Button
               variant="outline"
-              onClick={() => router.push("/")}
-              className="border-gray-600 text-gray-300"
+              onClick={() => router.push("/testimonials")}
+              
             >
               Go Home
             </Button>
@@ -161,48 +161,48 @@ function CheckoutSuccessContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center">
-      <div className="text-center max-w-md mx-auto px-4">
-        <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-6">
-          <Check className="h-10 w-10 text-green-500" />
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="glass mx-4 w-full max-w-md rounded-3xl border border-border px-8 py-12 text-center">
+        <div className="w-20 h-20 rounded-2xl bg-success/10 shadow-[var(--glass-rim)] flex items-center justify-center mx-auto mb-6">
+          <Check className="h-10 w-10 text-success" />
         </div>
 
-        <h1 className="text-3xl font-bold text-white mb-2">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground mb-2">
           Welcome to Komendly!
         </h1>
 
-        <p className="text-gray-400 mb-6">
+        <p className="text-muted-foreground mb-6">
           Your subscription is now active. You&apos;re all set to start creating amazing video testimonials.
         </p>
 
         {userData && (
-          <div className="bg-gray-800/50 rounded-xl p-6 mb-6 border border-gray-700">
-            <h3 className="text-lg font-semibold text-white mb-4">Your Plan Details</h3>
+          <div className="glass-subtle rounded-2xl p-6 mb-6 border border-border">
+            <h3 className="text-lg font-semibold text-foreground mb-4">Your Plan Details</h3>
             <div className="space-y-2 text-left">
               <div className="flex justify-between">
-                <span className="text-gray-400">Plan:</span>
-                <span className="text-white font-medium capitalize">{userData.plan}</span>
+                <span className="text-muted-foreground">Plan:</span>
+                <span className="text-foreground font-medium capitalize">{userData.plan}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Monthly Minutes:</span>
-                <span className="text-white font-medium">{userData.minutesLimit} minutes</span>
+                <span className="text-muted-foreground">Monthly Minutes:</span>
+                <span className="text-foreground font-medium">{userData.minutesLimit} minutes</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Email:</span>
-                <span className="text-white font-medium">{userData.email}</span>
+                <span className="text-muted-foreground">Email:</span>
+                <span className="text-foreground font-medium truncate pl-4">{userData.email}</span>
               </div>
             </div>
           </div>
         )}
 
-        <div className="flex items-center justify-center gap-2 text-gray-400 text-sm mb-6">
+        <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm mb-6">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span>Redirecting to your dashboard...</span>
         </div>
 
         <Button
           onClick={() => router.push("/dashboard")}
-          className="bg-purple-600 hover:bg-purple-700 px-8 py-6 text-lg"
+          className="h-12 px-8 text-base"
         >
           Go to Dashboard
         </Button>
@@ -213,10 +213,10 @@ function CheckoutSuccessContent() {
 
 function CheckoutSuccessLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <Loader2 className="h-16 w-16 animate-spin text-purple-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-semibold text-white mb-2">Loading...</h2>
+        <Loader2 className="h-16 w-16 animate-spin text-primary mx-auto mb-4" />
+        <h2 className="text-2xl font-semibold text-foreground mb-2">Loading...</h2>
       </div>
     </div>
   );

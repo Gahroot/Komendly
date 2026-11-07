@@ -14,12 +14,14 @@ import {
   User,
   ArrowLeft,
   BarChart3,
+  Megaphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/hooks/useUser";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
   {
@@ -48,6 +50,11 @@ const navItems = [
     icon: BarChart3,
   },
   {
+    label: "Ads",
+    href: "/admin/ads",
+    icon: Megaphone,
+  },
+  {
     label: "Settings",
     href: "/admin/settings",
     icon: Settings,
@@ -72,9 +79,9 @@ export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
     .slice(0, 2);
 
   return (
-    <div className="flex h-full flex-col bg-zinc-950 text-zinc-100">
+    <div className="flex h-full flex-col text-sidebar-foreground">
       {/* Logo */}
-      <div className="flex h-16 items-center px-6">
+      <div className="flex h-16 items-center justify-between px-6 pr-3">
         <Link href="/admin" className="flex items-center gap-2">
           <Image
             src="/logo.svg"
@@ -86,22 +93,23 @@ export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
           />
           <span className="text-xl font-bold tracking-tight">ADMIN</span>
         </Link>
+        <ThemeToggle />
       </div>
 
-      <Separator className="bg-zinc-800" />
+      <Separator className="bg-sidebar-border" />
 
       {/* Back to Dashboard Link */}
       <div className="px-3 py-2">
         <Link
           href="/dashboard"
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100 transition-colors"
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Dashboard
         </Link>
       </div>
 
-      <Separator className="bg-zinc-800" />
+      <Separator className="bg-sidebar-border" />
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4">
@@ -112,52 +120,48 @@ export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
           const Icon = item.icon;
 
           return (
-            <motion.div
-              key={item.href}
-              whileHover={{ x: 4 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            >
+            <div key={item.href} className="relative">
               <Link
                 href={item.href}
                 onClick={onNavigate}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200",
                   isActive
-                    ? "bg-violet-600 text-white"
-                    : "text-zinc-400 hover:bg-zinc-900 hover:text-white"
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--glass-rim)]"
+                    : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
                 )}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className={cn("h-[18px] w-[18px]", isActive && "text-primary")} />
                 {item.label}
                 {isActive && (
                   <motion.div
                     layoutId="adminActiveIndicator"
-                    className="ml-auto h-1.5 w-1.5 rounded-full bg-white"
+                    className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-primary"
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
               </Link>
-            </motion.div>
+            </div>
           );
         })}
       </nav>
 
-      <Separator className="bg-zinc-800" />
+      <Separator className="bg-sidebar-border" />
 
       {/* User Section */}
       <div className="p-4">
-        <div className="flex items-center gap-3 rounded-lg bg-zinc-900 p-3">
+        <div className="flex items-center gap-3 rounded-xl glass-subtle p-3">
           <Avatar className="h-9 w-9">
             <AvatarImage src="" alt={displayName} />
-            <AvatarFallback className="bg-violet-600 text-white">
+            <AvatarFallback className="bg-primary text-primary-foreground">
               {initials || <User className="h-4 w-4" />}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 overflow-hidden">
-            <p className="truncate text-sm font-medium text-zinc-100">
+            <p className="truncate text-sm font-medium text-foreground">
               {displayName}
             </p>
-            <p className="truncate text-xs text-zinc-500">{displayEmail}</p>
+            <p className="truncate text-xs text-muted-foreground">{displayEmail}</p>
           </div>
         </div>
 
@@ -168,7 +172,7 @@ export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
         >
           <Button
             variant="ghost"
-            className="w-full justify-start gap-3 text-zinc-400 hover:bg-zinc-900 hover:text-red-400"
+            className="w-full justify-start gap-3 text-muted-foreground hover:bg-card hover:text-destructive"
             onClick={logout}
           >
             <LogOut className="h-4 w-4" />

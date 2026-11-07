@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
     const hasPaidPlan = user.plan !== "pending" && user.plan !== "free";
 
     // If user doesn't have an active subscription, redirect to pricing
-    if (!hasActiveSubscription || !hasPaidPlan) {
+    // Admins (e.g. the /admin/ads operators) need a session regardless of subscription.
+    if (!user.isAdmin && (!hasActiveSubscription || !hasPaidPlan)) {
       log.info(
         { userId: user.id, email, plan: user.plan, status: user.subscriptionStatus, durationMs: timer.getDuration() },
         "Login successful but subscription incomplete - redirecting to pricing"

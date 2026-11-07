@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/page-header";
 
 interface AnalyticsStats {
   totalVideosGenerated: number;
@@ -43,15 +44,15 @@ interface AnalyticsStats {
 const chartConfig: ChartConfig = {
   videos: {
     label: "Videos",
-    color: "hsl(262, 83%, 58%)",
+    color: "var(--chart-1)",
   },
   users: {
     label: "Users",
-    color: "hsl(142, 76%, 36%)",
+    color: "var(--chart-3)",
   },
 };
 
-const COLORS = ["#8b5cf6", "#22c55e", "#3b82f6", "#f59e0b", "#ef4444"];
+const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
 
 export default function AnalyticsPage() {
   const [stats, setStats] = useState<AnalyticsStats | null>(null);
@@ -78,18 +79,15 @@ export default function AnalyticsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-zinc-100">Analytics</h1>
-          <p className="text-zinc-400 mt-1">Platform usage insights</p>
-        </div>
+        <PageHeader eyebrow="Admin" title="Analytics" description="Platform usage insights" />
         <div className="grid gap-4 md:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="bg-zinc-900 border-zinc-800">
+            <Card key={i} >
               <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-24 bg-zinc-800" />
+                <Skeleton className="h-4 w-24 bg-secondary" />
               </CardHeader>
               <CardContent>
-                <Skeleton className="h-8 w-20 bg-zinc-800" />
+                <Skeleton className="h-8 w-20 bg-secondary" />
               </CardContent>
             </Card>
           ))}
@@ -131,11 +129,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-zinc-100">Analytics</h1>
-        <p className="text-zinc-400 mt-1">Platform usage insights</p>
-      </div>
+      <PageHeader eyebrow="Admin" title="Analytics" description="Platform usage insights" />
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -143,16 +137,16 @@ export default function AnalyticsPage() {
           const Icon = stat.icon;
 
           return (
-            <Card key={stat.title} className="bg-zinc-900 border-zinc-800">
+            <Card key={stat.title} >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-zinc-400">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   {stat.title}
                 </CardTitle>
-                <Icon className="h-4 w-4 text-zinc-500" />
+                <Icon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-zinc-100">{stat.value}</div>
-                <p className="text-xs text-zinc-500 mt-1">{stat.description}</p>
+                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+                <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
               </CardContent>
             </Card>
           );
@@ -162,10 +156,10 @@ export default function AnalyticsPage() {
       {/* Charts */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Videos by Day */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card >
           <CardHeader>
-            <CardTitle className="text-zinc-100">Videos Generated (Last 14 Days)</CardTitle>
-            <CardDescription className="text-zinc-500">
+            <CardTitle className="text-foreground">Videos Generated (Last 14 Days)</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Daily video generation activity
             </CardDescription>
           </CardHeader>
@@ -174,13 +168,13 @@ export default function AnalyticsPage() {
               <BarChart data={stats?.videosByDay ?? []}>
                 <XAxis
                   dataKey="date"
-                  stroke="#71717a"
+                  stroke="var(--muted-foreground)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  stroke="#71717a"
+                  stroke="var(--muted-foreground)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -193,10 +187,10 @@ export default function AnalyticsPage() {
         </Card>
 
         {/* Users by Plan */}
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card >
           <CardHeader>
-            <CardTitle className="text-zinc-100">Users by Plan</CardTitle>
-            <CardDescription className="text-zinc-500">
+            <CardTitle className="text-foreground">Users by Plan</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Distribution of user subscriptions
             </CardDescription>
           </CardHeader>
@@ -226,10 +220,10 @@ export default function AnalyticsPage() {
         </Card>
 
         {/* Top AI Creators */}
-        <Card className="bg-zinc-900 border-zinc-800 md:col-span-2">
+        <Card className="bg-card border-border md:col-span-2">
           <CardHeader>
-            <CardTitle className="text-zinc-100">Most Used AI Creators</CardTitle>
-            <CardDescription className="text-zinc-500">
+            <CardTitle className="text-foreground">Most Used AI Creators</CardTitle>
+            <CardDescription className="text-muted-foreground">
               Video generations by AI creator
             </CardDescription>
           </CardHeader>
@@ -238,7 +232,7 @@ export default function AnalyticsPage() {
               <BarChart data={stats?.videosByCreator ?? []} layout="vertical">
                 <XAxis
                   type="number"
-                  stroke="#71717a"
+                  stroke="var(--muted-foreground)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -246,7 +240,7 @@ export default function AnalyticsPage() {
                 <YAxis
                   type="category"
                   dataKey="creator"
-                  stroke="#71717a"
+                  stroke="var(--muted-foreground)"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}

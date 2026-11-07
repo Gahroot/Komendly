@@ -385,32 +385,32 @@ export function VideoPreview({
                       )}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800">
+                  <DropdownMenuContent align="end" className="bg-card border-border">
                     <DropdownMenuItem
                       onClick={handleCopyLink}
-                      className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-800"
+                      className="text-foreground/80 hover:text-white focus:text-white focus:bg-secondary"
                     >
                       <Copy className="w-4 h-4 mr-2" />
                       Copy Link
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-zinc-800" />
+                    <DropdownMenuSeparator className="bg-secondary" />
                     <DropdownMenuItem
                       onClick={() => handleSocialShare("twitter")}
-                      className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-800"
+                      className="text-foreground/80 hover:text-white focus:text-white focus:bg-secondary"
                     >
                       <Twitter className="w-4 h-4 mr-2" />
                       Share on Twitter
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => handleSocialShare("facebook")}
-                      className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-800"
+                      className="text-foreground/80 hover:text-white focus:text-white focus:bg-secondary"
                     >
                       <Facebook className="w-4 h-4 mr-2" />
                       Share on Facebook
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => handleSocialShare("linkedin")}
-                      className="text-zinc-300 hover:text-white focus:text-white focus:bg-zinc-800"
+                      className="text-foreground/80 hover:text-white focus:text-white focus:bg-secondary"
                     >
                       <Linkedin className="w-4 h-4 mr-2" />
                       Share on LinkedIn

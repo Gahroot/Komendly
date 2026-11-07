@@ -62,11 +62,11 @@ export default async function BlogPostPage({ params }: PageProps) {
     .slice(0, 2)
 
   return (
-    <div className="min-h-screen bg-zinc-950">
-      <article className="container mx-auto px-4 py-16 max-w-3xl">
+    <div className="min-h-screen">
+      <article className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-20">
         <Link
           href="/blog"
-          className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-100 transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to blog
@@ -78,22 +78,22 @@ export default async function BlogPostPage({ params }: PageProps) {
               <Link
                 key={tag}
                 href={`/blog/tag/${tag.toLowerCase()}`}
-                className="text-xs font-medium text-purple-400 bg-purple-500/10 px-2 py-1 rounded-full hover:bg-purple-500/20 transition-colors"
+                className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full hover:bg-primary/20 transition-colors"
               >
                 {tag}
               </Link>
             ))}
           </div>
 
-          <h1 className="text-4xl font-bold tracking-tight text-zinc-100 mb-4">
+          <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl mb-4">
             {post.title}
           </h1>
 
-          <p className="text-xl text-zinc-400 mb-6">
+          <p className="text-xl text-muted-foreground mb-6">
             {post.description}
           </p>
 
-          <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-500 pb-8 border-b border-zinc-800">
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground pb-8 border-b border-border">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4" />
               <span>{post.author}</span>
@@ -120,15 +120,15 @@ export default async function BlogPostPage({ params }: PageProps) {
           </div>
         )}
 
-        <div className="prose prose-invert max-w-none">
+        <div className="prose dark:prose-invert max-w-none">
           {content}
         </div>
 
-        <footer className="mt-12 pt-8 border-t border-zinc-800">
+        <footer className="mt-12 pt-8 border-t border-border">
           <div className="flex items-center justify-between mb-8">
             <Link
               href="/blog"
-              className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-100 transition-colors"
+              className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to all posts
@@ -137,7 +137,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
           {relatedPosts.length > 0 && (
             <div>
-              <h2 className="text-2xl font-bold text-zinc-100 mb-6">Related Posts</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-6">Related Posts</h2>
               <div className="grid gap-6 md:grid-cols-2">
                 {relatedPosts.map((relatedPost) => (
                   <BlogPostCard key={relatedPost.slug} post={relatedPost} />

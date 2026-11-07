@@ -268,7 +268,7 @@ function GenerateContent() {
                 >
                   {copied ? (
                     <>
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <Check className="mr-2 h-4 w-4 text-success" />
                       Copied!
                     </>
                   ) : (
@@ -380,11 +380,11 @@ function GenerateContent() {
                   <CardContent>
                     <ul className="space-y-3 text-sm text-muted-foreground">
                       <li className="flex items-start gap-2">
-                        <span className={`mt-1 h-1.5 w-1.5 rounded-full ${status === "starting" ? "bg-primary animate-pulse" : "bg-green-500"}`} />
+                        <span className={`mt-1 h-1.5 w-1.5 rounded-full ${status === "starting" ? "bg-primary animate-pulse" : "bg-success"}`} />
                         <span>AI generating UGC script from review</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className={`mt-1 h-1.5 w-1.5 rounded-full ${status === "generating" ? "bg-primary animate-pulse" : status === "stitching" ? "bg-green-500" : "bg-muted-foreground"}`} />
+                        <span className={`mt-1 h-1.5 w-1.5 rounded-full ${status === "generating" ? "bg-primary animate-pulse" : status === "stitching" ? "bg-success" : "bg-muted-foreground"}`} />
                         <span>Generating lip-synced video clips</span>
                       </li>
                       <li className="flex items-start gap-2">

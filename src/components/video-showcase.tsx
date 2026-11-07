@@ -51,10 +51,10 @@ const TestimonialVideoCard = memo(function TestimonialVideoCard({
   return (
     <div
       className={cn(
-        "relative w-[200px] shrink-0 cursor-pointer overflow-hidden rounded-xl border bg-zinc-900 transition-all duration-300 sm:w-[240px]",
+        "relative w-[200px] shrink-0 cursor-pointer overflow-hidden rounded-xl border bg-card transition-all duration-300 sm:w-[240px]",
         isActive
-          ? "border-purple-500 ring-2 ring-purple-500/20"
-          : "border-zinc-800 hover:border-purple-500/50 hover:scale-[1.02]"
+          ? "border-primary ring-2 ring-primary/20"
+          : "border-border hover:border-primary/50 hover:scale-[1.02]"
       )}
       onClick={() => onToggle(videoId)}
     >
@@ -74,7 +74,7 @@ const TestimonialVideoCard = memo(function TestimonialVideoCard({
         className={cn(
           "absolute bottom-3 right-3 rounded-full p-2 transition-all duration-200",
           isActive
-            ? "bg-purple-600 shadow-lg shadow-purple-500/25"
+            ? "bg-primary shadow-lg shadow-primary/25"
             : "bg-black/60 hover:bg-black/80"
         )}
       >
@@ -144,11 +144,11 @@ export function VideoShowcase({ videoIds, className }: VideoShowcaseProps) {
   return (
     <motion.div
       className={cn("mt-16 w-full", className)}
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 1, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.5 }}
     >
-      <p className="mb-4 text-sm text-zinc-400">
+      <p className="mb-4 text-sm text-muted-foreground">
         See what AI-generated testimonials look like:
       </p>
 

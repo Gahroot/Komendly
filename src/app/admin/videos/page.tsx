@@ -39,6 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/page-header";
 
 interface GeneratedVideo {
   id: string;
@@ -128,58 +129,54 @@ export default function VideosPage() {
   const getStatusBadgeColor = (videoStatus: string) => {
     switch (videoStatus) {
       case "completed":
-        return "bg-green-500/20 text-green-400 border-green-500/30";
+        return "bg-success/20 text-success border-success/30";
       case "processing":
-        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+        return "bg-primary/20 text-primary border-primary/30";
       case "pending":
-        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+        return "bg-warning/20 text-warning border-warning/30";
       case "failed":
-        return "bg-red-500/20 text-red-400 border-red-500/30";
+        return "bg-destructive/20 text-destructive border-destructive/30";
       default:
-        return "bg-zinc-500/20 text-zinc-400 border-zinc-500/30";
+        return "bg-zinc-500/20 text-muted-foreground border-zinc-500/30";
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-zinc-100">Videos</h1>
-        <p className="text-zinc-400 mt-1">Manage generated videos</p>
-      </div>
+      <PageHeader eyebrow="Admin" title="Videos" description="Manage generated videos" />
 
       {/* Filters */}
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card >
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search by user email or business name..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 bg-zinc-800 border-zinc-700 text-zinc-100 placeholder:text-zinc-500"
+                className="pl-10 bg-secondary border-input text-foreground placeholder:text-muted-foreground"
               />
             </div>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-40 bg-zinc-800 border-zinc-700 text-zinc-100">
+              <SelectTrigger className="w-40 bg-secondary border-input text-foreground">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-900 border-zinc-800">
-                <SelectItem value="all" className="text-zinc-300">
+              <SelectContent >
+                <SelectItem value="all" className="text-foreground/80">
                   All Status
                 </SelectItem>
-                <SelectItem value="completed" className="text-zinc-300">
+                <SelectItem value="completed" className="text-foreground/80">
                   Completed
                 </SelectItem>
-                <SelectItem value="processing" className="text-zinc-300">
+                <SelectItem value="processing" className="text-foreground/80">
                   Processing
                 </SelectItem>
-                <SelectItem value="pending" className="text-zinc-300">
+                <SelectItem value="pending" className="text-foreground/80">
                   Pending
                 </SelectItem>
-                <SelectItem value="failed" className="text-zinc-300">
+                <SelectItem value="failed" className="text-foreground/80">
                   Failed
                 </SelectItem>
               </SelectContent>
@@ -189,63 +186,63 @@ export default function VideosPage() {
       </Card>
 
       {/* Videos Table */}
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card >
         <CardHeader>
-          <CardTitle className="text-zinc-100">All Videos</CardTitle>
-          <CardDescription className="text-zinc-500">
+          <CardTitle className="text-foreground">All Videos</CardTitle>
+          <CardDescription className="text-muted-foreground">
             {data?.total ?? 0} total videos
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border border-zinc-800">
+          <div className="rounded-md border border-border">
             <Table>
               <TableHeader>
-                <TableRow className="border-zinc-800 hover:bg-zinc-800/50">
-                  <TableHead className="text-zinc-400">Video</TableHead>
-                  <TableHead className="text-zinc-400">User</TableHead>
-                  <TableHead className="text-zinc-400">Business</TableHead>
-                  <TableHead className="text-zinc-400">Status</TableHead>
-                  <TableHead className="text-zinc-400">Duration</TableHead>
-                  <TableHead className="text-zinc-400">Created</TableHead>
-                  <TableHead className="text-zinc-400 text-right">Actions</TableHead>
+                <TableRow className="border-border hover:bg-muted">
+                  <TableHead className="text-muted-foreground">Video</TableHead>
+                  <TableHead className="text-muted-foreground">User</TableHead>
+                  <TableHead className="text-muted-foreground">Business</TableHead>
+                  <TableHead className="text-muted-foreground">Status</TableHead>
+                  <TableHead className="text-muted-foreground">Duration</TableHead>
+                  <TableHead className="text-muted-foreground">Created</TableHead>
+                  <TableHead className="text-muted-foreground text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   [...Array(5)].map((_, i) => (
-                    <TableRow key={i} className="border-zinc-800">
+                    <TableRow key={i} className="border-border">
                       <TableCell>
-                        <Skeleton className="h-12 w-20 bg-zinc-800" />
+                        <Skeleton className="h-12 w-20 bg-secondary" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-4 w-32 bg-zinc-800" />
+                        <Skeleton className="h-4 w-32 bg-secondary" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-4 w-24 bg-zinc-800" />
+                        <Skeleton className="h-4 w-24 bg-secondary" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-4 w-16 bg-zinc-800" />
+                        <Skeleton className="h-4 w-16 bg-secondary" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-4 w-12 bg-zinc-800" />
+                        <Skeleton className="h-4 w-12 bg-secondary" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-4 w-24 bg-zinc-800" />
+                        <Skeleton className="h-4 w-24 bg-secondary" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-4 w-8 bg-zinc-800 ml-auto" />
+                        <Skeleton className="h-4 w-8 bg-secondary ml-auto" />
                       </TableCell>
                     </TableRow>
                   ))
                 ) : data?.videos.length === 0 ? (
-                  <TableRow className="border-zinc-800">
-                    <TableCell colSpan={7} className="text-center text-zinc-500 py-8">
+                  <TableRow className="border-border">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                       No videos found
                     </TableCell>
                   </TableRow>
                 ) : (
                   data?.videos.map((video) => (
-                    <TableRow key={video.id} className="border-zinc-800 hover:bg-zinc-800/50">
+                    <TableRow key={video.id} className="border-border hover:bg-muted">
                       <TableCell>
                         <div className="flex items-center gap-3">
                           {video.thumbnailUrl ? (
@@ -253,27 +250,27 @@ export default function VideosPage() {
                             <img
                               src={video.thumbnailUrl}
                               alt="Thumbnail"
-                              className="h-12 w-20 rounded object-cover bg-zinc-800"
+                              className="h-12 w-20 rounded object-cover bg-secondary"
                             />
                           ) : (
-                            <div className="h-12 w-20 rounded bg-zinc-800 flex items-center justify-center">
-                              <Video className="h-5 w-5 text-zinc-600" />
+                            <div className="h-12 w-20 rounded bg-secondary flex items-center justify-center">
+                              <Video className="h-5 w-5 text-muted-foreground" />
                             </div>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium text-zinc-100">
+                          <p className="font-medium text-foreground">
                             {video.user.name || video.user.email.split("@")[0]}
                           </p>
-                          <p className="text-xs text-zinc-500">{video.user.email}</p>
+                          <p className="text-xs text-muted-foreground">{video.user.email}</p>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="text-zinc-100">{video.review.businessName}</p>
-                          <p className="text-xs text-zinc-500">{video.review.reviewerName}</p>
+                          <p className="text-foreground">{video.review.businessName}</p>
+                          <p className="text-xs text-muted-foreground">{video.review.reviewerName}</p>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -284,10 +281,10 @@ export default function VideosPage() {
                           {video.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-zinc-300">
+                      <TableCell className="text-foreground/80">
                         {video.duration ? `${video.duration}s` : "-"}
                       </TableCell>
-                      <TableCell className="text-zinc-400">
+                      <TableCell className="text-muted-foreground">
                         {new Date(video.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
@@ -296,22 +293,22 @@ export default function VideosPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-zinc-400 hover:text-zinc-100"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground"
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent
                             align="end"
-                            className="bg-zinc-900 border-zinc-800"
+                            
                           >
-                            <DropdownMenuLabel className="text-zinc-400">
+                            <DropdownMenuLabel className="text-muted-foreground">
                               Actions
                             </DropdownMenuLabel>
-                            <DropdownMenuSeparator className="bg-zinc-800" />
+                            <DropdownMenuSeparator className="bg-secondary" />
                             {video.url && (
                               <DropdownMenuItem
-                                className="text-zinc-300 focus:bg-zinc-800 focus:text-zinc-100"
+                                className="text-foreground/80 focus:bg-secondary focus:text-foreground"
                                 onClick={() => window.open(video.url!, "_blank")}
                               >
                                 <ExternalLink className="h-4 w-4 mr-2" />
@@ -319,7 +316,7 @@ export default function VideosPage() {
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem
-                              className="text-red-400 focus:bg-zinc-800 focus:text-red-300"
+                              className="text-destructive focus:bg-secondary focus:text-destructive"
                               onClick={() => handleDelete(video.id)}
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
@@ -338,7 +335,7 @@ export default function VideosPage() {
           {/* Pagination */}
           {data && data.totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-muted-foreground">
                 Page {data.page} of {data.totalPages}
               </p>
               <div className="flex items-center gap-2">
@@ -347,7 +344,7 @@ export default function VideosPage() {
                   size="sm"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                  className="border-input text-foreground/80 hover:bg-secondary"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -356,7 +353,7 @@ export default function VideosPage() {
                   size="sm"
                   onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
                   disabled={page === data.totalPages}
-                  className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                  className="border-input text-foreground/80 hover:bg-secondary"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>

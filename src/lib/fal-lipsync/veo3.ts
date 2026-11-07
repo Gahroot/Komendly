@@ -195,7 +195,7 @@ export function calculateOptimalDuration(
  * @param _duration - Duration setting (unused - flat rate pricing)
  * @returns Estimated cost in USD
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export function estimateVeo3Cost(_duration: Veo3Duration): number {
   // KIE.ai uses flat rate pricing: $0.40 per video for veo3_fast
   return estimateKieCost(false);

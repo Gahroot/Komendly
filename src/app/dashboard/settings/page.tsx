@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { User, Mail, Loader2, Check, AlertCircle } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
+import { PageHeader } from "@/components/page-header";
 
 export default function SettingsPage() {
   const { user, isLoading: userLoading, refresh } = useUser();
@@ -59,36 +60,33 @@ export default function SettingsPage() {
   if (userLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Settings</h1>
-        <p className="text-zinc-400 mt-1">Manage your account settings</p>
-      </div>
+      <PageHeader eyebrow="Account" title="Settings" description="Manage your account settings" />
 
       {error && (
-        <div className="flex items-center gap-2 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400">
+        <div className="flex items-center gap-2 p-4 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive">
           <AlertCircle className="h-5 w-5 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="flex items-center gap-2 p-4 bg-green-500/10 border border-green-500/50 rounded-lg text-green-400">
+        <div className="flex items-center gap-2 p-4 bg-success/10 border border-success/50 rounded-lg text-success">
           <Check className="h-5 w-5 flex-shrink-0" />
           <span>Profile updated successfully</span>
         </div>
       )}
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card >
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <User className="h-5 w-5 text-purple-500" />
+          <CardTitle className="text-foreground flex items-center gap-2">
+            <User className="h-5 w-5 text-primary" />
             Profile Information
           </CardTitle>
           <CardDescription>Update your account details</CardDescription>
@@ -96,37 +94,37 @@ export default function SettingsPage() {
         <CardContent>
           <form onSubmit={handleSave} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-zinc-400">
+              <Label htmlFor="email" className="text-muted-foreground">
                 Email
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
                   value={user?.email || ""}
                   disabled
-                  className="bg-zinc-800 border-zinc-700 pl-10 text-zinc-400"
+                  className="bg-secondary border-input pl-10 text-muted-foreground"
                 />
               </div>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-muted-foreground">
                 Email cannot be changed
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-zinc-400">
+              <Label htmlFor="name" className="text-muted-foreground">
                 Name
               </Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter your name"
-                  className="bg-zinc-800 border-zinc-700 pl-10"
+                  className="bg-secondary border-input pl-10"
                 />
               </div>
             </div>
@@ -134,7 +132,7 @@ export default function SettingsPage() {
             <Button
               type="submit"
               disabled={saving || name === user?.name}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-primary hover:bg-primary/90"
             >
               {saving ? (
                 <>
@@ -149,33 +147,33 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card >
         <CardHeader>
-          <CardTitle className="text-white">Account Information</CardTitle>
+          <CardTitle className="text-foreground">Account Information</CardTitle>
           <CardDescription>Your account details</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex justify-between items-center">
-            <span className="text-zinc-400">Plan</span>
-            <span className="text-white font-semibold capitalize">
+            <span className="text-muted-foreground">Plan</span>
+            <span className="text-foreground font-semibold capitalize">
               {user?.plan || "None"}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-zinc-400">Account Status</span>
+            <span className="text-muted-foreground">Account Status</span>
             <span
               className={`font-semibold ${
                 user?.subscriptionStatus === "active"
-                  ? "text-green-500"
-                  : "text-yellow-500"
+                  ? "text-success"
+                  : "text-warning"
               }`}
             >
               {user?.subscriptionStatus || "Inactive"}
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-zinc-400">Member Since</span>
-            <span className="text-white">
+            <span className="text-muted-foreground">Member Since</span>
+            <span className="text-foreground">
               {user?.createdAt
                 ? new Date(user.createdAt).toLocaleDateString("en-US", {
                     month: "long",

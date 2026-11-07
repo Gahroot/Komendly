@@ -19,21 +19,22 @@ export default function BlogPage() {
   const tags = getAllTags()
 
   return (
-    <div className="min-h-screen bg-zinc-950">
-      <div className="container mx-auto px-4 py-16 max-w-5xl">
+    <div className="min-h-screen">
+      <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-20">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-zinc-400 hover:text-zinc-100 transition-colors mb-8"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to home
         </Link>
 
         <header className="mb-12">
-          <h1 className="text-4xl font-bold tracking-tight text-zinc-100 mb-4">
+          <p className="mb-3 text-xs font-medium uppercase tracking-[0.14em] text-primary">Blog</p>
+          <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl mb-4">
             Blog
           </h1>
-          <p className="text-lg text-zinc-400 max-w-2xl">
+          <p className="text-lg text-muted-foreground max-w-2xl">
             Insights, tutorials, and updates about AI video testimonials,
             customer reviews, and growing your business with social proof.
           </p>
@@ -43,7 +44,7 @@ export default function BlogPage() {
           <div className="flex flex-wrap gap-2 mb-8">
             <Link
               href="/blog"
-              className="text-sm font-medium text-zinc-100 bg-zinc-800 px-3 py-1.5 rounded-full hover:bg-zinc-700 transition-colors"
+              className="text-sm font-medium text-primary-foreground bg-primary px-3 py-1.5 rounded-full hover:bg-primary/90 transition-colors"
             >
               All Posts
             </Link>
@@ -51,7 +52,7 @@ export default function BlogPage() {
               <Link
                 key={tag}
                 href={`/blog/tag/${tag.toLowerCase()}`}
-                className="text-sm font-medium text-zinc-400 bg-zinc-800/50 px-3 py-1.5 rounded-full hover:bg-zinc-800 hover:text-zinc-100 transition-colors"
+                className="text-sm font-medium text-muted-foreground border border-border bg-muted px-3 py-1.5 rounded-full hover:bg-secondary hover:text-foreground transition-colors"
               >
                 {tag}
               </Link>
@@ -61,7 +62,7 @@ export default function BlogPage() {
 
         {posts.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-zinc-400 text-lg">No blog posts yet. Check back soon!</p>
+            <p className="text-muted-foreground text-lg">No blog posts yet. Check back soon!</p>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">

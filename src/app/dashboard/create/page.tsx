@@ -126,7 +126,7 @@ export default function CreateVideoPage() {
                           key={i}
                           className={`text-lg ${
                             i < review.rating
-                              ? "text-yellow-400"
+                              ? "text-warning"
                               : "text-muted-foreground/30"
                           }`}
                         >

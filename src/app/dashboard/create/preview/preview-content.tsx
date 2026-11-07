@@ -177,7 +177,7 @@ export function PreviewContent() {
                 >
                   {copied ? (
                     <>
-                      <Check className="mr-2 h-4 w-4 text-green-500" />
+                      <Check className="mr-2 h-4 w-4 text-success" />
                       Copied!
                     </>
                   ) : (
@@ -287,7 +287,7 @@ export function PreviewContent() {
                         onClick={handleCopyLink}
                       >
                         {copied ? (
-                          <Check className="mr-2 h-4 w-4 text-green-500" />
+                          <Check className="mr-2 h-4 w-4 text-success" />
                         ) : (
                           <Copy className="mr-2 h-4 w-4" />
                         )}

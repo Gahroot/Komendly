@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { PageHeader } from "@/components/page-header";
 
 export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
@@ -20,75 +21,71 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-zinc-100">Settings</h1>
-        <p className="text-zinc-400 mt-1">Configure platform settings</p>
-      </div>
+      <PageHeader eyebrow="Admin" title="Settings" description="Configure platform settings" />
 
       {/* Platform Settings */}
-      <Card className="bg-zinc-900 border-zinc-800">
+      <Card >
         <CardHeader>
-          <CardTitle className="text-zinc-100">Platform Configuration</CardTitle>
-          <CardDescription className="text-zinc-500">
+          <CardTitle className="text-foreground">Platform Configuration</CardTitle>
+          <CardDescription className="text-muted-foreground">
             General platform settings and limits
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="starter-minutes" className="text-zinc-300">
+              <Label htmlFor="starter-minutes" className="text-foreground/80">
                 Starter Plan Minutes
               </Label>
               <Input
                 id="starter-minutes"
                 type="number"
                 defaultValue={3}
-                className="bg-zinc-800 border-zinc-700 text-zinc-100"
+                className="bg-secondary border-input text-foreground"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="pro-minutes" className="text-zinc-300">
+              <Label htmlFor="pro-minutes" className="text-foreground/80">
                 Pro Plan Minutes
               </Label>
               <Input
                 id="pro-minutes"
                 type="number"
                 defaultValue={20}
-                className="bg-zinc-800 border-zinc-700 text-zinc-100"
+                className="bg-secondary border-input text-foreground"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="enterprise-minutes" className="text-zinc-300">
+              <Label htmlFor="enterprise-minutes" className="text-foreground/80">
                 Enterprise Plan Minutes
               </Label>
               <Input
                 id="enterprise-minutes"
                 type="number"
                 defaultValue={60}
-                className="bg-zinc-800 border-zinc-700 text-zinc-100"
+                className="bg-secondary border-input text-foreground"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="max-video-duration" className="text-zinc-300">
+              <Label htmlFor="max-video-duration" className="text-foreground/80">
                 Max Video Duration (seconds)
               </Label>
               <Input
                 id="max-video-duration"
                 type="number"
                 defaultValue={120}
-                className="bg-zinc-800 border-zinc-700 text-zinc-100"
+                className="bg-secondary border-input text-foreground"
               />
             </div>
           </div>
 
-          <Separator className="bg-zinc-800" />
+          <Separator className="bg-secondary" />
 
           <div className="flex justify-end">
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="bg-violet-600 hover:bg-violet-700 text-white"
+              className="bg-primary hover:bg-primary/90 text-foreground"
             >
               <Save className="h-4 w-4 mr-2" />
               {saving ? "Saving..." : "Save Changes"}
@@ -98,42 +95,42 @@ export default function SettingsPage() {
       </Card>
 
       {/* Danger Zone */}
-      <Card className="bg-zinc-900 border-red-900/50">
+      <Card className="bg-card border-destructive/50">
         <CardHeader>
-          <CardTitle className="text-red-400 flex items-center gap-2">
+          <CardTitle className="text-destructive flex items-center gap-2">
             <AlertTriangle className="h-5 w-5" />
             Danger Zone
           </CardTitle>
-          <CardDescription className="text-zinc-500">
+          <CardDescription className="text-muted-foreground">
             Destructive actions that cannot be undone
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg bg-zinc-800/50 border border-zinc-700">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted border border-input">
             <div>
-              <p className="font-medium text-zinc-100">Clear Failed Videos</p>
-              <p className="text-sm text-zinc-500">
+              <p className="font-medium text-foreground">Clear Failed Videos</p>
+              <p className="text-sm text-muted-foreground">
                 Remove all videos with failed status from the database
               </p>
             </div>
             <Button
               variant="outline"
-              className="border-red-600 text-red-400 hover:bg-red-600/20"
+              className="border-destructive text-destructive hover:bg-destructive/20"
             >
               Clear Failed
             </Button>
           </div>
 
-          <div className="flex items-center justify-between p-4 rounded-lg bg-zinc-800/50 border border-zinc-700">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-muted border border-input">
             <div>
-              <p className="font-medium text-zinc-100">Reset Usage Counters</p>
-              <p className="text-sm text-zinc-500">
+              <p className="font-medium text-foreground">Reset Usage Counters</p>
+              <p className="text-sm text-muted-foreground">
                 Reset all user usage counters to zero
               </p>
             </div>
             <Button
               variant="outline"
-              className="border-red-600 text-red-400 hover:bg-red-600/20"
+              className="border-destructive text-destructive hover:bg-destructive/20"
             >
               Reset Usage
             </Button>

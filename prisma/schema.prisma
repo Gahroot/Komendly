@@ -12,29 +12,29 @@ datasource db {
 }
 
 model User {
-  id           String           @id @default(cuid())
-  email        String           @unique
+  id           String   @id @default(cuid())
+  email        String   @unique
   passwordHash String
   name         String?
-  plan         Plan             @default(pending)
-  isAdmin      Boolean          @default(false)
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  plan         Plan     @default(pending)
+  isAdmin      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Stripe integration
-  stripeCustomerId     String?   @unique
-  stripeSubscriptionId String?   @unique
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
   subscriptionStatus   SubscriptionStatus @default(incomplete)
   subscriptionPriceId  String?
   currentPeriodStart   DateTime?
   currentPeriodEnd     DateTime?
-  cancelAtPeriodEnd    Boolean   @default(false)
+  cancelAtPeriodEnd    Boolean            @default(false)
 
   // Usage tracking (minutes-based)
-  minutesUsed       Int       @default(0)  // Minutes used in current period
-  minutesLimit      Int       @default(0)  // Total minutes allowed (plan + credits)
-  bonusMinutes      Int       @default(0)  // Extra purchased minutes
-  lastUsageReset    DateTime?              // When usage was last reset
+  minutesUsed    Int       @default(0) // Minutes used in current period
+  minutesLimit   Int       @default(0) // Total minutes allowed (plan + credits)
+  bonusMinutes   Int       @default(0) // Extra purchased minutes
+  lastUsageReset DateTime? // When usage was last reset
 
   sessions           Session[]
   apiKeys            ApiKey[]
@@ -45,6 +45,11 @@ model User {
   creditPurchases    CreditPurchase[]
   falCompositeVideos FalCompositeVideo[]
 
+  // Website2ads
+  emailVerifiedAt DateTime?
+  adsMemberships  AdsWorkspaceMember[]
+  adRuns          AdRun[]
+
   @@index([email])
   @@index([plan])
   @@index([stripeCustomerId])
@@ -52,30 +57,30 @@ model User {
 }
 
 enum Plan {
-  free        // Legacy - treat same as pending
-  pending     // User registered but hasn't subscribed
-  starter     // 3 minutes/month
-  pro         // 20 minutes/month
-  enterprise  // 60 minutes/month
+  free // Legacy - treat same as pending
+  pending // User registered but hasn't subscribed
+  starter // 3 minutes/month
+  pro // 20 minutes/month
+  enterprise // 60 minutes/month
 }
 
 enum SubscriptionStatus {
-  incomplete          // Checkout started but not completed
-  incomplete_expired  // Checkout expired
-  trialing           // In trial period
-  active             // Subscription is active
-  past_due           // Payment failed but not yet canceled
-  canceled           // Subscription was canceled
-  unpaid             // Invoice unpaid
-  paused             // Subscription paused
+  incomplete // Checkout started but not completed
+  incomplete_expired // Checkout expired
+  trialing // In trial period
+  active // Subscription is active
+  past_due // Payment failed but not yet canceled
+  canceled // Subscription was canceled
+  unpaid // Invoice unpaid
+  paused // Subscription paused
 }
 
 model CreditPurchase {
   id              String   @id @default(cuid())
   userId          String
   stripePaymentId String   @unique
-  minutes         Int      // Minutes purchased
-  amountPaid      Int      // Amount in cents
+  minutes         Int // Minutes purchased
+  amountPaid      Int // Amount in cents
   createdAt       DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -148,12 +153,12 @@ model GeneratedVideo {
   completedAt  DateTime?
 
   // Mirage/Captions.ai specific fields
-  mirageOperationId  String?   @unique  // Operation ID for polling
-  mirageCreatorName  String?            // AI Creator used
-  mirageResolution   String?   @default("4k")
-  generatedScript    String?            // AI-generated UGC script
-  creditsUsed        Int?               // Mirage credits consumed
-  errorMessage       String?            // Error details if failed
+  mirageOperationId String? @unique // Operation ID for polling
+  mirageCreatorName String? // AI Creator used
+  mirageResolution  String? @default("4k")
+  generatedScript   String? // AI-generated UGC script
+  creditsUsed       Int? // Mirage credits consumed
+  errorMessage      String? // Error details if failed
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
@@ -178,11 +183,11 @@ model ActorPreset {
   name           String
   description    String?
   avatarStyle    String
-  category       String   // "male", "female", "neutral"
+  category       String // "male", "female", "neutral"
   ethnicity      String?
-  ageGroup       String?  // "young-adult", "adult", "middle-aged", "senior"
-  voiceSettings  Json     // VoiceSettings object
-  visualSettings Json     // VisualSettings object
+  ageGroup       String? // "young-adult", "adult", "middle-aged", "senior"
+  voiceSettings  Json // VoiceSettings object
+  visualSettings Json // VisualSettings object
   thumbnailUrl   String?
   isDefault      Boolean  @default(false)
   createdAt      DateTime @default(now())
@@ -196,19 +201,19 @@ model ActorPreset {
 }
 
 model Webhook {
-  id          String        @id @default(cuid())
-  userId      String
-  name        String        // Friendly name for the webhook
-  type        WebhookType   @default(custom)
-  webhookUrl  String
-  events      String[]      // Array of event types: ["video.completed", "video.failed", etc.]
-  active      Boolean       @default(true)
-  secret      String?       // Optional secret for signature verification
-  metadata    Json?         // Additional configuration (e.g., Slack channel, Discord settings)
+  id              String      @id @default(cuid())
+  userId          String
+  name            String // Friendly name for the webhook
+  type            WebhookType @default(custom)
+  webhookUrl      String
+  events          String[] // Array of event types: ["video.completed", "video.failed", etc.]
+  active          Boolean     @default(true)
+  secret          String? // Optional secret for signature verification
+  metadata        Json? // Additional configuration (e.g., Slack channel, Discord settings)
   lastTriggeredAt DateTime?
-  failureCount    Int       @default(0)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  failureCount    Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -231,15 +236,15 @@ enum WebhookType {
 
 model FalActor {
   id                String   @id @default(cuid())
-  name              String   // Display name: "Sarah - Professional"
+  name              String // Display name: "Sarah - Professional"
   slug              String   @unique // URL-friendly: "sarah-professional"
-  gender            String   // "male", "female"
-  style             String   // "professional", "casual", "energetic", "friendly"
-  referenceImageUrl String   // Front-facing pose for SadTalker consistency
-  thumbnailUrl      String   // Preview image for UI grid
-  voiceId           String?  // OpenAI TTS voice: "alloy", "nova", "shimmer", etc.
-  voicePrompt       String?  // Detailed voice description for VEO consistency (pitch, tone, accent, pace)
-  description       String?  // Optional description for the actor
+  gender            String // "male", "female"
+  style             String // "professional", "casual", "energetic", "friendly"
+  referenceImageUrl String // Front-facing pose for SadTalker consistency
+  thumbnailUrl      String // Preview image for UI grid
+  voiceId           String? // OpenAI TTS voice: "alloy", "nova", "shimmer", etc.
+  voicePrompt       String? // Detailed voice description for VEO consistency (pitch, tone, accent, pace)
+  description       String? // Optional description for the actor
   isActive          Boolean  @default(true)
   sortOrder         Int      @default(0)
   createdAt         DateTime @default(now())
@@ -254,41 +259,41 @@ model FalActor {
 }
 
 model FalCompositeVideo {
-  id              String              @id @default(cuid())
-  userId          String
-  reviewId        String
-  actorId         String
+  id       String @id @default(cuid())
+  userId   String
+  reviewId String
+  actorId  String
 
   // Scripts
-  fullScript        String            // Complete generated script
-  hookScript        String            // Hook portion (5-6s)
-  testimonialScript String            // Main testimonial (10-20s)
-  ctaScript         String            // Call to action (5-6s)
+  fullScript        String // Complete generated script
+  hookScript        String // Hook portion (5-6s)
+  testimonialScript String // Main testimonial (10-20s)
+  ctaScript         String // Call to action (5-6s)
 
   // Configuration
-  aspectRatio     String              @default("9:16")
-  targetDuration  Int                 // Total target duration in seconds (20-35)
-  voiceId         String              @default("nova") // OpenAI TTS voice used
+  aspectRatio    String @default("9:16")
+  targetDuration Int // Total target duration in seconds (20-35)
+  voiceId        String @default("nova") // OpenAI TTS voice used
 
   // Output
-  finalVideoUrl   String?
-  thumbnailUrl    String?
-  actualDuration  Int?                // Actual duration after generation
+  finalVideoUrl  String?
+  thumbnailUrl   String?
+  actualDuration Int? // Actual duration after generation
 
   // Status tracking
-  status          FalCompositeStatus  @default(pending)
-  currentClip     Int                 @default(0) // Which clip is being generated
-  totalClips      Int                 @default(3) // Total clips to generate
-  errorMessage    String?
+  status       FalCompositeStatus @default(pending)
+  currentClip  Int                @default(0) // Which clip is being generated
+  totalClips   Int                @default(3) // Total clips to generate
+  errorMessage String?
 
   // Timestamps
-  createdAt       DateTime            @default(now())
-  completedAt     DateTime?
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
 
   // Relations
-  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  review Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  actor  FalActor @relation(fields: [actorId], references: [id])
+  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  review Review    @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  actor  FalActor  @relation(fields: [actorId], references: [id])
   clips  FalClip[]
 
   @@index([userId])
@@ -299,29 +304,29 @@ model FalCompositeVideo {
 }
 
 model FalClip {
-  id               String   @id @default(cuid())
+  id               String @id @default(cuid())
   compositeVideoId String
-  clipType         String   // "hook", "testimonial", "cta"
-  clipIndex        Int      // Order within composite (0, 1, 2, ...)
-  scriptContent    String   // The text for this clip
+  clipType         String // "hook", "testimonial", "cta"
+  clipIndex        Int // Order within composite (0, 1, 2, ...)
+  scriptContent    String // The text for this clip
 
   // TTS tracking
-  audioUrl         String?  // URL of generated TTS audio
+  audioUrl String? // URL of generated TTS audio
 
   // FAL SadTalker tracking
-  falRequestId     String?  @unique // FAL request ID for polling
+  falRequestId String? @unique // FAL request ID for polling
 
   // Output
-  videoUrl         String?  // URL of generated video clip
-  duration         Int?     // Actual duration in seconds
+  videoUrl String? // URL of generated video clip
+  duration Int? // Actual duration in seconds
 
   // Status
-  status           String   @default("pending") // pending, generating_audio, generating_video, completed, failed
-  errorMessage     String?
+  status       String  @default("pending") // pending, generating_audio, generating_video, completed, failed
+  errorMessage String?
 
   // Timestamps
-  createdAt        DateTime @default(now())
-  completedAt      DateTime?
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
 
   // Relations
   compositeVideo FalCompositeVideo @relation(fields: [compositeVideoId], references: [id], onDelete: Cascade)
@@ -332,9 +337,434 @@ model FalClip {
 }
 
 enum FalCompositeStatus {
-  pending           // Initial state
-  generating_clips  // Clips being generated (TTS + SadTalker)
-  stitching         // FFmpeg combining clips
+  pending // Initial state
+  generating_clips // Clips being generated (TTS + SadTalker)
+  stitching // FFmpeg combining clips
   completed
   failed
+}
+
+// ============================================================================
+// Website2ads (komendly.com/ads) — multi-tenant website-to-ad SaaS
+// Shared by the Next.js web app and the Railway generation engine (engine/).
+// ============================================================================
+
+model AdsWorkspace {
+  id                   String    @id @default(cuid())
+  name                 String
+  ownerId              String
+  creditBalance        Int       @default(0) // cached; CreditLedger is the source of truth
+  trialUsedAt          DateTime?
+  // Billing (monthly plan with included credits + top-ups)
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  adsPlan              String    @default("trial") // trial | starter | growth | scale (placeholder tiers)
+  subscriptionStatus   String    @default("none")
+  currentPeriodEnd     DateTime?
+  canceledAt           DateTime?
+  suspendedAt          DateTime? // abuse suspension
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  members        AdsWorkspaceMember[]
+  brandProfiles  BrandProfile[]
+  runs           AdRun[]
+  ads            Ad[]
+  ledger         CreditLedger[]
+  abuseFlags     AbuseFlag[]
+  refunds        AdsRefund[]
+  metaConnection MetaConnection?
+
+  @@index([ownerId])
+  @@index([adsPlan])
+}
+
+model AdsWorkspaceMember {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        String   @default("owner") // owner | admin | member
+  createdAt   DateTime @default(now())
+
+  workspace AdsWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+// Persistent brand profile (one per site per workspace). Facts carry source URLs.
+model BrandProfile {
+  id          String   @id @default(cuid())
+  workspaceId String
+  domain      String
+  url         String
+  name        String?
+  // Visual identity
+  colors      Json     @default("[]") // [{hex, role: primary|secondary|accent|bg|text}]
+  fonts       Json     @default("[]") // [{family, role: heading|body, sourceUrl?}]
+  logoKey     String? // storage key
+  assets      Json     @default("[]") // [{key, sourceUrl, kind: product|screenshot|photo|illustration|icon, width, height, hasFace}]
+  // Strategy (extracted, user-correctable)
+  audience    String?
+  mainOffer   String?
+  pains       Json     @default("[]") // [{text, sourceUrl, quote?}]
+  proof       Json     @default("[]") // [{text, sourceUrl, kind: testimonial|stat|logo|award}]
+  facts       Json     @default("[]") // allowed claims: [{claim, sourceUrl, quote}]
+  landingPage String?
+  voice       String?
+  userEdited  Json     @default("{}") // which fields the user corrected
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace AdsWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  runs      AdRun[]
+
+  @@unique([workspaceId, domain])
+}
+
+enum AdRunStatus {
+  extracting
+  awaiting_confirm // 30-second confirm window
+  queued
+  generating
+  completed
+  partial // some ads failed QC/generation; credits for those released
+  failed
+  canceled
+}
+
+enum AdGoal {
+  leads
+  sales
+  awareness
+  traffic
+  app_installs
+  auto
+}
+
+model AdRun {
+  id              String      @id @default(cuid())
+  workspaceId     String
+  userId          String
+  brandProfileId  String?
+  url             String
+  goal            AdGoal      @default(auto)
+  resolvedGoal    AdGoal?
+  status          AdRunStatus @default(extracting)
+  isTrial         Boolean     @default(false)
+  extractAttempts Int         @default(0)
+  extraction      Json? // snapshot shown on confirm screen
+  corrections     Json? // user edits applied before generation
+  awarenessMix    Json? // e.g. {"problem_aware":7,"solution_aware":3}
+  ratios          String[]    @default(["1:1"]) // trial: 1:1 ; paid: any of 4:5,1:1,9:16
+  staticCount     Int         @default(10)
+  motionCount     Int         @default(1)
+  creditsReserved Int         @default(0)
+  creditsCharged  Int         @default(0)
+  confirmDeadline DateTime?
+  confirmedAt     DateTime?
+  firstAdAt       DateTime? // time-to-first-ad = firstAdAt - confirmedAt
+  completedAt     DateTime?
+  costMicros      BigInt      @default(0) // measured provider cost (USD micros, est. for subscription)
+  error           String?
+  clientIpHash    String?
+  deviceHash      String?
+  trialClaim      Json? // trial claim hashes (TrialClaimHashes), so the engine can claim on auto-confirm
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  workspace    AdsWorkspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brandProfile BrandProfile? @relation(fields: [brandProfileId], references: [id], onDelete: SetNull)
+  ads          Ad[]
+  jobs         AdJob[]
+
+  @@index([workspaceId, createdAt])
+  @@index([status])
+}
+
+enum AwarenessLevel {
+  unaware
+  problem_aware
+  solution_aware
+  product_aware
+  most_aware
+}
+
+enum AdKind {
+  static
+  motion
+}
+
+enum AdStatus {
+  planned
+  rendering
+  qc
+  ready
+  failed_qc
+  failed
+}
+
+model Ad {
+  id          String         @id @default(cuid())
+  runId       String
+  workspaceId String
+  kind        AdKind         @default(static)
+  index       Int // order within run
+  awareness   AwarenessLevel
+  angle       String // distinct idea, one line
+  hook        String // opening moment / private thought in buyer's words
+  headline    String
+  body        String?
+  cta         String?
+  claims      Json           @default("[]") // [{claim, factRef/sourceUrl}] — every claim must map to a BrandProfile fact
+  visualBrief Json?
+  status      AdStatus       @default(planned)
+  qcAttempts  Int            @default(0)
+  qcReport    Json? // {pass, checks:[{name, pass, detail}]}
+  costMicros  BigInt         @default(0)
+  durationMs  Int?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  run       AdRun         @relation(fields: [runId], references: [id], onDelete: Cascade)
+  workspace AdsWorkspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  assets    AdAsset[]
+  publishes MetaPublish[]
+
+  @@index([runId])
+  @@index([workspaceId, createdAt])
+}
+
+model AdAsset {
+  id         String    @id @default(cuid())
+  adId       String
+  ratio      String // "4:5" | "1:1" | "9:16"
+  storageKey String
+  mime       String // image/png | image/jpeg | video/mp4
+  width      Int
+  height     Int
+  bytes      Int
+  expiresAt  DateTime? // temporary storage TTL (null = kept with brand profile)
+  createdAt  DateTime  @default(now())
+
+  ad Ad @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@index([adId])
+  @@index([expiresAt])
+}
+
+enum AdJobStatus {
+  queued
+  running
+  succeeded
+  failed // will retry if attempts < maxAttempts
+  dead // exhausted retries -> admin "failed jobs"
+  canceled
+}
+
+// Postgres-backed queue. Engine claims with FOR UPDATE SKIP LOCKED.
+model AdJob {
+  id          String      @id @default(cuid())
+  type        String // extract | plan | render_static | render_motion | qc | publish_meta | cleanup
+  runId       String?
+  adId        String?
+  workspaceId String?
+  payload     Json        @default("{}")
+  result      Json?
+  status      AdJobStatus @default(queued)
+  priority    Int         @default(0) // higher first; paid > trial
+  runAt       DateTime    @default(now())
+  attempts    Int         @default(0)
+  maxAttempts Int         @default(3)
+  lockedBy    String?
+  lockedAt    DateTime?
+  lastError   String?
+  costMicros  BigInt      @default(0)
+  durationMs  Int?
+  createdAt   DateTime    @default(now())
+  finishedAt  DateTime?
+
+  run AdRun? @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([status, priority, runAt])
+  @@index([runId])
+  @@index([type, status])
+}
+
+enum CreditReason {
+  trial_grant
+  subscription_grant
+  topup
+  reserve
+  release
+  refund
+  admin_adjust
+  expire
+}
+
+// Append-only credit ledger. creditBalance on workspace is derived from it.
+model CreditLedger {
+  id           String       @id @default(cuid())
+  workspaceId  String
+  delta        Int
+  balanceAfter Int
+  reason       CreditReason
+  runId        String?
+  stripeRef    String?      @unique // idempotency for webhooks (invoice/payment id)
+  note         String?
+  actorId      String? // admin user for adjustments/refunds
+  createdAt    DateTime     @default(now())
+
+  workspace AdsWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+}
+
+// One free trial per domain / device / IP / email.
+model AdsTrialClaim {
+  id          String   @id @default(cuid())
+  workspaceId String
+  domainHash  String
+  ipHash      String?
+  deviceHash  String?
+  emailHash   String
+  createdAt   DateTime @default(now())
+
+  @@index([domainHash])
+  @@index([ipHash])
+  @@index([deviceHash])
+  @@index([emailHash])
+}
+
+model AbuseFlag {
+  id          String    @id @default(cuid())
+  workspaceId String?
+  userId      String?
+  kind        String // trial_farming | disposable_email | rate_limit | blocked_content | payment_fraud | prompt_injection
+  severity    String    @default("low") // low | medium | high
+  details     Json      @default("{}")
+  status      String    @default("open") // open | dismissed | actioned
+  resolvedBy  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  workspace AdsWorkspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+}
+
+model AdsRefund {
+  id             String   @id @default(cuid())
+  workspaceId    String
+  stripeRefundId String?  @unique
+  amountCents    Int
+  credits        Int      @default(0)
+  reason         String?
+  actorId        String
+  createdAt      DateTime @default(now())
+
+  workspace AdsWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+}
+
+// Funnel analytics: trial_started, extraction_shown, run_confirmed, first_ad_ready,
+// run_completed, export_downloaded, checkout_started, paid_converted, churned.
+model AdsEvent {
+  id          String   @id @default(cuid())
+  name        String
+  workspaceId String?
+  userId      String?
+  runId       String?
+  props       Json     @default("{}")
+  createdAt   DateTime @default(now())
+
+  @@index([name, createdAt])
+  @@index([workspaceId])
+}
+
+// Engine/provider health (e.g. Codex login expired) surfaced in admin.
+model EngineHeartbeat {
+  id        String   @id // worker id or "provider:codex"
+  kind      String // worker | provider
+  ok        Boolean
+  message   String?
+  meta      Json     @default("{}")
+  updatedAt DateTime @updatedAt
+}
+
+model AdsFeatureFlag {
+  key       String   @id // ezmotion | meta_publish
+  enabled   Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}
+
+// Meta publishing integration (paid users only). Tokens encrypted at rest.
+model MetaConnection {
+  id             String    @id @default(cuid())
+  workspaceId    String    @unique
+  encryptedToken String
+  tokenExpiresAt DateTime?
+  adAccountId    String?
+  pageId         String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  workspace AdsWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model MetaPublish {
+  id          String   @id @default(cuid())
+  adId        String
+  status      String   @default("pending") // pending | published | failed
+  metaAdId    String?
+  campaignId  String?
+  error       String?
+  jobId       String? // AdJob that publishes this row
+  ratio       String? // 4:5 | 1:1 | 9:16
+  adSetId     String?
+  adAccountId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ad Ad @relation(fields: [adId], references: [id], onDelete: Cascade)
+
+  @@index([adId])
+  @@index([jobId])
+}
+
+// Server-side OAuth state + PKCE verifier for connecting Meta (short-lived, single use).
+model MetaOAuthState {
+  state        String   @id
+  workspaceId  String
+  userId       String
+  mode         String // mcp | graph
+  codeVerifier String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+// Email verification for the /ads free trial (token stored as sha256 hash; expires).
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// Postgres-backed sliding-window rate limiter (billing/abuse worker). One row per hit.
+model AdsRateLimit {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
 }

@@ -98,7 +98,7 @@ export function GenerationProgress({
               className={cn(
                 "flex items-center gap-4 p-3 rounded-lg transition-colors",
                 isCurrentStage && "bg-primary/5 border border-primary/20",
-                isCompletedStage && "bg-green-500/5",
+                isCompletedStage && "bg-success/5",
                 isPendingStage && "opacity-50"
               )}
             >
@@ -106,7 +106,7 @@ export function GenerationProgress({
               <div
                 className={cn(
                   "flex items-center justify-center w-10 h-10 rounded-full transition-colors",
-                  isCompletedStage && "bg-green-500/20",
+                  isCompletedStage && "bg-success/20",
                   isCurrentStage && "bg-primary/20",
                   isPendingStage && "bg-muted"
                 )}
@@ -119,7 +119,7 @@ export function GenerationProgress({
                       animate={{ scale: 1 }}
                       exit={{ scale: 0 }}
                     >
-                      <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      <CheckCircle2 className="w-5 h-5 text-success" />
                     </motion.div>
                   ) : isCurrentStage ? (
                     <motion.div
@@ -144,7 +144,7 @@ export function GenerationProgress({
                     className={cn(
                       "text-sm font-medium",
                       isCurrentStage && "text-primary",
-                      isCompletedStage && "text-green-600 dark:text-green-400",
+                      isCompletedStage && "text-success dark:text-success",
                       isPendingStage && "text-muted-foreground"
                     )}
                   >
@@ -160,7 +160,7 @@ export function GenerationProgress({
                     </motion.span>
                   )}
                   {isCompletedStage && (
-                    <span className="text-xs text-green-600 dark:text-green-400">Complete</span>
+                    <span className="text-xs text-success dark:text-success">Complete</span>
                   )}
                 </div>
 
@@ -245,9 +245,9 @@ export function GenerationProgress({
             transition={{ type: "spring", stiffness: 200, damping: 15 }}
             className="flex flex-col items-center gap-3"
           >
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/20">
               <motion.svg
-                className="h-8 w-8 text-green-500"
+                className="h-8 w-8 text-success"
                 viewBox="0 0 24 24"
               >
                 <motion.path

@@ -10,7 +10,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { type Plan, type BillingCycle } from "@/lib/pricing-plans";
 
 const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 1, y: 12 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true },
   transition: { duration: 0.5 },
@@ -72,36 +72,36 @@ function PricingContent() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen text-foreground">
       <SiteHeader />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-black to-black" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-600/20 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/15 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
 
         <div className="relative mx-auto max-w-6xl px-4 pt-32 pb-16 sm:px-6 sm:pt-40 sm:pb-24">
           <motion.div
             className="text-center"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 1, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+            <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl md:text-6xl">
               Choose Your{" "}
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+              <span className="text-primary">
                 Plan
               </span>
             </h1>
-            <p className="mt-6 text-lg text-zinc-400 sm:text-xl max-w-2xl mx-auto">
+            <p className="mt-6 text-lg text-muted-foreground sm:text-xl max-w-2xl mx-auto">
               Select a plan to start generating AI-powered video testimonials.
               No hidden fees. Cancel anytime.
             </p>
 
             {error && (
               <motion.div
-                className="mt-6 p-4 bg-red-500/10 border border-red-500/50 rounded-xl text-red-400 max-w-md mx-auto"
+                className="mt-6 p-4 bg-destructive/10 border border-destructive/50 rounded-xl text-destructive max-w-md mx-auto"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
               >
@@ -123,23 +123,23 @@ function PricingContent() {
       <section className="relative py-16 sm:py-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <motion.div
-            className="bg-zinc-900/50 rounded-2xl p-8 sm:p-12 max-w-2xl mx-auto border border-zinc-800 text-center"
+            className="glass mx-auto max-w-2xl rounded-3xl border border-border p-8 text-center sm:p-12"
             {...fadeInUp}
           >
             <h3 className="text-2xl font-bold mb-4">Need More Minutes?</h3>
-            <p className="text-zinc-400 mb-4">
+            <p className="text-muted-foreground mb-4">
               Purchase additional video generation minutes anytime at{" "}
-              <span className="text-white font-semibold">$20 per minute</span>.
+              <span className="text-foreground font-semibold">$20 per minute</span>.
               Minimum purchase of 1 minute.
             </p>
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-muted-foreground">
               Available to all subscribers from your dashboard billing settings.
             </p>
           </motion.div>
 
           {/* Security Badge */}
           <motion.div
-            className="mt-12 flex items-center justify-center gap-2 text-zinc-500"
+            className="mt-12 flex items-center justify-center gap-2 text-muted-foreground"
             {...fadeInUp}
           >
             <Shield className="h-4 w-4" />
@@ -157,8 +157,8 @@ function PricingContent() {
 
 function PricingLoading() {
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
     </div>
   );
 }

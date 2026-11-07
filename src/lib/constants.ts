@@ -1,10 +1,10 @@
 export const AVATAR_STYLES = [
   { id: "professional", name: "Professional", description: "Clean, corporate look", gradient: "from-slate-600 to-slate-800" },
   { id: "casual", name: "Casual", description: "Relaxed, everyday vibe", gradient: "from-amber-400 to-orange-500" },
-  { id: "friendly", name: "Friendly", description: "Warm and approachable", gradient: "from-pink-400 to-rose-500" },
+  { id: "friendly", name: "Friendly", description: "Warm and approachable", gradient: "from-amber-400 to-orange-500" },
   { id: "energetic", name: "Energetic", description: "High energy, exciting", gradient: "from-yellow-400 to-red-500" },
   { id: "calm", name: "Calm", description: "Soothing and peaceful", gradient: "from-cyan-400 to-blue-500" },
-  { id: "bold", name: "Bold", description: "Strong and confident", gradient: "from-purple-500 to-indigo-600" },
+  { id: "bold", name: "Bold", description: "Strong and confident", gradient: "from-sky-500 to-blue-600" },
   { id: "warm", name: "Warm", description: "Cozy and inviting", gradient: "from-orange-400 to-red-400" },
   { id: "corporate", name: "Corporate", description: "Business professional", gradient: "from-blue-600 to-blue-800" },
 ] as const;

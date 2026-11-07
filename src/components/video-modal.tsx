@@ -65,9 +65,9 @@ export function VideoModal({
   }[video.aspectRatio];
 
   const aspectRatioColor = {
-    "9:16": "bg-purple-500/10 text-purple-400 border-purple-500/20",
-    "16:9": "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    "1:1": "bg-green-500/10 text-green-400 border-green-500/20",
+    "9:16": "bg-primary/10 text-primary border-primary/20",
+    "16:9": "bg-primary/10 text-primary border-primary/20",
+    "1:1": "bg-success/10 text-success border-success/20",
   }[video.aspectRatio];
 
   const handleDownload = async () => {
@@ -104,7 +104,7 @@ export function VideoModal({
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent
-        className="max-w-2xl bg-zinc-950 border-zinc-800 p-0 overflow-hidden max-h-[90vh]"
+        className="max-w-2xl bg-background border-border p-0 overflow-hidden max-h-[90vh]"
         showCloseButton={true}
       >
         <DialogHeader className="sr-only">
@@ -149,7 +149,7 @@ export function VideoModal({
                   <h2 className="text-xl font-semibold text-white truncate">
                     {video.reviewerName}
                   </h2>
-                  <p className="text-zinc-400 text-sm truncate">
+                  <p className="text-muted-foreground text-sm truncate">
                     {video.businessName}
                   </p>
                 </div>
@@ -165,25 +165,25 @@ export function VideoModal({
                     key={i}
                     className={`w-5 h-5 ${
                       i < video.rating
-                        ? "text-yellow-500 fill-yellow-500"
+                        ? "text-warning fill-warning"
                         : "text-zinc-700"
                     }`}
                   />
                 ))}
-                <span className="text-zinc-500 text-sm ml-2">
+                <span className="text-muted-foreground text-sm ml-2">
                   {video.rating} out of 5
                 </span>
               </div>
 
-              <Separator className="bg-zinc-800" />
+              <Separator className="bg-secondary" />
 
               {/* Review Text */}
               <div>
-                <h3 className="text-sm font-medium text-zinc-400 mb-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">
                   Review
                 </h3>
-                <div className="bg-zinc-900/50 rounded-lg p-4 border border-zinc-800">
-                  <p className="text-sm text-zinc-300 leading-relaxed">
+                <div className="bg-card rounded-lg p-4 border border-border">
+                  <p className="text-sm text-foreground/80 leading-relaxed">
                     &ldquo;{video.reviewText}&rdquo;
                   </p>
                 </div>
@@ -191,36 +191,36 @@ export function VideoModal({
 
               {/* Metadata Grid */}
               <div className="grid grid-cols-3 gap-4">
-                <div className="bg-zinc-900/50 rounded-lg p-3 border border-zinc-800">
-                  <div className="flex items-center gap-2 text-zinc-500 mb-1">
+                <div className="bg-card rounded-lg p-3 border border-border">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
                     <Calendar className="w-4 h-4" />
                     <span className="text-xs">Date</span>
                   </div>
-                  <p className="text-sm text-zinc-200 font-medium">
+                  <p className="text-sm text-foreground font-medium">
                     {formattedDate}
                   </p>
                 </div>
-                <div className="bg-zinc-900/50 rounded-lg p-3 border border-zinc-800">
-                  <div className="flex items-center gap-2 text-zinc-500 mb-1">
+                <div className="bg-card rounded-lg p-3 border border-border">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
                     <Clock className="w-4 h-4" />
                     <span className="text-xs">Duration</span>
                   </div>
-                  <p className="text-sm text-zinc-200 font-medium">
+                  <p className="text-sm text-foreground font-medium">
                     {formatDuration(Math.round(videoMetadata?.duration || video.duration))}
                   </p>
                 </div>
-                <div className="bg-zinc-900/50 rounded-lg p-3 border border-zinc-800">
-                  <div className="flex items-center gap-2 text-zinc-500 mb-1">
+                <div className="bg-card rounded-lg p-3 border border-border">
+                  <div className="flex items-center gap-2 text-muted-foreground mb-1">
                     <Palette className="w-4 h-4" />
                     <span className="text-xs">Style</span>
                   </div>
-                  <p className="text-sm text-zinc-200 font-medium truncate">
+                  <p className="text-sm text-foreground font-medium truncate">
                     {video.style}
                   </p>
                 </div>
               </div>
 
-              <Separator className="bg-zinc-800" />
+              <Separator className="bg-secondary" />
 
               {/* Actions */}
               <div className="space-y-3">
@@ -235,7 +235,7 @@ export function VideoModal({
                   <Button
                     variant="outline"
                     onClick={handleCopyLink}
-                    className="flex-1 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                    className="flex-1 border-input text-foreground/80 hover:bg-secondary hover:text-white"
                   >
                     {copied ? (
                       <>
@@ -263,7 +263,7 @@ export function VideoModal({
                       <Button
                         variant="ghost"
                         onClick={() => setShowDeleteConfirm(true)}
-                        className="w-full text-zinc-500 hover:text-red-400 hover:bg-red-500/10"
+                        className="w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                       >
                         <Trash2 className="w-4 h-4 mr-2" />
                         Delete Video
@@ -275,9 +275,9 @@ export function VideoModal({
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="p-4 rounded-lg bg-red-500/10 border border-red-500/20"
+                      className="p-4 rounded-lg bg-destructive/10 border border-destructive/20"
                     >
-                      <p className="text-sm text-red-400 mb-3 text-center">
+                      <p className="text-sm text-destructive mb-3 text-center">
                         Are you sure? This cannot be undone.
                       </p>
                       <div className="flex gap-2">
@@ -285,7 +285,7 @@ export function VideoModal({
                           size="sm"
                           variant="ghost"
                           onClick={() => setShowDeleteConfirm(false)}
-                          className="flex-1 text-zinc-400 hover:text-white hover:bg-zinc-800"
+                          className="flex-1 text-muted-foreground hover:text-white hover:bg-secondary"
                           disabled={isDeleting}
                         >
                           Cancel
@@ -294,7 +294,7 @@ export function VideoModal({
                           size="sm"
                           onClick={handleDelete}
                           disabled={isDeleting}
-                          className="flex-1 bg-red-600 text-white hover:bg-red-700"
+                          className="flex-1 bg-destructive text-white hover:bg-destructive"
                         >
                           {isDeleting ? (
                             <motion.div
