@@ -83,8 +83,8 @@ export function VerifyEmailConfirm() {
         )}
         {state === "invalid" && (
           <div className="mt-7 flex flex-col gap-2 sm:flex-row">
-            <Link href="/ads/app" className="spellbar__cta inline-flex h-12 flex-1 items-center justify-center rounded-2xl font-semibold">Go to my ads</Link>
-            <button type="button" onClick={() => void resend()} disabled={sending} className="inline-flex h-12 flex-1 items-center justify-center rounded-2xl border border-border font-medium text-foreground transition-colors hover:bg-accent">Send a new link</button>
+            <Link href="/ads/app" className="spellbar__cta inline-flex h-12 items-center sm:flex-1 justify-center rounded-2xl font-semibold">Go to my ads</Link>
+            <button type="button" onClick={() => void resend()} disabled={sending} className="inline-flex h-12 items-center justify-center rounded-2xl border sm:flex-1 border-border font-medium text-foreground transition-colors hover:bg-accent">Send a new link</button>
           </div>
         )}
       </div>
