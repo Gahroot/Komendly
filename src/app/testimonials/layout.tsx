@@ -4,7 +4,7 @@ const siteConfig = {
   name: "Komendly",
   tagline: "Your Customers Won't Go On Camera. We Fixed That.",
   description: "Turn your 5-star Google reviews into professional video testimonials with AI avatars. No filming, no begging customers, no actors needed. Create engaging video testimonials in 60 seconds.",
-  url: "https://komendly.com/testimonials",
+  url: "https://www.komendly.com/testimonials",
   ogImage: "/og-image.png",
   twitterHandle: "@komendly",
 };

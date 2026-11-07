@@ -1,5 +1,5 @@
 /** Canonical site constants shared by metadata, JSON-LD, sitemap, robots, feeds and llms.txt. */
-export const SITE_URL = "https://komendly.com";
+export const SITE_URL = "https://www.komendly.com";
 export const SITE_NAME = "Komendly";
 export const ORG_ID = `${SITE_URL}/#organization`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;

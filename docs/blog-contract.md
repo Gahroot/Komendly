@@ -1,7 +1,7 @@
 # Komendly blog content contract (shared by site, blog-engine, research)
 
 Posts live in `content/blog/<slug>.md` (existing posts may be `.mdx`; keep them working).
-URL: `https://komendly.com/blog/<slug>`. Engine-written posts are plain Markdown (GFM tables allowed),
+URL: `https://www.komendly.com/blog/<slug>`. Engine-written posts are plain Markdown (GFM tables allowed),
 MDX-safe: no raw HTML/JSX, no `<` or `{` outside code spans/blocks.
 
 ## Frontmatter (YAML)
@@ -53,7 +53,7 @@ claims:                                    # engine/gate bookkeeping, not render
 `/?utm_source=blog&utm_medium=article&utm_campaign=<slug>&utm_content=<position>#studio-url`
 
 ## IndexNow
-Key `78c8478292a52ad65d0087edc113df99`, key file served at `https://komendly.com/78c8478292a52ad65d0087edc113df99.txt`
+Key `78c8478292a52ad65d0087edc113df99`, key file served at `https://www.komendly.com/78c8478292a52ad65d0087edc113df99.txt`
 (file `public/78c8478292a52ad65d0087edc113df99.txt` containing just the key). Engine pings IndexNow after a merge goes live.
 
 ## Seed files (research -> engine)
