@@ -3,11 +3,11 @@ import { renderEmailLayout } from "../layout";
 
 describe("renderEmailLayout", () => {
   const html = renderEmailLayout({
-    appUrl: "https://komendly.com/",
+    appUrl: "https://www.komendly.com/",
     preheader: "Confirm",
     heading: "Hi <script>alert(1)</script>",
     paragraphs: ["Tom & \"Jerry\""],
-    button: { label: "Confirm my email", href: "https://komendly.com/verify-email?token=abc" },
+    button: { label: "Confirm my email", href: "https://www.komendly.com/verify-email?token=abc" },
   });
   it("escapes user content", () => {
     expect(html).not.toContain("<script>");
@@ -15,7 +15,7 @@ describe("renderEmailLayout", () => {
     expect(html).toContain("Tom &#38; &#34;Jerry&#34;");
   });
   it("includes link and image URL", () => {
-    expect(html).toContain('href="https://komendly.com/verify-email?token=abc"');
-    expect(html).toContain('src="https://komendly.com/brand/ozzy-classic-happy@3.png"');
+    expect(html).toContain('href="https://www.komendly.com/verify-email?token=abc"');
+    expect(html).toContain('src="https://www.komendly.com/brand/ozzy-classic-happy@3.png"');
   });
 });

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     description:
       "Choose the perfect plan for your team. Start free with 1 video per month, or upgrade to Pro/Business for unlimited video generation.",
     type: "website",
-    url: "https://komendly.com/pricing",
+    url: "https://www.komendly.com/pricing",
   },
   twitter: {
     title: "Pricing - Plans for Every Team | Komendly",

@@ -22,16 +22,16 @@ describe('JSON-LD builders', () => {
       headline: 'Komendly vs X',
       datePublished: '2026-11-07T00:00:00.000Z',
       dateModified: '2026-11-08T00:00:00.000Z',
-      author: { '@type': 'Person', name: 'Nolan Grout', url: 'https://komendly.com/blog/author/nolan-grout' },
+      author: { '@type': 'Person', name: 'Nolan Grout', url: 'https://www.komendly.com/blog/author/nolan-grout' },
       publisher: { '@type': 'Organization', name: 'Komendly' },
-      image: 'https://komendly.com/blog/komendly-vs-x/opengraph-image',
-      mainEntityOfPage: { '@id': 'https://komendly.com/blog/komendly-vs-x' },
+      image: 'https://www.komendly.com/blog/komendly-vs-x/opengraph-image',
+      mainEntityOfPage: { '@id': 'https://www.komendly.com/blog/komendly-vs-x' },
       about: [{ '@type': 'Thing', name: 'X' }],
       abstract: 'A.',
     })
   })
   it('FAQPage strips footnotes; null without faq', () => {
-    const ld = faqJsonLd(post.faq, 'https://komendly.com/blog/komendly-vs-x')
+    const ld = faqJsonLd(post.faq, 'https://www.komendly.com/blog/komendly-vs-x')
     expect(ld).toMatchObject({ '@type': 'FAQPage', mainEntity: [{ name: 'Q?', acceptedAnswer: { text: 'Ans.' } }] })
     expect(faqJsonLd([], 'u')).toBeNull()
   })
@@ -39,8 +39,8 @@ describe('JSON-LD builders', () => {
     expect(breadcrumbJsonLd([{ name: 'Home', path: '/' }, { name: 'Blog', path: '/blog' }])).toEqual({
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://komendly.com/' },
-        { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://komendly.com/blog' },
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://www.komendly.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://www.komendly.com/blog' },
       ],
     })
   })
@@ -60,23 +60,23 @@ describe('JSON-LD builders', () => {
 
 describe('feeds', () => {
   it('llms.txt lists the post with its answer', () => {
-    expect(buildLlmsTxt([post])).toContain('- [Komendly vs X](https://komendly.com/blog/komendly-vs-x): A.')
+    expect(buildLlmsTxt([post])).toContain('- [Komendly vs X](https://www.komendly.com/blog/komendly-vs-x): A.')
   })
   it('rss escapes and links', () => {
     const rss = buildRss([{ ...post, title: 'A & B' }])
     expect(rss).toContain('<title>A &amp; B</title>')
-    expect(rss).toContain('<link>https://komendly.com/blog/komendly-vs-x</link>')
+    expect(rss).toContain('<link>https://www.komendly.com/blog/komendly-vs-x</link>')
   })
 })
 
 describe('first-touch attribution', () => {
   it('captures utm params from a blog CTA and round-trips the cookie', () => {
-    const ft = firstTouchFromUrl(new URL('https://komendly.com/?utm_source=blog&utm_medium=article&utm_campaign=my-post&utm_content=inline'), NOW)
+    const ft = firstTouchFromUrl(new URL('https://www.komendly.com/?utm_source=blog&utm_medium=article&utm_campaign=my-post&utm_content=inline'), NOW)
     expect(ft).toEqual({ utm_source: 'blog', utm_medium: 'article', utm_campaign: 'my-post', utm_content: 'inline', landing: '/', at: NOW.toISOString() })
     expect(parseFirstTouch(serializeFirstTouch(ft ?? {}))).toEqual(ft)
   })
   it('ignores visits without utm and garbage cookies', () => {
-    expect(firstTouchFromUrl(new URL('https://komendly.com/blog'), NOW)).toBeNull()
+    expect(firstTouchFromUrl(new URL('https://www.komendly.com/blog'), NOW)).toBeNull()
     expect(parseFirstTouch('%7Bbad')).toBeNull()
     expect(parseFirstTouch(encodeURIComponent(JSON.stringify({ utm_source: '<script>', evil: 1 })))).toEqual({ utm_source: 'script' })
   })

@@ -20,7 +20,7 @@ const siteConfig = {
   name: "Komendly",
   tagline: "Your website in. Ready-to-run ads out.",
   description: "Paste your website and Ozzy, Komendly's AI ad wizard, builds on-brand, export-ready ads for every stage of awareness. 10 static ads + 1 animated ad free. No card required.",
-  url: "https://komendly.com",
+  url: "https://www.komendly.com",
   twitterHandle: "@komendly",
 };
 

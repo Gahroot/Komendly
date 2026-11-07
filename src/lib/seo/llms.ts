@@ -16,7 +16,7 @@ export function productFacts(): string[] {
     'One-click publishing to Meta (Facebook and Instagram) is included on Growth and Scale.',
     `One-time credit top-ups: ${ADS_TOPUPS.map((t) => `${t.credits} credits ${usd(t.priceCents)}`).join(', ')}.`,
     ADS_GUARANTEE,
-    'Second product: AI video testimonials (https://komendly.com/testimonials) turn written customer reviews into AI-avatar videos.',
+    'Second product: AI video testimonials (https://www.komendly.com/testimonials) turn written customer reviews into AI-avatar videos.',
   ]
 }
 
