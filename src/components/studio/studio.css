@@ -190,3 +190,36 @@ body.studio-body::before { display: none; }
 .campfire i:nth-child(3) { left: 16px; height: 12px; background: #ff6a3c; }
 @keyframes campfire { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.72); } }
 @media (prefers-reduced-motion: reduce) { .campfire i { animation: none; } }
+
+/* ---------- Ozzy's workshop (homepage demo) ---------- */
+.ws-bench { position: absolute; left: 50%; bottom: 6px; width: 210px; height: 14px; transform: translateX(-50%); background: #3a1f4f; box-shadow: inset 0 3px 0 #5a3470, 0 6px 0 #1a0d26; z-index: -1; }
+.ws-layer { position: absolute; inset: 0; opacity: 0; transform: translateY(8px) scale(.985); filter: blur(4px); transition: opacity 420ms var(--ease-out), transform 520ms var(--ease-expo), filter 420ms var(--ease-out); pointer-events: none; }
+.ws[data-stage="read"] .ws-read, .ws[data-stage="review"] .ws-review, .ws[data-stage="build"] .ws-ad, .ws[data-stage="ready"] .ws-ad { opacity: 1; transform: none; filter: none; }
+.ws-scan { position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--studio-gold); box-shadow: 0 0 18px 4px #ffcf4a88; animation: ws-scan 1.8s steps(14, end) infinite; }
+@keyframes ws-scan { from { top: 6%; } to { top: 94%; } }
+.ws-chip { opacity: 0; transform: translateX(-10px); background: #fff1d6; color: #2a1a6e; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; box-shadow: 0 3px 0 #1a0f3a; border: 2px solid #1a0f3a; white-space: nowrap; transition: opacity 300ms var(--ease-out), transform 420ms var(--ease-pop); }
+.ws[data-stage="read"] .ws-chip { opacity: 1; transform: none; transition-delay: var(--d); }
+.ws-mark { background: linear-gradient(90deg, oklch(0.84 0.14 78 / .38), oklch(0.84 0.14 78 / .38)) no-repeat left / 0% 100%; color: var(--foreground); padding: 0 2px; transition: background-size 1200ms var(--ease-expo) 500ms; }
+.ws[data-stage="review"] .ws-mark { background-size: 100% 100%; }
+.ws-mosaic { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(10, 1fr); }
+.ws-mosaic i { background: #1d1040; box-shadow: inset 0 0 0 1px #2b1556, 0 0 0 1px #1d1040; opacity: 1; }
+.ws[data-stage="build"] .ws-mosaic i { animation: ws-pix 1500ms steps(1, end) 1400ms both; }
+.ws[data-stage="ready"] .ws-mosaic i { opacity: 0; }
+@keyframes ws-pix { 0% { opacity: 1; background: #1d1040; } 40% { opacity: 1; background: #4a2a8a; } 60% { opacity: .9; background: #ffcf4a; } 75%, 100% { opacity: 0; } }
+.ws-quote { position: absolute; left: 8%; right: 8%; top: 44%; font-size: 22px; line-height: 1.15; color: #fff1d6; text-shadow: 0 2px 0 #1a0f3a, 0 0 20px #000; opacity: 0; }
+.ws[data-stage="build"] .ws-quote { animation: ws-quote 3200ms var(--ease-out) forwards; }
+@keyframes ws-quote { 0% { opacity: 0; transform: translateX(-24px); } 12% { opacity: 1; transform: none; } 42% { opacity: 1; transform: translateY(0) scale(1); } 60%, 100% { opacity: 0; transform: translateY(12px) scale(.96); } }
+.ws-fan { position: absolute; width: 62%; top: 10%; opacity: 0; transition: opacity 400ms var(--ease-out), transform 700ms var(--ease-pop); box-shadow: 0 20px 40px -15px #000; border-radius: 10px; }
+.ws-fan--a { right: -18%; transform: rotate(0) translateX(-30%); }
+.ws-fan--b { left: -18%; transform: rotate(0) translateX(30%); }
+.ws[data-stage="ready"] .ws-fan { opacity: .9; }
+.ws[data-stage="ready"] .ws-fan--a { transform: rotate(8deg); transition-delay: 250ms; }
+.ws[data-stage="ready"] .ws-fan--b { transform: rotate(-8deg); transition-delay: 400ms; }
+.ws-badge { position: absolute; left: 50%; bottom: -14px; transform: translate(-50%, 8px); opacity: 0; background: var(--studio-gold); color: #2a0f10; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 999px; white-space: nowrap; box-shadow: 0 6px 20px -6px #ffcf4aaa; transition: opacity 300ms, transform 500ms var(--ease-pop); }
+.ws[data-stage="ready"] .ws-badge { opacity: 1; transform: translate(-50%, 0); transition-delay: 500ms; }
+@media (max-width: 767px) { .ws-fan { display: none; } .ws-chips { left: 8px; } }
+@media (prefers-reduced-motion: reduce) {
+  .ws-layer, .ws-chip, .ws-fan, .ws-badge, .ws-mark { transition: none !important; }
+  .ws-scan, .ws-mosaic i, .ws-quote { animation: none !important; }
+  .ws-mosaic i { opacity: 0; }
+}

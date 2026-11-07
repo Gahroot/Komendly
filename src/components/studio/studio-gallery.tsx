@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { Awareness } from "@/lib/ads/contracts";
 import { AWARENESS_INFO } from "@/lib/ads/run-labels";
+import { StudioWorkshop } from "./studio-workshop";
 
 // Real composed ads from live runs, saved in public/ads/samples.
 const SAMPLES: { src: string; awareness: Awareness; angle: string; alt: string; tilt: string }[] = [
@@ -19,9 +20,12 @@ export function StudioGallery() {
       <div className="max-w-xl space-y-3">
         <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">Real output</p>
         <h2 id="gallery-title" className="font-display text-4xl font-medium tracking-[-0.02em] sm:text-5xl">Ads that sound like your customers</h2>
-        <p className="text-muted-foreground">Made from real websites. Every ad targets a different stage of buyer awareness.</p>
+        <p className="text-muted-foreground">Ozzy listens for the words your customers already use, then builds the ad around them. Here&apos;s one run, start to finish</p>
       </div>
-      <div className="mt-12 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 md:gap-x-7">
+      <div className="mt-12"><StudioWorkshop /></div>
+      <h3 className="font-display mt-20 text-2xl font-medium tracking-[-0.01em] sm:text-3xl">More real output</h3>
+      <p className="mt-2 text-sm text-muted-foreground">Made from real websites. Every ad targets a different stage of buyer awareness</p>
+      <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 md:gap-x-7">
         {SAMPLES.map((s) => (
           <figure key={s.src} className="group">
             <div className="studio-frame rounded-xl p-2 sm:p-2.5" style={{ ["--tilt" as string]: s.tilt }}>
