@@ -5,6 +5,7 @@ import { DeviceCookie } from "@/components/ads/device-cookie";
 import { TrackOnMount } from "@/components/analytics/track-on-mount";
 import { fraunces } from "@/components/studio/fonts";
 import { StudioClosing } from "@/components/studio/studio-closing";
+import { StudioFooter } from "@/components/studio/studio-footer";
 import { StudioGallery } from "@/components/studio/studio-gallery";
 import { StudioHero } from "@/components/studio/studio-hero";
 import { StudioJourney } from "@/components/studio/studio-journey";
@@ -13,7 +14,7 @@ import { StudioRoot } from "@/components/studio/studio-spell";
 import "@/components/studio/studio.css";
 
 export const metadata: Metadata = {
-  title: { absolute: "Komendly — Your website in. Ready-to-run ads out." },
+  title: { absolute: "Komendly — Your website in, ready-to-run ads out" },
   description: "Paste your website. Ozzy builds 10 on-brand, export-ready ads and an animated ad in minutes. Free, no card required.",
   alternates: { canonical: "/" },
 };
@@ -44,6 +45,7 @@ export default async function HomePage() {
           <StudioJourney />
           <StudioGallery />
           <StudioClosing />
+          <StudioFooter />
         </div>
       </main>
     </StudioRoot>

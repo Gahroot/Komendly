@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Check } from "lucide-react";
 import { AdsNav } from "@/components/ads/ads-nav";
+import { StudioFooter } from "@/components/studio/studio-footer";
 import { getCurrentUser } from "@/lib/auth";
 import { ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS } from "@/lib/ads/billing-config";
 import { formatCents } from "@/lib/ads/billing-format";
@@ -46,6 +47,7 @@ export default async function AdsPricingPage() {
           <p className="max-w-sm text-sm text-muted-foreground">{ADS_GUARANTEE}</p>
         </div>
       </main>
+      <StudioFooter />
     </div>
   );
 }
