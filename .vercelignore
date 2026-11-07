@@ -12,3 +12,5 @@ tmp
 tsconfig.tsbuildinfo
 *.png
 !public/**
+# App Router file icons (icon.png, apple-icon.png) must ship
+!src/app/*.png
