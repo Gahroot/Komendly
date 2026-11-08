@@ -22,7 +22,7 @@ key_takeaways:
   - "Komendly turns a website URL into static and animated ad creatives through Ozzy. Its trial includes 10 static ads + 1 animated ad, no card required."
   - "AdCreative.ai's predictive scoring, product-photo generation, and product-video workflows make it worth evaluating when those capabilities are requirements.[^5][^7][^8]"
   - "Compare subscription and production labor costs per approved ad. Credit allowances alone do not establish a cost winner."
-  - "Komendly offers one-click Meta publishing on Growth and Scale. AdCreative.ai documents pushing creatives to a connected Meta ad account.[^3]"
+  - "Komendly offers one-click publish to Meta on Growth and Scale plans. AdCreative.ai documents pushing creatives to a connected Meta ad account.[^3]"
 competitors:
   - "AdCreative.ai"
 cta: "ads"
@@ -100,9 +100,7 @@ claims:
     source: 2
   - text: "AdCreative.ai's help center says a card charge can follow if the user does not cancel before the trial ends."
     source: 2
-  - text: "AdCreative.ai's Instant Ads accepts a website or product URL."
-    source: 3
-  - text: "AdCreative.ai's Instant Ads generates ad copy and visuals using information from the submitted page."
+  - text: "AdCreative.ai's Instant Ads accepts a website or product URL and generates ad copy and visuals using the submitted page."
     source: 3
   - text: "AdCreative.ai's Instant Ads documents pushing creatives directly to connected Meta ad accounts."
     source: 3
@@ -142,7 +140,7 @@ Start with this comparison, then evaluate the work you actually need to finish.
 
 | Criterion | Komendly | AdCreative.ai |
 | --- | --- | --- |
-| Monthly starting price | Starter: $49/month; 20 credits | Starter: $39/month as of November 2026.[^1] |
+| Monthly starting price | Check current pricing on the pricing page linked below | Starter: $39/month as of November 2026.[^1] |
 | Free trial | 10 static ads + 1 animated ad, no card required | 7-day trial; credit card required.[^2] |
 | Formats | Static + animated; 4:5, 1:1, 9:16 | Ad banners, product photos, and product videos.[^1][^7][^8] |
 | Website input | Website URL through Ozzy | URL-based Instant Ads.[^3] |
@@ -153,9 +151,9 @@ Start with this comparison, then evaluate the work you actually need to finish.
 
 AdCreative.ai's monthly cards list Starter at $39 for 20 credits and Professional at $249 for 300 credits, as of November 2026.[^1] Check current pricing and your selected billing interval before subscribing.
 
-Komendly's monthly USD plans are Starter at $49 with 20 credits, Growth at $119 with 55 credits, and Scale at $229 with 115 credits. See [Komendly pricing](/pricing) for the plan comparison.
+For Komendly's current plan prices and credit allowances, see [Komendly pricing](/pricing). Check the plan that fits your intended formats and publishing needs before estimating your monthly budget.
 
-Those allowances are credits, not a verified comparison of finished ads. Do not turn them into an ads-per-month promise without checking how your intended format consumes the balance.
+Credit allowances are not a verified comparison of finished ads. Do not turn them into an ads-per-month promise without checking how your intended format consumes the balance.
 
 Before choosing a subscription, write down your expected workload: approved static creatives, animated versions, campaign angles, and review time. Pick a plan against that brief. Buying an allowance you cannot use is not the same as reducing your production cost.
 
