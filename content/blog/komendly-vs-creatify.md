@@ -11,8 +11,9 @@ tags:
   - "AI video ads"
   - "Creatify"
   - "ad tool comparison"
-published: false
-status: "draft"
+published: true
+status: "approved"
+approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "komendly vs creatify"
 secondary_keywords:
   - "creatify review"
