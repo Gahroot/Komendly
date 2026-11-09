@@ -65,7 +65,7 @@ sources:
   - id: 4
     title: "Pencil Pricing: Plans for Teams and Enterprise"
     publisher: "Pencil"
-    url: "https://www.trypencil.com/pricing"
+    url: "https://trypencil.com/pricing"
     accessed: 2026-11-09
   - id: 5
     title: "Canva Plans and Pricing"
@@ -88,7 +88,7 @@ sources:
     url: "https://www.quickads.ai/pricing"
     accessed: 2026-11-09
 claims:
-  - text: "As of November 2026, AdCreative.ai lists its entry Starter option at $39/month with 20 monthly credits."
+  - text: "As of November 2026, AdCreative.ai lists its entry Starter option at $39/month."
     source: 1
   - text: "AdCreative.ai advertises a 7-day free trial."
     source: 1
@@ -160,19 +160,19 @@ By Nolan Grout, founder of Komendly. Komendly is my product, so treat its inclus
 
 My recommendation is to choose by the next creative job you need to finish. A founder preparing static offer ads has a different buying decision from a marketer commissioning an avatar-led video.
 
-Use this shortlist to choose a trial, then apply the same brief and approval standard to each candidate. Annual billing is identified explicitly; consider the commitment before comparing it with a monthly subscription.
+Use this shortlist to choose a trial, then apply the same brief and approval standard to each candidate. Annual billing is identified explicitly; consider the commitment before comparing it with a monthly subscription. The best-for verdicts are my editorial recommendations.
 
 | Tool | Price | Free plan or trial | Formats | My best-for verdict |
 | --- | --- | --- | --- | --- |
-| Komendly | Komendly Starter: $49/month | 10 static ads + 1 animated ad, no card required | Static + animated; 4:5, 1:1, 9:16 | Website-to-ad production |
-| AdCreative.ai | AdCreative.ai Starter: $39/month, as of November 2026.[^1] | 7-day free trial.[^1] | Image + video.[^1] | Creative generation with scoring |
-| Creatify | Creatify Standard: displayed at $10/month alongside annual savings, as of November 2026; confirm billing.[^2] | Free plan, as of November 2026; watermarked exports.[^2] | Image + video, including avatars.[^2] | URL-to-video and avatar ads |
-| Predis.ai | Predis.ai Core: $230 billed yearly, as of November 2026.[^3] | 3-day free trial; card required.[^3] | Images, videos, carousels.[^3] | Combining social content and ads |
-| Pencil | Pencil Core: $14/month billed monthly, as of November 2026.[^4] | Confirm current trial terms | Text, image + video.[^4] | A modest paid testing budget |
-| Canva | Canva Free; Pro US$144/year for one person, as of November 2026.[^5] | Pro and Business free trials.[^5] | Image + video.[^5] | Hands-on design control |
+| Komendly | Check current plans | 10 static ads + 1 animated ad, no card required | Static + animated; 4:5, 1:1, 9:16 | Website-to-ad production |
+| AdCreative.ai | Starter: $39/month, as of November 2026.[^1] | 7-day free trial.[^1] | Image + video.[^1] | Creative generation with scoring |
+| Creatify | Standard: $10/month displayed alongside annual savings, as of November 2026; confirm billing.[^2] | Free plan, as of November 2026; watermarked exports.[^2] | Image + video, including avatars.[^2] | URL-to-video and avatar ads |
+| Predis.ai | Core: $230 billed yearly, as of November 2026.[^3] | 3-day free trial; card required.[^3] | Images, videos, carousels.[^3] | Combining social content and ads |
+| Pencil | Core: $14/month billed monthly, as of November 2026.[^4] | Confirm current trial terms | Text, image + video.[^4] | A modest paid testing budget |
+| Canva | Free; Pro US$144/year for one person, as of November 2026.[^5] | Pro and Business free trials.[^5] | Image + video.[^5] | Hands-on design control |
 | Arcads | Check current pricing | Free trial advertised.[^6] | AI-actor and generated video.[^6] | Actor-led video concepts |
-| Omneky | Omneky Lite: $29/month billed monthly, as of November 2026.[^7] | 7-day free trial.[^7] | Images + short cinematic videos on Lite.[^7] | Generation alongside creative insights |
-| Quickads | Quickads software: from $199/month, as of November 2026.[^8] | Quickads paid trial: $1, as of November 2026.[^8] | Image + video.[^8] | Exploring software and managed services |
+| Omneky | Lite: $29/month billed monthly, as of November 2026.[^7] | 7-day free trial.[^7] | Images + short cinematic videos on Lite.[^7] | Generation alongside creative insights |
+| Quickads | Software: from $199/month, as of November 2026.[^8] | Paid trial: $1, as of November 2026.[^8] | Image + video.[^8] | Exploring software and managed services |
 
 ## How should you test an AI ad generator before buying?
 
@@ -220,11 +220,11 @@ Add the criterion scores for a total out of 16. Use that total as a decision aid
 
 **My verdict: best for a small business starting with its website and needing static plus animated ads.**
 
-Komendly turns a website URL into on-brand, ready-to-run creatives through Ozzy, its AI ad wizard. It supports 4:5, 1:1, and 9:16, with ads for all 5 awareness stages: unaware, problem aware, solution aware, product aware, and most aware.
+Komendly turns a website URL into on-brand, ready-to-run ad creatives through Ozzy, its AI ad wizard. It supports 4:5, 1:1, and 9:16, with ads for all 5 awareness stages: unaware, problem aware, solution aware, product aware, and most aware.
 
 **Pro:** The website-to-ad workflow matches this specific production job. **Con:** One-click publish to Meta requires Growth or Scale, so account for that when choosing a plan.
 
-Komendly Starter costs $49/month with 20 credits. Komendly Growth costs $119/month with 55 credits. Komendly Scale costs $229/month with 115 credits. See [Komendly pricing](/pricing) for plan selection. Compare the plan cost with the distinct creatives you approve in your own test.
+See [Komendly pricing](/pricing) for current plans and pricing. Compare the plan cost with the distinct creatives you approve in your own test, and choose according to the work you need to produce next.
 
 The trial includes 10 static ads + 1 animated ad, no card required. Email verification applies, with one trial per website/device/network. Use the [free ad studio](/) to evaluate your own website.
 
@@ -232,7 +232,7 @@ The trial includes 10 static ads + 1 animated ad, no card required. Email verifi
 
 **My verdict: shortlist it when creative scoring is central to your buying decision.**
 
-AdCreative.ai offers image and video creative generation alongside Creative Scoring AI.[^1] AdCreative.ai's Starter entry option lists 20 monthly credits at $39/month as of November 2026.[^1]
+AdCreative.ai offers image and video creative generation alongside Creative Scoring AI.[^1] Consider it when you want to evaluate a scoring tool as part of your creative workflow.
 
 **Pro:** Generation and scoring are available within its product offering.[^1] **Con:** Unlimited generation does not mean unlimited downloads: its FAQ says downloads consume credits.[^1]
 
