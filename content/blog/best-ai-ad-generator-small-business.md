@@ -11,8 +11,9 @@ tags:
   - "Small business"
   - "Ad creatives"
   - "Marketing tools"
-published: false
-status: "draft"
+published: true
+status: "approved"
+approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "best ai ad generator for small business"
 secondary_keywords:
   - "ai ad generator"
