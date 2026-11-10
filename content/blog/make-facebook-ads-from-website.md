@@ -11,8 +11,9 @@ tags:
   - "AI ad creatives"
   - "Website to ads"
   - "Creative strategy"
-published: false
-status: "draft"
+published: true
+status: "approved"
+approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "make facebook ads from website"
 secondary_keywords:
   - "website to ads"
