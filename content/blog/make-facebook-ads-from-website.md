@@ -57,7 +57,7 @@ claims:
     source: 1
   - text: "Meta’s published advertising principles say its ad review considers the content, targeting, landing page and advertiser’s identity."
     source: 2
-  - text: "Meta announced that it is beginning to detect ads created or edited using third-party AI tools through industry-standard signals and apply an AI info label when detected."
+  - text: "In its June 2026 update, Meta said it would begin automatically detecting ads created or edited using third-party AI tools through industry-standard signals and would apply an AI info label in About this ad when detected."
     source: 3
 ---
 
@@ -92,7 +92,7 @@ For **Grounds**, collect relevant evidence: a real project photograph, an accura
 
 For **Execution**, gather your logo, brand colors, suitable photographs and the intended destination. Select an image that illustrates the offer rather than an unrelated decorative image.
 
-If customer evidence needs its own planning process, use our [social proof playbook](/blog/social-proof-playbook-video-testimonials-small-business).
+If you are still choosing a production tool, use our [AI ad generator guide for small businesses](/blog/best-ai-ad-generator-small-business) alongside this brief.
 
 ## How do you adapt website copy to each awareness stage?
 
@@ -144,7 +144,7 @@ Confirm that any conditions are still accurate. Remove unsupported superlatives,
 
 The landing page deserves the same attention as the creative. Meta’s published advertising principles say its ad review considers the content, targeting, landing page and advertiser’s identity.[^2]
 
-For AI-generated imagery, keep a record of the original assets and review how the finished image represents your product. Meta has announced that it is beginning to detect ads created or edited using third-party AI tools through industry-standard signals and apply an AI info label when detected.[^3] Do not assume every AI-generated ad will receive a label.
+For AI-generated imagery, keep a record of the original assets and review how the finished image represents your product. In its June 2026 update, Meta said it would begin automatically detecting ads created or edited using third-party AI tools through industry-standard signals and would apply an AI info label in About this ad when detected.[^3] Treat that announcement as a plan, rather than confirmation that third-party detection has begun.
 
 ## How do you move from a finished creative to a campaign?
 
