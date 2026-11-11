@@ -67,7 +67,7 @@ sources:
   - id: 5
     title: "Pencil pricing"
     publisher: "Pencil"
-    url: "https://trypencil.com/pricing"
+    url: "https://www.trypencil.com/pricing"
     accessed: 2026-11-11
   - id: 6
     title: "What is the difference between Pencil and Pencil Pro?"
@@ -133,9 +133,9 @@ claims:
     source: 7
   - text: "Canva lists AI ad creation and creative insights, plus social scheduling on Pro and Business."
     source: 7
-  - text: "Canva lists image, video and photo and video animation tools."
+  - text: "Canva's pricing page links to image and video editing tools."
     source: 7
-  - text: "Canva's shared monthly AI allowance varies by plan; advanced AI tools and complex tasks consume more allowance."
+  - text: "Canva's shared monthly AI allowance varies by plan; higher-tier AI tools and more complex tasks consume more allowance."
     source: 7
   - text: "As of November 2026, Quickads advertises software from $199/month, or $299/month with AI agents, publishing and the influencer agent."
     source: 9
@@ -179,11 +179,11 @@ The table separates documented capabilities from my editorial best-for verdicts.
 
 | Product | Price | Free trial or evaluation | Formats | My best-for verdict |
 | --- | --- | --- | --- | --- |
-| Komendly | Starter $49/month; Growth $119/month; Scale $229/month | 10 static ads + 1 animated ad, no card required | Static and animated; 4:5, 1:1, 9:16 | A founder starting with a website URL |
+| Komendly | Check current pricing; see the plan link below | 10 static ads + 1 animated ad, no card required | Static and animated; 4:5, 1:1, 9:16 | A founder starting with a website URL |
 | Smartly | As of November 2026, check current pricing with sales; no subscription price on the reviewed homepage.[^3] | Demo offered; self-serve free trial not confirmed there.[^3] | Image, video, display and connected TV.[^1] | Teams requiring coordinated creative and media operations |
 | AdCreative.ai | As of November 2026, entry Starter is $39/month on monthly billing.[^4] | Seven-day free trial.[^4] | Banners, copy, photoshoots and videos.[^4] | Teams wanting scoring alongside creative production |
 | Pencil | As of November 2026, Core is $14/month; Growth is $55/month, billed monthly.[^5] | Free trial mentioned in FAQ; confirm allowance.[^5] | Text, image and video assets.[^5] | Teams exploring generative ad production |
-| Canva | As of November 2026, US Pro is $144/year for one person; Business is $250/year per person.[^7] | Free plan; Pro and Business trials advertised.[^7] | Image, video and animation tools.[^7] | Teams prioritizing manual design control |
+| Canva | As of November 2026, US Pro is $144/year for one person; Business is $250/year per person.[^7] | Free plan; Pro and Business trials advertised.[^7] | Image and video editing tools.[^7] | Teams prioritizing manual design control |
 | Quickads | As of November 2026, software starts at $199/month, or $299/month with AI agents, publishing and the influencer agent.[^9] | As of November 2026, a $1 trial is advertised.[^9] | AI image and video ads.[^9] | Teams considering software plus managed services |
 
 ### Komendly: best for starting with your website
@@ -196,7 +196,7 @@ Komendly turns a website URL into on-brand, ready-to-run static and animated ad 
 
 **Verdict:** Choose Komendly when the missing piece is ad production from your website. Choose a design-focused workflow when precise manual composition is your main requirement.
 
-See [how to make Facebook ads from website URLs](/blog/make-facebook-ads-from-website) for the production workflow, and [pricing](/pricing) for plan details.
+See [how to make Facebook ads from website URLs](/blog/make-facebook-ads-from-website) for the production workflow, and [pricing](/pricing) for current plan details.
 
 ### Canva: best for manual design control
 
@@ -204,7 +204,7 @@ Canva AI supports conversational refinement and edits you make yourself.[^8] Can
 
 **Pros:** My recommendation for a teammate who wants to shape the final composition directly.
 
-**Cons:** Canva's shared monthly AI allowance varies by plan; advanced AI tools and complex tasks consume more allowance.[^7] Check your intended workflow against that allowance.
+**Cons:** Canva's shared monthly AI allowance varies by plan; higher-tier AI tools and more complex tasks consume more allowance.[^7] Check your intended workflow against that allowance.
 
 **Verdict:** Canva is the better pick than Komendly when hands-on design control determines whether an ad gets approved. Include AI creation in your evaluation alongside editing.
 
