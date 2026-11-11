@@ -12,7 +12,7 @@ export default async function VerifyEmailPage() {
       <AdsNav signedIn={signedIn} />
       <main className="flex justify-center px-4 py-16 sm:py-24">
         <Suspense>
-          <VerifyEmailConfirm />
+          <VerifyEmailConfirm signedIn={signedIn} />
         </Suspense>
       </main>
     </div>

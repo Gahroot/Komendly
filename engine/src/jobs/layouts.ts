@@ -1,14 +1,13 @@
 // Deterministic post-LLM layout/asset assignment: template variety, real assets, limited imagery.
 import type { AdSpec, Extraction } from "../../../src/lib/ads/contracts";
 import { isCompleteSentence, jaccard, numbersIn } from "./grounding";
+import { FAKE_UI_LAYOUTS } from "./trial-fill";
 
 export const TEMPLATES = [
   "quote_thought",
   "hero_product",
   "before_after",
   "ui_card",
-  "chat_moment",
-  "notification",
   "pain_list",
   "testimonial",
   "offer_card",
@@ -24,8 +23,6 @@ export const IMAGE_LED = ["photo_fullbleed", "photo_split", "product_spotlight",
 
 export const TEMPLATE_GUIDE = `Layouts (set visual.layout to exactly one id; use many different ones):
 - quote_thought: the buyer's private thought as a big quote
-- chat_moment: the moment as a short chat/DM exchange
-- notification: the moment as a phone notification
 - before_after: life before vs after (two sides)
 - pain_list: 2-4 short pains the buyer recognises
 - ui_card: a clean rebuild/screenshot of the product UI (needs a screenshot asset)
@@ -44,8 +41,8 @@ Prefer image-led layouts: at least half of the ads should be built on the site's
 
 const ALIASES: Array<[RegExp, Template]> = [
   [/quote|thought/, "quote_thought"],
-  [/chat|dm|message|text/, "chat_moment"],
-  [/notif|push|alert/, "notification"],
+  // Chat bubbles / notification cards read as fake app UI in QC: those ideas become a quote of the thought.
+  [/chat|dm|message|text|notif|push|alert/, "quote_thought"],
   [/before|after|split|vs/, "before_after"],
   [/list|pains|bullet/, "pain_list"],
   [/ui|dashboard|screen|app/, "ui_card"],
@@ -59,6 +56,7 @@ const ALIASES: Array<[RegExp, Template]> = [
 
 export function normalizeTemplate(layout: string, known: readonly string[] = TEMPLATES): Template | null {
   const k = layout.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (FAKE_UI_LAYOUTS.has(k)) return "quote_thought";
   const exact = known.find((t) => t === k);
   if (exact) return exact;
   for (const [re, t] of ALIASES) if (re.test(k)) return t;
@@ -85,8 +83,8 @@ function usable(a: Asset): boolean {
 }
 
 const BY_AWARENESS: Record<AdSpec["awareness"], Template[]> = {
-  unaware: ["quote_thought", "photo_caption", "notification", "chat_moment", "photo_fullbleed", "problem_scene", "minimal_type", "before_after"],
-  problem_aware: ["quote_thought", "photo_fullbleed", "chat_moment", "notification", "photo_split", "pain_list", "before_after", "photo_caption", "problem_scene", "minimal_type", "founder_note"],
+  unaware: ["quote_thought", "photo_caption", "photo_fullbleed", "problem_scene", "minimal_type", "before_after"],
+  problem_aware: ["quote_thought", "photo_fullbleed", "photo_split", "pain_list", "before_after", "photo_caption", "problem_scene", "minimal_type", "founder_note"],
   solution_aware: ["photo_split", "before_after", "screenshot_device", "ui_card", "product_spotlight", "hero_product", "photo_collage", "founder_note", "stat_card", "pain_list", "minimal_type"],
   product_aware: ["testimonial", "product_spotlight", "screenshot_device", "ui_card", "photo_collage", "hero_product", "stat_card", "before_after", "offer_card"],
   most_aware: ["offer_card", "product_spotlight", "hero_product", "photo_fullbleed", "testimonial", "minimal_type"],
@@ -101,7 +99,7 @@ export function testimonialFor(s: AdSpec, proof: Proof[]): Proof | null {
 }
 
 export function assignLayouts(specs: AdSpec[], ctx: LayoutContext): AdSpec[] {
-  const known = ctx.templates?.length ? [...ctx.templates] : [...TEMPLATES];
+  const known = (ctx.templates?.length ? [...ctx.templates] : [...TEMPLATES]).filter((t) => !FAKE_UI_LAYOUTS.has(t));
   const assets = ctx.assets.filter(usable);
   const noFace = assets.filter((a) => !a.hasFace);
   const screenshots = noFace.filter((a) => a.kind === "screenshot");

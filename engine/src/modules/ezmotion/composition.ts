@@ -272,7 +272,7 @@ ${timelineScript({ t, structure, stage, push: prod?.trimmable ? 1.2 : 1.07, plat
 /** Fits [data-fit] text so its widest planned line spans data-fit px (and the block stays under data-fith px), measured with real fonts. */
 // [data-alts]: regroups the existing .w nodes (GSAP keeps its targets) into the split that is
 // biggest with the loaded font's real metrics. Then every [data-fit] block is scaled to fill its box.
-const FIT_SCRIPT = `(function(){var cv=document.createElement("canvas").getContext("2d");
+export const FIT_SCRIPT = `(function(){var cv=document.createElement("canvas").getContext("2d");
 function regroup(el){var alts=el.dataset.alts?JSON.parse(el.dataset.alts):null;if(!alts||!alts.length)return;var ws=Array.prototype.slice.call(el.querySelectorAll(".w"));var cs=getComputedStyle(el);cv.font=cs.fontWeight+" 100px "+cs.fontFamily;var lh=1.06,best=null;
 alts.forEach(function(a){var i=0,mw=1;a.forEach(function(c){var t=ws.slice(i,i+c).map(function(w){return w.textContent}).join(" ");mw=Math.max(mw,cv.measureText(t).width*1.02);i+=c});var s=Math.min(+el.dataset.fit/mw*100,+el.dataset.fith/(a.length*lh));if(!best||s>best.s*1.03)best={a:a,s:s}});
 var lines=el.querySelectorAll(".line"),proto=lines[0];lines.forEach(function(l){l.remove()});var i=0;best.a.forEach(function(c){var l=proto.cloneNode(false);ws.slice(i,i+c).forEach(function(w,k){if(k)l.appendChild(document.createTextNode(" "));l.appendChild(w)});i+=c;el.appendChild(l)});el.style.fontSize=Math.floor(best.s)+"px"}

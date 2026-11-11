@@ -16,6 +16,8 @@ const Read = z.object({
   textBoxes: z.array(z.object({ x: z.number(), y: z.number(), w: z.number(), h: z.number() })).describe("bounding box of every designed text block (headline lines, subline, button), as fractions 0-1 of image width/height from the top-left"),
   screenUi: z.enum(["none", "matches_reference", "other"]).describe("any phone/laptop/monitor screen with UI: none, matches the reference screenshot (image 2 if given), or other/invented UI"),
   productNotInReferences: z.boolean().describe("a product, device, gadget or piece of hardware is featured that does not appear in any reference image (generic props like furniture, plants, a ladder do not count)"),
+  hasFakeUi: z.boolean().describe("a button-shaped pill/box around the CTA, a notification card or toast, play button, checkbox, poll or app-style chat bubble drawn into the ad (not inside a real screenshot)").optional(),
+  misspelledWords: z.array(z.string()).describe("any word in the designed ad text that is misspelled, garbled or not a real word, exactly as rendered").optional(),
   hasInventedData: z.boolean().describe("a chart, graph, dashboard figure or data visual that is not a real screenshot"),
 });
 export type ReadBack = z.infer<typeof Read>;
@@ -55,6 +57,9 @@ export function judge(read: ReadBack, a: Allowed): string[] {
   if (read.hasHumanFace) reasons.push("human face");
   if (read.hasThirdPartyBrand) reasons.push("third-party brand prominent");
   if (read.hasFrame) reasons.push("frame around ad");
+  if (read.hasFakeUi) reasons.push("fake UI element (button/pill/notification)");
+  const copyWords = new Set(copy.split(" "));
+  for (const w of read.misspelledWords ?? []) if (normText(w) && !copyWords.has(normText(w))) reasons.push(`misspelled "${w}"`);
   if (read.hasInventedData) reasons.push("invented chart or data visual");
   if (read.productNotInReferences) reasons.push("product_not_in_references");
   if (read.screenUi === "other" || (read.screenUi === "matches_reference" && !a.screenshotRef)) reasons.push("invented screen UI");

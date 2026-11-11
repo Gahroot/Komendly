@@ -4,6 +4,7 @@ import path from "node:path";
 import { ExtractionSchema, type Extraction } from "../../../src/lib/ads/contracts";
 import type { BrandKit } from "../render/static/types";
 import type { Storage } from "../storage/s3";
+import { isBlankLogo, logoInk } from "./blank-logo";
 
 function asArray<T>(v: unknown): T[] {
   return Array.isArray(v) ? (v as T[]) : [];
@@ -28,7 +29,9 @@ export async function buildBrandKit(
     await writeFile(file, await storage.get(key));
     return file;
   };
-  const logoPath = logoKey ? await fetchTo(logoKey).catch(() => null) : null;
+  const rawLogo = logoKey ? await fetchTo(logoKey).catch(() => null) : null;
+  // A placeholder app icon (solid plate, almost no mark) is worse than no logo: renderers use the brand-name wordmark.
+  const logoPath = rawLogo && isBlankLogo(await logoInk(rawLogo)) ? null : rawLogo;
   // Spec'd assets first, then the rest (renderers may pick alternates), capped at 8.
   const order = [...assets].sort((a, b) => Number(wantedAssetKeys.includes(b.key)) - Number(wantedAssetKeys.includes(a.key))).slice(0, 8);
   const local: BrandKit["assets"] = [];

@@ -109,7 +109,7 @@ export class OpenAIProvider implements AIProvider {
       if (!b64) throw new Error("OpenAI Images API returned no image");
       const png = Buffer.from(b64, "base64");
       const dims = imageSize(png) ?? { width: 0, height: 0 };
-      return { png, ...dims, usage: { latencyMs: Date.now() - started, images: 1, costMicros: imageCostMicros(this.o.prices, quality) } };
+      return { png, ...dims, usage: { latencyMs: Date.now() - started, images: 1, costMicros: imageCostMicros(this.o.prices, quality, 1, req.references?.length ?? 0) } };
     }, req.signal);
   }
 

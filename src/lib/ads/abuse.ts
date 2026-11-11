@@ -22,6 +22,10 @@ export interface RequestFingerprint {
 
 /** Trials from one IP prefix within 24h at/above this raise a trial_farming flag. */
 export const VELOCITY_THRESHOLD = 3;
+/** Free packs per network (IPv4 /24, IPv6 /64) per 30 days (2 = e.g. a couple with two businesses). Family / coworkers with their own websites share a network;
+ *  the domain, email and device checks stop repeat packs for the same business. Over the cap = ip_used. */
+export const IP_TRIAL_CAP = 2;
+const IP_WINDOW_MS = 30 * 24 * 3600 * 1000;
 export const MAX_URL_LENGTH = 2048;
 
 // ---------------------------------------------------------------------------
@@ -258,11 +262,11 @@ async function flag(kind: string, severity: "low" | "medium" | "high", details: 
 /** Check whether this user/workspace may start a free trial for this URL. */
 export async function checkTrialEligibility(userId: string, workspaceId: string, url: string, fp: RequestFingerprint): Promise<TrialEligibility> {
   const [user, ws] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId }, select: { email: true, emailVerifiedAt: true } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { email: true } }),
     prisma.adsWorkspace.findUnique({ where: { id: workspaceId }, select: { suspendedAt: true, trialUsedAt: true } }),
   ]);
   if (!user || !ws || ws.suspendedAt) return { ok: false, reason: "suspended" };
-  if (!user.emailVerifiedAt) return { ok: false, reason: "email_unverified" };
+  // No email check here: the trial starts right after signup; a verified email is required to download (download-gate.ts).
   if (isDisposableEmail(user.email)) {
     await flag("disposable_email", "low", { email: normalizeEmail(user.email).replace(/^[^@]+/, "***") }, workspaceId, userId);
     return { ok: false, reason: "disposable_email" };
@@ -280,13 +284,14 @@ export async function checkTrialEligibility(userId: string, workspaceId: string,
     prisma.adsTrialClaim.findFirst({ where: { domainHash: h.domainHash } }),
     prisma.adsTrialClaim.findFirst({ where: { emailHash: h.emailHash } }),
     h.deviceHash ? prisma.adsTrialClaim.findFirst({ where: { deviceHash: h.deviceHash } }) : null,
-    h.ipHash ? prisma.adsTrialClaim.findFirst({ where: { ipHash: h.ipHash } }) : null,
+    h.ipHash ? prisma.adsTrialClaim.count({ where: { ipHash: h.ipHash, createdAt: { gte: new Date(Date.now() - IP_WINDOW_MS) } } }) : 0,
     h.ipHash ? prisma.adsTrialClaim.count({ where: { ipHash: h.ipHash, createdAt: { gte: since } } }) : 0,
   ]);
   if (ipRecent + 1 >= VELOCITY_THRESHOLD) {
     await flag("trial_farming", ipRecent + 1 >= VELOCITY_THRESHOLD * 2 ? "high" : "medium", { ipHash: h.ipHash, trials24h: ipRecent + 1 }, workspaceId, userId);
   }
-  return decideTrial({ domain: !!domain, email: !!email, device: !!device, ip: !!ip });
+  if (ip > 0 && ip < IP_TRIAL_CAP) await flag("shared_network_trial", "low", { ipHash: h.ipHash, priorTrials30d: ip }, workspaceId, userId);
+  return decideTrial({ domain: !!domain, email: !!email, device: !!device, ip: ip >= IP_TRIAL_CAP });
 }
 
 /** Pure decision order once lookups are done. */
@@ -319,4 +324,34 @@ export async function rateLimit(key: string, limit: number, windowSeconds: numbe
     await tx.adsRateLimit.create({ data: { key } });
     return true;
   });
+}
+
+// ---------------------------------------------------------------------------
+// Ozzy Studio free video (same person, many accounts). Claims reuse AdsTrialClaim with every hash
+// prefixed "studio:" so they never match (or count toward) ads trial lookups, and vice versa. No migration.
+
+export const STUDIO_CLAIM_PREFIX = "studio:";
+
+export type StudioFreeDecision =
+  | { ok: true; sharedNetwork: boolean }
+  | { ok: false; reason: "email_used" | "device_used" | "ip_used" };
+
+/** AdsTrialClaim columns for a studio free-video claim (domainHash = "studio:<workspaceId>" identifies the workspace). */
+export function studioClaimHashes(workspaceId: string, email: string, fp: RequestFingerprint): TrialHashes {
+  const prefix = fp.ip ? ipPrefix(fp.ip) : null;
+  const p = STUDIO_CLAIM_PREFIX;
+  return {
+    domainHash: `${p}${workspaceId}`,
+    emailHash: `${p}${hashIdentity("email", normalizeEmail(email))}`,
+    ipHash: prefix ? `${p}${hashIdentity("ip", prefix)}` : null,
+    deviceHash: fp.deviceId ? `${p}${hashIdentity("device", fp.deviceId)}` : null,
+  };
+}
+
+/** Pure: lookups are counts of OTHER workspaces' studio claims (ip = last 30 days). Same email/device always blocks. */
+export function decideStudioFree(hits: { email: number; device: number; ip30d: number }): StudioFreeDecision {
+  if (hits.email > 0) return { ok: false, reason: "email_used" };
+  if (hits.device > 0) return { ok: false, reason: "device_used" };
+  if (hits.ip30d >= IP_TRIAL_CAP) return { ok: false, reason: "ip_used" };
+  return { ok: true, sharedNetwork: hits.ip30d > 0 };
 }

@@ -49,23 +49,25 @@ const TestimonialVideoCard = memo(function TestimonialVideoCard({
   }, [instanceId, videoId, onPlayerReady, onPlayerUnmount]);
 
   return (
-    <div
+    <button
+      type="button"
+      aria-pressed={isActive}
+      aria-label={isActive ? "Mute this example" : "Play this example with sound"}
       className={cn(
-        "relative w-[200px] shrink-0 cursor-pointer overflow-hidden rounded-xl border bg-card transition-all duration-300 sm:w-[240px]",
-        isActive
-          ? "border-primary ring-2 ring-primary/20"
-          : "border-border hover:border-primary/50 hover:scale-[1.02]"
+        "pixel-frame studio-frame relative block w-[180px] shrink-0 cursor-pointer overflow-hidden p-1.5 text-left sm:w-[220px]",
+        isActive && "shadow-[0_0_40px_-6px_#ffcf4a99]"
       )}
       onClick={() => onToggle(videoId)}
     >
-      <div className="aspect-[9/16]">
+      <div className="pixel-frame aspect-[9/16] overflow-hidden bg-[var(--studio-ink)]">
         <iframe
           ref={iframeRef}
           src={`https://player.vimeo.com/video/${videoId}?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&background=1&muted=1`}
           className="pointer-events-none h-full w-full"
           frameBorder="0"
           allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-          title="Testimonial video"
+          title="Example AI video testimonial"
+          loading="lazy"
         />
       </div>
 
@@ -74,26 +76,26 @@ const TestimonialVideoCard = memo(function TestimonialVideoCard({
         className={cn(
           "absolute bottom-3 right-3 rounded-full p-2 transition-all duration-200",
           isActive
-            ? "bg-primary shadow-lg shadow-primary/25"
-            : "bg-black/60 hover:bg-black/80"
+            ? "bg-[var(--studio-gold)] text-[#2a0f10]"
+            : "bg-black/60 text-white"
         )}
       >
         {isActive ? (
-          <Volume2 className="h-4 w-4 text-white" />
+          <Volume2 aria-hidden className="h-4 w-4" />
         ) : (
-          <VolumeX className="h-4 w-4 text-white" />
+          <VolumeX aria-hidden className="h-4 w-4" />
         )}
       </div>
 
       {/* Click hint overlay */}
       {!isActive && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-opacity duration-200 hover:bg-black/20 hover:opacity-100">
-          <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
-            Click to unmute
+          <span className="rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+            Tap for sound
           </span>
         </div>
       )}
-    </div>
+    </button>
   );
 });
 
@@ -143,14 +145,11 @@ export function VideoShowcase({ videoIds, className }: VideoShowcaseProps) {
 
   return (
     <motion.div
-      className={cn("mt-16 w-full", className)}
+      className={cn("w-full", className)}
       initial={{ opacity: 1, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.5 }}
     >
-      <p className="mb-4 text-sm text-muted-foreground">
-        See what AI-generated testimonials look like:
-      </p>
 
       <div className="relative w-full [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
         <Marquee

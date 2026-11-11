@@ -6,7 +6,7 @@ import { adsErrorResponse, getOrCreateWorkspace, requireUser } from "@/lib/ads/w
 export async function GET() {
   try {
     const workspace = await getOrCreateWorkspace(await requireUser());
-    const brands = await prisma.brandProfile.findMany({ where: { workspaceId: workspace.id }, orderBy: { updatedAt: "desc" } });
+    const brands = await prisma.brandProfile.findMany({ where: { workspaceId: workspace.id, NOT: { runs: { some: {}, every: { kind: { in: ["gift", "nurture"] } } } } }, orderBy: { updatedAt: "desc" } });
     return NextResponse.json({ brands: brands.map(brandSummary) });
   } catch (error) {
     return adsErrorResponse(error);

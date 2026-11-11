@@ -11,6 +11,7 @@ import { track } from "@/lib/analytics/track";
 import { ozzy } from "@/components/ozzy/store";
 import { useSpell } from "./studio-spell";
 import { StudioOzzySlot } from "./studio-ozzy-slot";
+import { TrialUsedDialog, checkTrialDomain } from "@/components/ads/trial-used-dialog";
 
 const GOALS: AdGoalValue[] = ["auto", ...AD_GOALS.filter((g) => g !== "auto")];
 
@@ -23,6 +24,7 @@ export function StudioUrlForm({ signedIn, cta = "Make my ads" }: { signedIn: boo
   const [error, setError] = useState<string | null>(null);
   const [state, setState] = useState<"idle" | "valid" | "invalid" | "cast">("idle");
   const focusedOnce = useRef(false);
+  const [usedDomain, setUsedDomain] = useState<string | null>(null);
 
   function onChange(v: string) {
     setUrl(v);
@@ -34,7 +36,7 @@ export function StudioUrlForm({ signedIn, cta = "Make my ads" }: { signedIn: boo
     setSpell(valid ? "valid" : v ? "typing" : "idle");
   }
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = url.trim();
     if (!isValidSiteUrl(trimmed)) {
@@ -45,11 +47,20 @@ export function StudioUrlForm({ signedIn, cta = "Make my ads" }: { signedIn: boo
       ozzy.emit({ type: "url:invalid" });
       return;
     }
+    setState("cast");
+    setSpell("cast");
+    if (!signedIn) {
+      const check = await checkTrialDomain(trimmed);
+      if (check.used) {
+        setState("valid");
+        setSpell("valid");
+        setUsedDomain(check.domain ?? trimmed);
+        return;
+      }
+    }
     savePendingRun({ url: trimmed, goal });
     track("url_submit", { signed_in: signedIn, goal, placement: "hero" });
     ozzy.emit({ type: "url:submit" });
-    setState("cast");
-    setSpell("cast");
     router.push(startHref(trimmed, goal, signedIn));
   }
 
@@ -106,6 +117,7 @@ export function StudioUrlForm({ signedIn, cta = "Make my ads" }: { signedIn: boo
           ))}
         </div>
       </div>
+      <TrialUsedDialog domain={usedDomain} next={startHref(url, goal, true)} onClose={() => setUsedDomain(null)} />
       <StudioOzzySlot greet size={128} className="pointer-events-none absolute bottom-full left-1 z-10 -mb-[14px] sm:left-5 [&>*]:pointer-events-auto" />
     </form>
   );

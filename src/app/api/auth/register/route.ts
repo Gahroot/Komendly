@@ -3,6 +3,10 @@ import {
   getUserByEmail,
   createUser,
 } from "@/lib/auth";
+import { fingerprintFrom } from "@/lib/ads/run";
+import { getOrCreateWorkspace } from "@/lib/ads/workspace";
+import { STUDIO_INVITE_COOKIE } from "@/lib/studio/invite";
+import { claimStudioInviteAtSignup } from "@/lib/studio/invite-server";
 import { authLogger, createRequestTimer, generateRequestId, logError } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
@@ -64,6 +68,14 @@ export async function POST(request: NextRequest) {
       password,
       name,
     });
+
+    // Ozzy Studio invite cookie: the invited friend gets 2 free Studio videos (never fails registration).
+    const studioInvite = request.cookies.get(STUDIO_INVITE_COOKIE)?.value;
+    if (studioInvite) {
+      await getOrCreateWorkspace(user)
+        .then((workspace) => claimStudioInviteAtSignup({ token: studioInvite, user, workspace, fp: fingerprintFrom(request), friendIsNew: true }))
+        .catch((error) => console.error("[studio] invite claim at register failed", error));
+    }
 
     // Return user data for redirect to pricing (NO session created)
     // User must complete payment before getting access

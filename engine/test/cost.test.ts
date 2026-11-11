@@ -8,12 +8,13 @@ describe("cost meter", () => {
   it("prices text per token and images per quality", () => {
     expect(textCostMicros(DEFAULT_PRICES, "gpt-6.1-sol", 1_000_000, 100_000)).toBe(3_000_000);
     expect(textCostMicros(DEFAULT_PRICES, "unknown-model", 1000, 0)).toBe(2000);
-    expect(imageCostMicros(DEFAULT_PRICES, "medium", 2)).toBe(84_000);
+    expect(imageCostMicros(DEFAULT_PRICES, "medium", 2)).toBe(113_500);
+    expect(imageCostMicros(DEFAULT_PRICES, "medium", 1, 4)).toBe(124_500);
     expect(sumCost([{ costMicros: 1 }, { costMicros: 2 }])).toBe(3);
   });
   it("accepts overrides", () => {
     const p = loadPrices({ ENGINE_PRICES_JSON: JSON.stringify({ image: { low: 0.02 } }) });
-    expect(imageCostMicros(p, "low")).toBe(20_000);
+    expect(imageCostMicros(p, "low")).toBe(27_500);
     expect(p.image.high).toBe(DEFAULT_PRICES.image.high);
   });
 });

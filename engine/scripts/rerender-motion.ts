@@ -49,11 +49,14 @@ for (const domain of domains) {
   const spec: AdSpec = { index: ad.index, kind: "motion", awareness: ad.awareness, angle: ad.angle, hook: ad.hook, headline: ad.headline, body: ad.body ?? undefined, cta: ad.cta ?? undefined,
     claims: ad.claims as AdSpec["claims"], visual: { concept: vb.concept ?? "", assetKeys: vb.assetKeys ?? [], layout: vb.layout ?? "", generateImagery: false } };
   try {
-    const res = await renderMotionAd({ spec, brand, siteUrl: `https://${domain}`, ratios: [ratio], workDir: join(dir, "work"), provider, maxSeconds: 14 });
+    const pains = Array.isArray(bp.pains) ? (bp.pains as Array<{ text?: string } | string>).map((p) => (typeof p === "string" ? p : p?.text ?? "")).filter(Boolean) : [];
+    const brief = { audience: bp.audience ?? undefined, offer: bp.mainOffer ?? undefined, pains };
+    const res = await renderMotionAd({ spec, brand, brief, siteUrl: `https://${domain}`, ratios: [ratio], workDir: join(dir, "work"), provider, maxSeconds: 14 });
+    console.log(domain, JSON.stringify(res.meta), JSON.stringify(res.onScreenText));
     const f = res.files[0];
     if (!f) throw new Error("no file");
     await copyFile(f.path, join(dir, "motion.mp4"));
-    await run("ffmpeg", ["-y", "-v", "error", "-i", f.path, "-vf", `fps=1,scale=${Math.round(f.width / 4)}:-1,tile=7x2`, "-frames:v", "1", join(dir, "strip.jpg")]);
+    await run("ffmpeg", ["-y", "-v", "error", "-i", f.path, "-vf", `fps=2,scale=${Math.round(f.width / 5)}:-1,tile=8x3`, "-frames:v", "1", join(dir, "strip.jpg")]);
     console.log(domain, "ok", join(dir, "strip.jpg"));
   } catch (e) { console.log(domain, "failed", e instanceof Error ? e.message.slice(0, 300) : e); }
 }

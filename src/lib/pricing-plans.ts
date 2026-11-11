@@ -27,3 +27,6 @@ export const plans = [
 
 export type Plan = (typeof plans)[number];
 export type BillingCycle = "monthly" | "yearly";
+
+/** Top-up price for subscribers (mirrors CREDIT_PURCHASE.pricePerMinute in src/lib/stripe.ts). */
+export const CREDIT_PRICE_PER_MINUTE_USD = 20;

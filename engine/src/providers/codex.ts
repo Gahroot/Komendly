@@ -22,6 +22,10 @@ export class CodexProvider implements AIProvider {
   readonly name = "codex" as const;
   constructor(private readonly o: CodexProviderOptions) {}
 
+  get agentCredentials(): NonNullable<AIProvider["agentCredentials"]> {
+    return { lease: (minMs) => this.o.auth.lease(minMs), adopt: (next) => this.o.auth.adopt(next) };
+  }
+
   private async creds(): Promise<{ accessToken: string; accountId: string | undefined }> {
     try {
       return await this.o.auth.resolve();
@@ -107,7 +111,7 @@ export class CodexProvider implements AIProvider {
       return {
         png,
         ...dims,
-        usage: { latencyMs: Date.now() - started, images: 1, costMicros: imageCostMicros(this.o.prices, quality) },
+        usage: { latencyMs: Date.now() - started, images: 1, costMicros: imageCostMicros(this.o.prices, quality, 1, req.references?.length ?? 0) },
       };
     }, req.signal);
   }

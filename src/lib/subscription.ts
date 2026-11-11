@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { SUBSCRIPTION_PLANS } from "@/lib/stripe";
+import type { Prisma } from "@prisma/client";
+import { evaluateEntitlement } from "@/lib/testimonial/contracts";
 
 export type SubscriptionStatusType = "active" | "past_due" | "trialing" | "incomplete" | "canceled" | "unpaid" | "paused" | "incomplete_expired";
 
@@ -48,37 +50,40 @@ export async function checkSubscription(userId: string): Promise<SubscriptionInf
   };
 }
 
-// Check if user can generate video (has minutes remaining)
+// Check if user can generate video: active subscription OR credit-pack minutes remaining.
 export async function canGenerateVideo(userId: string, estimatedMinutes: number = 1): Promise<{
   allowed: boolean;
   reason?: string;
   remainingMinutes?: number;
 }> {
-  const subscription = await checkSubscription(userId);
-
-  if (!subscription) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { subscriptionStatus: true, minutesUsed: true, minutesLimit: true, bonusMinutes: true },
+  });
+  if (!user) {
     return { allowed: false, reason: "User not found" };
   }
+  const e = evaluateEntitlement(user, estimatedMinutes);
+  return e.allowed
+    ? { allowed: true, remainingMinutes: e.remainingMinutes }
+    : { allowed: false, reason: e.reason, remainingMinutes: e.remainingMinutes };
+}
 
-  if (!subscription.isActive) {
-    return {
-      allowed: false,
-      reason: "Active subscription required. Please subscribe to generate videos.",
-    };
-  }
-
-  if (subscription.minutesRemaining < estimatedMinutes) {
-    return {
-      allowed: false,
-      reason: `Insufficient minutes. You have ${subscription.minutesRemaining} minute(s) remaining but need ${estimatedMinutes}.`,
-      remainingMinutes: subscription.minutesRemaining,
-    };
-  }
-
-  return {
-    allowed: true,
-    remainingMinutes: subscription.minutesRemaining,
-  };
+/**
+ * Atomically reserve minutes (minutesUsed += minutes) only if the user is still entitled.
+ * Same rule as evaluateEntitlement, enforced in SQL so concurrent starts can't overspend.
+ */
+export async function reserveGenerationMinutes(
+  tx: Pick<Prisma.TransactionClient, "$executeRaw">,
+  userId: string,
+  minutes: number
+): Promise<boolean> {
+  const n = await tx.$executeRaw`
+    UPDATE "User" SET "minutesUsed" = "minutesUsed" + ${minutes}
+    WHERE id = ${userId}
+      AND "minutesLimit" - "minutesUsed" >= ${minutes}
+      AND ("subscriptionStatus" IN ('active', 'trialing') OR "bonusMinutes" >= ${minutes})`;
+  return n === 1;
 }
 
 // Deduct minutes from user's quota

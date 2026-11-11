@@ -25,6 +25,17 @@ export interface AdView {
   cta: string | null;
   status: AdStatusValue;
   assets: AdAssetView[];
+  /** Trial bonus ad (visualBrief.locked in the engine contract); absent for normal ads. */
+  bonusKind?: "story" | "motion" | "fresh";
+  /** Bonus ad the workspace hasn't paid for: `assets` is empty and only `lockedPreviewUrl` (blurred poster) is served. */
+  locked?: boolean;
+  lockedPreviewUrl?: string | null;
+}
+
+export interface RunBonusView {
+  stories: number;
+  videos: number;
+  locked: boolean;
 }
 
 export interface RunView {
@@ -51,6 +62,12 @@ export interface RunView {
   creditsReserved: number;
   ads: AdView[];
   serverNow: string;
+  /** Ready trial bonus ads; null when there are none (ADS_TRIAL_BONUS off). */
+  bonus: RunBonusView | null;
+  /** Bonus ads are still expected for this settled run: keep polling. */
+  bonusPending: boolean;
+  /** Ads -> Ozzy Studio bridge (flag studio_bridge, default off). */
+  studio?: { bridge: boolean; freeVideosLeft: number };
 }
 
 export interface RunSummary {
@@ -72,6 +89,10 @@ export interface WorkspaceView {
   balance: number;
   emailVerified: boolean;
   email: string;
+  /** Free trial statics (20 for referred workspaces, else 10). */
+  trialStatic: number;
+  /** Referral credits in the balance that expire, soonest first. */
+  expiring: { credits: number; expiresAt: string }[];
 }
 
 export interface BrandSummary {

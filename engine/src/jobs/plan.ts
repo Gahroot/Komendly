@@ -22,8 +22,11 @@ import { releaseForAd } from "./credits";
 import { findNearDuplicates } from "./dedupe";
 import { mapClaimsToFacts, type Fact } from "./grounding";
 import { maybeFinalizeRun } from "./finalize";
+import { giftPolicy } from "./gift-policy";
+import { EMPTY_HISTORY, historyPrompt, hookOffset, loadBrandHistory } from "./brand-history";
 import { assignLayouts } from "./layouts";
-import { abandonReplacement, qcObj } from "./replace";
+import { abandonReplacement, attemptCap, hedgeLockKey, qcObj } from "./replace";
+import { countTypeAds, fallbackFor, fallbackOf, isLocked, maxTypeAds, typographicSpec } from "./trial-fill";
 import { loadLayoutCatalog, loadMotionModule } from "./modules";
 
 const LlmAd = z.object({
@@ -97,11 +100,20 @@ type RunWithProfile = {
   brandProfile: { facts: unknown } | null;
 };
 
+/** Asset keys QC rejected as off-topic for this run (stored on AdRun.extraction.rejectedAssetKeys). */
+export function rejectedAssetKeys(extraction: unknown): string[] {
+  const r = (extraction as { rejectedAssetKeys?: unknown } | null)?.rejectedAssetKeys;
+  return Array.isArray(r) ? r.filter((x): x is string => typeof x === "string") : [];
+}
+
 /** Brand brief shared by planning and replacement. */
 export function runBrief(run: RunWithProfile): { ex: Extraction & { goal?: string }; facts: Fact[]; brief: string } {
   const ex0 = ExtractionSchema.safeParse(run.extraction);
   if (!ex0.success) throw new PermanentJobError("run has no valid extraction");
-  const ex = applyCorrections(ex0.data, run.corrections);
+  const ex1 = applyCorrections(ex0.data, run.corrections);
+  // Photos QC already rejected as off-topic for this run (image_relevant) are never planned again.
+  const rejected = new Set(rejectedAssetKeys(run.extraction));
+  const ex = rejected.size ? { ...ex1, assets: ex1.assets.filter((a) => !rejected.has(a.key)) } : ex1;
   const bp = run.brandProfile;
   const facts: Fact[] = (Array.isArray(bp?.facts) && bp.facts.length ? (bp.facts as unknown as Fact[]) : ex.facts).filter(
     (f) => f && typeof f.claim === "string",
@@ -125,7 +137,7 @@ export async function planJob(ctx: JobContext): Promise<unknown> {
   const { db, job } = ctx;
   if (!job.runId) throw new PermanentJobError("plan job without runId");
   if (typeof job.payload.replaceAdId === "string") {
-    return replaceAdJob(ctx, job.payload.replaceAdId, typeof job.payload.feedback === "string" ? job.payload.feedback : "");
+    return replaceAdJob(ctx, job.payload.replaceAdId, typeof job.payload.feedback === "string" ? job.payload.feedback : "", job.payload.hedge === true, job.payload.settle === true);
   }
   const run = await db.adRun.findUnique({ where: { id: job.runId }, include: { brandProfile: true } });
   if (!run) throw new PermanentJobError("run not found");
@@ -139,8 +151,14 @@ export async function planJob(ctx: JobContext): Promise<unknown> {
   const mix = (run.awarenessMix as Partial<Record<Awareness, number>> | null) ?? (run.isTrial ? TRIAL_AWARENESS_MIX : TRIAL_AWARENESS_MIX);
   const slots = awarenessSlots(mix, run.staticCount);
 
-  const slotList = slots.map((l, i) => `slot ${i}: ${l}`).join("\n");
-  const basePrompt = `${untrusted("brand-brief", brief)}\n\nWrite ${slots.length} static ads, one per slot:\n${slotList}\n\nAlso return strongestSlot: the slot whose angle is the strongest (it will also become the animated ad).`;
+  // Brand memory: earlier sets for this website, so a repeat customer gets new angles, photos and hooks.
+  // Planner-side memory is opt-in (BRAND_MEMORY_PLAN=1): in blind tests it nudged quality down (62% -> 44-48% READY)
+  // while copy already doesn't repeat without it. Render-side memory (scene rotation, cross-run image dedupe) is always on.
+  const history = process.env.BRAND_MEMORY_PLAN === "1" ? await loadBrandHistory(db, run) : EMPTY_HISTORY;
+  const hOff = hookOffset(history);
+  const slotList = slots.map((l, i) => `slot ${i}: ${l}${hOff ? ` (hook format ${(i + hOff) % 10})` : ""}`).join("\n");
+  const memory = historyPrompt(history, ex.assets);
+  const basePrompt = `${untrusted("brand-brief", brief)}${memory ? `\n\n${untrusted("brand-history", memory)}` : ""}\n\nWrite ${slots.length} static ads, one per slot:\n${slotList}${hOff ? "\n(Hook format per slot is given in brackets above; it overrides the slot-number rule.)" : ""}\n\nAlso return strongestSlot: the slot whose angle is the strongest (it will also become the animated ad).`;
 
   // Two parallel batches; each gets its own share of the pains so angles diverge.
   const half = Math.ceil(slots.length / 2);
@@ -221,8 +239,10 @@ export async function planJob(ctx: JobContext): Promise<unknown> {
           runId: run.id,
           adId: row.id,
           workspaceId: run.workspaceId,
-          // Earlier ads first so the first ad lands fast; paid runs outrank trial.
-          priority: priorityFor(run.isTrial, 20 - Math.min(spec.index, 19)),
+          // Earlier ads first so the first ad lands fast; paid runs outrank trial. A run's first batch
+          // (45..26) outranks other runs' QC re-renders (25), hedges (30) and replacements (35/40), so
+          // a new run's ready count climbs first; photo-free statics (fastest, no image gen) get +5.
+          priority: priorityFor(run.isTrial, 45 - Math.min(spec.index, 19) + (spec.kind === "static" && !spec.visual.generateImagery ? 5 : 0)),
           maxAttempts: 3,
         });
       }
@@ -302,7 +322,7 @@ export async function planJob(ctx: JobContext): Promise<unknown> {
 
   const { motionOk, motionWhy } = await prep;
   const strongest = ads[strongestSlot ?? 0] ?? ads.find((a) => a !== undefined);
-  for (let m = 0; m < run.motionCount && strongest; m++) {
+  for (let m = 0; m < giftPolicy(run).motionCount(run.motionCount) && strongest; m++) {
     const spec = toSpec(strongest, slots.length + m, "motion", slots[strongestSlot ?? 0] ?? "problem_aware");
     if (motionOk) {
       await writeAd(spec, true);
@@ -336,12 +356,17 @@ export async function planJob(ctx: JobContext): Promise<unknown> {
 const OneAd = z.object({ ad: LlmAd });
 
 /** plan job with payload.replaceAdId: write one new distinct ad to replace a failed one. */
-export async function replaceAdJob(ctx: JobContext, replaceAdId: string, feedback: string): Promise<unknown> {
+export async function replaceAdJob(ctx: JobContext, replaceAdId: string, feedback: string, hedge = false, settle = false): Promise<unknown> {
   const { db } = ctx;
   const old = await db.ad.findUnique({ where: { id: replaceAdId }, include: { run: { include: { brandProfile: true } } } });
   if (!old) throw new PermanentJobError("ad to replace not found");
   if (qcObj(old.qcReport).replacedBy) return { skipped: "already replaced" };
   const run = old.run;
+  // Hedge (parallel replacement, see replace.ts): pointless once the original passed QC or the pack is done.
+  if (hedge && (old.status === "ready" || !["queued", "generating"].includes(run.status))) {
+    if (qcObj(old.qcReport).replacementPending) await abandonReplacement(db, old.id);
+    return { skipped: old.status === "ready" ? "original passed QC" : `run status ${run.status}` };
+  }
   if (!["queued", "generating"].includes(run.status)) {
     await abandonReplacement(db, old.id);
     return { skipped: `run status ${run.status}` };
@@ -395,7 +420,19 @@ Avoid whatever caused the failure. Return {"ad": {...}} with slot 0.`;
     .filter((s) => s.kind === "static" && !qcObj(s.qcReport).replacedBy && s.id !== old.id)
     .map((s) => (s.visualBrief as { spec?: AdSpec } | null)?.spec)
     .filter((s): s is AdSpec => Boolean(s));
-  const spec = old.kind === "static" ? (assignLayouts([...liveSpecs, draft], { assets: ex.assets, proof: ex.proof, ...(await loadLayoutCatalog({ brandName: ex.brandName, colors: ex.colors, fonts: ex.fonts, assets: ex.assets })) }).find((s) => s.index === index) ?? draft) : draft;
+  const assigned = old.kind === "static" ? (assignLayouts([...liveSpecs, draft], { assets: ex.assets, proof: ex.proof, ...(await loadLayoutCatalog({ brandName: ex.brandName, colors: ex.colors, fonts: ex.fonts, assets: ex.assets })) }).find((s) => s.index === index) ?? draft) : draft;
+  // Trial fill: the last slots get progressively safer renders (template, then typographic without photos).
+  const packSiblings = siblings.filter((s) => s.kind === old.kind && !isLocked(s.visualBrief));
+  // Slots still missing: promised minus ready/in-flight pack statics (failed and replaced ones don't count).
+  const live = packSiblings.filter((s) => s.id !== old.id && !qcObj(s.qcReport).replacedBy && !["failed", "failed_qc"].includes(s.status)).length;
+  const missing = Math.max(0, run.staticCount - live);
+  let fallback = old.kind === "static" ? fallbackFor(run, packSiblings.length, attemptCap("static", run), missing) : null;
+  if (old.kind === "static" && run.isTrial && fallbackOf(old.visualBrief)) fallback = "type";
+  // Cap text-only ads per pack: past it, use the template renderer (site photos) instead.
+  if (fallback === "type" && countTypeAds(packSiblings.filter((s) => s.id !== old.id)) >= maxTypeAds(run)) fallback = "template";
+  // Settle fill (finalize.ts): the last missing slots always go typographic, the safest render, even past the type cap.
+  if (settle && old.kind === "static") fallback = "type";
+  const spec = fallback === "type" ? typographicSpec(assigned, liveSpecs.map((s) => s.visual.layout), ex.mainOffer) : assigned;
 
   const created = await db.$transaction(async (tx) => {
     const row = await tx.ad.create({
@@ -411,13 +448,18 @@ Avoid whatever caused the failure. Return {"ad": {...}} with slot 0.`;
         body: spec.body ?? null,
         cta: spec.cta ?? null,
         claims: spec.claims as unknown as Prisma.InputJsonValue,
-        visualBrief: { ...spec.visual, spec, replaces: old.id } as unknown as Prisma.InputJsonValue,
+        visualBrief: { ...spec.visual, spec, replaces: old.id, ...(hedge ? { hedgeOf: old.id } : {}), ...(fallback ? { fallback } : {}) } as unknown as Prisma.InputJsonValue,
         status: "planned",
       },
     });
-    const r = qcObj(old.qcReport);
-    delete r.replacementPending;
-    await tx.ad.update({ where: { id: old.id }, data: { qcReport: { ...r, replacedBy: row.id } as Prisma.InputJsonValue } });
+    if (hedge) await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${hedgeLockKey(old.id)}))`;
+    // Re-read under the lock: a hedge only supersedes the original once it has ended failed (adoptHedge).
+    const cur = hedge ? await tx.ad.findUnique({ where: { id: old.id }, select: { status: true, qcReport: true } }) : old;
+    const r = qcObj(cur?.qcReport);
+    if (!hedge || r.replacementPending || ["failed", "failed_qc"].includes(cur?.status ?? "")) {
+      delete r.replacementPending;
+      await tx.ad.update({ where: { id: old.id }, data: { qcReport: { ...r, replacedBy: row.id } as Prisma.InputJsonValue } });
+    }
     await enqueue(tx, {
       type: spec.kind === "motion" ? "render_motion" : "render_static",
       runId: run.id,
@@ -428,4 +470,46 @@ Avoid whatever caused the failure. Return {"ad": {...}} with slot 0.`;
     return row;
   });
   return { replaced: old.id, by: created.id };
+}
+
+const BonusOut = z.object({ ads: z.array(LlmAd) });
+
+/** Bonus (locked upsell) motion ads: `n` new animated ads on angles distinct from every ad in the run. */
+export async function planBonusMotion(ctx: JobContext, run: RunWithProfile & { id: string }, n: number, startIndex: number): Promise<AdSpec[]> {
+  if (n <= 0) return [];
+  const { ex, facts, brief } = runBrief(run);
+  const siblings = await ctx.db.ad.findMany({ where: { runId: run.id }, orderBy: { index: "asc" }, select: { angle: true, hook: true, headline: true } });
+  const levels: Awareness[] = ["problem_aware", "product_aware", "solution_aware", "most_aware", "unaware"];
+  const slots = Array.from({ length: n }, (_, i) => `slot ${i}: ${levels[i % levels.length]}`).join("\n");
+  const prompt = `${untrusted("brand-brief", brief)}
+
+Write ${n} short ANIMATED (motion) ads, one per slot:\n${slots}
+Each must take a NEW angle (a different buyer moment and a different reason to buy) from every ad already in this run, and from each other:\n${siblings.map((s) => `- ${s.angle} | ${s.headline}`).join("\n")}
+Return {"ads": [...]} with slot numbers.`;
+  const r = await structured(ctx.provider, BonusOut, { system: PLAN_SYSTEM, prompt, reasoning: "low", signal: ctx.signal }, ctx.usage);
+  const assetKeys = new Set(ex.assets.map((a) => a.key));
+  const real = ex.assets.filter((a) => a.kind !== "icon" && !a.hasFace && a.width >= 300).map((a) => a.key);
+  const keysOr = (k: string[]) => (k.length ? k : real.slice(0, 3));
+  const out: AdSpec[] = [];
+  for (const [i, a] of r.ads.slice(0, n).entries()) {
+    const mapped = mapClaimsToFacts(a.claims, facts);
+    const claims = mapped.filter((m) => m.factIndex !== null).map((m) => ({ claim: m.claim, sourceUrl: facts[m.factIndex ?? 0]?.sourceUrl ?? m.sourceUrl }));
+    const dup = findNearDuplicates([...siblings, ...out.map((o) => ({ angle: o.angle, hook: o.hook, headline: o.headline })), a]);
+    if (dup.includes(siblings.length + out.length)) continue;
+    out.push(
+      AdSpecSchema.parse({
+        index: startIndex + out.length,
+        kind: "motion",
+        awareness: levels[i % levels.length],
+        angle: a.angle,
+        hook: a.hook,
+        headline: a.headline.slice(0, 90),
+        ...(capBody(a.body) ? { body: capBody(a.body) } : {}),
+        ...(a.cta ? { cta: a.cta.slice(0, 30) } : {}),
+        claims,
+        visual: { ...a.visual, assetKeys: keysOr(a.visual.assetKeys.filter((k) => assetKeys.has(k))) },
+      }),
+    );
+  }
+  return out;
 }

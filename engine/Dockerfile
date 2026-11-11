@@ -22,6 +22,14 @@ COPY prisma/schema.prisma prisma/schema.prisma
 COPY src/lib/ads/contracts.ts src/lib/ads/contracts.ts
 COPY src/lib/ads/meta/core/ src/lib/ads/meta/core/
 COPY src/lib/ads/trial-confirm.ts src/lib/ads/trial-confirm.ts
+COPY src/lib/testimonial/contracts.ts src/lib/testimonial/contracts.ts
+COPY src/lib/studio/contracts.ts src/lib/studio/contracts.ts
+COPY src/lib/hub/money-model.ts src/lib/hub/money-model.ts
+COPY src/lib/ads/billing-config.ts src/lib/ads/billing-config.ts
+COPY src/lib/ads/lifecycle/ src/lib/ads/lifecycle/
+COPY src/lib/ads/outbound/ src/lib/ads/outbound/
+COPY src/lib/ads/bonus-access.ts src/lib/ads/bonus-access.ts
+COPY src/lib/ads/referral-code.ts src/lib/ads/referral-code.ts
 COPY engine/package.json engine/package-lock.json engine/
 COPY engine/scripts/prisma-generate.mjs engine/scripts/prisma-generate.mjs
 
@@ -30,6 +38,9 @@ WORKDIR /app/engine
 RUN npm ci --include=dev && npm cache clean --force
 # Playwright Chromium (same version as engine's playwright) + its system deps.
 RUN npx playwright install --with-deps chromium && rm -rf /var/lib/apt/lists/*
+# EZ Motion agent (EZ Coder's Motion mode) for the animated ad; pinned. Its bundle brings HyperFrames 0.8.82.
+RUN npm install -g @prestyj/cli@5.32.2 && npm cache clean --force
+ENV EZMOTION_CLI_DIST=/usr/local/lib/node_modules/@prestyj/cli/dist
 
 COPY engine/ ./
 # Shared files under /app/src (contracts, meta core) resolve packages from the engine's node_modules.

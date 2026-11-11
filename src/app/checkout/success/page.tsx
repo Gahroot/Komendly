@@ -1,222 +1,155 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Check, Loader2, AlertCircle } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { OzzyPerch, type OzzyMood } from "@/components/testimonials/ozzy-perch";
+import { trackOnce } from "@/lib/analytics/track";
+import { PLAN_CONFIG, type PlanKey } from "@/lib/stripe-config";
+import { loadDraft } from "@/lib/testimonial-draft";
+import { FIRST_VIDEO_OFFER, GUARANTEE, VIDEO_PACK_OFFER, videosLabel } from "@/lib/first-video-offer";
+
+interface VerifiedUser {
+  id: string;
+  email?: string;
+  name?: string;
+  plan?: string;
+  minutesLimit?: number;
+}
+interface VerifyResponse {
+  success?: boolean;
+  error?: string;
+  user?: VerifiedUser;
+  purchase?: { offer: string; minutes: number; amount: number; signedIn: boolean };
+}
+
+function getCookie(name: string): string | undefined {
+  const hit = document.cookie.split("; ").find((c) => c.startsWith(`${name}=`));
+  return hit ? hit.slice(name.length + 1) : undefined;
+}
+
+function planValue(plan: string | undefined): number {
+  return plan && plan in PLAN_CONFIG ? PLAN_CONFIG[plan as PlanKey].monthlyPrice : 0;
+}
 
 function CheckoutSuccessContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const sessionId = searchParams.get("session_id");
-
+  const sessionId = useSearchParams().get("session_id");
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-  const [userData, setUserData] = useState<{
-    email?: string;
-    name?: string;
-    plan?: string;
-    minutesLimit?: number;
-  } | null>(null);
+  const [info, setInfo] = useState<{ title: string; detail: string; next: string; nextLabel: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const ran = useRef(false);
 
   useEffect(() => {
+    if (ran.current) return;
+    ran.current = true;
     if (!sessionId) {
       setStatus("error");
-      setError("No session ID provided");
+      setError("No checkout session found.");
       return;
     }
 
-    const verifySession = async () => {
+    (async () => {
       try {
-        const response = await fetch(`/api/stripe/checkout?session_id=${sessionId}`);
-        const data = await response.json();
+        // Server verifies the paid session and syncs it directly (idempotent with the webhook).
+        const res = await fetch(`/api/stripe/checkout?session_id=${encodeURIComponent(sessionId)}`);
+        const data = (await res.json()) as VerifyResponse;
+        if (!res.ok || !data.success || !data.user) throw new Error(data.error || "We couldn't confirm your payment yet.");
+        const user = data.user;
+        const purchase = data.purchase;
+        const value = purchase ? purchase.amount : planValue(user.plan);
 
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to verify payment");
-        }
+        trackOnce(`purchase:${sessionId}`, "purchase", {
+          product: "testimonials",
+          offer: purchase?.offer,
+          plan: purchase ? undefined : user.plan,
+          value,
+          currency: "USD",
+          transaction_id: sessionId,
+        });
+        fetch("/api/facebook-capi", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            eventType: "Purchase",
+            email: user.email,
+            value,
+            currency: "USD",
+            transactionId: sessionId,
+            contentName: purchase ? (purchase.offer === FIRST_VIDEO_OFFER.key ? FIRST_VIDEO_OFFER.name : purchase.offer === VIDEO_PACK_OFFER.key ? VIDEO_PACK_OFFER.name : "Video pack") : `${user.plan} Plan`,
+            sourceUrl: window.location.href,
+            fbc: getCookie("_fbc"),
+            fbp: getCookie("_fbp"),
+          }),
+        }).catch(() => undefined);
 
-        if (data.success && data.user) {
-          setUserData(data.user);
-          setStatus("success");
-
-          // Track purchase conversion in GA4
-          if (typeof window !== "undefined" && typeof window.gtag === "function") {
-            const planPrices: Record<string, number> = {
-              pro: 29,
-              business: 99,
-            };
-            const value = planPrices[data.user.plan?.toLowerCase()] || 29;
-            window.gtag("event", "purchase", {
-              value: value,
-              currency: "USD",
-              transaction_id: sessionId,
-            });
-          }
-
-          // Track purchase conversion via Facebook Conversions API
-          try {
-            const planPrices: Record<string, number> = {
-              pro: 29,
-              business: 99,
-            };
-            const value = planPrices[data.user.plan?.toLowerCase()] || 29;
-
-            // Get Facebook cookies for better attribution
-            const getCookie = (name: string) => {
-              const value = `; ${document.cookie}`;
-              const parts = value.split(`; ${name}=`);
-              if (parts.length === 2) return parts.pop()?.split(";").shift();
-              return undefined;
-            };
-
-            await fetch("/api/facebook-capi", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                eventType: "Purchase",
-                email: data.user.email,
-                value: value,
-                currency: "USD",
-                transactionId: sessionId,
-                contentName: `${data.user.plan} Plan`,
-                sourceUrl: window.location.href,
-                fbc: getCookie("_fbc"),
-                fbp: getCookie("_fbp"),
-              }),
-            });
-          } catch (fbError) {
-            // Don't block on Facebook tracking errors
-            console.error("Facebook CAPI error:", fbError);
-          }
-
-          // After successful payment verification, log the user in
-          // Create a session for them
-          const loginResponse = await fetch("/api/auth/login-after-payment", {
+        // Subscriptions sign in via login-after-payment; one-time purchases are signed in by the verify call.
+        if (!purchase?.signedIn) {
+          const login = await fetch("/api/auth/login-after-payment", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: data.user.id }),
+            body: JSON.stringify({ userId: user.id }),
           });
-
-          if (loginResponse.ok) {
-            // Redirect to dashboard after a short delay
-            setTimeout(() => {
-              router.push("/dashboard");
-            }, 3000);
-          }
-        } else {
-          throw new Error("Payment verification failed");
+          if (!login.ok) throw new Error("Payment confirmed, but we couldn't sign you in. Please sign in with your email and password.");
         }
+
+        const hasDraft = loadDraft() !== null;
+        const next = hasDraft ? "/dashboard/create-fal/generate?from=draft" : "/dashboard/create-fal";
+        setInfo({
+          title: purchase ? "Paid. Let's film it." : "You're in!",
+          detail: purchase
+            ? `${videosLabel(purchase.minutes)} (up to 60s each) on your account.${hasDraft ? " Starting your video now…" : ""}`
+            : `Your ${user.plan} plan is active with ${videosLabel(user.minutesLimit ?? 0)} this month.${hasDraft ? " Starting your video now…" : ""}`,
+          next,
+          nextLabel: hasDraft ? "Start my video" : "Make a video",
+        });
+        setStatus("success");
+        if (hasDraft) router.replace(next);
       } catch (err) {
         setStatus("error");
         setError(err instanceof Error ? err.message : "Something went wrong");
       }
-    };
-
-    verifySession();
+    })();
   }, [sessionId, router]);
 
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-16 w-16 animate-spin text-primary mx-auto mb-4" />
-          <h2 className="text-2xl font-semibold text-foreground mb-2">
-            Verifying your payment...
-          </h2>
-          <p className="text-muted-foreground">Please wait while we confirm your subscription.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (status === "error") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="glass mx-4 w-full max-w-md rounded-3xl border border-border px-8 py-12 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-destructive/10 shadow-[var(--glass-rim)] flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="h-8 w-8 text-destructive" />
-          </div>
-          <h2 className="text-2xl font-semibold text-foreground mb-2">
-            Payment Verification Failed
-          </h2>
-          <p className="text-muted-foreground mb-6">{error}</p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button
-              onClick={() => router.push("/pricing")}
-              
-            >
-              Try Again
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => router.push("/testimonials")}
-              
-            >
-              Go Home
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const mood: OzzyMood =
+    status === "loading"
+      ? { form: "explorer", expression: "focused", motion: "scan", line: "Checking with the bank…" }
+      : status === "success"
+        ? { form: "ascended", expression: "excited", motion: "celebrate", line: "Payment's in. Let's go!" }
+        : { form: "classic", expression: "confused", motion: "think" };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="glass mx-4 w-full max-w-md rounded-3xl border border-border px-8 py-12 text-center">
-        <div className="w-20 h-20 rounded-2xl bg-success/10 shadow-[var(--glass-rim)] flex items-center justify-center mx-auto mb-6">
-          <Check className="h-10 w-10 text-success" />
+    <div className="flex min-h-screen items-center justify-center px-4 py-16 text-foreground">
+      <div className="relative w-full max-w-md">
+        <OzzyPerch mood={mood} size={88} className="absolute -top-[82px] left-4 z-10" />
+        <div className="pixel-frame bg-[linear-gradient(180deg,oklch(0.24_0.08_295/.94),oklch(0.17_0.07_292/.94))] p-8 text-center" aria-live="polite">
+          {status === "loading" ? (
+            <>
+              <Loader2 aria-hidden className="mx-auto size-10 animate-spin text-[var(--studio-gold)]" />
+              <h1 className="font-display mt-4 text-2xl font-medium">Confirming your payment…</h1>
+              <p className="mt-2 text-sm text-muted-foreground">This usually takes a second or two.</p>
+            </>
+          ) : status === "error" ? (
+            <>
+              <h1 className="font-display text-2xl font-medium">We hit a snag</h1>
+              <p className="mt-2 text-sm text-muted-foreground">{error}</p>
+              <p className="mt-2 text-xs text-muted-foreground">If you were charged, your videos are safe: they&apos;re added as soon as Stripe confirms.</p>
+              <div className="mt-6 flex flex-wrap justify-center gap-3">
+                <Link href="/login" className="spellbar__cta inline-flex h-11 items-center rounded-2xl px-5 font-semibold">Sign in</Link>
+                <Link href="/pricing" className="inline-flex h-11 items-center rounded-2xl border border-border px-5 font-medium hover:bg-accent">Back to pricing</Link>
+              </div>
+            </>
+          ) : info ? (
+            <>
+              <h1 className="font-display text-3xl font-medium">{info.title}</h1>
+              <p className="mt-2 text-sm text-muted-foreground">{info.detail}</p>
+              <Link href={info.next} className="spellbar__cta mt-6 inline-flex h-12 items-center rounded-2xl px-6 font-semibold">{info.nextLabel}</Link>
+            </>
+          ) : null}
         </div>
-
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground mb-2">
-          Welcome to Komendly!
-        </h1>
-
-        <p className="text-muted-foreground mb-6">
-          Your subscription is now active. You&apos;re all set to start creating amazing video testimonials.
-        </p>
-
-        {userData && (
-          <div className="glass-subtle rounded-2xl p-6 mb-6 border border-border">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Your Plan Details</h3>
-            <div className="space-y-2 text-left">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Plan:</span>
-                <span className="text-foreground font-medium capitalize">{userData.plan}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Monthly Minutes:</span>
-                <span className="text-foreground font-medium">{userData.minutesLimit} minutes</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Email:</span>
-                <span className="text-foreground font-medium truncate pl-4">{userData.email}</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm mb-6">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <span>Redirecting to your dashboard...</span>
-        </div>
-
-        <Button
-          onClick={() => router.push("/dashboard")}
-          className="h-12 px-8 text-base"
-        >
-          Go to Dashboard
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function CheckoutSuccessLoading() {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <Loader2 className="h-16 w-16 animate-spin text-primary mx-auto mb-4" />
-        <h2 className="text-2xl font-semibold text-foreground mb-2">Loading...</h2>
+        <p className="mt-4 text-center text-xs text-muted-foreground">{GUARANTEE}</p>
       </div>
     </div>
   );
@@ -224,7 +157,7 @@ function CheckoutSuccessLoading() {
 
 export default function CheckoutSuccessPage() {
   return (
-    <Suspense fallback={<CheckoutSuccessLoading />}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <CheckoutSuccessContent />
     </Suspense>
   );

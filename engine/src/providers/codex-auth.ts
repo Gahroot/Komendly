@@ -147,6 +147,26 @@ export class CodexAuth {
     await rename(tmp, this.o.tokenStore);
   }
 
+  /**
+   * Full credentials valid for at least `minMs` (refreshing first if needed), for handing to a
+   * child agent run. The child must not refresh concurrently: with this margin it never has to.
+   */
+  async lease(minMs = 2 * 60 * 60_000): Promise<CodexCreds> {
+    const creds = await this.load();
+    if (!creds) throw new Error("Codex login not configured");
+    return this.now() >= creds.expiresAt - Math.max(minMs, MIN_REFRESH_THRESHOLD_MS) ? this.refresh() : creds;
+  }
+
+  /** Take back credentials a child run refreshed (refresh tokens rotate; the newest pair wins). */
+  async adopt(next: CodexCreds): Promise<boolean> {
+    const cur = await this.load();
+    if (cur && (next.refreshToken === cur.refreshToken || next.expiresAt <= cur.expiresAt)) return false;
+    this.creds = next;
+    this.loading = Promise.resolve(next);
+    await this.persist(next);
+    return true;
+  }
+
   async health(): Promise<{ ok: boolean; message?: string }> {
     if (!this.configured) return { ok: false, message: "Codex login not configured" };
     try {

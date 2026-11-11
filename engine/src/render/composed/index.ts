@@ -26,7 +26,7 @@ export class ComposedRejectedError extends Error {
 
 export interface ComposedAd { png: Buffer; prompt: string; check: TextCheck; attempts: number; imageMs: number; usage: UsageMeter[]; failedReasons: string[]; hash: string; sceneShift: number; logo: { box: Box | null; kind: string | null } }
 
-export async function composeAd(provider: AIProvider, spec: AdSpec, brand: BrandKit, style: PromptStyle, ratio: Ratio = "1:1", signal?: AbortSignal, avoidHashes: string[] = [], timings: ComposedTimings = newComposedTimings()): Promise<ComposedAd> {
+export async function composeAd(provider: AIProvider, spec: AdSpec, brand: BrandKit, style: PromptStyle, ratio: Ratio = "4:5", signal?: AbortSignal, avoidHashes: string[] = [], timings: ComposedTimings = newComposedTimings(), sceneOffset = 0): Promise<ComposedAd> {
   const t0 = Date.now();
   const refs = await buildReferences(spec, brand);
   timings.refsMs += Date.now() - t0;
@@ -34,7 +34,7 @@ export async function composeAd(provider: AIProvider, spec: AdSpec, brand: Brand
   let strictNote: string | undefined;
   let last: TextCheck | null = null;
   const failedReasons: string[] = [];
-  let sceneShift = 0;
+  let sceneShift = sceneOffset;
   let similarRetried = false;
   for (let attempt = 1; attempt <= 3; attempt++) {
     const prompt = buildComposedPrompt({ spec, brand, refLabels: refs.map((r) => r.label), style, ratio, strictNote, sceneShift, hasScreens: refs.some((r) => r.screenshot) });
@@ -56,7 +56,7 @@ export async function composeAd(provider: AIProvider, spec: AdSpec, brand: Brand
     if (check.ok && !similarRetried && tooSimilar(hash, avoidHashes)) {
       // Near-duplicate of another ad in this run: one regeneration with a different scene.
       similarRetried = true;
-      sceneShift = 1;
+      sceneShift = sceneOffset + 1;
       failedReasons.push("too similar to another ad");
       continue;
     }
@@ -74,7 +74,7 @@ export async function composeAd(provider: AIProvider, spec: AdSpec, brand: Brand
 }
 
 /** Renders all ratios; returns files in the same shape as the template renderer. */
-export async function renderComposedAd(i: { spec: AdSpec; brand: BrandKit; ratios: Ratio[]; workDir: string; provider: AIProvider; signal?: AbortSignal; avoidHashes?: string[]; timings?: ComposedTimings }): Promise<{ files: RenderedFile[]; usage: UsageMeter[]; attempts: number; failedReasons: string[]; hash: string; sceneShift: number; logo: ComposedAd["logo"] }> {
+export async function renderComposedAd(i: { spec: AdSpec; brand: BrandKit; ratios: Ratio[]; workDir: string; provider: AIProvider; signal?: AbortSignal; avoidHashes?: string[]; timings?: ComposedTimings; sceneOffset?: number }): Promise<{ files: RenderedFile[]; usage: UsageMeter[]; attempts: number; failedReasons: string[]; hash: string; sceneShift: number; logo: ComposedAd["logo"] }> {
   const files: RenderedFile[] = [];
   const usage: UsageMeter[] = [];
   let attempts = 0;
@@ -83,7 +83,7 @@ export async function renderComposedAd(i: { spec: AdSpec; brand: BrandKit; ratio
   let logo: ComposedAd["logo"] = { box: null, kind: null };
   const failedReasons: string[] = [];
   for (const ratio of i.ratios) {
-    const r = await composeAd(i.provider, i.spec, i.brand, "lean", ratio, i.signal, i.avoidHashes, i.timings);
+    const r = await composeAd(i.provider, i.spec, i.brand, "lean", ratio, i.signal, i.avoidHashes, i.timings, i.sceneOffset ?? 0);
     if (!hash) { hash = r.hash; sceneShift = r.sceneShift; logo = r.logo; }
     usage.push(...r.usage);
     attempts += r.attempts;

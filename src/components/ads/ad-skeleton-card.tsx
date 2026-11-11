@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const ASPECT: Record<string, string> = { "4:5": "aspect-[4/5]", "1:1": "aspect-square", "9:16": "aspect-[9/16]" };
 
 /** Placeholder tile at the ad's ratio while it is planned or rendering. */
-export function AdSkeletonCard({ label, ratio = "1:1" }: { label: string; ratio?: string }) {
+export function AdSkeletonCard({ label, ratio = "4:5" }: { label: string; ratio?: string }) {
   return (
     <div className="space-y-2.5" aria-busy="true">
       <div className="relative">

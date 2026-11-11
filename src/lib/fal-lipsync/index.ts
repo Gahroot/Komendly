@@ -76,8 +76,6 @@ export {
 export {
   processClip,
   processCompositeVideo,
-  startBackgroundProcessing,
-  processPendingVideos,
 } from "./clip-processor";
 
 // Video Stitcher

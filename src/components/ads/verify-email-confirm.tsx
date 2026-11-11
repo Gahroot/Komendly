@@ -19,7 +19,7 @@ const COPY: Record<State, { title: string; text: string }> = {
 };
 
 /** Lands from the confirmation email: confirms the token, then sends the user on to their ads. */
-export function VerifyEmailConfirm() {
+export function VerifyEmailConfirm({ signedIn }: { signedIn: boolean }) {
   const token = useSearchParams().get("token");
   const [state, setState] = useState<State>(token ? "checking" : "invalid");
   const [sending, setSending] = useState(false);
@@ -61,7 +61,11 @@ export function VerifyEmailConfirm() {
   }
 
   const continueHref = hasPending ? "/ads/start" : "/ads/app";
-  const copy = COPY[state];
+  // Opened in another browser (e.g. from the Facebook in-app browser): confirmed, but this browser isn't signed in.
+  const loginHref = `/ads/login?verified=1&next=${encodeURIComponent(continueHref)}`;
+  const copy = state === "ok" && !signedIn
+    ? { title: "You're confirmed!", text: "Your free ads are unlocked. Sign in here to get them, or go back to the app where you signed up and tap \"I clicked the link\"." }
+    : COPY[state];
   return (
     <div className="flex w-full max-w-md flex-col items-center">
       <div className="relative z-10 -mb-5"><OzzyLazy size={136} perch="ledge" speech={false} /></div>
@@ -72,8 +76,8 @@ export function VerifyEmailConfirm() {
         </h1>
         <p className="mt-3 text-muted-foreground">{copy.text}</p>
         {state === "ok" && (
-          <Link href={continueHref} className="spellbar__cta mt-7 inline-flex h-12 w-full items-center justify-center rounded-2xl font-semibold">
-            {hasPending ? "Start my ads" : "Continue to my ads"}
+          <Link href={signedIn ? continueHref : loginHref} className="spellbar__cta mt-7 inline-flex h-12 w-full items-center justify-center rounded-2xl font-semibold">
+            {!signedIn ? "Sign in to get my ads" : hasPending ? "Start my ads" : "Continue to my ads"}
           </Link>
         )}
         {state === "expired" && (

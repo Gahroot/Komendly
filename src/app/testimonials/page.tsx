@@ -1,418 +1,160 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Star, Video, Zap, Download, Play, Sparkles, XCircle, Clock, DollarSign } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { PricingCards } from "@/components/pricing-cards";
-import { type Plan, type BillingCycle } from "@/lib/pricing-plans";
+import { Clock3, Download, MessageSquareQuote, ShieldCheck, UserRound, Video } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { VideoShowcase } from "@/components/video-showcase";
 import { SectionHeading } from "@/components/section-heading";
+import { ExampleShowcase, HeroExample } from "@/components/testimonials/example-showcase";
+import { HERO_EXAMPLE } from "@/components/testimonials/example-videos";
+import { TrackOnMount } from "@/components/analytics/track-on-mount";
+import { StudioPose } from "@/components/studio/studio-pose";
+import { ReviewDraftForm } from "@/components/testimonials/review-draft-form";
+import { StickyMobileCta } from "@/components/testimonials/sticky-mobile-cta";
+import { OfferSectionCta } from "@/components/testimonials/offer-section-cta";
+import { PlansUpsell } from "@/components/testimonials/plans-upsell";
+import { TESTIMONIAL_FAQ } from "@/components/testimonials/faq-data";
+import { FIRST_VIDEO_OFFER, formatUsd, GUARANTEE, perVideoUsd, UGC_CREATOR_RATE_USD, videosLabel } from "@/lib/first-video-offer";
 
-const videoIds = ["1150452550", "1150480391", "1150452582", "1150480352", "1150452614"];
+// Real videos made with Komendly (Vimeo).
 
-const steps = [
-  {
-    videoId: "1150131353",
-    title: "Grab Your Review",
-    description: "Copy any 5-star review from Google. The ones your customers already wrote. No new work required.",
-  },
-  {
-    videoId: "1150131333",
-    title: "Pick a Face",
-    description: "Choose an AI avatar. They look real. They sound real. Because the words they're saying are real.",
-  },
-  {
-    videoId: "1150131316",
-    title: "Download. Post. Done.",
-    description: "Get your video. Put it on social. Watch people actually stop scrolling. That's it.",
-  },
+const STEPS = [
+  { icon: MessageSquareQuote, title: "Paste a review", text: "Any review a real customer wrote. No new asks, no awkward emails." },
+  { icon: UserRound, title: "Pick who says it", text: "Choose an AI presenter and a length: 30 or 60 seconds." },
+  { icon: Download, title: "Download and post", text: "A vertical MP4 for Reels, TikTok, Shorts or your site." },
 ];
 
-const fadeInUp = {
-  initial: { opacity: 1, y: 12 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true },
-  transition: { duration: 0.5 },
-};
+const PROOF = [
+  { icon: Video, title: "Real examples above", text: "Every video on this page was made with Komendly from a written review." },
+  { icon: Clock3, title: "Minutes, not weeks", text: `Typical creator rates are $${UGC_CREATOR_RATE_USD.low}–${UGC_CREATOR_RATE_USD.high} per testimonial video and a week or two of back-and-forth. No filming day, no editor here.` },
+  { icon: ShieldCheck, title: "Looks real or it's free", text: GUARANTEE },
+];
 
-const staggerContainer = {
-  initial: {},
-  whileInView: {
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-export default function Home() {
-  const router = useRouter();
-  const [videoOpen, setVideoOpen] = useState(false);
-
-  const handleSelectPlan = (plan: Plan, billingCycle: BillingCycle) => {
-    // Store selected plan info and redirect to register
-    const params = new URLSearchParams({
-      plan: plan.key,
-      billing: billingCycle,
-    });
-    router.push(`/register?${params.toString()}`);
-  };
-
+export default function TestimonialsPage() {
   return (
-    <div className="min-h-screen text-foreground">
+    <div className="min-h-screen pb-24 text-foreground sm:pb-0">
+      <TrackOnMount event="landing_view" params={{ product: "testimonials" }} />
       <SiteHeader />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/15 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
+      {/* Hero: real example video + the review form (starts without signup) */}
+      <section className="relative mx-auto grid max-w-6xl items-center gap-8 px-4 pb-16 pt-6 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12 lg:pt-12">
+        <div className="studio-rise space-y-5">
+          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--studio-gold)]">AI video testimonials</p>
+          <h1 className="font-display text-4xl font-medium leading-[1.05] tracking-[-0.02em] sm:text-5xl lg:text-6xl">
+            Turn 5-star reviews into videos that <em className="text-[var(--studio-gold)]">sell</em>.
+          </h1>
+          <p className="max-w-xl text-lg text-muted-foreground">
+            Paste a review a customer already wrote. A realistic presenter says it on camera, ready for Reels, TikTok and your site. No creators to brief, no filming day.
+          </p>
+          <div className="flex items-start gap-4 lg:hidden">
+            <HeroVideo className="w-40 shrink-0" />
+            <ul className="space-y-2 pt-2 text-sm text-muted-foreground">
+              <li>Made from a real review</li>
+              <li>9:16, ready for Reels</li>
+              <li>Tap the video for sound</li>
+            </ul>
+          </div>
+          <div id="start" className="scroll-mt-24 pt-24">
+            <ReviewDraftForm />
+          </div>
+        </div>
+        <div className="relative hidden justify-center lg:flex">
+          <div className="absolute -top-[86px] left-1/2 -translate-x-1/2"><StudioPose form="classic" expression="happy" motion="idle" size={96} /></div>
+          <HeroVideo className="w-[320px]" />
+        </div>
+      </section>
 
-        <div className="relative mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-32 lg:py-40">
-          <motion.div
-            className="flex flex-col items-center text-center"
-            initial={{ opacity: 1, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            {/* Badge */}
-            <motion.div
-              className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm text-primary"
-              initial={{ opacity: 1, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Sparkles className="h-4 w-4" />
-              Your Reviews Deserve to Be Seen
-            </motion.div>
+      {/* Examples */}
+      <section id="examples" className="scroll-mt-20 py-14" aria-labelledby="examples-title">
+        <SectionHeading id="examples-title" eyebrow="Examples" title="Made from reviews like yours" description="Tap any video for sound." className="px-4" />
+        <div className="mt-8"><ExampleShowcase /></div>
+      </section>
 
-            {/* Headline */}
-            <h1 className="max-w-4xl text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-              Turn Reviews Into{" "}
-              <span className="text-primary">
-                Video Testimonials
-              </span>
-            </h1>
+      {/* How it works */}
+      <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6" aria-labelledby="how-title">
+        <SectionHeading id="how-title" eyebrow="How it works" title="Three steps, a few minutes" />
+        <ol className="mt-10 grid gap-5 md:grid-cols-3">
+          {STEPS.map((s, i) => (
+            <li key={s.title} className="pixel-frame bg-[oklch(0.2_0.07_295/0.62)] p-6">
+              <p className="font-mono text-xs text-[var(--studio-gold)]">0{i + 1}</p>
+              <s.icon aria-hidden className="mt-3 size-6 text-[var(--studio-gold)]" />
+              <h3 className="font-display mt-3 text-xl font-medium">{s.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{s.text}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-            {/* Subheadline */}
-            <p className="mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-              Turn your existing 5-star reviews into video testimonials. No filming. No begging customers. No awkward asks.
-            </p>
+      {/* Offer + value */}
+      <section className="mx-auto max-w-4xl px-4 py-14 sm:px-6" aria-labelledby="offer-title">
+        <SectionHeading id="offer-title" eyebrow={`The ${FIRST_VIDEO_OFFER.name}`} title={`${videosLabel(FIRST_VIDEO_OFFER.minutes)}. ${formatUsd(FIRST_VIDEO_OFFER.priceCents)}, once.`} description={`That's ${perVideoUsd(FIRST_VIDEO_OFFER.priceCents, FIRST_VIDEO_OFFER.minutes)} a video, against typical creator rates of $${UGC_CREATOR_RATE_USD.low}–${UGC_CREATOR_RATE_USD.high}. No subscription, no auto-renew.`} />
+        <div className="mt-10"><OfferSectionCta /></div>
+        <TrackOnMount event="offer_view" params={{ product: "testimonials", placement: "landing" }} onceKey="testi_offer_view_landing" />
+      </section>
 
-            {/* CTAs */}
-            <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
-              <Button
-                asChild
-                size="lg"
-                className="h-12 gap-1.5 rounded-full bg-brand px-8 text-base font-semibold text-primary-foreground hover:bg-primary/90"
-              >
-                <Link href="/register">
-                  <Play className="size-5" />
-                  Create Your First Video
-                </Link>
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="h-12 gap-1.5 rounded-full border-input bg-transparent px-8 text-base text-foreground/80 hover:bg-secondary hover:text-foreground"
-                onClick={() => setVideoOpen(true)}
-              >
-                <Play className="size-5" />
-                See how it works
-              </Button>
+      {/* Why it's safe to try */}
+      <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6" aria-labelledby="proof-title">
+        <SectionHeading id="proof-title" eyebrow="Why try it" title="Proof, speed, and a promise" />
+        <div className="mt-10 grid gap-5 md:grid-cols-3">
+          {PROOF.map((p) => (
+            <div key={p.title} className="rounded-2xl border border-border bg-[oklch(0.2_0.07_295/0.5)] p-6">
+              <p.icon aria-hidden className="size-6 text-[var(--studio-gold)]" />
+              <h3 className="font-display mt-3 text-lg font-medium">{p.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{p.text}</p>
             </div>
-
-            {/* Social proof */}
-            <motion.p
-              className="mt-6 text-sm text-muted-foreground"
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-            >
-              Join 1,000+ happy creators
-            </motion.p>
-
-            {/* Video Testimonials Showcase */}
-            <VideoShowcase videoIds={videoIds} />
-          </motion.div>
+          ))}
         </div>
       </section>
 
-      {/* Problem Section */}
-      <section className="relative py-24 sm:py-32">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <motion.div {...fadeInUp}>
-            <SectionHeading
-              eyebrow="The problem"
-              title={<>The Problem With <span className="text-primary">Video Testimonials</span></>}
-              description={<>You already know video works. Here&apos;s why you don&apos;t have any.</>}
-            />
-          </motion.div>
+      {/* Plans upsell */}
+      <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6" aria-labelledby="plans-title">
+        <SectionHeading id="plans-title" eyebrow="Making lots?" title="Monthly plans" description="For a steady stream of videos. Cancel any time." />
+        <div className="mt-8"><PlansUpsell /></div>
+      </section>
 
-          <motion.div
-            className="mt-16 grid gap-6 md:grid-cols-3"
-            variants={staggerContainer}
-            initial="initial"
-            whileInView="whileInView"
-            viewport={{ once: true }}
-          >
-            {/* Problem 1 */}
-            <motion.div variants={fadeInUp}>
-              <Card className="group h-full transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/40">
-                <CardHeader>
-                  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl shadow-[var(--glass-rim)] bg-destructive/10 text-destructive transition-colors group-hover:bg-destructive/20">
-                    <XCircle className="h-6 w-6" />
-                  </div>
-                  <CardTitle className="text-lg font-semibold text-foreground">Customers Say No</CardTitle>
-                  <CardDescription className="leading-relaxed text-muted-foreground">
-                    They love you. Left a 5-star review. But ask them to go on camera? &quot;Sorry, I&apos;m too busy.&quot; Every. Single. Time.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </motion.div>
-
-            {/* Problem 2 */}
-            <motion.div variants={fadeInUp}>
-              <Card className="group h-full transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/40">
-                <CardHeader>
-                  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl shadow-[var(--glass-rim)] bg-destructive/10 text-destructive transition-colors group-hover:bg-destructive/20">
-                    <DollarSign className="h-6 w-6" />
-                  </div>
-                  <CardTitle className="text-lg font-semibold text-foreground">Actors Cost a Fortune</CardTitle>
-                  <CardDescription className="leading-relaxed text-muted-foreground">
-                    Big brands pay thousands for actors to fake testimonials. You shouldn&apos;t have to. Your real reviews are better anyway.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </motion.div>
-
-            {/* Problem 3 */}
-            <motion.div variants={fadeInUp}>
-              <Card className="group h-full transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/40">
-                <CardHeader>
-                  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl shadow-[var(--glass-rim)] bg-destructive/10 text-destructive transition-colors group-hover:bg-destructive/20">
-                    <Clock className="h-6 w-6" />
-                  </div>
-                  <CardTitle className="text-lg font-semibold text-foreground">Reviews Just Sit There</CardTitle>
-                  <CardDescription className="leading-relaxed text-muted-foreground">
-                    You have dozens of amazing reviews. They&apos;re buried on Google. Nobody sees them. What a waste.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </motion.div>
-          </motion.div>
+      {/* FAQ */}
+      <section className="mx-auto max-w-3xl px-4 py-14 sm:px-6" aria-labelledby="faq-title">
+        <SectionHeading id="faq-title" eyebrow="FAQ" title="Questions, answered" />
+        <div className="mt-8 divide-y divide-border rounded-2xl border border-border bg-[oklch(0.2_0.07_295/0.5)]">
+          {TESTIMONIAL_FAQ.map((f) => (
+            <details key={f.q} className="group px-5 py-4">
+              <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-4 font-medium [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span aria-hidden className="text-[var(--studio-gold)] transition-transform group-open:rotate-45">+</span>
+              </summary>
+              <p className="mt-2 text-sm text-muted-foreground">{f.a}</p>
+            </details>
+          ))}
         </div>
       </section>
 
-      {/* Solution Section */}
-      <section className="relative py-24 sm:py-32">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <motion.div {...fadeInUp}>
-            <SectionHeading
-              eyebrow="The fix"
-              title={<>The Fix Is <span className="text-primary">Stupid Simple</span></>}
-              description={<>Use your real reviews. Let AI do the video part.</>}
-            />
-          </motion.div>
-
-          <motion.div
-            className="mt-16 grid gap-6 md:grid-cols-3"
-            variants={staggerContainer}
-            initial="initial"
-            whileInView="whileInView"
-            viewport={{ once: true }}
-          >
-            {/* Solution 1 */}
-            <motion.div variants={fadeInUp}>
-              <Card className="group h-full transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/40">
-                <CardHeader>
-                  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl shadow-[var(--glass-rim)] bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
-                    <Star className="h-6 w-6" />
-                  </div>
-                  <CardTitle className="text-lg font-semibold text-foreground">Your Real Words</CardTitle>
-                  <CardDescription className="leading-relaxed text-muted-foreground">
-                    Paste your actual Google reviews. These are real people saying real things about your business. That&apos;s powerful.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </motion.div>
-
-            {/* Solution 2 */}
-            <motion.div variants={fadeInUp}>
-              <Card className="group h-full transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/40">
-                <CardHeader>
-                  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl shadow-[var(--glass-rim)] bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
-                    <Zap className="h-6 w-6" />
-                  </div>
-                  <CardTitle className="text-lg font-semibold text-foreground">AI Brings It To Life</CardTitle>
-                  <CardDescription className="leading-relaxed text-muted-foreground">
-                    Pick a realistic avatar. It reads your review naturally. Looks like a real person. Because the words ARE from a real person.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </motion.div>
-
-            {/* Solution 3 */}
-            <motion.div variants={fadeInUp}>
-              <Card className="group h-full transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/40">
-                <CardHeader>
-                  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl shadow-[var(--glass-rim)] bg-primary/10 text-primary transition-colors group-hover:bg-primary/20">
-                    <Download className="h-6 w-6" />
-                  </div>
-                  <CardTitle className="text-lg font-semibold text-foreground">Post Everywhere</CardTitle>
-                  <CardDescription className="leading-relaxed text-muted-foreground">
-                    Download and post to TikTok, Instagram, YouTube, your website. Wherever your customers are scrolling.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section id="how-it-works" className="relative py-24 sm:py-32">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/10 to-transparent" />
-
-        <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
-          <motion.div {...fadeInUp}>
-            <SectionHeading
-              eyebrow="How it works"
-              title={<>60 Seconds. That&apos;s It.</>}
-              description={<>Three clicks. One video. Zero hassle.</>}
-            />
-          </motion.div>
-
-          <motion.div
-            className="mt-16 grid gap-8 md:grid-cols-3"
-            variants={staggerContainer}
-            initial="initial"
-            whileInView="whileInView"
-            viewport={{ once: true }}
-          >
-            {steps.map((step, index) => (
-              <motion.div key={step.videoId} variants={fadeInUp} className="relative text-center">
-                <div className="glass relative mx-auto mb-6 overflow-hidden rounded-2xl border border-border p-1.5">
-                  <span className="glass-float absolute left-4 top-4 z-10 rounded-full border border-border px-2.5 py-0.5 font-mono text-xs text-primary">
-                    0{index + 1}
-                  </span>
-                  <div className="aspect-video overflow-hidden rounded-xl">
-                    <iframe
-                      src={`https://player.vimeo.com/video/${step.videoId}?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&loop=1&background=1&muted=1`}
-                      className="w-full h-full pointer-events-none"
-                      frameBorder="0"
-                      allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-                      title={step.title}
-                    />
-                  </div>
-                </div>
-                <h3 className="text-xl font-semibold">{step.title}</h3>
-                <p className="mt-3 text-muted-foreground">{step.description}</p>
-                {index === 0 && (
-                  <div className="absolute right-0 top-[90px] hidden h-0.5 w-1/6 bg-gradient-to-r from-primary/90 to-transparent md:block" />
-                )}
-                {index === 1 && (
-                  <>
-                    <div className="absolute left-0 top-[90px] hidden h-0.5 w-1/6 bg-gradient-to-l from-primary/90 to-transparent md:block" />
-                    <div className="absolute right-0 top-[90px] hidden h-0.5 w-1/6 bg-gradient-to-r from-primary/90 to-transparent md:block" />
-                  </>
-                )}
-                {index === 2 && (
-                  <div className="absolute left-0 top-[90px] hidden h-0.5 w-1/6 bg-gradient-to-l from-primary/90 to-transparent md:block" />
-                )}
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <motion.div
-            className="mt-12 text-center"
-            {...fadeInUp}
-          >
-            <Button
-              asChild
-              size="lg"
-              className="h-12 gap-1.5 rounded-full bg-brand px-8 text-base font-semibold text-primary-foreground hover:bg-primary/90"
-            >
-              <Link href="/register">
-                <Play className="size-5" />
-                Make Your First Video
-              </Link>
-            </Button>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section className="relative py-24 sm:py-32">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <motion.div className="mb-12" {...fadeInUp}>
-            <SectionHeading
-              eyebrow="Pricing"
-              title={<>No Contracts. No Hidden Fees.</>}
-              description={<>Choose a plan that fits your needs.</>}
-            />
-          </motion.div>
-
-          <PricingCards onSelectPlan={handleSelectPlan} />
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="relative py-24 sm:py-32">
-        
-        <motion.div
-          className="glass relative isolate mx-4 max-w-4xl overflow-hidden rounded-3xl border border-border px-6 py-14 text-center sm:mx-auto sm:px-12 sm:py-20"
-          {...fadeInUp}
-        >
-          <div aria-hidden className="pointer-events-none absolute -top-32 left-1/2 -z-10 h-64 w-[36rem] -translate-x-1/2 rounded-full bg-primary/25 blur-3xl" />
-          <h2 className="relative text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl">
-            Your Reviews Are Already Written.
-          </h2>
-          <p className="relative mt-4 text-2xl font-semibold text-primary">
-            Now make them work for you.
-          </p>
-          <p className="mt-6 text-lg text-muted-foreground">
-            Every day without video testimonials is a day your competitors look more trustworthy than you. Fix that now.
-          </p>
-          <div className="mt-10">
-            <Button
-              asChild
-              size="lg"
-              className="h-14 gap-2 rounded-full bg-brand px-10 text-lg font-semibold text-primary-foreground hover:bg-primary/90"
-            >
-              <Link href="/register">
-                <Video className="size-6" />
-                Create Your First Video
-              </Link>
-            </Button>
+      {/* Closing */}
+      <section className="mx-auto max-w-6xl px-4 pb-6 pt-8 sm:px-6">
+        <div className="relative overflow-hidden rounded-3xl border border-border bg-[linear-gradient(160deg,#24124a,#160b2c_60%,#2a1020)] p-8 sm:p-12">
+          <div className="relative flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-xl space-y-3">
+              <h2 className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-4xl">Your reviews are already written.</h2>
+              <p className="text-muted-foreground">Give the best one a face and a voice today.</p>
+            </div>
+            <div className="flex items-end gap-3">
+              <div className="-mb-2 hidden md:block"><StudioPose form="ascended" expression="happy" size={104} /></div>
+              <Link href="#start" className="spellbar__cta inline-flex h-12 items-center justify-center whitespace-nowrap rounded-2xl px-6 font-semibold">Turn my review into a video</Link>
+            </div>
           </div>
-        </motion.div>
+        </div>
       </section>
-
-      {/* How It Works Video Modal */}
-      <Dialog open={videoOpen} onOpenChange={setVideoOpen}>
-        <DialogContent className="w-full max-w-[95vw] sm:max-w-[90vw] lg:max-w-6xl border-border bg-background p-0 overflow-hidden">
-          <DialogTitle className="sr-only">How Komendly Works</DialogTitle>
-          <div className="aspect-video w-full">
-            {videoOpen && (
-              <iframe
-                className="w-full h-full"
-                src="https://www.youtube.com/embed/CY-D_0Yvq08?autoplay=1&controls=0&loop=1&playlist=CY-D_0Yvq08&modestbranding=1&showinfo=0&rel=0&playsinline=1&disablekb=1"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <SiteFooter />
+      <StickyMobileCta targetId="start" />
     </div>
+  );
+}
+
+function HeroVideo({ className = "" }: { className?: string }) {
+  return (
+    <figure className={`pixel-frame studio-frame p-2 ${className}`}>
+      <div className="pixel-frame aspect-[9/16] overflow-hidden bg-[var(--studio-ink)]">
+        <HeroExample slug={HERO_EXAMPLE.slug} title="Example: a customer review turned into an AI video testimonial" />
+      </div>
+      <figcaption className="sr-only">An example video made with Komendly from a written customer review.</figcaption>
+    </figure>
   );
 }

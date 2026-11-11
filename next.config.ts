@@ -29,6 +29,9 @@ const nextConfig: NextConfig = {
     "/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
     "/twitter-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
     "/blog/[slug]/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
+    "/gift/[token]/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
+    "/s/[token]/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
+    "/ozzy-studio/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
   },
   // The Ads studio is the homepage; /ads (exact) is kept as a permanent alias. /ads/* routes and assets are untouched.
   async redirects() {
@@ -52,7 +55,7 @@ const nextConfig: NextConfig = {
       },
       {
         // Public marketing pages only: never cache API, account or admin responses
-        source: "/((?!api|ads|admin|dashboard|checkout|login|register|ozzy-lab|_next).+)",
+        source: "/((?!api|ads|admin|dashboard|checkout|login|register|ozzy-lab|verify-email|test-video|r/|gift/|partners/apply|studio|s/|_next).+)",
         headers: [
           {
             key: "Cache-Control",
@@ -66,13 +69,60 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
       {
-        source: "/:area(api|ads|admin|dashboard|checkout)/:path*",
+        source: "/:area(api|ads|admin|dashboard|checkout|studio)/:path*",
         headers: [
           {
             key: "Cache-Control",
             value: "private, no-store",
           },
         ],
+      },
+      {
+        // Signed ad thumbnails in emails: long-lived and public (must come after the /api no-store rule to override it)
+        source: "/api/ads/email-img/:token",
+        headers: [{ key: "Cache-Control", value: "public, max-age=2592000, immutable" }],
+      },
+      {
+        // Gift pack ad images (token-checked, immutable once ready)
+        source: "/api/ads/gift-public/:token/img/:asset",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, immutable" }],
+      },
+      {
+        // Ad of the week images (featured ads only): public, a day fresh
+        source: "/api/ad-of-the-week/:adId",
+        headers: [{ key: "Cache-Control", value: "public, max-age=3600, stale-while-revalidate=86400" }],
+      },
+      {
+        // Referral share links set the kmd_ref cookie: never cache
+        source: "/r/:code",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        // Public gift pages: per-token, short shared cache (status changes while Ozzy is still drawing)
+        source: "/gift/:token*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=30, s-maxage=60, stale-while-revalidate=300" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        // Public Ozzy Studio share pages: briefly cacheable (the presigned media URLs inside live ~10 min).
+        source: "/s/:token*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=30, s-maxage=120, stale-while-revalidate=240" }, { key: "X-Robots-Tag", value: "noindex, follow" }],
+      },
+      {
+        // Private/transactional pages: never indexed, even if linked (robots.txt also disallows the private ones)
+        source: "/:area(admin|dashboard|checkout|studio|test-video|ozzy-lab|verify-email|login|register)/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/:area(admin|dashboard|checkout|studio|test-video|ozzy-lab|verify-email|login|register)",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/ads/:area(app|billing|brands|runs|start|login|signup|refer|gifts|partner)/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/ads/:area(app|billing|brands|runs|start|login|signup|refer|gifts|partner)",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
         source: "/static/:path*",

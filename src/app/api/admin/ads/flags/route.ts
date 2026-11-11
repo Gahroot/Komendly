@@ -3,7 +3,7 @@ import { z } from "zod";
 import { checkAdmin } from "@/lib/ads/billing-auth";
 import { prisma } from "@/lib/prisma";
 
-const ADS_FLAG_KEYS = ["ezmotion", "meta_publish"] as const;
+const ADS_FLAG_KEYS = ["ezmotion", "meta_publish", "lifecycle_email"] as const;
 const Body = z.object({ key: z.enum(ADS_FLAG_KEYS), enabled: z.boolean() });
 
 export async function POST(request: NextRequest) {

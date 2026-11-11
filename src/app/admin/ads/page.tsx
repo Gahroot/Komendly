@@ -2,7 +2,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCents, formatPct, formatSeconds } from "@/lib/ads/billing-format";
 import { loadAdsOverview } from "@/lib/ads/metrics-queries";
-import { PricingSurveyCard } from "./_components/pricing-survey-card";
 import { AdminAdsShell } from "./_components/admin-ads-shell";
 import { RunsChart } from "./_components/runs-chart";
 import { StatCard } from "./_components/stat-card";
@@ -86,7 +85,6 @@ async function Overview() {
           </CardContent>
         </Card>
       </div>
-      <PricingSurveyCard />
     </div>
   );
 }

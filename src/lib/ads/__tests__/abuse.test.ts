@@ -66,3 +66,14 @@ describe("SSRF guard", () => {
     await expect(assertPublicHost(new URL("https://ok.example"), async () => ["93.184.216.34"])).resolves.toBeUndefined();
   });
 });
+
+describe("same website vs shared network", () => {
+  const none = { domain: false, email: false, device: false, ip: false };
+  it("the same website is always refused, whatever the network/email/device", () => {
+    expect(decideTrial({ ...none, domain: true })).toEqual({ ok: false, reason: "domain_used" });
+  });
+  it("a different website on a shared network passes until the cap (caller passes ip = count >= IP_TRIAL_CAP)", () => {
+    expect(decideTrial({ ...none, ip: false })).toEqual({ ok: true });
+    expect(decideTrial({ ...none, ip: true })).toEqual({ ok: false, reason: "ip_used" });
+  });
+});

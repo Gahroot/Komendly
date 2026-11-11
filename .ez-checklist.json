@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "items": {
+    "agent-setup": {
+      "checkedAt": "2026-11-07T19:12:05.354Z",
+      "commit": "18f59ac",
+      "uncommittedChanges": true,
+      "result": "issues",
+      "summary": "CLAUDE.md is rewritten and checked against the code, but .ezcoder/skills is empty, so no project skills cover the recurring work.",
+      "findings": [
+        "Medium: .ezcoder/skills/ is empty. Recurring workflows (schema change plus engine Prisma regeneration, ads engine job changes, blog generation) have no skills. Blog generation is only a .claude command. Fix: add project skills."
+      ],
+      "evidence": [
+        "Rewrote CLAUDE.md within the gg:init fence (5896 bytes)",
+        "Checked claims against package.json, vitest.config.ts, .vercelignore, next.config.ts, src/middleware.ts, engine/railway.json, prisma/schema.prisma",
+        "ls .ezcoder/skills: empty; .claude/commands has blog-generator.md and commit.md",
+        "Scope: root CLAUDE.md, the agent skills/commands folders, and deploy/test config",
+        "Not checked: every webhook route line by line; engine/src internals beyond the contracts imports"
+      ]
+    }
+  }
+}

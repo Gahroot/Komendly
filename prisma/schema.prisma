@@ -245,6 +245,15 @@ model FalActor {
   voiceId           String? // OpenAI TTS voice: "alloy", "nova", "shimmer", etc.
   voicePrompt       String? // Detailed voice description for VEO consistency (pitch, tone, accent, pace)
   description       String? // Optional description for the actor
+  // Consistent identity + selection (testimonial engine)
+  voiceProvider     String? // TTS provider for voiceId, e.g. "fal" (audio-driven pipeline)
+  voiceSettings     Json? // Provider voice params (speed, pitch, emotion...) fixed per actor
+  ageRange          String? // "25-34"
+  persona           String? // "busy mom", "small business owner"
+  occupation        String?
+  setting           String? // "car", "kitchen", "office", ...
+  tags              String[] @default([])
+  industries        String[] @default([])
   isActive          Boolean  @default(true)
   sortOrder         Int      @default(0)
   createdAt         DateTime @default(now())
@@ -286,6 +295,17 @@ model FalCompositeVideo {
   totalClips   Int                @default(3) // Total clips to generate
   errorMessage String?
 
+  // Engine pipeline (testimonial_generate job)
+  pipeline        String? // "native_speech" | "audio_driven"
+  modelConfig     Json? // snapshot of the model config used
+  pipelineState   Json? // engine checkpoints (script, audio, clip plan) for idempotent retries
+  scriptSource    String? // "codex" | "template" | "custom"
+  jobId           String? // AdJob id
+  costMicros      BigInt  @default(0) // estimated vendor cost
+  minutesReserved Int     @default(0)
+  minutesCharged  Int     @default(0)
+  minutesState    String  @default("none") // none | reserved | charged | released
+
   // Timestamps
   createdAt   DateTime  @default(now())
   completedAt DateTime?
@@ -319,6 +339,12 @@ model FalClip {
   // Output
   videoUrl String? // URL of generated video clip
   duration Int? // Actual duration in seconds
+
+  // Engine pipeline
+  deliveryDirection String? // per-clip delivery note (tone/pace, never appearance)
+  startMs           Int? // audio-driven: chunk offsets in the full script audio
+  endMs             Int?
+  costMicros        BigInt  @default(0)
 
   // Status
   status       String  @default("pending") // pending, generating_audio, generating_video, completed, failed
@@ -355,6 +381,8 @@ model AdsWorkspace {
   ownerId              String
   creditBalance        Int       @default(0) // cached; CreditLedger is the source of truth
   trialUsedAt          DateTime?
+  studioFreeVideos     Int       @default(1) // Ozzy Studio: free finished videos left (1 per new workspace; +1 per studio referral reward; +2 for invited friends)
+  studioOfferReadyAt   DateTime? // first free Studio video delivered -> 72h Studio launch offer window starts
   // Billing (monthly plan with included credits + top-ups)
   stripeCustomerId     String?   @unique
   stripeSubscriptionId String?   @unique
@@ -367,6 +395,7 @@ model AdsWorkspace {
   updatedAt            DateTime  @updatedAt
 
   members        AdsWorkspaceMember[]
+  studioSessions StudioSession[]
   brandProfiles  BrandProfile[]
   runs           AdRun[]
   ads            Ad[]
@@ -453,6 +482,7 @@ model AdRun {
   resolvedGoal    AdGoal?
   status          AdRunStatus @default(extracting)
   isTrial         Boolean     @default(false)
+  kind            String      @default("standard") // standard | gift (3 statics for someone else's site: no credits, no trial claim, auto-confirm)
   extractAttempts Int         @default(0)
   extraction      Json? // snapshot shown on confirm screen
   corrections     Json? // user edits applied before generation
@@ -602,6 +632,9 @@ enum CreditReason {
   refund
   admin_adjust
   expire
+  referral_reward // Give 10, get 10: expires (CreditLedger.expiresAt)
+  studio_charge // Ozzy Studio render charge (stripeRef studio:<renderId>)
+  offer_bonus // one-time bonus credits from an offer (e.g. studio_launch)
 }
 
 // Append-only credit ledger. creditBalance on workspace is derived from it.
@@ -615,6 +648,7 @@ model CreditLedger {
   stripeRef    String?      @unique // idempotency for webhooks (invoice/payment id)
   note         String?
   actorId      String? // admin user for adjustments/refunds
+  expiresAt    DateTime? // referral_reward grants only: unused remainder expires then (sweep writes reason=expire, stripeRef expire:<ledgerId>)
   createdAt    DateTime     @default(now())
 
   workspace AdsWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -767,4 +801,379 @@ model AdsRateLimit {
   createdAt DateTime @default(now())
 
   @@index([key, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Growth loops: referrals (Give 10, get 10), gift packs, partners, ad of the week
+// ---------------------------------------------------------------------------
+
+/// One share code per workspace (customers and partners). Link: /r/<code>.
+model AdsReferralCode {
+  id          String   @id @default(cuid())
+  code        String   @unique // short, url-safe, e.g. "sarah-k3x9"
+  workspaceId String   @unique
+  userId      String
+  kind        String   @default("customer") // customer | partner
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+/// A referred sign-up. Referred friend gets a 20-ad trial; referrer gets 10 credits (30-day expiry) when the friend's trial finishes.
+model AdsReferral {
+  id                  String    @id @default(cuid())
+  code                String
+  referrerWorkspaceId String
+  referredWorkspaceId String    @unique
+  referredUserId      String
+  source              String    @default("link") // link | gift | partner
+  giftId              String?
+  status              String    @default("signed_up") // signed_up | trial_done | rewarded | paid | rejected
+  rejectReason        String? // self_referral | same_network | monthly_cap | ...
+  trialDoneAt         DateTime?
+  rewardedAt          DateTime?
+  rewardCredits       Int       @default(0)
+  rewardLedgerId      String?   @unique
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([referrerWorkspaceId, createdAt])
+  @@index([code])
+}
+
+/// Free 3-ad "gift pack" made for another business's website. Public link: /gift/<token>.
+model AdsGift {
+  id                  String    @id @default(cuid())
+  token               String    @unique
+  senderWorkspaceId   String
+  senderUserId        String
+  senderName          String // shown as "<senderName> made you these"
+  recipientUrl        String
+  recipientDomainHash String
+  recipientName       String?
+  note                String?
+  source              String // trial_ready | paid_monthly | partner_demo | admin_outreach
+  runId               String?   @unique // AdRun.kind = gift
+  status              String    @default("pending") // pending | generating | ready | failed
+  viewedAt            DateTime?
+  viewCount           Int       @default(0)
+  claimedAt           DateTime?
+  claimedWorkspaceId  String?
+  costMicros          BigInt    @default(0)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([senderWorkspaceId, createdAt])
+  @@index([recipientDomainHash])
+  @@index([status])
+}
+
+/// Partner program (web designers, freelancers, agencies): 30% of referred payments for 12 months.
+model AdsPartner {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  workspaceId       String    @unique
+  status            String    @default("applied") // applied | approved | rejected | paused
+  company           String?
+  website           String?
+  role              String? // web designer | freelancer | agency | other
+  clientCount       Int?
+  pitch             String? // how they plan to share it
+  payoutEmail       String?
+  payoutMethod      String? // paypal | wise | bank | other
+  commissionPct     Int       @default(30)
+  commissionMonths  Int       @default(12)
+  demoGiftsPerMonth Int       @default(3)
+  approvedAt        DateTime?
+  adminNote         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([status])
+}
+
+/// One row per paid invoice of a partner-referred workspace. Payable after the 30-day refund window; paid manually by admin.
+model AdsCommission {
+  id                  String    @id @default(cuid())
+  partnerId           String
+  referredWorkspaceId String
+  stripeInvoiceId     String    @unique // or checkout/payment id for one-time payments
+  amountCents         Int
+  commissionCents     Int
+  status              String    @default("pending") // pending | payable | paid | void
+  availableAt         DateTime // amount becomes payable (refund window passed)
+  paidAt              DateTime?
+  payoutRef           String?
+  voidReason          String?
+  createdAt           DateTime  @default(now())
+
+  @@index([partnerId, status])
+  @@index([referredWorkspaceId])
+}
+
+/// Ad of the week: user consent to feature an ad on Komendly's socials (tagging their handle).
+model AdsFeature {
+  id          String    @id @default(cuid())
+  adId        String    @unique
+  workspaceId String
+  userId      String
+  consentAt   DateTime  @default(now())
+  handle      String? // @instagram / facebook page to tag
+  brandName   String?
+  status      String    @default("consented") // consented | shortlisted | featured | declined | withdrawn
+  featuredAt  DateTime?
+  postUrl     String?
+  caption     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, createdAt])
+  @@index([workspaceId])
+}
+
+// ---------------------------------------------------------------------------
+// Ozzy Studio: conversational motion graphics / video ads / footage editing (goal ezmotionkom).
+// Web <-> engine only through these rows (no HTTP). Contract: src/lib/studio/contracts.ts.
+// ---------------------------------------------------------------------------
+
+/// One chat thread with Ozzy (= one video project). The engine keeps the agent session + project files in S3 between turns.
+model StudioSession {
+  id             String    @id @default(cuid())
+  workspaceId    String
+  userId         String
+  title          String    @default("New video")
+  status         String    @default("idle") // idle | queued | working | awaiting_user | error
+  model          String    @default("gpt-6.1-sol")
+  thinking       String    @default("high")
+  projectKey     String? // S3 key of the project snapshot (tar.gz) after the last turn
+  agentStateKey  String? // S3 key of the serialized agent session after the last turn
+  freeVideo      Boolean   @default(false) // this session spends the workspace's free video (watermarked)
+  starterId      String? // starter prompt id used to open it
+  lastActivityAt DateTime  @default(now())
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  workspace AdsWorkspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  messages  StudioMessage[]
+  events    StudioEvent[]
+  renders   StudioRender[]
+  uploads   StudioUpload[]
+
+  @@index([workspaceId, lastActivityAt])
+  @@index([userId])
+}
+
+/// A chat message. Assistant messages stream: the engine appends StudioEvent rows and writes the final content when done.
+model StudioMessage {
+  id          String   @id @default(cuid())
+  sessionId   String
+  role        String // user | assistant
+  content     String   @default("")
+  attachments Json     @default("[]") // user: [{uploadId}] ; assistant: [{renderId}] | [{question}]
+  status      String   @default("done") // queued | streaming | done | error | cancelled
+  jobId       String? // AdJob studio_turn for assistant messages
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  session StudioSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+}
+
+/// Append-only stream of what Ozzy is doing (text deltas, tool steps, previews). The web SSE route tails it by id.
+model StudioEvent {
+  id        BigInt   @id @default(autoincrement())
+  sessionId String
+  messageId String?
+  type      String // see STUDIO_EVENT_TYPES
+  data      Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  session StudioSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, id])
+}
+
+/// User footage / images uploaded straight to S3 (presigned PUT), probed by the engine.
+model StudioUpload {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  sessionId   String?
+  key         String   @unique
+  filename    String
+  mime        String
+  bytes       Int
+  durationSec Float?
+  width       Int?
+  height      Int?
+  posterKey   String?
+  status      String   @default("pending") // pending | uploaded | ready | failed
+  createdAt   DateTime @default(now())
+
+  session StudioSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+  @@index([sessionId])
+}
+
+/// A finished, delivered video version from a Studio session.
+model StudioRender {
+  id             String   @id @default(cuid())
+  sessionId      String
+  messageId      String?
+  workspaceId    String
+  version        Int
+  key            String // mp4 in S3
+  posterKey      String?
+  ratio          String // 9:16 | 4:5 | 1:1 | 16:9
+  seconds        Float
+  width          Int
+  height         Int
+  watermarked    Boolean  @default(false)
+  free           Boolean  @default(false)
+  kind           String   @default("new") // new | revision
+  creditsCharged Int      @default(0)
+  shareToken     String?  @unique // public /s/<token> share page (viral loop)
+  shareViews     Int      @default(0)
+  costMicros     BigInt   @default(0)
+  createdAt      DateTime @default(now())
+
+  session StudioSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, version])
+  @@index([workspaceId, createdAt])
+}
+
+/// "Give 2 free Studio videos": invite link /studio/invite/<token>. Friend gets 2 free videos at sign-up; sender +1 free video.
+model StudioInvite {
+  id                 String    @id @default(cuid())
+  token              String    @unique
+  senderWorkspaceId  String
+  senderUserId       String
+  email              String? // optional: invite emailed by Ozzy
+  status             String    @default("sent") // sent | claimed | rewarded | rejected
+  rejectReason       String? // self | same_network | monthly_cap | existing_user
+  claimedWorkspaceId String?   @unique
+  claimedUserId      String?
+  claimedAt          DateTime?
+  rewardedAt         DateTime?
+  createdAt          DateTime  @default(now())
+
+  @@index([senderWorkspaceId, createdAt])
+}
+
+/// Cold outbound ("I made you a free ad"): engine-run, OUTBOUND_ENABLED=0 by default. Mailboxes come from the
+/// OUTBOUND_MAILBOXES env (JSON: address, name, user, appPassword); this row holds only state, never the password.
+model OutboundMailbox {
+  id              String    @id @default(cuid())
+  address         String    @unique
+  displayName     String
+  smtpHost        String    @default("smtp.gmail.com")
+  smtpPort        Int       @default(465)
+  smtpUser        String
+  imapHost        String    @default("imap.gmail.com")
+  imapPort        Int       @default(993)
+  secretRef       String    @default("env:OUTBOUND_MAILBOXES") // where the app password lives (never in the DB)
+  dailyCap        Int       @default(40)
+  warmupStartedAt DateTime  @default(now())
+  paused          Boolean   @default(false)
+  pausedReason    String?
+  lastSentAt      DateTime?
+  lastPolledAt    DateTime?
+  imapLastUid     Int       @default(0)
+  sentTotal       Int       @default(0)
+  bouncedTotal    Int       @default(0)
+  complainedTotal Int       @default(0)
+  repliedTotal    Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  sends OutboundSend[]
+}
+
+/// One lead-finding request (admin page / CLI / engine): niche + cities + count. The engine claims pending rows.
+model OutboundRun {
+  id        String   @id @default(cuid())
+  niche     String
+  cities    String[]
+  count     Int
+  status    String   @default("pending") // pending | running | done | failed
+  found     Int      @default(0)
+  result    Json?
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model OutboundLead {
+  id           String    @id @default(cuid())
+  runId        String?
+  businessName String
+  website      String
+  domain       String    @unique // registrable domain: dedupe key
+  niche        String
+  city         String
+  region       String?
+  timezone     String    @default("America/New_York")
+  email        String // public business address found on the business's own site
+  emailFoundOn String // page URL it was found on
+  source       String    @default("osm") // osm | manual
+  /// found -> ad_made -> queued -> sent -> opened -> clicked -> replied -> signed_up -> paid | bounced | unsubscribed | complained | failed
+  status       String    @default("found")
+  giftId       String?   @unique
+  giftToken    String?   @unique
+  adId         String?
+  claimToken   String    @unique
+  unsubToken   String    @unique
+  mailboxId    String?
+  step         Int       @default(0) // emails sent (max 2: first + one follow-up)
+  nextSendAt   DateTime?
+  lastSentAt   DateTime?
+  clickedAt    DateTime?
+  repliedAt    DateTime?
+  error        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  sends OutboundSend[]
+
+  @@index([status, nextSendAt])
+  @@index([runId])
+}
+
+model OutboundSend {
+  id           String          @id @default(cuid())
+  leadId       String
+  lead         OutboundLead    @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  mailboxId    String
+  mailbox      OutboundMailbox @relation(fields: [mailboxId], references: [id], onDelete: Cascade)
+  step         Int
+  messageId    String          @unique
+  toEmail      String
+  subject      String
+  body         String
+  copySource   String          @default("fallback") // ai | fallback
+  dryRun       Boolean         @default(false)
+  sentAt       DateTime        @default(now())
+  bounced      Boolean         @default(false)
+  complained   Boolean         @default(false)
+  replied      Boolean         @default(false)
+  replySnippet String?
+
+  @@index([mailboxId, sentAt])
+  @@index([leadId])
+}
+
+/// Never email these again: value = lowercased email or registrable domain.
+model OutboundSuppression {
+  id        String   @id @default(cuid())
+  value     String   @unique
+  kind      String // email | domain
+  reason    String // bounce | unsubscribe | complaint | reply_stop | existing_user | manual
+  createdAt DateTime @default(now())
 }

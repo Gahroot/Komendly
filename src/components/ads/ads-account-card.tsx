@@ -29,12 +29,15 @@ export function AdsAccountCard() {
           <div>
             <p className="text-2xl font-semibold tabular-nums">{data.balance}</p>
             <p className="text-xs text-muted-foreground">credits · 1 credit = 1 static ad</p>
+            {data.expiring.map((e) => (
+              <p key={e.expiresAt} className="text-xs font-medium text-[var(--studio-gold,currentColor)]">{e.credits} referral credits expire {new Date(e.expiresAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</p>
+            ))}
           </div>
         </div>
         {data.isPaid ? (
           <Button asChild variant="outline" className="w-full"><Link href="/ads/billing">Manage billing</Link></Button>
         ) : data.trialAvailable ? (
-          <p className="text-sm text-muted-foreground">Your free trial is ready: 10 static ads + 1 animated ad for one website.</p>
+          <p className="text-sm text-muted-foreground">Your free trial is ready: {data.trialStatic} static ads + 1 animated ad for one website.</p>
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">You&apos;ve used your free trial. Pick a monthly plan to keep making ads.</p>

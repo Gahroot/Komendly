@@ -20,14 +20,30 @@ const mdxComponents = {
     <h4 className="mt-6 mb-2 text-lg font-semibold text-foreground" {...props} />
   ),
   p: (props: ComponentProps<'p'>) => <p className="mb-6 text-foreground/90" {...props} />,
-  a: (props: ComponentProps<'a'>) => (
+  a: (props: ComponentProps<'a'>) => {
+    // Footnote refs from transformFootnotes: `[n](#source-n)` -> superscript citation link
+    if (props.href?.startsWith('#source-')) {
+      return (
+        <sup className="ml-0.5 font-mono text-[0.7em]">
+          <a
+            href={props.href}
+            aria-label={`Source ${props.href.slice('#source-'.length)}`}
+            className="text-[var(--studio-gold)] no-underline hover:underline"
+          >
+            [{props.children}]
+          </a>
+        </sup>
+      )
+    }
+    return (
     <a
       className="text-[var(--studio-gold)] underline decoration-[var(--studio-gold)]/50 underline-offset-4 transition-colors hover:decoration-[var(--studio-gold)]"
       target={props.href?.startsWith('http') ? '_blank' : undefined}
       rel={props.href?.startsWith('http') ? 'noopener noreferrer' : undefined}
       {...props}
     />
-  ),
+    )
+  },
   ul: (props: ComponentProps<'ul'>) => (
     <ul className="mb-6 list-disc space-y-2 pl-6 text-foreground/90 marker:text-[var(--studio-gold)]" {...props} />
   ),
@@ -90,12 +106,14 @@ const mdxComponents = {
 
 interface CompileMDXOptions {
   source: string
+  /** Extra components available to the body, e.g. an inline CTA inserted by the page. */
+  components?: Record<string, (props: Record<string, never>) => ReactNode>
 }
 
-export async function renderMDX({ source }: CompileMDXOptions): Promise<ReactNode> {
+export async function renderMDX({ source, components }: CompileMDXOptions): Promise<ReactNode> {
   const { content } = await compileMDX({
     source,
-    components: mdxComponents,
+    components: { ...mdxComponents, ...components },
     options: {
       parseFrontmatter: false,
       mdxOptions: {

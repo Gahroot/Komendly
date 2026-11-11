@@ -10,6 +10,12 @@ export async function ozzyDataUrl(name: string): Promise<string> {
   return `data:image/png;base64,${buf.toString("base64")}`;
 }
 
+/** Komendly logo mark (Ozzy badge), same file the site header uses. */
+let markUrl: Promise<string> | null = null;
+function markDataUrl(): Promise<string> {
+  return (markUrl ??= readFile(path.join(process.cwd(), "public", "brand", "komendly-mark-128.png")).then((b) => `data:image/png;base64,${b.toString("base64")}`));
+}
+
 const STARS = (() => {
   const r = seeded(7);
   return Array.from({ length: 40 }, (_, i) => ({
@@ -33,7 +39,7 @@ function loadFraunces(): Promise<Buffer> {
 }
 
 export async function studioOg({ label, headline, headlineSize, pill, ozzy }: Props): Promise<ImageResponse> {
-  const font = await loadFraunces();
+  const [font, mark] = await Promise.all([loadFraunces(), markDataUrl()]);
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", position: "relative", background: "linear-gradient(180deg,#0c0820 0%,#2b1556 62%,#b8513d 100%)", fontFamily: "Fraunces" }}>
@@ -50,7 +56,7 @@ export async function studioOg({ label, headline, headlineSize, pill, ozzy }: Pr
         <img src={ozzy} width={360} height={360} alt="" style={{ position: "absolute", right: 70, bottom: 40, imageRendering: "pixelated" }} />
         <div style={{ position: "absolute", left: 72, top: 64, width: 700, display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", alignItems: "center", fontSize: 36, fontWeight: 500, color: "#fff1d6" }}>
-            <div style={{ width: 18, height: 18, background: "#ffcf4a", transform: "rotate(45deg)", marginRight: 16 }} />
+            <img src={mark} width={48} height={48} alt="" style={{ marginRight: 16 }} />
             Komendly{label ? <span style={{ color: "#ffcf4a", marginLeft: 12 }}>{label}</span> : null}
           </div>
           <div style={{ marginTop: 36, fontSize: headlineSize, lineHeight: 1.04, fontWeight: 500, color: "#fff1d6", letterSpacing: -2 }}>{headline}</div>

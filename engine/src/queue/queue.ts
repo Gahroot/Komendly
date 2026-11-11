@@ -24,12 +24,17 @@ export interface ClaimedJob {
  * Atomically claim up to `limit` due jobs of the given types, in fairness order (see fairness.ts):
  * start work, then a run's first ad, then priority + aging.
  */
+/** Scale/Agency "priority generation" boost in claim order. */
+export const PRIORITY_PLAN_BOOST = 60;
+
 export async function claimJobs(
   db: Db,
   workerId: string,
   types: readonly string[],
   limit: number,
   fairness: FairnessTypes = DEFAULT_FAIRNESS,
+  /** Only claim jobs of this run (ops scripts such as make-gift.ts); null = any job. */
+  scopeRunId: string | null = null,
 ): Promise<ClaimedJob[]> {
   if (limit <= 0 || types.length === 0) return [];
   const start = [...fairness.start];
@@ -40,6 +45,7 @@ export async function claimJobs(
     WHERE j.id IN (
       SELECT c.id FROM "AdJob" c
       WHERE c.status IN ('queued', 'failed') AND c."runAt" <= now() AND c.type = ANY(${types as string[]})
+        AND (${scopeRunId}::text IS NULL OR c."runId" = ${scopeRunId}::text)
       ORDER BY (
         c.priority
         + CASE WHEN c.type = ANY(${start}::text[]) AND NOT (c.payload ? 'replaceAdId') THEN ${START_BOOST} ELSE 0 END
@@ -54,6 +60,8 @@ export async function claimJobs(
             AND NOT EXISTS (SELECT 1 FROM "AdJob" r WHERE r."runId" = c."runId" AND r.status = 'running' AND r.type = ANY(${render}::text[]))
           THEN ${FIRST_AD_BOOST} ELSE 0 END
         + LEAST(${AGE_CAP}, GREATEST(0, EXTRACT(EPOCH FROM (now() - c."runAt")) / ${AGE_STEP_SEC}))
+        -- Priority generation (Scale, Agency): their jobs go ahead of other paid work (= 1 minute of aging).
+        + CASE WHEN c."workspaceId" IS NOT NULL AND EXISTS (SELECT 1 FROM "AdsWorkspace" w WHERE w.id = c."workspaceId" AND w."adsPlan" IN ('scale', 'agency') AND w."subscriptionStatus" IN ('active', 'trialing', 'past_due')) THEN ${PRIORITY_PLAN_BOOST} ELSE 0 END
       ) DESC, c."runAt" ASC, c.id ASC
       LIMIT ${limit}
       FOR UPDATE OF c SKIP LOCKED
@@ -127,8 +135,26 @@ export async function recoverStaleJobs(db: Db, staleMs: number, scope: { types?:
   return n;
 }
 
+/**
+ * Jobs locked by a worker that is no longer alive (its EngineHeartbeat is older than deadMs, or it has none).
+ * Single-replica deploys restart the container: without this, a job locked by the old container waits the
+ * full stale-lock window (15 min) before anyone retries it. Never touches jobs of live workers.
+ */
+export async function recoverOrphanedJobs(db: Db, selfWorkerId: string, deadMs: number): Promise<number> {
+  return db.$executeRaw`
+    UPDATE "AdJob" j SET
+      status = CASE WHEN j.attempts >= j."maxAttempts" THEN 'dead'::"AdJobStatus" ELSE 'queued'::"AdJobStatus" END,
+      "lockedBy" = NULL, "lockedAt" = NULL, "lastError" = 'worker gone (restart): retried',
+      "finishedAt" = CASE WHEN j.attempts >= j."maxAttempts" THEN now() ELSE NULL END
+    WHERE j.status = 'running' AND j."lockedBy" IS NOT NULL AND j."lockedBy" <> ${selfWorkerId}
+      AND NOT EXISTS (SELECT 1 FROM "EngineHeartbeat" h WHERE h.id = j."lockedBy" AND h."updatedAt" > now() - (${deadMs}::int * interval '1 millisecond'))`;
+}
+
+/** Engine-internal job types the web app never enqueues ("bonus": trial upsell, see jobs/bonus.ts). */
+export type EngineJobType = "bonus";
+
 export interface EnqueueInput {
-  type: JobType;
+  type: JobType | EngineJobType;
   runId?: string | null;
   adId?: string | null;
   workspaceId?: string | null;

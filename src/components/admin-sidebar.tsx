@@ -14,7 +14,14 @@ import {
   User,
   ArrowLeft,
   BarChart3,
+  LineChart as LineChartIcon,
   Megaphone,
+  Sparkles,
+  Cpu,
+  UserPlus,
+  Gift,
+  RotateCcw,
+  TrendingDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,43 +30,50 @@ import { cn } from "@/lib/utils";
 import { useUser } from "@/hooks/useUser";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-const navItems = [
+const navGroups = [
   {
     label: "Overview",
-    href: "/admin",
-    icon: LayoutDashboard,
+    items: [
+      { label: "Ozzy HQ", href: "/admin", icon: LayoutDashboard },
+      { label: "Users", href: "/admin/users", icon: Users },
+    ],
   },
   {
-    label: "Users",
-    href: "/admin/users",
-    icon: Users,
+    label: "Ad Packs",
+    items: [
+      { label: "Ads overview", href: "/admin/ads", icon: Megaphone, exact: true },
+      { label: "Workspaces", href: "/admin/ads/workspaces", icon: Users },
+      { label: "Jobs & engine", href: "/admin/ads/jobs", icon: Cpu, also: ["/admin/ads/engine"] },
+    ],
+  },
+  { label: "Studio", items: [{ label: "Studio sessions", href: "/admin/studio", icon: Sparkles }] },
+  { label: "Testimonials", items: [{ label: "Videos", href: "/admin/videos", icon: Video }] },
+  {
+    label: "Growth",
+    items: [
+      { label: "Sign-ups", href: "/admin/ads/signups", icon: UserPlus },
+      { label: "Funnel", href: "/admin/ads/funnel", icon: BarChart3, also: ["/admin/ads/growth"] },
+      { label: "Referrals & partners", href: "/admin/ads/referrals", icon: Gift, also: ["/admin/ads/partners"] },
+      { label: "Analytics", href: "/admin/analytics", icon: LineChartIcon },
+      { label: "Price survey", href: "/admin/price-survey", icon: LineChartIcon },
+    ],
   },
   {
-    label: "Videos",
-    href: "/admin/videos",
-    icon: Video,
+    label: "Money",
+    items: [
+      { label: "Revenue", href: "/admin/revenue", icon: CreditCard },
+      { label: "Refunds", href: "/admin/ads/refunds", icon: RotateCcw },
+      { label: "Churn", href: "/admin/ads/churn", icon: TrendingDown },
+    ],
   },
-  {
-    label: "Revenue",
-    href: "/admin/revenue",
-    icon: CreditCard,
-  },
-  {
-    label: "Analytics",
-    href: "/admin/analytics",
-    icon: BarChart3,
-  },
-  {
-    label: "Ads",
-    href: "/admin/ads",
-    icon: Megaphone,
-  },
-  {
-    label: "Settings",
-    href: "/admin/settings",
-    icon: Settings,
-  },
-];
+  { label: "", items: [{ label: "Settings", href: "/admin/settings", icon: Settings }] },
+] as const satisfies readonly { label: string; items: readonly { label: string; href: string; icon: unknown; exact?: boolean; also?: readonly string[] }[] }[];
+
+function navActive(pathname: string, item: { href: string; exact?: boolean; also?: readonly string[] }): boolean {
+  if (item.href === "/admin" || item.exact) return pathname === item.href;
+  const hit = (p: string) => pathname === p || pathname.startsWith(p + "/");
+  return hit(item.href) || (item.also ?? []).some(hit);
+}
 
 interface AdminSidebarProps {
   onNavigate?: () => void;
@@ -84,66 +98,62 @@ export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
       <div className="flex h-16 items-center justify-between px-6 pr-3">
         <Link href="/admin" className="flex items-center gap-2">
           <Image
-            src="/logo.svg"
+            src="/brand/komendly-mark-128.png"
             alt="Komendly"
             width={32}
             height={32}
             className="h-8 w-8"
             priority
           />
-          <span className="text-xl font-bold tracking-tight">ADMIN</span>
+          <span className="text-xl font-bold tracking-tight">Ozzy HQ</span>
         </Link>
         <ThemeToggle />
       </div>
 
       <Separator className="bg-sidebar-border" />
 
-      {/* Back to Dashboard Link */}
+      {/* Back to the app Link */}
       <div className="px-3 py-2">
         <Link
           href="/dashboard"
           className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Dashboard
+          Back to the app
         </Link>
       </div>
 
       <Separator className="bg-sidebar-border" />
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map((item) => {
-          const isActive =
-            pathname === item.href ||
-            (item.href !== "/admin" && pathname.startsWith(item.href));
-          const Icon = item.icon;
-
-          return (
-            <div key={item.href} className="relative">
-              <Link
-                href={item.href}
-                onClick={onNavigate}
-                className={cn(
-                  "relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--glass-rim)]"
-                    : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
-                )}
-              >
-                <Icon className={cn("h-[18px] w-[18px]", isActive && "text-primary")} />
-                {item.label}
-                {isActive && (
-                  <motion.div
-                    layoutId="adminActiveIndicator"
-                    className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-primary"
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  />
-                )}
-              </Link>
-            </div>
-          );
-        })}
+      <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
+        {navGroups.map((group) => (
+          <div key={group.label || "more"} className="space-y-1">
+            {group.label ? <p className="px-3 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{group.label}</p> : null}
+            {group.items.map((item) => {
+              const isActive = navActive(pathname, item);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onNavigate}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors duration-200",
+                    isActive
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-[var(--glass-rim)]"
+                      : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+                  )}
+                >
+                  <Icon className={cn("h-[18px] w-[18px]", isActive && "text-primary")} />
+                  {item.label}
+                  {isActive && <span className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-primary" />}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       <Separator className="bg-sidebar-border" />

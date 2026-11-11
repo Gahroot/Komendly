@@ -11,6 +11,7 @@ import { isValidSiteUrl, startHref } from "@/lib/ads/url-submit";
 import { track } from "@/lib/analytics/track";
 import { ozzy } from "@/components/ozzy/store";
 import { GoalChips } from "./goal-chips";
+import { TrialUsedDialog, checkTrialDomain } from "./trial-used-dialog";
 
 /** Website URL + optional goal. Saves the request so it survives sign-up, then continues at /ads/start. */
 export function AdsUrlForm({ signedIn, cta = "Make my ads" }: { signedIn: boolean; cta?: string }) {
@@ -19,8 +20,10 @@ export function AdsUrlForm({ signedIn, cta = "Make my ads" }: { signedIn: boolea
   const [goal, setGoal] = useState<AdGoalValue>("auto");
   const [error, setError] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
+  const [usedDomain, setUsedDomain] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = url.trim();
     if (!isValidSiteUrl(trimmed)) {
@@ -28,6 +31,15 @@ export function AdsUrlForm({ signedIn, cta = "Make my ads" }: { signedIn: boolea
       track("url_invalid", { length: trimmed.length });
       ozzy.emit({ type: "url:invalid" });
       return;
+    }
+    if (!signedIn) {
+      setChecking(true);
+      const check = await checkTrialDomain(trimmed);
+      setChecking(false);
+      if (check.used) {
+        setUsedDomain(check.domain ?? trimmed);
+        return;
+      }
     }
     savePendingRun({ url: trimmed, goal });
     track("url_submit", { signed_in: signedIn, goal });
@@ -62,11 +74,12 @@ export function AdsUrlForm({ signedIn, cta = "Make my ads" }: { signedIn: boolea
             className="h-11 border-0 bg-transparent pl-9 text-base shadow-none focus-visible:ring-0"
           />
         </div>
-        <Button type="submit" size="lg" className="h-11 w-full sm:w-auto">
+        <Button type="submit" size="lg" disabled={checking} className="h-11 w-full sm:w-auto">
           {cta} <ArrowRight />
         </Button>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
+      <TrialUsedDialog domain={usedDomain} next={startHref(url, goal, true)} onClose={() => setUsedDomain(null)} />
       <div className="space-y-2">
         <p className="text-xs text-muted-foreground">Goal (optional)</p>
         <GoalChips

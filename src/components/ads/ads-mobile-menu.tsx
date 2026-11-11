@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { OzzyLazy } from "@/components/ozzy/OzzyLazy";
 import { cn } from "@/lib/utils";
+import { BrandMark } from "@/components/brand-mark";
 
 export type AdsNavLink = { href: string; label: string };
 
@@ -23,7 +24,7 @@ export function AdsMobileMenu({ links, cta }: { links: AdsNavLink[]; cta?: AdsNa
       <SheetContent side="right" className="flex w-[82vw] max-w-xs flex-col">
         <SheetHeader className="pb-2">
           <SheetTitle className="flex items-center gap-2 text-xl">
-            <span aria-hidden className="inline-block size-2.5 rotate-45 bg-[var(--studio-gold)] shadow-[0_0_12px_#ffcf4a99]" />
+            <BrandMark className="size-7" />
             Komendly
           </SheetTitle>
           <SheetDescription className="sr-only">Site navigation</SheetDescription>

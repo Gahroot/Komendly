@@ -19,6 +19,18 @@ export interface FalActorData {
   description?: string;
   isActive: boolean;
   sortOrder: number;
+  voiceProvider?: string;
+  /** Accent derived from voicePrompt (shown instead of a voice name). */
+  accent?: string;
+  ageRange?: string;
+  persona?: string;
+  occupation?: string;
+  setting?: string;
+  tags?: string[];
+  industries?: string[];
+  /** Present when the actors API is called with ?reviewId= and a Codex ranking exists. */
+  recommended?: boolean;
+  recommendRank?: number;
 }
 
 // ============================================================================

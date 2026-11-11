@@ -19,8 +19,8 @@ export const GOAL_LABELS: Record<AdGoalValue, string> = {
 };
 
 export const TRIAL_REASON_MESSAGES: Record<string, string> = {
-  email_unverified: "Confirm your email to unlock your free ads. We just sent you a link.",
-  domain_used: "This website has already used its free trial. Pick a plan to keep generating ads for it.",
+  email_unverified: "Confirm your email to download. We just sent you a link.",
+  domain_used: "Someone at your company already used the free ad pack for this website. It's one free pack per business. Log in to that account, or pick a plan to make more ads for it.",
   device_used: "A free trial was already used on this device. Pick a plan to keep going.",
   ip_used: "A free trial was already used from this network. Pick a plan to keep going.",
   disposable_email: "Free trials need a permanent email address. Sign up with your work or personal email.",

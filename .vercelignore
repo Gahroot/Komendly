@@ -1,5 +1,7 @@
 # Website2ads: the engine deploys to Railway, not Vercel
 engine
+# Blog engine: separate Railway service
+blog-engine
 **/__tests__
 **/*.test.ts
 **/*.test.tsx
@@ -14,3 +16,5 @@ tsconfig.tsbuildinfo
 !public/**
 # App Router file icons (icon.png, apple-icon.png) must ship
 !src/app/*.png
+# One-off ops scripts (some import engine/, which is not uploaded)
+scripts

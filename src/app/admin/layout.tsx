@@ -87,7 +87,7 @@ export default function AdminLayout({
         {/* Mobile Header */}
         <header className="flex h-16 items-center justify-between sticky top-0 z-30 border-b border-border glass-float px-4 lg:hidden">
           <div className="flex items-center gap-2">
-            <Image src="/logo.svg" alt="" width={28} height={28} className="h-7 w-7" />
+            <Image src="/brand/komendly-mark-128.png" alt="" width={28} height={28} className="h-7 w-7" />
             <span className="text-base font-semibold tracking-wide text-foreground">
               ADMIN
             </span>

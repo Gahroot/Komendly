@@ -58,7 +58,7 @@ describe("composition per ratio", () => {
       expect(html).toContain('window.__timelines["main"] = tl');
       expect(html).not.toMatch(/Math\.random|Date\.now|repeat:-1/);
       expect(html).toContain("No cookies");
-      if (ratio === "9:16") expect([frame.safe.top, frame.safe.bottom]).toEqual([Math.round(1920 * 0.14), 384]);
+      if (ratio === "9:16") expect([frame.safe.top, frame.safe.bottom]).toEqual([Math.round(1920 * 0.14), 672]);
     });
   }
 });

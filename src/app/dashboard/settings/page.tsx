@@ -14,6 +14,7 @@ import {
 import { User, Mail, Loader2, Check, AlertCircle } from "lucide-react";
 import { useUser } from "@/hooks/useUser";
 import { PageHeader } from "@/components/page-header";
+import { FIRST_VIDEO_OFFER } from "@/lib/first-video-offer";
 
 export default function SettingsPage() {
   const { user, isLoading: userLoading, refresh } = useUser();
@@ -60,24 +61,24 @@ export default function SettingsPage() {
   if (userLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 aria-hidden className="h-8 w-8 animate-spin text-[var(--studio-gold)]" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader eyebrow="Account" title="Settings" description="Manage your account settings" />
+    <div className="max-w-3xl space-y-6">
+      <PageHeader eyebrow="Account" title="Settings" description="Your name and account details." />
 
       {error && (
-        <div className="flex items-center gap-2 p-4 bg-destructive/10 border border-destructive/50 rounded-lg text-destructive">
+        <div role="alert" className="flex items-center gap-2 rounded-xl border border-[oklch(0.7_0.17_25/0.5)] bg-[oklch(0.7_0.17_25/0.12)] p-3 text-sm text-[oklch(0.86_0.1_25)]">
           <AlertCircle className="h-5 w-5 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="flex items-center gap-2 p-4 bg-success/10 border border-success/50 rounded-lg text-success">
+        <div role="status" className="flex items-center gap-2 rounded-xl border border-[oklch(0.84_0.14_78/0.45)] bg-[oklch(0.84_0.14_78/0.1)] p-3 text-sm text-[var(--studio-gold)]">
           <Check className="h-5 w-5 flex-shrink-0" />
           <span>Profile updated successfully</span>
         </div>
@@ -86,7 +87,7 @@ export default function SettingsPage() {
       <Card >
         <CardHeader>
           <CardTitle className="text-foreground flex items-center gap-2">
-            <User className="h-5 w-5 text-primary" />
+            <User aria-hidden className="h-5 w-5 text-[var(--studio-gold)]" />
             Profile Information
           </CardTitle>
           <CardDescription>Update your account details</CardDescription>
@@ -104,7 +105,7 @@ export default function SettingsPage() {
                   type="email"
                   value={user?.email || ""}
                   disabled
-                  className="bg-secondary border-input pl-10 text-muted-foreground"
+                  className="h-11 pl-10 text-muted-foreground"
                 />
               </div>
               <p className="text-xs text-muted-foreground">
@@ -124,7 +125,7 @@ export default function SettingsPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Enter your name"
-                  className="bg-secondary border-input pl-10"
+                  className="h-11 pl-10"
                 />
               </div>
             </div>
@@ -132,7 +133,7 @@ export default function SettingsPage() {
             <Button
               type="submit"
               disabled={saving || name === user?.name}
-              className="bg-primary hover:bg-primary/90"
+              className="spellbar__cta h-11 rounded-xl px-5 font-semibold"
             >
               {saving ? (
                 <>
@@ -156,7 +157,7 @@ export default function SettingsPage() {
           <div className="flex justify-between items-center">
             <span className="text-muted-foreground">Plan</span>
             <span className="text-foreground font-semibold capitalize">
-              {user?.plan || "None"}
+              {user?.subscriptionStatus === "active" ? user.plan : (user?.bonusMinutes ?? 0) > 0 ? FIRST_VIDEO_OFFER.name : "None"}
             </span>
           </div>
           <div className="flex justify-between items-center">
@@ -164,8 +165,8 @@ export default function SettingsPage() {
             <span
               className={`font-semibold ${
                 user?.subscriptionStatus === "active"
-                  ? "text-success"
-                  : "text-warning"
+                  ? "text-[var(--success)]"
+                  : "text-muted-foreground"
               }`}
             >
               {user?.subscriptionStatus || "Inactive"}

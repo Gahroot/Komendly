@@ -22,7 +22,7 @@ describe("fetch fallback HTML parse", () => {
 describe("replacement cap", () => {
   it("allows staticCount+3 statics and one motion retry", () => {
     expect(attemptCap("static", { staticCount: 10, motionCount: 1 })).toBe(13);
-    expect(attemptCap("static", { staticCount: 10, motionCount: 1, isTrial: true })).toBe(15);
+    expect(attemptCap("static", { staticCount: 10, motionCount: 1, isTrial: true }, {})).toBe(20); // trials: 2x the promised count (ADS_TRIAL_ATTEMPT_FACTOR)
     expect(attemptCap("motion", { staticCount: 10, motionCount: 1 })).toBe(2);
   });
 });

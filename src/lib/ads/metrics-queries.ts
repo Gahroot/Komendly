@@ -1,4 +1,5 @@
 // DB loaders for the admin overview; all maths lives in metrics.ts.
+import { loadInternalIds } from "@/lib/internal-accounts";
 import { prisma } from "@/lib/prisma";
 import { ADS_TOPUPS } from "./billing-config";
 import {
@@ -16,19 +17,20 @@ const TOPUP_CENTS_PER_CREDIT =
 export async function loadAdsOverview(now: Date = new Date()) {
   const since30 = new Date(now.getTime() - 30 * DAY_MS);
   const since90 = new Date(now.getTime() - 90 * DAY_MS);
+  const ws = { notIn: (await loadInternalIds()).workspaceIds };
   const [subs, churned30, events, runs, ads, topups] = await Promise.all([
-    prisma.adsWorkspace.findMany({ select: { adsPlan: true, subscriptionStatus: true } }),
-    prisma.adsEvent.count({ where: { name: "churned", createdAt: { gte: since30 } } }),
+    prisma.adsWorkspace.findMany({ where: { id: ws }, select: { adsPlan: true, subscriptionStatus: true } }),
+    prisma.adsEvent.count({ where: { name: "churned", createdAt: { gte: since30 }, workspaceId: ws } }),
     prisma.adsEvent.findMany({
-      where: { name: { in: ["trial_started", "paid_converted"] }, createdAt: { gte: since90 } },
+      where: { name: { in: ["trial_started", "paid_converted"] }, createdAt: { gte: since90 }, workspaceId: ws },
       select: { name: true, workspaceId: true, createdAt: true },
     }),
     prisma.adRun.findMany({
-      where: { createdAt: { gte: since30 } },
+      where: { createdAt: { gte: since30 }, workspaceId: ws },
       select: { createdAt: true, confirmedAt: true, firstAdAt: true, status: true },
     }),
-    prisma.ad.findMany({ where: { createdAt: { gte: since30 } }, select: { status: true, costMicros: true } }),
-    prisma.creditLedger.aggregate({ where: { reason: "topup", createdAt: { gte: since30 } }, _sum: { delta: true } }),
+    prisma.ad.findMany({ where: { createdAt: { gte: since30 }, workspaceId: ws }, select: { status: true, costMicros: true } }),
+    prisma.creditLedger.aggregate({ where: { reason: "topup", createdAt: { gte: since30 }, workspaceId: ws }, _sum: { delta: true } }),
   ]);
 
   const mrr = computeMrr(subs);

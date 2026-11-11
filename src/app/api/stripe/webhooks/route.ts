@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { stripe, getPlanFromPriceId, getMinutesForPlan, mapStripeStatus } from "@/lib/stripe";
+import { stripe, mapStripeStatus, minutesForStoredPlan, resolveSubscriptionPlan } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { isAdsStripeObject } from "@/lib/ads/billing-stripe";
+import { fulfilCreditPurchase } from "@/lib/credit-fulfilment";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -89,6 +90,9 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  // One-time payments (credit packs, first-video offer) are fulfilled on payment_intent.succeeded.
+  if (session.mode !== "subscription") return;
+
   const userId = session.metadata?.userId;
   const customerId = session.customer as string;
   const subscriptionId = session.subscription as string;
@@ -103,14 +107,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // Retrieve the subscription to get details
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
   const priceId = subscription.items.data[0]?.price.id;
-  const plan = getPlanFromPriceId(priceId);
+  const resolved = resolveSubscriptionPlan(subscription);
 
-  if (!plan) {
+  if (!resolved) {
     console.error(`Unknown price ID: ${priceId}`);
     return;
   }
 
-  const minutesLimit = getMinutesForPlan(plan);
+  const { plan, minutes: minutesLimit } = resolved;
 
   // Get period dates from subscription (with validation)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -143,7 +147,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
   const priceId = subscription.items.data[0]?.price.id;
-  const plan = getPlanFromPriceId(priceId);
 
   const user = await prisma.user.findUnique({
     where: { stripeCustomerId: customerId },
@@ -170,10 +173,11 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
   };
 
-  // Update plan and minutes if subscription is active and plan is valid
-  if (subscription.status === "active" && plan) {
-    updateData.plan = plan;
-    updateData.minutesLimit = getMinutesForPlan(plan) + user.bonusMinutes;
+  // Update plan and minutes if subscription is active and plan is valid (legacy prices keep legacy minutes)
+  const resolved = resolveSubscriptionPlan(subscription, user.plan);
+  if (subscription.status === "active" && resolved) {
+    updateData.plan = resolved.plan;
+    updateData.minutesLimit = resolved.minutes + user.bonusMinutes;
   }
 
   await prisma.user.update({
@@ -226,9 +230,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   }
 
   // Reset usage for new billing period
-  type ValidPlan = "starter" | "pro" | "enterprise";
-  const plan = user.plan as ValidPlan | "pending" | "free";
-  const baseMinutes = (plan !== "pending" && plan !== "free") ? getMinutesForPlan(plan as ValidPlan) : 0;
+  const baseMinutes = minutesForStoredPlan(user.plan, user.subscriptionPriceId);
 
   await prisma.user.update({
     where: { id: user.id },
@@ -272,24 +274,17 @@ async function handleCreditPurchase(paymentIntent: Stripe.PaymentIntent) {
     return;
   }
 
-  // Record the purchase
-  await prisma.creditPurchase.create({
-    data: {
-      userId,
-      stripePaymentId: paymentIntent.id,
-      minutes,
-      amountPaid: paymentIntent.amount,
-    },
+  // create-before-increment in one transaction; a replay (or the success-page sync) is a no-op
+  const result = await fulfilCreditPurchase(prisma, {
+    userId,
+    stripePaymentId: paymentIntent.id,
+    minutes,
+    amountPaid: paymentIntent.amount,
   });
-
-  // Add minutes to user's account
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      bonusMinutes: { increment: minutes },
-      minutesLimit: { increment: minutes },
-    },
-  });
+  if (result.status !== "fulfilled") {
+    console.log(`Credit purchase ${paymentIntent.id} already fulfilled (${result.status})`);
+    return;
+  }
 
   console.log(`Added ${minutes} bonus minutes to user ${userId}`);
 }

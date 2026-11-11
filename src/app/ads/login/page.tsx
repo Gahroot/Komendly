@@ -1,19 +1,17 @@
 import { Suspense } from "react";
-import { AdsAuthForm } from "@/components/ads/ads-auth-form";
-import { AdsAuthShell } from "@/components/ads/ads-auth-shell";
-import { AdsNav } from "@/components/ads/ads-nav";
+import { SiteHeader } from "@/components/site-header";
+import { OzzyAuth } from "@/components/hub/ozzy-auth";
 
-export const metadata = { title: "Sign in | Komendly Ads" };
+export const metadata = { title: "Sign in", robots: { index: false, follow: true } };
 
+/** Same Ozzy front door as /login (kept for old links and ?next=/ads/... flows). */
 export default function AdsLoginPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <AdsNav signedIn={false} />
-      <AdsAuthShell>
-        <Suspense>
-          <AdsAuthForm mode="login" />
-        </Suspense>
-      </AdsAuthShell>
+    <div className="min-h-screen text-foreground">
+      <SiteHeader cta={false} />
+      <Suspense fallback={<div className="min-h-[60vh]" />}>
+        <OzzyAuth mode="login" />
+      </Suspense>
     </div>
   );
 }

@@ -8,6 +8,8 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import type { FalActorsResponse } from "@/lib/fal-lipsync/types";
+import { getReadyRecommendation } from "@/lib/testimonial/recommend";
+import { accentFromVoicePrompt } from "@/lib/testimonial/contracts";
 
 export async function GET(request: Request) {
   try {
@@ -21,6 +23,9 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const gender = url.searchParams.get("gender");
     const style = url.searchParams.get("style");
+    const reviewId = url.searchParams.get("reviewId");
+    const picks = reviewId ? await getReadyRecommendation(user.id, reviewId) : null;
+    const rank = new Map((picks ?? []).map((p, i) => [p.actorId, i + 1]));
 
     // Build filter
     const where: Record<string, unknown> = {
@@ -54,6 +59,15 @@ export async function GET(request: Request) {
         description: actor.description ?? undefined,
         isActive: actor.isActive,
         sortOrder: actor.sortOrder,
+        voiceProvider: actor.voiceProvider ?? undefined,
+        accent: accentFromVoicePrompt(actor.voicePrompt) ?? undefined,
+        ageRange: actor.ageRange ?? undefined,
+        persona: actor.persona ?? undefined,
+        occupation: actor.occupation ?? undefined,
+        setting: actor.setting ?? undefined,
+        tags: actor.tags,
+        industries: actor.industries,
+        ...(picks ? { recommended: rank.has(actor.id), recommendRank: rank.get(actor.id) } : {}),
       })),
       total: actors.length,
     };

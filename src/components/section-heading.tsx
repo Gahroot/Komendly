@@ -6,18 +6,15 @@ interface SectionHeadingProps {
   title: ReactNode;
   description?: ReactNode;
   className?: string;
+  id?: string;
 }
 
-/** Centered marketing section heading: glass eyebrow pill, display title, muted lead. */
-export function SectionHeading({ eyebrow, title, description, className }: SectionHeadingProps) {
+/** Studio section heading: gold mono kicker, Fraunces title, muted lead. */
+export function SectionHeading({ eyebrow, title, description, className, id }: SectionHeadingProps) {
   return (
     <div className={cn("mx-auto max-w-2xl text-center", className)}>
-      {eyebrow && (
-        <span className="glass-subtle mb-5 inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-medium uppercase tracking-[0.14em] text-primary">
-          {eyebrow}
-        </span>
-      )}
-      <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl">{title}</h2>
+      {eyebrow && <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--studio-gold)]">{eyebrow}</p>}
+      <h2 id={id} className="font-display text-3xl font-medium tracking-[-0.02em] text-foreground sm:text-4xl">{title}</h2>
       {description && <p className="mt-4 text-base text-muted-foreground sm:text-lg">{description}</p>}
     </div>
   );

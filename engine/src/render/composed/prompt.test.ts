@@ -178,3 +178,33 @@ describe("invented products and logo corner", () => {
     expect(r.chip).toBe(false);
   });
 });
+
+describe("static fixes v2", () => {
+  it("keeps short full brand names and drops taglines", async () => {
+    const { shortBrandName } = await import("./logo-source");
+    expect(shortBrandName("Greater Boston HVAC", "greaterbostonhvac.com")).toBe("Greater Boston HVAC");
+    expect(shortBrandName("Greater Boston HVAC")).toBe("Greater Boston HVAC");
+    expect(shortBrandName("Joe's Stone Crab | Miami Beach")).toBe("Joe's Stone Crab");
+  });
+  it("flags fake UI and misspelled words", async () => {
+    const { judge } = await import("./verify-text");
+    const base = { headline: "They say they can fix our roof", cta: "Get a quote", allText: ["They say they can fix our roof"], incidentalText: [], hasQuoteOrAttribution: false, hasBadgeOrStars: false, hasHumanFace: false, hasThirdPartyBrand: false, hasFrame: false, topLeftEmpty: true, textBoxes: [], screenUi: "none" as const, productNotInReferences: false, hasInventedData: false, hasFakeUi: false, misspelledWords: [] as string[] };
+    const a = { headline: "They say they can fix our roof", cta: "Get a quote", brandName: "X" };
+    expect(judge(base, a)).toEqual([]);
+    expect(judge({ ...base, misspelledWords: ["sav"] }, a)).toContain('misspelled "sav"');
+    expect(judge({ ...base, hasFakeUi: true }, a).length).toBe(1);
+  });
+});
+
+import { chipForLogo, legibleShare } from "./logo-overlay";
+describe("logo chip for mixed-tone logos", () => {
+  it("does not pick a dark chip when the logo has dark lettering", () => {
+    const lums = [...Array(40).fill(250), ...Array(60).fill(20)]; // white icon + dark text
+    const chip = chipForLogo(lums, ["#000000", "#8a1c1c"]);
+    expect(chip).not.toBe("#000000");
+    expect(chip).not.toBe("#111111");
+  });
+  it("measures legible share", () => {
+    expect(legibleShare([10, 20, 240], 255)).toBeCloseTo(2 / 3);
+  });
+});

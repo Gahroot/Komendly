@@ -265,6 +265,19 @@ function within<T>(p: Promise<T>, ms: number, what: string): Promise<T> {
  * Crawl with fallbacks: parallel browser crawl -> fresh browser, single tab ->
  * plain fetch + HTML parse. Only throws SiteUnreachableError/BlockedUrlError when all fail.
  */
+const CHALLENGE_RE = /checking your browser|just a moment\.\.\.|attention required|verify you are (a )?human|enable javascript and cookies to continue|ddos protection by|security check to access|are you a robot|access denied|request unsuccessful\. incapsula/i;
+
+/** Bot-protection interstitials (Cloudflare, Sucuri, Imperva...): not the site's real content. */
+export function isChallengePage(p: { title: string; text: string }): boolean {
+  const t = p.text.trim();
+  return (CHALLENGE_RE.test(p.title) || CHALLENGE_RE.test(t.slice(0, 600))) && t.length < 1500;
+}
+
+/** At least one page with real, readable site content. */
+export function hasReadableContent(r: Pick<CrawlResult, "pages">): boolean {
+  return r.pages.some((p) => p.text.trim().length >= 50 && !isChallengePage(p));
+}
+
 export async function crawlSite(url: string, limits: CrawlLimits = DEFAULT_LIMITS, signal?: AbortSignal): Promise<CrawlResult> {
   await assertPublicUrl(url);
   const errors: string[] = [];
@@ -272,8 +285,8 @@ export async function crawlSite(url: string, limits: CrawlLimits = DEFAULT_LIMIT
     try {
       const budget = tabs === 3 ? limits.totalTimeoutMs : Math.round(limits.totalTimeoutMs * 0.7);
       const r = await crawlWithBrowser(url, { ...limits, totalTimeoutMs: budget }, tabs, signal);
-      if (r.pages.some((p) => p.text.trim().length >= 50)) return r;
-      errors.push(`browser(${tabs}): no readable text`);
+      if (hasReadableContent(r)) return withoutChallengePages(r);
+      errors.push(`browser(${tabs}): ${r.pages.some(isChallengePage) ? "bot challenge page" : "no readable text"}`);
     } catch (e) {
       if (e instanceof BlockedUrlError || signal?.aborted) throw e;
       errors.push(`browser(${tabs}): ${e instanceof Error ? e.message.split("\n")[0] : String(e)}`);
@@ -281,13 +294,17 @@ export async function crawlSite(url: string, limits: CrawlLimits = DEFAULT_LIMIT
   }
   try {
     const r = await crawlWithFetch(url, limits, signal);
-    if (r.pages.some((p) => p.text.trim().length >= 50)) return r;
-    errors.push("fetch: no readable text");
+    if (hasReadableContent(r)) return withoutChallengePages(r);
+    errors.push(`fetch: ${r.pages.some(isChallengePage) ? "bot challenge page" : "no readable text"}`);
   } catch (e) {
     if (e instanceof BlockedUrlError) throw e;
     errors.push(`fetch: ${e instanceof Error ? e.message : String(e)}`);
   }
   throw new SiteUnreachableError(`crawl failed: ${errors.join(" | ")}`);
+}
+
+function withoutChallengePages(r: CrawlResult): CrawlResult {
+  return { ...r, pages: r.pages.filter((p) => !isChallengePage(p)) };
 }
 
 // ---- plain fetch fallback ----------------------------------------------------
@@ -423,6 +440,14 @@ const imageKey = (src: string) => {
   }
 };
 
+/** Minimum time photo downloads always get, even past the crawl deadline. */
+export const MIN_IMAGE_BUDGET_MS = 10_000;
+
+/** Deadline for photo downloads: the crawl deadline, but never less than MIN_IMAGE_BUDGET_MS from now. */
+export function imageDeadline(deadline: number, now = Date.now()): number {
+  return Math.max(deadline, now + MIN_IMAGE_BUDGET_MS);
+}
+
 export async function downloadImages(
   candidates: Array<{ src: string; w: number; h: number; alt: string }>,
   limits: CrawlLimits,
@@ -437,6 +462,9 @@ export async function downloadImages(
     if (!cur || c.w * c.h > cur.w * cur.h) best.set(k, c);
   }
   const picked = [...best.values()].sort((a, b) => b.w * b.h - a.w * a.h || a.src.localeCompare(b.src)).slice(0, limits.maxImages + 6);
+  // Slow pages can eat the whole crawl budget; photos still get a floor so a run never ends up
+  // with zero real photos just because page loads were slow (seen under load: 0 images, AI-only ads).
+  deadline = imageDeadline(deadline);
   const out: Array<CrawledImage | null> = new Array(picked.length).fill(null);
   let next = 0;
   await Promise.all(

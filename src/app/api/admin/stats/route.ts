@@ -1,3 +1,4 @@
+import { loadInternalIds } from "@/lib/internal-accounts";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -21,6 +22,7 @@ export async function GET() {
     const lastDayOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
     // Fetch all stats in parallel
+    const uid = { notIn: (await loadInternalIds()).userIds };
     const [
       totalUsers,
       activeSubscribers,
@@ -34,19 +36,21 @@ export async function GET() {
       videosByStatus,
       creditPurchases,
     ] = await Promise.all([
-      prisma.user.count(),
+      prisma.user.count({ where: { id: uid } }),
       prisma.user.count({
         where: {
+          id: uid,
           subscriptionStatus: "active",
           plan: { notIn: ["pending", "free"] },
         },
       }),
       prisma.generatedVideo.count(),
       prisma.user.count({
-        where: { createdAt: { gte: firstDayOfMonth } },
+        where: { createdAt: { gte: firstDayOfMonth }, id: uid },
       }),
       prisma.user.count({
         where: {
+          id: uid,
           createdAt: {
             gte: firstDayOfLastMonth,
             lte: lastDayOfLastMonth,
@@ -65,6 +69,7 @@ export async function GET() {
         },
       }),
       prisma.user.findMany({
+        where: { id: uid },
         take: 10,
         orderBy: { createdAt: "desc" },
         select: {

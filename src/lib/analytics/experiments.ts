@@ -14,6 +14,8 @@ export interface Experiment {
 export const EXPERIMENTS = {
   /** Homepage hero headline. variants[0] is always the control. */
   home_hero: { key: "home_hero", variants: ["control", "companion"], weights: [50, 50], active: true },
+  /** /free-ads: 20 s product demo film under the hero form ("demo") vs the page as it was. Read with scripts/experiment-readout.ts. */
+  free_ads_demo: { key: "free_ads_demo", variants: ["control", "demo"], weights: [50, 50], active: true },
 } as const satisfies Record<string, Experiment>;
 
 export type ExperimentKey = keyof typeof EXPERIMENTS;

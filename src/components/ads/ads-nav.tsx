@@ -1,16 +1,20 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AdsMobileMenu, type AdsNavLink } from "./ads-mobile-menu";
+import { BrandMark } from "@/components/brand-mark";
 
 const SIGNED_IN: AdsNavLink[] = [
+  { href: "/dashboard", label: "← All apps" },
   { href: "/ads/app", label: "Home" },
   { href: "/ads/brands", label: "Brands" },
+  { href: "/ads/gifts", label: "Gifts" },
+  { href: "/ads/refer", label: "Give 10, get 10" },
   { href: "/ads/billing", label: "Billing" },
 ];
 const SIGNED_OUT: AdsNavLink[] = [
   { href: "/ads/pricing", label: "Pricing" },
   { href: "/blog", label: "Blog" },
-  { href: "/ads/login", label: "Sign in" },
+  { href: "/login", label: "Sign in" },
 ];
 const TRY: AdsNavLink = { href: "/ads/signup", label: "Try free" };
 
@@ -20,7 +24,7 @@ export function AdsNav({ signedIn }: { signedIn: boolean }) {
     <header className="sticky top-0 z-40 border-b bg-background/70 backdrop-blur-xl">
       <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href={signedIn ? "/ads/app" : "/"} className="flex items-center gap-2 font-[family-name:var(--font-fraunces)] text-lg font-semibold tracking-tight">
-          <span aria-hidden className="inline-block size-2.5 rotate-45 bg-[var(--studio-gold,currentColor)] shadow-[0_0_12px_#ffcf4a99]" />
+          <BrandMark className="size-7" />
           Komendly
         </Link>
         <div className="flex items-center gap-1">

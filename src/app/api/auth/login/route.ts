@@ -58,7 +58,8 @@ export async function POST(request: NextRequest) {
 
     // If user doesn't have an active subscription, redirect to pricing
     // Admins (e.g. the /admin/ads operators) need a session regardless of subscription.
-    if (!user.isAdmin && (!hasActiveSubscription || !hasPaidPlan)) {
+    // Buyers of one-time minutes (first-video offer) have no subscription but may use the dashboard.
+    if (!user.isAdmin && (!hasActiveSubscription || !hasPaidPlan) && user.bonusMinutes <= 0) {
       log.info(
         { userId: user.id, email, plan: user.plan, status: user.subscriptionStatus, durationMs: timer.getDuration() },
         "Login successful but subscription incomplete - redirecting to pricing"

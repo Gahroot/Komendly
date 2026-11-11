@@ -2,12 +2,13 @@
 // has a plan job (the web app enqueues one on explicit confirm; this is idempotent).
 import type { Db } from "../db";
 import { enqueue, priorityFor } from "../queue/queue";
+import { giftPolicy } from "./gift-policy";
 import { finalizeConfirm } from "../../../src/lib/ads/trial-confirm";
 
 export async function sweepConfirmations(db: Db, now: Date = new Date()): Promise<{ confirmed: number; planned: number }> {
   const due = await db.adRun.findMany({
     where: { status: "awaiting_confirm", confirmDeadline: { lt: now } },
-    select: { id: true, workspaceId: true, userId: true, isTrial: true, trialClaim: true },
+    select: { id: true, workspaceId: true, userId: true, isTrial: true, kind: true, trialClaim: true },
     take: 100,
   });
   let confirmed = 0;
@@ -16,7 +17,8 @@ export async function sweepConfirmations(db: Db, now: Date = new Date()): Promis
     if (u.count !== 1) continue;
     confirmed++;
     // Same bookkeeping as the web app's confirmRun: trial claim, trialUsedAt, run_confirmed.
-    await finalizeConfirm(db, r, { auto: true, edited: [], now });
+    // Gift runs never claim a trial (they normally never reach awaiting_confirm at all).
+    await finalizeConfirm(db, { ...r, isTrial: giftPolicy(r).claimTrial }, { auto: true, edited: [], now });
   }
   // Every queued run with no ads needs exactly one live/finished plan job.
   const queued = await db.adRun.findMany({

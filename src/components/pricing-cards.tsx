@@ -1,26 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Check, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { plans, type Plan, type BillingCycle } from "@/lib/pricing-plans";
-
-const fadeInUp = {
-  initial: { opacity: 1, y: 12 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true },
-  transition: { duration: 0.5 },
-};
-
-const staggerContainer = {
-  initial: {},
-  whileInView: {
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
+import { cn } from "@/lib/utils";
 
 interface PricingCardsProps {
   onSelectPlan: (plan: Plan, billingCycle: BillingCycle) => void | Promise<void>;
@@ -28,121 +11,90 @@ interface PricingCardsProps {
   showBillingToggle?: boolean;
 }
 
-export function PricingCards({
-  onSelectPlan,
-  loading = null,
-  showBillingToggle = true
-}: PricingCardsProps) {
+/** Cost of one video (up to 60s) on a plan; 1 video = 1 minute. */
+export function perVideoPrice(monthlyPrice: number, videos: number): string {
+  return `$${Math.round(monthlyPrice / Math.max(1, videos))}`;
+}
+
+export function PricingCards({ onSelectPlan, loading = null, showBillingToggle = true }: PricingCardsProps) {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
 
   return (
     <>
-      {/* Billing Toggle */}
       {showBillingToggle && (
-        <div className="flex justify-center mb-12">
-          <div className="glass-subtle flex rounded-full border border-border p-1" role="group" aria-label="Billing cycle">
-            <button
-              onClick={() => setBillingCycle("monthly")}
-              type="button"
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${
-                billingCycle === "monthly"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBillingCycle("yearly")}
-              type="button"
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${
-                billingCycle === "yearly"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Yearly
-              <span className="ml-2 text-xs text-success">Save 20%</span>
-            </button>
+        <div className="mb-10 flex justify-center">
+          <div className="flex rounded-full border border-border bg-[oklch(1_0_0/4%)] p-1" role="radiogroup" aria-label="Billing cycle">
+            {(["monthly", "yearly"] as const).map((c) => (
+              <button
+                key={c}
+                type="button"
+                role="radio"
+                aria-checked={billingCycle === c}
+                onClick={() => setBillingCycle(c)}
+                className="spell-chip min-h-10 rounded-full px-5 text-sm font-medium capitalize"
+              >
+                {c}
+                {c === "yearly" ? <span className="ml-1.5 text-xs">(2 months free)</span> : null}
+              </button>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Pricing Cards */}
-      <motion.div
-        className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto"
-        variants={staggerContainer}
-        initial="initial"
-        whileInView="whileInView"
-        viewport={{ once: true }}
-      >
-        {plans.map((plan) => (
-          <motion.div
-            key={plan.key}
-            variants={fadeInUp}
-            className={`relative flex flex-col rounded-3xl border p-8 ${
-              plan.popular
-                ? "glass glow-primary border-primary/50 bg-gradient-to-b from-primary/15 to-card"
-                : "glass border-border"
-            }`}
-          >
-            {plan.popular && (
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <span className="bg-brand rounded-full px-4 py-1 text-xs font-semibold uppercase tracking-wider shadow-[var(--glass-rim)]">
-                  Most Popular
-                </span>
-              </div>
-            )}
-
-            <div className="text-center mb-6">
-              <h3 className="mb-2 text-xl font-semibold tracking-tight">{plan.name}</h3>
-              <p className="text-muted-foreground text-sm">{plan.description}</p>
-            </div>
-
-            <div className="text-center mb-6">
-              <div className="flex items-baseline justify-center">
-                <span className="text-5xl font-semibold tracking-tight tabular-nums">
-                  ${billingCycle === "monthly" ? plan.monthlyPrice : Math.round(plan.yearlyPrice / 12)}
-                </span>
-                <span className="text-muted-foreground ml-2">/month</span>
-              </div>
-              {billingCycle === "yearly" && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  ${plan.yearlyPrice} billed annually
-                </p>
+      <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-3">
+        {plans.map((plan) => {
+          const price = billingCycle === "monthly" ? plan.monthlyPrice : Math.round(plan.yearlyPrice / 12);
+          return (
+            <div
+              key={plan.key}
+              className={cn(
+                "pixel-frame relative flex flex-col p-7",
+                plan.popular ? "bg-[linear-gradient(180deg,#3a2266,#1c0f36)] shadow-[0_0_60px_-20px_#ffcf4a88]" : "bg-[oklch(0.2_0.07_295/0.62)]",
               )}
-              <div className="mt-3 inline-block rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-sm text-primary">
-                {plan.minutes} minutes/month
-              </div>
-            </div>
-
-            <ul className="mb-8 flex-1 space-y-3 border-t border-border pt-6">
-              {plan.features.map((feature, idx) => (
-                <li key={idx} className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                  <span className="text-foreground/80 text-sm">{feature}</span>
-                </li>
-              ))}
-            </ul>
-
-            <Button
-              onClick={() => onSelectPlan(plan, billingCycle)}
-              disabled={loading !== null}
-              variant={plan.popular ? "default" : "outline"}
-              className="h-12 w-full text-base font-semibold"
             >
-              {loading === plan.key ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                `Get ${plan.name}`
+              {plan.popular && (
+                <p className="mb-3 w-max rounded-full bg-[var(--studio-gold)] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#2a0f10]">Most popular</p>
               )}
-            </Button>
-          </motion.div>
-        ))}
-      </motion.div>
+              <h3 className="font-display text-2xl font-medium">{plan.name}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
+              <p className="mt-5 flex items-baseline gap-1">
+                <span className="font-display text-5xl font-medium tabular-nums">${price}</span>
+                <span className="text-muted-foreground">/month</span>
+              </p>
+              {billingCycle === "yearly" && <p className="text-sm text-muted-foreground">${plan.yearlyPrice} billed yearly</p>}
+              <p className="mt-2 text-sm text-foreground">
+                {plan.minutes} videos/month · <span className="font-semibold text-[var(--studio-gold)]">{perVideoPrice(price, plan.minutes)} per video</span>
+              </p>
+              <ul className="mb-7 mt-6 flex-1 space-y-2.5 border-t border-border pt-5">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-2.5 text-sm text-foreground/90">
+                    <Check aria-hidden className="mt-0.5 size-4 shrink-0 text-[var(--studio-gold)]" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                onClick={() => onSelectPlan(plan, billingCycle)}
+                disabled={loading !== null}
+                className={cn(
+                  "inline-flex h-12 w-full items-center justify-center rounded-2xl px-5 font-semibold disabled:opacity-60",
+                  plan.popular ? "spellbar__cta" : "border border-border text-foreground transition-colors hover:bg-accent",
+                )}
+              >
+                {loading === plan.key ? (
+                  <>
+                    <Loader2 aria-hidden className="mr-2 size-5 animate-spin" />
+                    Opening checkout…
+                  </>
+                ) : (
+                  `Get ${plan.name}`
+                )}
+              </button>
+            </div>
+          );
+        })}
+      </div>
     </>
   );
 }

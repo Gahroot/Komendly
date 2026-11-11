@@ -1,464 +1,322 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import {
-  Download,
-  Copy,
-  Check,
-  Plus,
-  Clock,
-  User,
-  Mic,
-  Calendar,
-  Loader2,
-  AlertCircle,
-  RefreshCw,
-  Zap,
-  Film,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { VideoPlayer } from "@/components/video-player";
-import { useFalGeneration } from "@/hooks/useFalGeneration";
-import type { TTSVoice } from "@/lib/fal-lipsync/types";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { AlertCircle, Check, Download, Loader2, Plus, RefreshCw } from "lucide-react";
+import { fetchActors, pickDefaultActor } from "@/components/testimonials/create/actors";
+import { CreateSteps, StepTitle } from "@/components/testimonials/create/create-steps";
+import { LaunchUpsell, OutOfMinutes } from "@/components/testimonials/create/offer-gate";
+import { PriceSurvey } from "@/components/testimonials/price-survey";
+import { OzzyPerch, type OzzyMood } from "@/components/testimonials/ozzy-perch";
+import { useUser } from "@/hooks/useUser";
+import { trackOnce } from "@/lib/analytics/track";
+import { claimOnce, clearFlow, clipCounts, loadFlow, saveFlow, stageFromStatus, STAGES, type CreateFlow, type GenStage } from "@/lib/create-flow";
+import type { FalGenerateStatusResponse } from "@/lib/fal-lipsync/types";
+import { clearDraft, loadDraft, saveDraft } from "@/lib/testimonial-draft";
+import { cn } from "@/lib/utils";
+
+type Phase = "preparing" | "ready" | "starting" | "tracking" | "no_minutes" | "error";
+
+const POLL_MS = 5000;
+
+const STAGE_MOOD: Record<GenStage, OzzyMood> = {
+  pending: { form: "classic", expression: "focused", motion: "nod", line: "You're in the queue. Won't be long." },
+  script: { form: "creator", expression: "focused", motion: "think", line: "Writing the script from the review." },
+  voicing: { form: "creator", expression: "focused", motion: "summon", line: "Recording the voice." },
+  animating: { form: "creator", expression: "excited", motion: "summon", line: "Filming the presenter." },
+  finishing: { form: "developer", expression: "focused", motion: "type", line: "Stitching it all together." },
+  ready: { form: "joyful", expression: "excited", motion: "celebrate", line: "Beauty! Your video's ready." },
+  failed: { form: "classic", expression: "confused", motion: "think", line: "That take didn't work. Sorry." },
+};
+
+function errorMessage(data: unknown, fallback: string): string {
+  return typeof data === "object" && data !== null && typeof (data as { error?: unknown }).error === "string" ? (data as { error: string }).error : fallback;
+}
 
 function GenerateContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [copied, setCopied] = useState(false);
-  const [reviewCreated, setReviewCreated] = useState(false);
-  const [reviewId, setReviewId] = useState<string | null>(null);
+  const params = useSearchParams();
+  const { user, refresh: refreshUser } = useUser();
+  const [flow, setFlow] = useState<CreateFlow | null>(null);
+  const [phase, setPhase] = useState<Phase>("preparing");
+  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<FalGenerateStatusResponse | null>(null);
+  const booted = useRef(false);
 
-  const {
-    status,
-    progress,
-    currentClip,
-    totalClips,
-    clips,
-    finalVideoUrl,
-    thumbnailUrl,
-    error,
-    compositeVideoId,
-    generate,
-    cancel,
-    reset,
-    retry,
-  } = useFalGeneration();
-
-  // Get params from URL
-  const reviewText = searchParams.get("review") || "";
-  const reviewAuthor = searchParams.get("author") || "Anonymous";
-  const reviewRating = parseInt(searchParams.get("rating") || "5", 10);
-  const businessName = searchParams.get("business") || "My Business";
-  const actorId = searchParams.get("actor") || "";
-  const targetDuration = parseInt(searchParams.get("duration") || "30", 10);
-  const voiceId = (searchParams.get("voice") || "nova") as TTSVoice;
-
-  // Create review and start generation on mount
-  useEffect(() => {
-    if (reviewCreated || !reviewText || !actorId) return;
-
-    async function createReviewAndGenerate() {
+  const start = useCallback(
+    async (f: CreateFlow) => {
+      if (!f.actorId) return;
+      setPhase("starting");
+      setError(null);
       try {
-        // First, create the review in the database
-        const reviewResponse = await fetch("/api/reviews", {
+        const res = await fetch("/api/fal-generate/start", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            reviewText,
-            reviewerName: reviewAuthor,
-            businessName,
-            rating: reviewRating,
-            source: "manual",
-          }),
+          body: JSON.stringify({ reviewId: f.reviewId, actorId: f.actorId, targetDuration: Number(f.length), aspectRatio: "9:16" }),
         });
-
-        if (!reviewResponse.ok) {
-          throw new Error("Failed to create review");
+        const data = (await res.json().catch(() => ({}))) as { compositeVideoId?: string; minutesReserved?: number; jobId?: string | null };
+        if (res.status === 402) {
+          setPhase("no_minutes");
+          return;
         }
-
-        const reviewData = await reviewResponse.json();
-        setReviewId(reviewData.review.id);
-        setReviewCreated(true);
-
-        // Now start video generation
-        generate({
-          reviewId: reviewData.review.id,
-          actorId,
-          targetDuration,
-          aspectRatio: "9:16",
-          voiceId,
-          useAIScript: true,
-        });
-      } catch (err) {
-        console.error("Failed to start generation:", err);
+        if (!res.ok || !data.compositeVideoId) throw new Error(errorMessage(data, "Couldn't start the video"));
+        const next = { ...f, compositeVideoId: data.compositeVideoId };
+        saveFlow(next);
+        setFlow(next);
+        clearDraft();
+        trackOnce(`testi_video_started_${data.compositeVideoId}`, "video_started", { product: "testimonials", length: f.length, minutes: data.minutesReserved });
+        void refreshUser();
+        setPhase("tracking");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Couldn't start the video");
+        setPhase("error");
       }
-    }
-
-    createReviewAndGenerate();
-  }, [reviewText, actorId, reviewAuthor, reviewRating, businessName, targetDuration, voiceId, generate, reviewCreated]);
-
-  const handleCopyLink = async () => {
-    if (finalVideoUrl) {
-      await navigator.clipboard.writeText(finalVideoUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  const handleDownload = () => {
-    if (!finalVideoUrl) return;
-
-    const filename = `testimonial-${compositeVideoId || Date.now()}.mp4`;
-    const downloadUrl = `/api/download?url=${encodeURIComponent(finalVideoUrl)}&filename=${encodeURIComponent(filename)}`;
-    const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleCreateAnother = () => {
-    reset();
-    router.push("/dashboard/create-fal");
-  };
-
-  const handleRetry = () => {
-    if (reviewId) {
-      retry();
-    }
-  };
-
-  const isGenerating = status === "starting" || status === "generating" || status === "stitching";
-  const isComplete = status === "complete" && finalVideoUrl;
-  const isError = status === "error";
-
-  const getStatusText = (): string => {
-    switch (status) {
-      case "starting":
-        return "Initializing generation...";
-      case "generating":
-        return `Generating clips (${currentClip}/${totalClips})...`;
-      case "stitching":
-        return "Stitching clips together...";
-      case "complete":
-        return "Complete!";
-      case "error":
-        return "Generation failed";
-      default:
-        return "Starting...";
-    }
-  };
-
-  return (
-    <div className="container mx-auto max-w-4xl py-8 px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">
-              {isGenerating
-                ? "Creating Your AI Video"
-                : isComplete
-                ? "Your Video is Ready!"
-                : isError
-                ? "Generation Failed"
-                : "Video Generation"}
-            </h1>
-            <Badge variant="secondary" className="gap-1">
-              <Zap className="w-3 h-3" />
-              Beta
-            </Badge>
-          </div>
-          <p className="mt-2 text-muted-foreground">
-            {isGenerating
-              ? "Your AI actor is recording your testimonial with lip-sync..."
-              : isComplete
-              ? "Preview your video and download or share it."
-              : isError
-              ? "Something went wrong. Please try again."
-              : "Starting video generation..."}
-          </p>
-        </div>
-
-        {/* Main Content */}
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Video / Progress Section */}
-          <div className="lg:col-span-2">
-            <Card className="overflow-hidden">
-              <CardContent className="p-0">
-                {isComplete ? (
-                  <VideoPlayer src={finalVideoUrl} aspectRatio="9:16" poster={thumbnailUrl || undefined} />
-                ) : (
-                  <div className="flex min-h-[400px] flex-col items-center justify-center bg-muted/30 p-8">
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">
-                          {getStatusText()}
-                        </h3>
-                        <p className="text-muted-foreground text-center mb-4">
-                          This typically takes 2-5 minutes depending on video length
-                        </p>
-                        {progress > 0 && (
-                          <div className="w-full max-w-xs">
-                            <Progress value={progress} className="h-2" />
-                            <p className="text-sm text-center mt-2 text-muted-foreground">
-                              {progress}% complete
-                            </p>
-                          </div>
-                        )}
-                        <Button variant="outline" onClick={cancel} className="mt-4">
-                          Cancel
-                        </Button>
-                      </>
-                    ) : isError ? (
-                      <>
-                        <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-                        <h3 className="text-lg font-semibold mb-2">Generation Failed</h3>
-                        <p className="text-muted-foreground text-center mb-4 max-w-sm">
-                          {error || "An unexpected error occurred"}
-                        </p>
-                        <div className="flex gap-3">
-                          <Button onClick={handleRetry}>
-                            <RefreshCw className="mr-2 h-4 w-4" />
-                            Retry
-                          </Button>
-                          <Button variant="outline" onClick={handleCreateAnother}>
-                            Start Over
-                          </Button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">Initializing...</p>
-                      </>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Action Buttons */}
-            {isComplete && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="mt-4 flex flex-wrap gap-3"
-              >
-                <Button onClick={handleDownload} className="flex-1 sm:flex-none">
-                  <Download className="mr-2 h-4 w-4" />
-                  Download Video
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleCopyLink}
-                  className="flex-1 sm:flex-none"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="mr-2 h-4 w-4 text-success" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copy Link
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleCreateAnother}
-                  className="flex-1 sm:flex-none"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Another
-                </Button>
-              </motion.div>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-4">
-            {/* Generation Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Generation Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <User className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">AI Actor</p>
-                    <p className="text-sm text-muted-foreground">
-                      Selected actor
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <Mic className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Voice</p>
-                    <p className="text-sm text-muted-foreground capitalize">{voiceId}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <Clock className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Duration</p>
-                    <p className="text-sm text-muted-foreground">
-                      ~{targetDuration} seconds
-                    </p>
-                  </div>
-                </div>
-                {isComplete && (
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                      <Calendar className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Created</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date().toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Review Preview */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Original Review</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="font-medium text-sm">{reviewAuthor}</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {"⭐".repeat(reviewRating)}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground italic line-clamp-4">
-                  &quot;{reviewText}&quot;
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Processing Info */}
-            {isGenerating && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-              >
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Processing Steps</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3 text-sm text-muted-foreground">
-                      <li className="flex items-start gap-2">
-                        <span className={`mt-1 h-1.5 w-1.5 rounded-full ${status === "starting" ? "bg-primary animate-pulse" : "bg-success"}`} />
-                        <span>AI generating UGC script from review</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className={`mt-1 h-1.5 w-1.5 rounded-full ${status === "generating" ? "bg-primary animate-pulse" : status === "stitching" ? "bg-success" : "bg-muted-foreground"}`} />
-                        <span>Generating lip-synced video clips</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className={`mt-1 h-1.5 w-1.5 rounded-full ${status === "stitching" ? "bg-primary animate-pulse" : "bg-muted-foreground"}`} />
-                        <span>Stitching clips together</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                        <span>Finalizing and preparing download</span>
-                      </li>
-                    </ul>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {/* Clip Progress */}
-            {isGenerating && clips.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Film className="h-4 w-4" />
-                      Clip Progress
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {clips.map((clip) => (
-                        <li key={clip.index} className="flex items-center justify-between text-sm">
-                          <span className="capitalize">{clip.type}</span>
-                          <Badge
-                            variant={
-                              clip.status === "completed"
-                                ? "default"
-                                : clip.status === "failed"
-                                ? "destructive"
-                                : "secondary"
-                            }
-                            className="text-xs"
-                          >
-                            {clip.status === "completed" ? "Done" : clip.status === "pending" ? "Waiting" : "Processing"}
-                          </Badge>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </div>
-        </div>
-      </motion.div>
-    </div>
+    },
+    [refreshUser],
   );
-}
 
-function GenerateLoading() {
+  // Boot: resume a running video, or build the run from the draft (after checkout) / the previous steps.
+  useEffect(() => {
+    if (booted.current) return;
+    booted.current = true;
+    const fromDraft = params.get("from") === "draft";
+    const wantsStart = params.get("start") === "1";
+    (async () => {
+      let f = loadFlow();
+      const draft = fromDraft ? loadDraft() : null;
+      if (draft && (!f || f.reviewText !== draft.reviewText)) f = null;
+      if (f?.compositeVideoId) {
+        setFlow(f);
+        setPhase("tracking");
+        return;
+      }
+      try {
+        if (!f && draft) {
+          const res = await fetch("/api/reviews", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reviewText: draft.reviewText, reviewerName: draft.reviewerName, businessName: draft.businessName, rating: draft.rating, source: "manual" }),
+          });
+          const data = (await res.json().catch(() => ({}))) as { review?: { id: string } };
+          if (!res.ok || !data.review) throw new Error(errorMessage(data, "Couldn't save your review"));
+          f = { reviewId: data.review.id, reviewText: draft.reviewText, businessName: draft.businessName, reviewerName: draft.reviewerName, rating: draft.rating, gender: draft.gender, length: draft.length, actorId: draft.actorId };
+          saveFlow(f);
+        }
+        if (!f) {
+          router.replace("/dashboard/create-fal");
+          return;
+        }
+        if (!f.actorId) {
+          const d = pickDefaultActor(await fetchActors(f.reviewId), f.gender);
+          if (!d) throw new Error("No presenters are available right now");
+          f = { ...f, actorId: d.id, actorName: d.name };
+          saveFlow(f);
+        }
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Something went wrong");
+        setPhase("error");
+        return;
+      }
+      setFlow(f);
+      if (wantsStart || fromDraft) router.replace("/dashboard/create-fal/generate");
+      // Auto-start once per tab; a refresh shows the button instead (the server also dedupes in-progress videos).
+      const onceKey = fromDraft && draft ? `kmd_autostart_draft_${draft.savedAt}` : `kmd_autostart_${f.reviewId}_${f.actorId}_${f.length}`;
+      if ((wantsStart || fromDraft) && claimOnce(onceKey)) void start(f);
+      else setPhase("ready");
+    })();
+  }, [params, router, start]);
+
+  // Poll the real status until it is final.
+  const videoId = phase === "tracking" ? flow?.compositeVideoId : undefined;
+  useEffect(() => {
+    if (!videoId) return;
+    const ac = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const tick = async () => {
+      try {
+        const res = await fetch(`/api/fal-generate/status?id=${encodeURIComponent(videoId)}`, { signal: ac.signal, cache: "no-store" });
+        if (res.status === 404) {
+          clearFlow();
+          setError("We couldn't find that video.");
+          setPhase("error");
+          return;
+        }
+        if (res.ok) {
+          const s = (await res.json()) as FalGenerateStatusResponse;
+          setStatus(s);
+          const stage = stageFromStatus(s);
+          if (stage === "ready") {
+            trackOnce(`testi_video_ready_${videoId}`, "video_ready", { product: "testimonials", seconds: s.actualDuration });
+            return;
+          }
+          if (stage === "failed") {
+            trackOnce(`testi_video_failed_${videoId}`, "video_failed", { product: "testimonials", error: s.error?.slice(0, 80) });
+            void refreshUser();
+            return;
+          }
+        }
+      } catch {
+        if (ac.signal.aborted) return;
+      }
+      timer = setTimeout(tick, POLL_MS);
+    };
+    void tick();
+    return () => {
+      ac.abort();
+      if (timer) clearTimeout(timer);
+    };
+  }, [videoId, refreshUser]);
+
+  function makeAnother() {
+    clearFlow();
+    router.push("/dashboard/create-fal");
+  }
+
+  function retry() {
+    if (!flow) return;
+    const fresh = { ...flow, compositeVideoId: undefined };
+    saveFlow(fresh);
+    setFlow(fresh);
+    setStatus(null);
+    void start(fresh);
+  }
+
+  function keepAsDraft() {
+    if (!flow) return;
+    saveDraft({ reviewText: flow.reviewText, businessName: flow.businessName, reviewerName: flow.reviewerName, rating: flow.rating, gender: flow.gender, length: flow.length, actorId: flow.actorId });
+  }
+
+  const stage: GenStage | null = phase === "tracking" ? (status ? stageFromStatus(status) : "pending") : null;
+  const ready = stage === "ready" && status?.finalVideoUrl;
+  const counts = status ? clipCounts(status) : { done: 0, total: 0 };
+  const mood: OzzyMood = stage
+    ? STAGE_MOOD[stage]
+    : phase === "error"
+      ? STAGE_MOOD.failed
+      : phase === "no_minutes"
+        ? { form: "classic", expression: "happy", motion: "nod", line: "One step left, then we film." }
+        : { form: "classic", expression: "happy", motion: "idle" };
+  const title = ready ? "Your video is ready" : stage === "failed" ? "That take didn't work" : phase === "no_minutes" ? "Get minutes to film" : phase === "tracking" ? "Filming your video" : "Ready to film";
+
   return (
-    <div className="container mx-auto max-w-4xl py-8 px-4">
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    <div className="mx-auto max-w-5xl space-y-8">
+      <div className="mx-auto max-w-3xl"><CreateSteps current={3} /></div>
+      <StepTitle kicker="Step 3 of 3" title={title}>
+        {phase === "tracking" && !ready && stage !== "failed" ? "You can leave this page. The video keeps filming and lands in your library." : null}
+      </StepTitle>
+
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="relative pt-20">
+          <OzzyPerch mood={mood} size={84} className="absolute left-4 top-0 z-10" />
+          <div className="overflow-hidden rounded-2xl border border-border bg-[oklch(0.2_0.07_295/0.62)] p-5 sm:p-6">
+            {phase === "preparing" || phase === "starting" ? (
+              <div role="status" className="flex min-h-64 flex-col items-center justify-center gap-3 text-muted-foreground">
+                <Loader2 aria-hidden className="size-8 animate-spin text-[var(--studio-gold)]" />
+                {phase === "starting" ? "Sending it to the studio…" : "Getting your review ready…"}
+              </div>
+            ) : phase === "ready" && flow ? (
+              <div className="flex min-h-64 flex-col items-center justify-center gap-4 text-center">
+                <p className="max-w-sm text-muted-foreground">
+                  {flow.actorName ?? "Your presenter"} will read a {flow.length}-second script based on this review.
+                </p>
+                <button type="button" onClick={() => void start(flow)} className="spellbar__cta inline-flex h-12 items-center justify-center rounded-xl px-6 font-semibold">
+                  Start filming
+                </button>
+                <Link href="/dashboard/create-fal/style" className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">Change presenter or length</Link>
+              </div>
+            ) : phase === "no_minutes" ? (
+              <OutOfMinutes user={user} placement="create_generate" onBeforeCheckout={keepAsDraft} />
+            ) : phase === "error" ? (
+              <div role="alert" className="flex min-h-64 flex-col items-center justify-center gap-4 text-center">
+                <AlertCircle aria-hidden className="size-10 text-[oklch(0.78_0.15_25)]" />
+                <p className="max-w-sm text-muted-foreground">{error}</p>
+                <div className="flex flex-wrap justify-center gap-3">
+                  {flow ? <button type="button" onClick={retry} className="spellbar__cta inline-flex h-11 items-center gap-2 rounded-xl px-5 font-semibold"><RefreshCw aria-hidden className="size-4" />Try again</button> : null}
+                  <button type="button" onClick={makeAnother} className="spell-chip inline-flex h-11 items-center rounded-xl px-5">Start over</button>
+                </div>
+              </div>
+            ) : ready ? (
+              <div className="space-y-4">
+                <video src={status?.finalVideoUrl} poster={status?.thumbnailUrl} controls playsInline className="mx-auto aspect-[9/16] max-h-[70vh] w-auto rounded-xl bg-black" />
+                <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                  <a
+                    href={`/api/download?url=${encodeURIComponent(status?.finalVideoUrl ?? "")}&filename=${encodeURIComponent(`testimonial-${status?.compositeVideoId ?? "video"}.mp4`)}`}
+                    download
+                    className="spellbar__cta inline-flex h-12 items-center justify-center gap-2 rounded-xl px-6 font-semibold"
+                  >
+                    <Download aria-hidden className="size-4" /> Download MP4
+                  </a>
+                  <button type="button" onClick={makeAnother} className="spell-chip inline-flex h-12 items-center justify-center gap-2 rounded-xl px-6">
+                    <Plus aria-hidden className="size-4" /> Make another
+                  </button>
+                </div>
+              </div>
+            ) : stage === "failed" ? (
+              <div role="alert" className="flex min-h-64 flex-col items-center justify-center gap-4 text-center">
+                <AlertCircle aria-hidden className="size-10 text-[oklch(0.78_0.15_25)]" />
+                <p className="max-w-sm text-muted-foreground">{status?.error ? `The studio reported: ${status.error}` : "The studio couldn't finish this one."} Reserved minutes are returned for failed videos.</p>
+                <div className="flex flex-wrap justify-center gap-3">
+                  <button type="button" onClick={retry} className="spellbar__cta inline-flex h-11 items-center gap-2 rounded-xl px-5 font-semibold"><RefreshCw aria-hidden className="size-4" />Try again</button>
+                  <button type="button" onClick={makeAnother} className="spell-chip inline-flex h-11 items-center rounded-xl px-5">Start over</button>
+                </div>
+              </div>
+            ) : (
+              <ol className="space-y-1" aria-label="Progress">
+                {STAGES.map((s) => {
+                  const idx = STAGES.findIndex((x) => x.id === stage);
+                  const me = STAGES.findIndex((x) => x.id === s.id);
+                  const done = me < idx;
+                  const current = me === idx;
+                  return (
+                    <li key={s.id} aria-current={current ? "step" : undefined} className={cn("flex items-center gap-3 rounded-xl px-3 py-2.5", current && "bg-[oklch(0.84_0.14_78/0.1)]")}>
+                      <span className={cn("flex size-6 shrink-0 items-center justify-center rounded-full border text-xs", done && "border-[var(--studio-gold)] text-[var(--studio-gold)]", current && "border-transparent bg-[var(--studio-gold)] text-[#2a0f10]", !done && !current && "border-border text-muted-foreground")}>
+                        {done ? <Check aria-hidden className="size-3.5" /> : current ? <span aria-hidden className="studio-dot size-2 rounded-full bg-[#2a0f10]" /> : null}
+                      </span>
+                      <span className={cn("flex-1", current ? "font-medium text-foreground" : done ? "text-foreground/80" : "text-muted-foreground")}>{s.label}</span>
+                      {current && (s.id === "animating" || s.id === "voicing") && counts.total > 0 ? (
+                        <span className="text-xs tabular-nums text-muted-foreground">{counts.done} of {counts.total} clips done</span>
+                      ) : null}
+                    </li>
+                  );
+                })}
+                <li aria-hidden className="mx-3 mt-3 h-1 overflow-hidden rounded-full bg-[oklch(1_0_0/0.06)]"><div className="studio-shimmer h-full w-full" /></li>
+              </ol>
+            )}
+          </div>
+        </div>
+
+        {flow ? (
+          <aside className="space-y-4 lg:pt-20">
+            <div className="rounded-2xl border border-border bg-[oklch(0.2_0.07_295/0.5)] p-5 text-sm">
+              <h2 className="font-display text-lg font-medium">This video</h2>
+              <dl className="mt-3 space-y-2">
+                <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Presenter</dt><dd className="truncate">{flow.actorName ?? "Chosen for you"}</dd></div>
+                <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Length</dt><dd className="tabular-nums">{flow.length} sec</dd></div>
+                <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Format</dt><dd>Vertical 9:16</dd></div>
+                <div className="flex justify-between gap-4"><dt className="text-muted-foreground">Videos left</dt><dd className="tabular-nums">{user ? Math.max(0, user.minutesLimit - user.minutesUsed) : "…"}</dd></div>
+              </dl>
+            </div>
+            <blockquote className="rounded-2xl border border-border bg-[oklch(0.2_0.07_295/0.5)] p-5 text-sm">
+              <p className="line-clamp-5 italic text-foreground/90">&ldquo;{flow.reviewText}&rdquo;</p>
+              <footer className="mt-2 text-xs text-muted-foreground">{flow.reviewerName} · {flow.businessName}</footer>
+            </blockquote>
+          </aside>
+        ) : null}
       </div>
+      {ready ? (
+        <>
+          <LaunchUpsell user={user} placement="video_ready" />
+          <PriceSurvey placement="first_video_ready" trigger="now" />
+        </>
+      ) : null}
     </div>
   );
 }
 
 export default function GeneratePage() {
   return (
-    <Suspense fallback={<GenerateLoading />}>
+    <Suspense fallback={<div className="min-h-[50vh]" />}>
       <GenerateContent />
     </Suspense>
   );

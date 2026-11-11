@@ -4,12 +4,18 @@ import { CorrectionsSchema, MAX_EXTRACT_RETRIES, type Ratio } from "./contracts"
 import { trackAdsEvent } from "./events";
 import { extractRetriesUsed, parseExtraction } from "./run-confirm";
 import type { AdView, RunView } from "./run-types";
+import { parseBonus, PREVIEW_RATIO, shouldAwaitBonus, summarizeBonus } from "./bonus-access";
+import { isBonusUnlockedById, trialBonusEnabled } from "./bonus-unlock";
+import { studioBridgeEnabled } from "@/lib/studio/bridge-server";
 
 function assetUrls(id: string) {
   return { previewUrl: `/api/ads/assets/${id}/preview`, downloadUrl: `/api/ads/assets/${id}/download` };
 }
 
-function adView(ad: Ad & { assets: AdAsset[] }): AdView {
+function adView(ad: Ad & { assets: AdAsset[] }, unlocked: boolean): AdView {
+  const bonus = parseBonus(ad.visualBrief);
+  const locked = Boolean(bonus) && !unlocked;
+  const preview = ad.assets.find((a) => a.ratio === PREVIEW_RATIO);
   return {
     id: ad.id,
     index: ad.index,
@@ -20,7 +26,9 @@ function adView(ad: Ad & { assets: AdAsset[] }): AdView {
     body: ad.body,
     cta: ad.cta,
     status: ad.status,
-    assets: ad.assets
+    ...(bonus ? { bonusKind: bonus.bonusKind, locked, lockedPreviewUrl: locked && preview ? assetUrls(preview.id).previewUrl : null } : {}),
+    // Locked bonus ads expose no full-res asset URLs at all (the asset routes refuse them too).
+    assets: (locked ? [] : ad.assets.filter((a) => a.ratio !== PREVIEW_RATIO))
       .slice()
       .sort((a, b) => a.ratio.localeCompare(b.ratio))
       .map((a) => ({ id: a.id, ratio: a.ratio as Ratio, mime: a.mime, width: a.width, height: a.height, ...assetUrls(a.id) })),
@@ -56,11 +64,22 @@ export async function loadRunView(runId: string): Promise<RunView | null> {
   });
   if (!run) return null;
   // Ads the engine replaced after a failed quality check stay hidden: the replacement is shown instead.
-  const ads = run.ads.filter((a) => !isReplaced(a.qcReport)).map(adView);
+  const visible = run.ads.filter((a) => !isReplaced(a.qcReport));
+  const hasBonusRows = visible.some((a) => parseBonus(a.visualBrief));
+  const unlocked = hasBonusRows ? await isBonusUnlockedById(run.workspaceId) : false;
+  const ads = visible.map((a) => adView(a, unlocked));
+  const bonusEnabled = trialBonusEnabled();
+  const settled = ["completed", "partial"].includes(run.status);
+  const bonusReadyLogged =
+    bonusEnabled && run.isTrial && settled
+      ? Boolean(await prisma.adsEvent.findFirst({ where: { runId: run.id, name: "bonus_ready" }, select: { id: true } }))
+      : true;
+  const pendingBonusAds = visible.filter((a) => parseBonus(a.visualBrief) && !["ready", "failed", "failed_qc"].includes(a.status)).length;
   const extraction = parseExtraction(run.extraction);
   const corrections = CorrectionsSchema.safeParse(run.corrections ?? {});
   const firstAdAt = await backfillFirstAd(run, ads);
   const hasLogo = Boolean(extraction?.logoKey || run.brandProfile?.logoKey);
+  const [bridge, studioWs] = await Promise.all([studioBridgeEnabled(), prisma.adsWorkspace.findUnique({ where: { id: run.workspaceId }, select: { studioFreeVideos: true } })]);
   return {
     id: run.id,
     url: run.url,
@@ -85,5 +104,9 @@ export async function loadRunView(runId: string): Promise<RunView | null> {
     creditsReserved: run.creditsReserved,
     ads,
     serverNow: new Date().toISOString(),
+    bonus: summarizeBonus(visible, unlocked),
+    bonusPending:
+      settled && shouldAwaitBonus({ enabled: bonusEnabled, isTrial: run.isTrial, completedAt: run.completedAt, bonusReadyLogged, pendingBonusAds, now: new Date() }),
+    studio: { bridge, freeVideosLeft: studioWs?.studioFreeVideos ?? 0 },
   };
 }

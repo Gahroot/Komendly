@@ -1,13 +1,19 @@
 # Komendly design system
 
 Two layers:
-1. **Studio — "Moonlit Outback Atelier"** (2026-11): the Ads homepage (`/`) and every `/ads/*` page. Always-dusk night sky, pixel moon,
+1. **Studio — "Moonlit Outback Atelier"** (2026-11): the Ads homepage (`/`), every `/ads/*` page, and the whole testimonials product
+   (`/testimonials`, `/pricing`, `/register`, `/login`, `/checkout/*`, `/dashboard/*`). Always-dusk night sky, pixel moon,
    stepped outback ridges, gold stars, and Ozzy the dingo wizard. This is the brand.
-2. **Midnight Glass** (below): the testimonials product (`/testimonials`, `/dashboard`, admin). Unchanged.
+2. **Midnight Glass** (below): admin only (`/admin`). Unchanged.
 
 ## Studio ("Moonlit Outback Atelier")
 - Scope: `.studio` wrapper (`StudioRoot` in `src/components/studio/studio-spell.tsx`) sets its own tokens in `src/components/studio/studio.css`;
-  shadcn components inside inherit them. `/ads/*` gets it from `src/app/ads/layout.tsx`. Dark only (no theme toggle in the studio).
+  shadcn components inside inherit them. `/ads/*` gets it from `src/app/ads/layout.tsx`; testimonials marketing/auth/checkout layouts wrap
+  pages in `TestiStudio` (`src/components/testimonials/testi-studio.tsx`) and `src/app/dashboard/layout.tsx` uses `StudioRoot` directly.
+  Dark only (no theme toggle in the studio).
+- Testimonials parts: `src/components/testimonials/*` (offer card, `OzzyPerch`, review draft form) and `create/*` (steps, presenter grid,
+  out-of-minutes gate). The create flow (`/dashboard/create-fal` → `style` → `generate`) shows stages from the real status API
+  (`stageFromStatus` in `src/lib/create-flow.ts`); `OzzyPerch` moods follow those real stages only.
 - Palette: night ink `#0c0820`, violet `#7b3cf0`/`#a970ff`, ember horizon `oklch(0.62 0.17 45)`, gold `#ffcf4a` (primary actions, emphasis),
   cream text `oklch(0.96 0.03 75)`, cyan `#5ee6ff` (magic/tech accents only). Purple is allowed here: it is Ozzy's hat and cape.
 - Type: Fraunces (display, `font-display` / `var(--font-fraunces)`) for headlines and Ozzy's voice; Geist for UI; Geist Mono for kickers.
@@ -32,7 +38,7 @@ Two layers:
 
 ---
 
-# Midnight Glass (testimonials product)
+# Midnight Glass (admin only)
 
 Dark-first, calm, atmospheric. Deep ink-blue canvas, two soft ambient glows, translucent glass surfaces with a thin lit rim, one periwinkle accent (+ teal secondary). Inspired by liquid-glass desktop UIs; Komendly keeps its own logo.
 

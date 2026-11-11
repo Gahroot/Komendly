@@ -100,8 +100,9 @@ export function logo(ctx: TemplateCtx, onBg: string, requested = 76, forceChip =
 }
 
 export function cta(ctx: TemplateCtx, bg = ctx.palette.accent, fg = ctx.palette.accentText, extra = ""): string {
+  void fg; // CTAs are plain underlined text, never a filled button (Meta: no fake UI).
   return ctx.cta
-    ? `<div class="cta ${extra}" data-key="cta" ${fitAttrs("body", extra === "big" ? 46 : 40, 28)} style="${extra === "big" ? `background:${bg};color:${fg}` : `--cta-bg:${bg}`}">${esc(ctx.cta)}<span class="arrow">→</span></div>`
+    ? `<div class="cta ${extra}" data-key="cta" ${fitAttrs("body", extra === "big" ? 46 : 40, 28)} style="${extra === "big" ? `color:${bg}` : `--cta-bg:${bg}`}">${esc(ctx.cta)}<span class="arrow">→</span></div>`
     : "";
 }
 
@@ -422,7 +423,7 @@ html,body{width:${width}px;height:${height}px;overflow:hidden;background:${p.bg}
 .wordmark{font-family:${ctx.fonts.heading};font-weight:800;letter-spacing:-0.02em}
 .cta{white-space:nowrap;max-width:100%;overflow:hidden;display:inline-flex;align-items:center;gap:16px;align-self:flex-start;flex:none;padding:0 0 12px;border-bottom:4px solid currentColor;font-weight:700;font-size:40px;line-height:1;letter-spacing:-0.01em}
 .cta.wrap{white-space:normal}
-.cta.big{font-size:46px;padding:34px 60px;border-bottom:none;border-radius:6px;align-self:stretch;justify-content:space-between}
+.cta.big{font-size:46px}
 .arrow{font-weight:500}
 .media{position:relative;overflow:hidden;box-shadow:0 30px 60px -30px rgba(0,0,0,.35)}
 .bandbox{display:flex;align-items:center;justify-content:center;min-height:200px;overflow:hidden}

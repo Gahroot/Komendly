@@ -43,6 +43,14 @@ export interface RatioReport {
   assetKeys?: string[];
   /** Background field family this ad used (accent/dark/page/photo). */
   field?: string;
+  /** Whether the spec's body copy is visible in the render (null when the spec has no body). */
+  bodyShown?: boolean | null;
+}
+
+/** Normalised start of the body, matched against the page text to tell whether the layout showed it. */
+export function bodyProbe(body: string | null | undefined): string | null {
+  const n = (body ?? "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  return n ? n.slice(0, 28).trim() : null;
 }
 
 export interface DetailedStaticRenderResult extends StaticRenderResult {
@@ -258,7 +266,10 @@ export async function renderStaticAdWith(browser: Browser, input: StaticRenderIn
         throw new StaticRenderError("text_overflow", `Ad ${spec.index} (${rid}, ${ratio}) overflows at minimum font size: ${fit.overflow.join(", ")}`, { ratio, template: rid, overflow: fit.overflow });
       }
       const contrast = (await ensureImageContrast(page, width, height)) ?? undefined;
-      reports.push({ ratio, template: rid, fit, contrast, assetKeys: images.map((m) => m.key), field: fieldOf(ctx) });
+      const probe = bodyProbe(spec.body);
+      const pageText = probe ? String(await page.evaluate("document.body.innerText")) : "";
+      const bodyShown = probe ? pageText.toLowerCase().replace(/[^a-z0-9]+/g, " ").includes(probe) : null;
+      reports.push({ ratio, template: rid, fit, contrast, assetKeys: images.map((m) => m.key), field: fieldOf(ctx), bodyShown });
       if (contrast && !contrast.ok) {
         throw new StaticRenderError("low_contrast", `Ad ${spec.index} (${rid}, ${ratio}) text over image below AA even at full scrim: ${JSON.stringify(contrast.contrast)}`, { ratio, template: rid });
       }

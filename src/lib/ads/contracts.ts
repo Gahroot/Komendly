@@ -9,7 +9,7 @@ export const RATIO_PIXELS: Record<Ratio, { width: number; height: number }> = {
   "1:1": { width: 1080, height: 1080 },
   "9:16": { width: 1080, height: 1920 },
 };
-export const TRIAL_RATIOS: Ratio[] = ["1:1"];
+export const TRIAL_RATIOS: Ratio[] = ["4:5"];
 
 export const AWARENESS_LEVELS = [
   "unaware",

@@ -8,11 +8,11 @@ import type { JobContext } from "./context";
 import { mapClaimsToFacts, type Fact } from "./grounding";
 import type { Check } from "./qc";
 
-export const COPY_CHECKS = ["vision_plain_words", "vision_buyer_moment", "grounded", "claim_mapped", "vision_no_cut_text", "vision_headline_readable"];
+export const COPY_CHECKS = ["vision_plain_words", "vision_buyer_moment", "grounded", "claim_mapped", "vision_no_cut_text", "vision_headline_readable", "vision_no_fake_testimonial", "vision_personal_attributes", "vision_offer_clear"];
 const IMAGE_WORDS = /screenshot|image|photo|asset|picture|left-side|right-side|embedded|ui\b/i;
 
 export function classifyFailures(failed: Check[]): { copy: Check[]; image: Check[] } {
-  const image = failed.filter((c) => (c.name === "vision_one_idea" || c.name === "vision_no_cut_text") && IMAGE_WORDS.test(c.detail ?? ""));
+  const image = failed.filter((c) => c.name === "vision_image_relevant" || (c.name === "vision_one_idea" || c.name === "vision_no_cut_text") && IMAGE_WORDS.test(c.detail ?? ""));
   const copy = failed.filter((c) => COPY_CHECKS.includes(c.name) && !image.includes(c));
   return { copy, image };
 }

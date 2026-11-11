@@ -182,8 +182,8 @@ export async function expireIncludedCredits(workspaceId: string, renewalKey: str
 }
 
 /** Top-up purchase. Never expires. Idempotent per payment ref. */
-export async function grantTopup(workspaceId: string, stripeRef: string, credits: number): Promise<MutationResult> {
-  return applyCreditMutation({ workspaceId, reason: "topup", delta: credits, stripeRef, note: `top-up (${credits})` });
+export async function grantTopup(workspaceId: string, stripeRef: string, credits: number, note?: string): Promise<MutationResult> {
+  return applyCreditMutation({ workspaceId, reason: "topup", delta: credits, stripeRef, note: note ?? `top-up (${credits})` });
 }
 
 /** Claw back credits on refund (clamped at 0 — the user may already have spent them). */
@@ -202,4 +202,9 @@ export async function refundCredits(workspaceId: string, refundKey: string, cred
 /** Admin manual adjustment (positive or negative; cannot overdraw). */
 export async function adminAdjustCredits(workspaceId: string, delta: number, actorId: string, note: string, key: string): Promise<MutationResult> {
   return applyCreditMutation({ workspaceId, reason: "admin_adjust", delta, actorId, note, stripeRef: `admin:${key}` });
+}
+
+/** Pure: credits to add on a paid mid-period upgrade = new period's credits minus the last period grant (never negative). */
+export function upgradeTopUpCredits(newPeriodCredits: number, lastGrant: number): number {
+  return Math.max(0, newPeriodCredits - Math.max(0, lastGrant));
 }

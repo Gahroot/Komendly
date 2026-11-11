@@ -1,4 +1,6 @@
 // extract job: crawl -> LLM extraction -> grounding -> upload assets -> BrandProfile + AdRun.
+import { isFreeRun, isGiftRun } from "../gift-policy";
+import { markGiftGenerating } from "../gift";
 import { createHash } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -67,6 +69,9 @@ export async function extractJob(ctx: JobContext, crawlFn: typeof crawlSite = cr
   const run = await db.adRun.findUnique({ where: { id: job.runId } });
   if (!run) throw new PermanentJobError("run not found");
   if (run.status !== "extracting") return { skipped: `run status ${run.status}` };
+  const gift = isGiftRun(run);
+  if (gift) await markGiftGenerating(db, run.id);
+  const autoConfirm = isFreeRun(run);
 
   const corrections = CorrectionsSchema.safeParse(run.corrections ?? {});
   const note = corrections.success ? corrections.data.note : undefined;
@@ -93,12 +98,17 @@ export async function extractJob(ctx: JobContext, crawlFn: typeof crawlSite = cr
   const uploads = (async () => {
     const ts = Date.now();
     const domain = domainOf(crawl.finalUrl);
+    // Gift for a domain the sender already has a profile for: use that profile as-is (never overwrite it).
+    const prior = gift ? await db.brandProfile.findUnique({ where: { workspaceId_domain: { workspaceId: run.workspaceId, domain } }, select: { id: true } }) : null;
     const existing = await db.brandProfile.upsert({
       where: { workspaceId_domain: { workspaceId: run.workspaceId, domain } },
       create: { workspaceId: run.workspaceId, domain, url: crawl.finalUrl },
       update: {},
     });
     const bp = existing.id;
+    // Gift: link the profile to the gift run right away, so the web can tell gift-only profiles apart
+    // (BrandProfile whose runs are all kind=gift) even while extraction is still running.
+    if (gift) await db.adRun.update({ where: { id: run.id }, data: { brandProfileId: bp } });
     const puts: Array<Promise<unknown>> = [];
     const logoKey = crawl.logo ? brandKey(run.workspaceId, bp, "logo", hashName(crawl.logo.bytes, crawl.logo.mime)) : null;
     if (crawl.logo && logoKey) puts.push(storage.put(logoKey, crawl.logo.bytes, crawl.logo.mime));
@@ -119,13 +129,15 @@ export async function extractJob(ctx: JobContext, crawlFn: typeof crawlSite = cr
     const shot = crawl.pages[0]?.screenshot;
     if (shot) puts.push(storage.put(runKey(run.workspaceId, run.id, "extract", "home.jpg"), shot, "image/jpeg"));
     await Promise.all(puts);
-    return { bp, domain, existing, logoKey, imageKeys, fonts, storeMs: Date.now() - ts };
+    return { bp, domain, existing, keepProfile: Boolean(prior), logoKey, imageKeys, fonts, storeMs: Date.now() - ts };
   })();
   uploads.catch(() => undefined);
 
   const t1 = Date.now();
   const llm = await llmExtract(ctx.provider, crawl, { goal: run.goal, correctionNote: note, signal: ctx.signal }, ctx.usage);
   const llmMs = Date.now() - t1;
+  // Never plan ads from an empty profile (e.g. a bot wall slipped through): generic ads are worse than a clear failure.
+  if (!llm.brandName?.trim() && !llm.mainOffer?.trim()) throw new PermanentJobError("We couldn't read what this business sells from its website. Try another page of the site, such as a services or about page.");
 
   const pageTexts = crawl.pages.map((p) => ({ url: p.url, text: `${p.title}\n${p.description}\n${p.text}` }));
   const pains = keepGrounded(llm.pains, pageTexts);
@@ -144,7 +156,7 @@ export async function extractJob(ctx: JobContext, crawlFn: typeof crawlSite = cr
   };
   const facts = keepGrounded(llm.facts, pageTexts);
 
-  const { bp, domain, existing, logoKey, imageKeys, fonts, storeMs } = await uploads;
+  const { bp, domain, existing, keepProfile, logoKey, imageKeys, fonts, storeMs } = await uploads;
   const classByIndex = new Map(llm.images.map((c) => [c.id.replace(/^img/, ""), c]));
   // Unclassified photos are assumed to contain faces (never altered).
   const assets: Extraction["assets"] = crawl.images.map((im, i) => {
@@ -203,7 +215,7 @@ export async function extractJob(ctx: JobContext, crawlFn: typeof crawlSite = cr
     voice: extraction.voice,
   };
   for (const k of edited) delete fields[k];
-  await db.brandProfile.update({ where: { id: bp }, data: fields as Prisma.BrandProfileUpdateInput });
+  if (!keepProfile) await db.brandProfile.update({ where: { id: bp }, data: fields as Prisma.BrandProfileUpdateInput });
 
   const now = ctx.now();
   const updated = await db.adRun.updateMany({
@@ -213,8 +225,8 @@ export async function extractJob(ctx: JobContext, crawlFn: typeof crawlSite = cr
       extractAttempts: { increment: 1 },
       brandProfileId: bp,
       resolvedGoal: goal,
-      status: "awaiting_confirm",
-      confirmDeadline: new Date(now.getTime() + CONFIRM_WINDOW_SECONDS * 1000),
+      // Gifts skip the confirm screen: straight to queued (the confirm sweeper enqueues the plan job).
+      ...(autoConfirm ? { status: "queued" as const, confirmedAt: now } : { status: "awaiting_confirm" as const, confirmDeadline: new Date(now.getTime() + CONFIRM_WINDOW_SECONDS * 1000) }),
     },
   });
   return {

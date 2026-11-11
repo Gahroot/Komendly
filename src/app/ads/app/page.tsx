@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { getOrCreateWorkspace } from "@/lib/ads/workspace";
+import { bridgeForWorkspace } from "@/lib/studio/bridge-server";
+import { StudioBridgeCard } from "@/components/ads/studio-bridge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdsAccountCard } from "@/components/ads/ads-account-card";
@@ -11,10 +14,13 @@ import { AdsUrlForm } from "@/components/ads/ads-url-form";
 import { StudioOzzySlot } from "@/components/studio/studio-ozzy-slot";
 import { DeviceCookie } from "@/components/ads/device-cookie";
 
-export const metadata = { title: "Home | Komendly Ads" };
+export const metadata = { title: "Home", robots: { index: false, follow: false } };
 
 export default async function AdsAppPage() {
-  if (!(await getCurrentUser())) redirect(`/ads/login?next=${encodeURIComponent("/ads/app")}`);
+  const user = await getCurrentUser();
+  if (!user) redirect(`/ads/login?next=${encodeURIComponent("/ads/app")}`);
+  const ws = await getOrCreateWorkspace(user);
+  const bridge = await bridgeForWorkspace(ws.id, ws.studioFreeVideos);
   return (
     <div className="min-h-screen bg-background text-foreground">
       <DeviceCookie />
@@ -35,6 +41,7 @@ export default async function AdsAppPage() {
               <CardContent><AdsUrlForm signedIn /></CardContent>
             </Card>
             <AdsRecentRuns />
+            {bridge && <StudioBridgeCard placement="app_home" data={bridge} />}
           </div>
           <div className="space-y-6">
             <AdsAccountCard />

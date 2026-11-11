@@ -3,15 +3,15 @@ import { DOCTRINE } from "./doctrine";
 
 /** Hook format per slot index, so parallel writers never share a pattern. */
 export const HOOK_FORMATS = [
-  "private thought (first person, what they'd never say out loud)",
+  "private pre-purchase thought (first person, BEFORE buying; never an account of using this business)",
   "question they already ask themselves",
   "specific scene (time, place, what just happened)",
   "objection they have to this kind of product, answered",
   "contrast (what they did vs what happened)",
   "plain statement of the pain, no twist",
-  "what someone else said to them",
+  "what a friend asks them before they decide (no names, not a review)",
   "a small habit or workaround they use today",
-  "the moment after: what changes when it's solved",
+  "the moment after, in second person: what changes for you when it's solved",
   "direct call-out of who this is for",
 ];
 
@@ -28,6 +28,7 @@ COPY
 - claims: every product statement (numbers, results, prices, guarantees, features) copied from a FACT with its sourceUrl. No fact, no claim.
 
 VISUAL
-- concept: one clear idea. layout: one id below. assetKeys: only provided keys; never edit assets with hasFace=true. generateImagery only when no real asset fits (no identifiable faces), with imageryPrompt.
+- concept: one clear idea. assetKeys: pick the asset that most plainly shows the actual service/product/setting a buyer gets (the dish, the treatment room, the finished job); skip decorative, ambiguous or off-topic photos, logos-only images and stock-looking people.
+- concept: layout: one id below. assetKeys: only provided keys; never edit assets with hasFace=true. generateImagery only when no real asset fits (no identifiable faces), with imageryPrompt.
 
 ${TEMPLATE_GUIDE}`;

@@ -9,6 +9,7 @@ import { trackAdsEvent } from "./events";
 import { enqueueJob } from "./jobs";
 import { awarenessMixFor, creditCost, domainOf, normalizeUrl, PRIORITY, sha256 } from "./run";
 import { TRIAL_REASON_MESSAGES } from "./run-labels";
+import { markGiftClaimed, trialStaticCountFor } from "./referrals";
 import { AdsHttpError, isPaidWorkspace } from "./workspace";
 
 const CONFIRMED_STATUSES: readonly string[] = ["queued", "generating", "completed", "partial"];
@@ -64,7 +65,7 @@ export async function startRun(input: StartRunInput, ctx: { user: User; workspac
   if (isTrial) {
     // One in-flight trial at a time: send the user back to it instead of starting another.
     const existing = await prisma.adRun.findFirst({
-      where: { workspaceId: workspace.id, isTrial: true, status: { notIn: ["failed", "canceled"] } },
+      where: { workspaceId: workspace.id, isTrial: true, kind: { not: "gift" }, status: { notIn: ["failed", "canceled"] } },
       select: { id: true, status: true, url: true },
     });
     if (existing && !CONFIRMED_STATUSES.includes(existing.status)) return { runId: existing.id, resumed: true };
@@ -76,8 +77,9 @@ export async function startRun(input: StartRunInput, ctx: { user: User; workspac
     }
     const eligibility = await checkTrialEligibility(user.id, workspace.id, url, fp);
     if (!eligibility.ok) {
-      const status = eligibility.reason === "email_unverified" ? 403 : 402;
-      throw new AdsHttpError(status, eligibility.reason, TRIAL_REASON_MESSAGES[eligibility.reason] ?? "Free trial unavailable.");
+      // Recorded so lifecycle emails don't tell a refused user "your free ads are waiting" (and to measure the rules).
+      await trackAdsEvent("trial_blocked", { workspaceId: workspace.id, userId: user.id, props: { reason: eligibility.reason, domain } }).catch(() => undefined);
+      throw new AdsHttpError(402, eligibility.reason, TRIAL_REASON_MESSAGES[eligibility.reason] ?? "Free trial unavailable.");
     }
     const run = await prisma.adRun.create({
       data: {
@@ -88,7 +90,7 @@ export async function startRun(input: StartRunInput, ctx: { user: User; workspac
         goal,
         status: "extracting",
         isTrial: true,
-        staticCount: trialStaticCount(),
+        staticCount: await trialStaticCountFor(workspace.id, trialStaticCount()), // 20 for referred workspaces
         motionCount: TRIAL_GRANT.motion,
         ratios: TRIAL_RATIOS,
         awarenessMix: TRIAL_AWARENESS_MIX,
@@ -98,11 +100,12 @@ export async function startRun(input: StartRunInput, ctx: { user: User; workspac
     });
     await enqueueJob({ type: "extract", runId: run.id, workspaceId: workspace.id, priority: PRIORITY.trial, payload: { url } });
     await trackAdsEvent("trial_started", { workspaceId: workspace.id, userId: user.id, runId: run.id, props: { domain, goal } });
+    await markGiftClaimed(workspace.id, user.id);
     return { runId: run.id, resumed: false };
   }
 
   const staticCount = input.count ?? 10;
-  const ratios = input.ratios ?? ["1:1"];
+  const ratios = input.ratios ?? ["4:5"];
   const levels = input.awareness ?? ["problem_aware", "solution_aware"];
   const motionCount = input.motion ? 1 : 0;
   const cost = creditCost({ staticCount, ratios, motionCount });

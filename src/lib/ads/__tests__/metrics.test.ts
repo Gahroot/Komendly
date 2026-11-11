@@ -17,7 +17,7 @@ describe("metrics", () => {
       { adsPlan: "scale", subscriptionStatus: "canceled" },
       { adsPlan: "trial", subscriptionStatus: "none" },
     ]);
-    expect(r).toEqual({ mrrCents: 14800, activeSubscribers: 2, arpuCents: 7400 });
+    expect(r).toEqual({ mrrCents: 16800, activeSubscribers: 2, arpuCents: 8400 });
   });
 
   it("churn rate", () => {

@@ -9,7 +9,7 @@ import { ProviderUnavailableError } from "./providers/errors";
 import type { AIProvider, UsageMeter } from "./providers/types";
 import { JobAbortedError } from "./jobs/abort";
 import { DEFAULT_FAIRNESS, startLaneLimits } from "./queue/fairness";
-import { claimJobs, completeJob, enqueueOnce, failJob, recoverStaleJobs, releaseJob, renewLeases, type ClaimedJob } from "./queue/queue";
+import { claimJobs, completeJob, enqueueOnce, failJob, recoverOrphanedJobs, recoverStaleJobs, releaseJob, renewLeases, type ClaimedJob } from "./queue/queue";
 import type { Storage } from "./storage/s3";
 import { cleanupJob } from "./jobs/cleanup";
 import { sweepConfirmations } from "./jobs/confirm-sweeper";
@@ -21,7 +21,12 @@ import { planJob } from "./jobs/plan";
 import { handlePublishMeta } from "./jobs/publish-meta";
 import { qcJob } from "./jobs/qc";
 import { renderJob } from "./jobs/render";
+import { bonusJob, onBonusTerminal } from "./jobs/bonus";
 import { sleep } from "./util/sleep";
+import { TESTIMONIAL_JOB_TYPE, TESTIMONIAL_RECOMMEND_JOB_TYPE } from "../../src/lib/testimonial/contracts";
+import { onTestimonialDeadDb, recommendActorsJob, sweepDeadTestimonials, testimonialJob } from "./testimonial/job";
+import { STUDIO_PROBE_JOB_TYPE, STUDIO_TURN_JOB_TYPE } from "../../src/lib/studio/contracts";
+import { createStudioTurnHandler, studioProbeJob } from "./studio/index";
 
 export const HANDLERS: Record<string, JobHandler> = {
   extract: (c) => extractJob(c),
@@ -29,12 +34,18 @@ export const HANDLERS: Record<string, JobHandler> = {
   render_static: renderJob,
   render_motion: renderJob,
   qc: qcJob,
+  bonus: bonusJob,
   cleanup: cleanupJob,
   publish_meta: (c) => handlePublishMeta(c),
+  [TESTIMONIAL_JOB_TYPE]: testimonialJob,
+  [TESTIMONIAL_RECOMMEND_JOB_TYPE]: recommendActorsJob,
+  [STUDIO_TURN_JOB_TYPE]: createStudioTurnHandler(),
+  [STUDIO_PROBE_JOB_TYPE]: studioProbeJob,
 };
 /** Job types that need the AI provider. */
-export const AI_TYPES = ["extract", "plan", "render_static", "render_motion", "qc"];
-export const NON_AI_TYPES = ["cleanup", "publish_meta"];
+export const AI_TYPES = ["extract", "plan", "render_static", "render_motion", "qc", "bonus", STUDIO_TURN_JOB_TYPE];
+// Testimonial jobs degrade to the free template without Codex, so they never wait on provider health.
+export const NON_AI_TYPES = ["cleanup", "publish_meta", TESTIMONIAL_JOB_TYPE, TESTIMONIAL_RECOMMEND_JOB_TYPE, STUDIO_PROBE_JOB_TYPE];
 const START_TYPES = new Set(DEFAULT_FAIRNESS.start);
 
 export interface RunnerDeps {
@@ -43,6 +54,8 @@ export interface RunnerDeps {
   provider: AIProvider;
   config: EngineConfig;
   launchBrowser: () => Promise<Browser>;
+  /** Only process jobs of this run (scripts that share the dev DB with other workers). */
+  scopeRunId?: string;
 }
 
 export function isTransient(e: unknown): boolean {
@@ -119,10 +132,18 @@ export class Runner {
     // Keep the leases of running jobs fresh so stale recovery never steals a healthy long render.
     every(this.d.config.leaseRenewMs, () => renewLeases(this.d.db, this.d.config.workerId, [...this.active.keys()]), "lease");
     every(60_000, () => recoverStaleJobs(this.d.db, this.d.config.staleLockMs).then((n) => n && log("warn", "recovered stale jobs", { n })), "stale");
+    every(60_000, () => sweepDeadTestimonials(this.d.db).then((n) => n && log("warn", "released minutes of dead testimonial jobs", { n })), "testimonial-sweep");
     every(2_000, () => sweepConfirmations(this.d.db).then((r) => (r.confirmed || r.planned) && log("info", "confirm sweep", r)), "sweeper");
-    every(this.d.config.cleanupEveryMs, () => this.scheduleCleanup(), "cleanup");
+    if (!this.d.scopeRunId) every(this.d.config.cleanupEveryMs, () => this.scheduleCleanup(), "cleanup");
     await recoverStaleJobs(this.d.db, this.d.config.staleLockMs);
-    await this.scheduleCleanup();
+    // Jobs of a dead worker (e.g. the container this deploy replaced): retry now, not after the stale window.
+    const orphanDeadMs = Math.max(3 * this.d.config.heartbeatMs, 90_000);
+    if (!this.d.scopeRunId) {
+      const n = await recoverOrphanedJobs(this.d.db, this.d.config.workerId, orphanDeadMs).catch(() => 0);
+      if (n) log("warn", "recovered orphaned jobs", { n });
+      every(60_000, () => recoverOrphanedJobs(this.d.db, this.d.config.workerId, orphanDeadMs).then((n) => n && log("warn", "recovered orphaned jobs", { n })), "orphans");
+    }
+    if (!this.d.scopeRunId) await this.scheduleCleanup();
     void this.loop();
   }
 
@@ -163,9 +184,9 @@ export class Runner {
         try {
           const startTypes = types.filter((t) => START_TYPES.has(t));
           // General slots take any work in fairness order (start work first); reserved-only slots take start work.
-          const rest0 = lim.other > 0 ? await claimJobs(this.d.db, this.d.config.workerId, types, lim.other) : [];
+          const rest0 = lim.other > 0 ? await claimJobs(this.d.db, this.d.config.workerId, types, lim.other, DEFAULT_FAIRNESS, this.d.scopeRunId ?? null) : [];
           const reservedFree = lim.start - rest0.length;
-          const first = reservedFree > 0 && startTypes.length ? await claimJobs(this.d.db, this.d.config.workerId, startTypes, reservedFree) : [];
+          const first = reservedFree > 0 && startTypes.length ? await claimJobs(this.d.db, this.d.config.workerId, startTypes, reservedFree, DEFAULT_FAIRNESS, this.d.scopeRunId ?? null) : [];
           claimed = [...rest0, ...first];
           if (claimed.length) {
             const byType: Record<string, number> = {};
@@ -252,6 +273,10 @@ export class Runner {
   /** Terminal failure side-effects: fail the run or the ad (+ release credits). */
   private async onDead(job: ClaimedJob, msg: string): Promise<void> {
     const { db } = this.d;
+    if ((job.type as string) === TESTIMONIAL_JOB_TYPE) {
+      await onTestimonialDeadDb(db, job.payload, msg);
+      return;
+    }
     if (job.type === "plan" && job.runId && typeof job.payload.replaceAdId === "string") {
       await abandonReplacement(db, job.payload.replaceAdId);
       await maybeFinalizeRun(db, job.runId);
@@ -261,6 +286,7 @@ export class Runner {
       await db.ad.updateMany({ where: { id: job.adId, status: { notIn: ["ready", "failed_qc"] } }, data: { status: "failed" } });
       await requestReplacement(db, job.adId, `render failed: ${msg.slice(0, 500)}`);
       await maybeFinalizeRun(db, job.runId);
+      await onBonusTerminal(db, this.d.storage, job.adId, new Date(), this.d.config.assetTtlDays);
     }
   }
 

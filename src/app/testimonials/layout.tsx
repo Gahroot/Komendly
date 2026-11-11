@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
+import { FIRST_VIDEO_OFFER } from "@/lib/first-video-offer";
+import { PLAN_CONFIG } from "@/lib/stripe-config";
+const KIT = FIRST_VIDEO_OFFER.priceCents / 100;
+const KIT_LINE = `Start with the ${FIRST_VIDEO_OFFER.name}: ${FIRST_VIDEO_OFFER.minutes} videos for $${KIT}, one time.`;
+const FROM = PLAN_CONFIG.starter.monthlyPrice;
+import { TestiStudio } from "@/components/testimonials/testi-studio";
+import { TESTIMONIAL_FAQ } from "@/components/testimonials/faq-data";
 
 const siteConfig = {
   name: "Komendly",
   tagline: "Your Customers Won't Go On Camera. We Fixed That.",
-  description: "Turn your 5-star Google reviews into professional video testimonials with AI avatars. No filming, no begging customers, no actors needed. Create engaging video testimonials in 60 seconds.",
-  url: "https://komendly.com/testimonials",
+  description: `Turn your 5-star Google reviews into professional video testimonials with AI avatars. No filming, no begging customers, no actors needed. ${KIT_LINE}`,
+  url: "https://www.komendly.com/testimonials",
   ogImage: "/og-image.png",
   twitterHandle: "@komendly",
 };
@@ -90,31 +97,12 @@ const jsonLd = {
       offers: {
         "@type": "AggregateOffer",
         priceCurrency: "USD",
-        lowPrice: "0",
-        highPrice: "99",
-        offerCount: "3",
+        lowPrice: String(KIT),
+        highPrice: String(PLAN_CONFIG.enterprise.monthlyPrice),
+        offerCount: "4",
         offers: [
-          {
-            "@type": "Offer",
-            name: "Free Plan",
-            price: "0",
-            priceCurrency: "USD",
-            description: "1 free video per month",
-          },
-          {
-            "@type": "Offer",
-            name: "Pro Plan",
-            price: "29",
-            priceCurrency: "USD",
-            description: "50 video minutes per month",
-          },
-          {
-            "@type": "Offer",
-            name: "Business Plan",
-            price: "99",
-            priceCurrency: "USD",
-            description: "200 video minutes per month",
-          },
+          { "@type": "Offer", name: FIRST_VIDEO_OFFER.name, price: String(KIT), priceCurrency: "USD", description: `One-time: ${FIRST_VIDEO_OFFER.minutes} videos, up to 60s each` },
+          ...Object.values(PLAN_CONFIG).map((p) => ({ "@type": "Offer", name: p.name, price: String(p.monthlyPrice), priceCurrency: "USD", description: `${p.minutesPerMonth} videos per month` })),
         ],
       },
       featureList: [
@@ -146,53 +134,12 @@ const jsonLd = {
       description: siteConfig.description,
       publisher: {
         "@id": `${siteConfig.url}/#organization`,
-      },
-      potentialAction: {
-        "@type": "SearchAction",
-        target: {
-          "@type": "EntryPoint",
-          urlTemplate: `${siteConfig.url}/dashboard/videos?search={search_term_string}`,
-        },
-        "query-input": "required name=search_term_string",
-      },
+      }
     },
     {
       "@type": "FAQPage",
       "@id": `${siteConfig.url}/#faq`,
-      mainEntity: [
-        {
-          "@type": "Question",
-          name: "How do AI video testimonials work?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Simply paste your existing Google review text, choose an AI avatar, and our technology generates a professional video testimonial. The AI avatar reads your real customer review naturally, creating authentic-looking video content in under 60 seconds.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Do I need my customers to record videos?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "No! That's the whole point of Komendly. Your customers have already left written reviews. We transform those existing reviews into engaging video testimonials using AI avatars - no filming, no asking customers for more, no awkward requests.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Can I use these videos on social media?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Absolutely! Download your video testimonials and post them anywhere - TikTok, Instagram Reels, YouTube Shorts, your website, Facebook ads, LinkedIn, and more. Videos are optimized for vertical social media formats.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "How long does it take to create a video testimonial?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "About 60 seconds. Paste your review, pick an avatar, and click generate. That's it. No editing, no production team, no waiting days for a video editor.",
-          },
-        },
-      ],
+      mainEntity: TESTIMONIAL_FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
     },
     {
       "@type": "SoftwareApplication",
@@ -203,17 +150,10 @@ const jsonLd = {
       operatingSystem: "Web",
       offers: {
         "@type": "Offer",
-        price: "0",
+        price: String(KIT),
         priceCurrency: "USD",
-        description: "Free plan available",
-      },
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "4.9",
-        ratingCount: "127",
-        bestRating: "5",
-        worstRating: "1",
-      },
+        description: KIT_LINE,
+      }
     },
   ],
 };
@@ -222,7 +162,7 @@ export default function TestimonialsLayout({ children }: { children: React.React
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      {children}
+      <TestiStudio>{children}</TestiStudio>
     </>
   );
 }

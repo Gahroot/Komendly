@@ -63,8 +63,8 @@ const ALIASES: Array<[RegExp, TemplateId]> = [
   [/device|browser|laptop|phone|mockup|screenshot/, "screenshot_device"],
   [/caption|editorial|photo.?quote/, "photo_caption"],
   [/before|after|split|versus|\bvs\b/, "before_after"],
-  [/chat|message|sms|text_?moment|imessage|dm/, "chat_moment"],
-  [/notif|push|lock_?screen/, "notification"],
+  // Chat bubbles / notification cards are judged fake app UI by QC: render those ideas as a quoted thought.
+  [/chat|message|sms|text_?moment|imessage|dm|notif|push|lock_?screen/, "quote_thought"],
   [/testimonial|review|proof/, "testimonial"],
   [/stat|number|metric/, "stat_card"],
   [/founder|letter|note/, "founder_note"],
@@ -78,9 +78,9 @@ const ALIASES: Array<[RegExp, TemplateId]> = [
 ];
 
 const BY_AWARENESS: Record<AdSpec["awareness"], TemplateId[]> = {
-  unaware: ["quote_thought", "problem_scene", "chat_moment", "minimal_type"],
-  problem_aware: ["quote_thought", "pain_list", "chat_moment", "problem_scene", "notification", "before_after", "minimal_type"],
-  solution_aware: ["hero_product", "ui_card", "before_after", "founder_note", "notification"],
+  unaware: ["quote_thought", "problem_scene", "minimal_type"],
+  problem_aware: ["quote_thought", "pain_list", "problem_scene", "before_after", "minimal_type"],
+  solution_aware: ["hero_product", "ui_card", "before_after", "founder_note"],
   product_aware: ["offer_card", "testimonial", "stat_card", "hero_product", "ui_card"],
   most_aware: ["offer_card", "testimonial", "stat_card", "minimal_type"],
 };
@@ -95,6 +95,7 @@ export interface TemplateCapabilities {
 /** Template named (or aliased) by spec.visual.layout, or null when it names none. */
 export function matchTemplate(spec: AdSpec): TemplateId | null {
   const key = spec.visual.layout.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (key === "chat_moment" || key === "notification") return "quote_thought";
   const exact = TEMPLATE_IDS.find((t) => t === key);
   if (exact) return exact;
   for (const [re, id] of ALIASES) if (re.test(key)) return id;

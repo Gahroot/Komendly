@@ -30,6 +30,22 @@ export function chipColour(logoLum: number, brandHexes: string[]): string {
   return logoLum > 128 ? "#111111" : "#ffffff";
 }
 
+/** Share of logo pixels (luminances) that differ from a ground by at least `min` (legible against it). */
+export function legibleShare(lums: number[], groundLum: number, min = 70): number {
+  if (!lums.length) return 1;
+  return lums.filter((l) => Math.abs(l - groundLum) >= min).length / lums.length;
+}
+
+/**
+ * Chip colour for a logo with mixed tones (e.g. white icon + dark lettering): the candidate (brand colours,
+ * near-white, near-black) against which the most logo pixels stay legible. Mean luminance alone picks a
+ * black chip for such logos and hides the dark lettering.
+ */
+export function chipForLogo(lums: number[], brandHexes: string[]): string {
+  const cands = [...brandHexes, "#ffffff", "#111111"];
+  return [...cands].sort((a, b) => legibleShare(lums, lumOf(b)) - legibleShare(lums, lumOf(a)) || a.localeCompare(b))[0] ?? "#ffffff";
+}
+
 /** True when region r (pixels) overlaps any text box (fractions), with a small margin. */
 export function hitsText(r: Region, W: number, H: number, boxes: Box[], margin = 0.015): boolean {
   return boxes.some((b) => {
@@ -39,16 +55,16 @@ export function hitsText(r: Region, W: number, H: number, boxes: Box[], margin =
 }
 
 /** Mean luminance of the logo's opaque pixels only (transparent areas ignored). */
-async function logoLuminance(logo: Buffer): Promise<number> {
+async function logoLuminances(logo: Buffer): Promise<number[]> {
   const { data, info } = await sharp(logo).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  let sum = 0, n = 0;
-  for (let i = 0; i < data.length; i += info.channels) {
+  const out: number[] = [];
+  const step = Math.max(1, Math.floor(data.length / info.channels / 20000)) * info.channels; // sample <= ~20k px
+  for (let i = 0; i < data.length; i += step) {
     const a = data[i + 3] ?? 0;
     if (a < 128) continue;
-    sum += 0.299 * (data[i] ?? 0) + 0.587 * (data[i + 1] ?? 0) + 0.114 * (data[i + 2] ?? 0);
-    n++;
+    out.push(0.299 * (data[i] ?? 0) + 0.587 * (data[i + 1] ?? 0) + 0.114 * (data[i + 2] ?? 0));
   }
-  return n ? sum / n : 128;
+  return out;
 }
 
 export async function overlayLogo(ad: Buffer, logoPath: string | null, opts: { topLeftEmpty?: boolean; brandHexes?: string[]; textBoxes?: Box[]; brandName?: string; headingFont?: string; domain?: string } = {}): Promise<{ png: Buffer; corner: Corner | null; chip: boolean; box: Box | null; kind: "file" | "wordmark" | null }> {
@@ -62,7 +78,8 @@ export async function overlayLogo(ad: Buffer, logoPath: string | null, opts: { t
   const trimmed = real?.png ?? (await wordmark(shortBrandName(opts.brandName ?? "", opts.domain), opts.headingFont, Math.round(W * 0.22), sample.lum > 128 ? "#111111" : "#ffffff"));
   const tm = await sharp(trimmed).metadata();
   const aspect = (tm.width ?? 1) / (tm.height ?? 1);
-  const logoLum = await logoLuminance(trimmed);
+  const logoLums = await logoLuminances(trimmed);
+  const logoLum = logoLums.length ? logoLums.reduce((a, b) => a + b, 0) / logoLums.length : 128;
   const boxes = opts.textBoxes ?? [];
   const corners: Corner[] = ["tl", "tr", "bl", "br"];
   // Always place a logo. Preference: text-free calm corner > text-free busy corner (chip) > least-bad corner, smaller.
@@ -82,10 +99,10 @@ export async function overlayLogo(ad: Buffer, logoPath: string | null, opts: { t
     const r = box(calm.c);
     for (const forceChip of [false, true]) {
       // Chip only when contrast needs it (low luminance difference, textured ground, or touching text).
-      const chip = forceChip || Math.abs(calm.lum - logoLum) < 70 || calm.std > 35 || !calm.free;
+      const chip = forceChip || legibleShare(logoLums, calm.lum) < 0.85 || calm.std > 35 || !calm.free;
       const layers: OverlayOptions[] = [];
       if (chip) {
-        const fill = chipColour(logoLum, opts.brandHexes ?? []);
+        const fill = chipForLogo(logoLums, opts.brandHexes ?? []);
         layers.push({ input: Buffer.from(`<svg width="${r.width}" height="${r.height}" xmlns="http://www.w3.org/2000/svg"><rect width="${r.width}" height="${r.height}" rx="${Math.round(cp * 1.2)}" fill="${fill}" stroke="none"/></svg>`), left: r.left, top: r.top });
       }
       layers.push({ input: logo, left: r.left + cp, top: r.top + cp });

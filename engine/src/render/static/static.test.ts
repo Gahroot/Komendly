@@ -55,7 +55,7 @@ describe("contrast", () => {
 describe("template selection", () => {
   it("accepts ids and aliases, falls back by awareness", () => {
     expect(requestedTemplate(spec({}, "before-after"))).toBe("before_after");
-    expect(requestedTemplate(spec({}, "iMessage moment"))).toBe("chat_moment");
+    expect(requestedTemplate(spec({}, "iMessage moment"))).toBe("quote_thought");
     expect(TEMPLATE_IDS).toContain(requestedTemplate(spec({}, "???")));
   });
   it("never invents numbers or quotes", () => {

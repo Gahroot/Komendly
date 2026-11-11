@@ -1,48 +1,42 @@
 // Stripe configuration - safe to import in client components
-// Price IDs and plan definitions (no Stripe client)
+// Plan definitions (no Stripe client). Prices are provisional premium launch prices; tune them here.
+// 1 video = up to 60 s = 1 minute internally, so `minutesPerMonth` is also videos per month.
 
-// Plan display configuration
+/** Yearly = 2 months free. */
+const yearly = (monthly: number) => monthly * 10;
+
+// Keys stay starter/pro/enterprise so DB plan values and price-ID env vars keep mapping.
 export const PLAN_CONFIG = {
   starter: {
-    name: "Starter",
-    description: "Perfect for small businesses getting started",
-    monthlyPrice: 60,
-    yearlyPrice: 600,
-    minutesPerMonth: 3,
-    features: [
-      "3 minutes of video generation per month",
-      "HD quality exports",
-      "Basic AI avatars",
-      "Email support",
-    ],
+    name: "Growth",
+    description: "Turn every new 5-star review into a video",
+    monthlyPrice: 197,
+    yearlyPrice: yearly(197),
+    minutesPerMonth: 10,
+    features: ["10 videos a month, up to 60s each", "All 24 presenters", "Ready-to-post 9:16 MP4s", "Free re-renders", "Email support"],
   },
   pro: {
     name: "Pro",
-    description: "For growing businesses with more video needs",
-    monthlyPrice: 300,
-    yearlyPrice: 3000,
-    minutesPerMonth: 20,
-    features: [
-      "20 minutes of video generation per month",
-      "4K quality exports",
-      "Premium AI avatars",
-      "Priority support",
-    ],
+    description: "A steady stream of social proof for every channel",
+    monthlyPrice: 497,
+    yearlyPrice: yearly(497),
+    minutesPerMonth: 30,
+    features: ["30 videos a month, up to 60s each", "All 24 presenters", "Ready-to-post 9:16 MP4s", "Free re-renders", "Priority support"],
   },
   enterprise: {
-    name: "Enterprise",
-    description: "For large teams with high-volume needs",
-    monthlyPrice: 600,
-    yearlyPrice: 6000,
-    minutesPerMonth: 60,
-    features: [
-      "60 minutes of video generation per month",
-      "4K quality exports",
-      "All premium AI avatars",
-      "Dedicated support",
-      "Custom integrations",
-    ],
+    name: "Agency",
+    description: "For agencies running testimonials for many clients",
+    monthlyPrice: 997,
+    yearlyPrice: yearly(997),
+    minutesPerMonth: 80,
+    features: ["80 videos a month, up to 60s each", "All 24 presenters", "Ready-to-post 9:16 MP4s", "Free re-renders", "Priority support"],
   },
 } as const;
 
 export type PlanKey = keyof typeof PLAN_CONFIG;
+
+/** Minutes for subscribers still on the original (pre-2026-11) Stripe prices. Grandfathered. */
+export const LEGACY_PLAN_MINUTES: Record<PlanKey, number> = { starter: 3, pro: 20, enterprise: 60 };
+
+/** Marks subscriptions created on the current prices (subscription metadata). */
+export const PLAN_PRICE_VERSION = "v2";

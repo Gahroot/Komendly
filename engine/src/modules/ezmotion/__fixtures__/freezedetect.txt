@@ -1,0 +1,9 @@
+[Parsed_freezedetect_0 @ 0xbed015bc0] lavfi.freezedetect.freeze_start: 11.833333
+[Parsed_freezedetect_0 @ 0xbed015bc0] lavfi.freezedetect.freeze_duration: 0.6
+[Parsed_freezedetect_0 @ 0xbed015bc0] lavfi.freezedetect.freeze_end: 12.433333
+[Parsed_freezedetect_0 @ 0xbed015bc0] lavfi.freezedetect.freeze_start: 13.866667
+[Parsed_freezedetect_0 @ 0xbed015bc0] lavfi.freezedetect.freeze_duration: 0.466667
+[Parsed_freezedetect_0 @ 0xbed015bc0] lavfi.freezedetect.freeze_end: 14.333333
+[Parsed_freezedetect_0 @ 0xbed015bc0] lavfi.freezedetect.freeze_start: 14.333333
+[Parsed_freezedetect_0 @ 0xbed015bc0] lavfi.freezedetect.freeze_duration: 0.6
+[Parsed_freezedetect_0 @ 0xbed015bc0] lavfi.freezedetect.freeze_end: 14.933333

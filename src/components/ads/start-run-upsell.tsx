@@ -7,12 +7,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 const TITLES: Record<string, string> = {
   trial_used: "You've used your free trial",
   device_used: "A free trial was already used on this device",
-  domain_used: "This website already had a free trial",
+  domain_used: "This website already got its free ads",
   ip_used: "A free trial was already used on this network",
   insufficient_credits: "You're out of credits",
 };
 
-const PERKS = ["Monthly ad credits", "Every ratio: 4:5, 1:1 and 9:16", "All five awareness levels", "Animated ads + publish to Meta"];
+const PERKS = ["Monthly ad credits", "Every ratio: 4:5, 1:1 and 9:16", "All five awareness levels", "Animated video ads"];
 
 /** Shown when starting a run hits a 402 (trial used, device used, out of credits). */
 export function StartRunUpsell({ code, message }: { code: string; message: string }) {

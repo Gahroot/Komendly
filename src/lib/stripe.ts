@@ -3,6 +3,7 @@
 
 import Stripe from "stripe";
 import { PLAN_CONFIG, type PlanKey } from "./stripe-config";
+import { isPlanKey, resolvePlan, type PriceIds, type ResolvedPlan } from "./plan-pricing";
 
 let stripeClient: Stripe | null = null;
 
@@ -42,6 +43,30 @@ export const STRIPE_PRICE_IDS = {
     yearly: process.env.STRIPE_ENTERPRISE_YEARLY_PRICE_ID!,
   },
 } as const;
+
+// Current (v2) price IDs. Optional: when unset, checkout uses inline price_data at PLAN_CONFIG prices,
+// so new customers are never charged the legacy price IDs above (those are grandfathered only).
+export const STRIPE_PRICE_IDS_V2: PriceIds = {
+  starter: { monthly: process.env.STRIPE_STARTER_V2_MONTHLY_PRICE_ID, yearly: process.env.STRIPE_STARTER_V2_YEARLY_PRICE_ID },
+  pro: { monthly: process.env.STRIPE_PRO_V2_MONTHLY_PRICE_ID, yearly: process.env.STRIPE_PRO_V2_YEARLY_PRICE_ID },
+  enterprise: { monthly: process.env.STRIPE_ENTERPRISE_V2_MONTHLY_PRICE_ID, yearly: process.env.STRIPE_ENTERPRISE_V2_YEARLY_PRICE_ID },
+};
+
+/** Plan + minutes for a Stripe subscription (legacy prices keep legacy minutes). */
+export function resolveSubscriptionPlan(subscription: Stripe.Subscription, fallbackPlan?: string | null): ResolvedPlan | null {
+  const price = subscription.items.data[0]?.price;
+  return resolvePlan(
+    { priceId: price?.id, metadataPlanKey: subscription.metadata?.planKey, unitAmount: price?.unit_amount, interval: price?.recurring?.interval, fallbackPlan },
+    STRIPE_PRICE_IDS,
+    STRIPE_PRICE_IDS_V2,
+  );
+}
+
+/** Monthly minutes for a user's stored plan + price id (renewals). 0 when not on a paid plan. */
+export function minutesForStoredPlan(plan: string, subscriptionPriceId: string | null): number {
+  if (!isPlanKey(plan)) return 0;
+  return resolvePlan({ priceId: subscriptionPriceId, fallbackPlan: plan }, STRIPE_PRICE_IDS, STRIPE_PRICE_IDS_V2)?.minutes ?? 0;
+}
 
 // Stripe Product IDs from environment variables
 export const STRIPE_PRODUCT_IDS = {

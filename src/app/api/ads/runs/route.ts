@@ -10,7 +10,7 @@ export async function GET() {
     const user = await requireUser();
     const workspace = await getOrCreateWorkspace(user);
     const runs = await prisma.adRun.findMany({
-      where: { workspaceId: workspace.id },
+      where: { workspaceId: workspace.id, kind: { notIn: ["gift", "nurture"] } }, // gift packs live on /ads/gifts; nurture runs (monthly locked fresh ad) only via their email link
       orderBy: { createdAt: "desc" },
       take: 20,
       include: { ads: { select: { status: true } } },

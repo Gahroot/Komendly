@@ -1,343 +1,122 @@
-"use client";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { AlertTriangle, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { getAdminUser } from "@/lib/ads/billing-auth";
+import { formatCents, formatPct } from "@/lib/ads/billing-format";
+import { loadHq } from "@/lib/hub/hq-queries";
+import { StatCard } from "./ads/_components/stat-card";
+import { OzzyLazy } from "@/components/ozzy/OzzyLazy";
 
-import { useEffect, useState } from "react";
-import {
-  Users,
-  Video,
-  DollarSign,
-  TrendingUp,
-  ArrowUpRight,
-  ArrowDownRight,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, LineChart, Line } from "recharts";
-import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/page-header";
+export const metadata: Metadata = { title: "Ozzy HQ" };
+export const dynamic = "force-dynamic";
 
-interface DashboardStats {
-  totalUsers: number;
-  activeSubscribers: number;
-  totalVideos: number;
-  totalRevenue: number;
-  userGrowth: number;
-  videoGrowth: number;
-  recentUsers: Array<{
-    id: string;
-    email: string;
-    name: string | null;
-    plan: string;
-    createdAt: string;
-  }>;
-  recentVideos: Array<{
-    id: string;
-    status: string;
-    createdAt: string;
-    user: { email: string };
-  }>;
-  monthlyRevenue: Array<{
-    month: string;
-    revenue: number;
-  }>;
-  videosByStatus: Array<{
-    status: string;
-    count: number;
-  }>;
-}
-
-const chartConfig: ChartConfig = {
-  revenue: {
-    label: "Revenue",
-    color: "var(--chart-1)",
-  },
-  completed: {
-    label: "Completed",
-    color: "var(--chart-3)",
-  },
-  pending: {
-    label: "Pending",
-    color: "var(--chart-4)",
-  },
-  processing: {
-    label: "Processing",
-    color: "var(--chart-2)",
-  },
-  failed: {
-    label: "Failed",
-    color: "var(--chart-5)",
-  },
-};
-
-export default function AdminDashboard() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch("/api/admin/stats");
-        if (response.ok) {
-          const data = await response.json();
-          setStats(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch admin stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <PageHeader eyebrow="Admin" title="Dashboard" description="Overview of your platform" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i} >
-              <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-24 bg-secondary" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-20 bg-secondary" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  const statCards = [
-    {
-      title: "Total Users",
-      value: stats?.totalUsers ?? 0,
-      icon: Users,
-      change: stats?.userGrowth ?? 0,
-      description: "Total registered users",
-    },
-    {
-      title: "Active Subscribers",
-      value: stats?.activeSubscribers ?? 0,
-      icon: TrendingUp,
-      change: 0,
-      description: "Users with active subscriptions",
-    },
-    {
-      title: "Total Videos",
-      value: stats?.totalVideos ?? 0,
-      icon: Video,
-      change: stats?.videoGrowth ?? 0,
-      description: "Videos generated",
-    },
-    {
-      title: "Total Revenue",
-      value: `$${((stats?.totalRevenue ?? 0) / 100).toLocaleString()}`,
-      icon: DollarSign,
-      change: 0,
-      description: "Lifetime revenue",
-    },
-  ];
-
+export default async function OzzyHq() {
+  const admin = await getAdminUser();
+  if (!admin) return <p className="text-destructive">Admin access required.</p>;
+  const h = await loadHq(new Date());
+  const name = "Nolan"; // the owner is the only admin
+  const mrr = h.money.adsMrrCents + h.money.legacyMrrCents;
   return (
-    <div className="space-y-6">
-      <PageHeader eyebrow="Admin" title="Dashboard" description="Overview of your platform" />
+    <div className="mx-auto max-w-7xl space-y-8">
+      <header className="flex items-end gap-4">
+        <OzzyLazy size={72} perch="ledge" speech={false} pose={{ form: "classic", expression: "happy", motion: "wave" }} />
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Ozzy HQ</p>
+          <h1 className="text-3xl font-semibold tracking-tight">G&apos;day {name}</h1>
+          <p className="text-sm text-muted-foreground">Everything across Ad Packs, Ozzy Studio and Testimonials. Real numbers, test sign-ups filtered out.</p>
+        </div>
+      </header>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((stat) => {
-          const Icon = stat.icon;
-          const isPositive = stat.change >= 0;
+      <Section title="Needs your attention">
+        {h.attention.length ? (
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {h.attention.map((a) => (
+              <li key={a.key}>
+                <Link href={a.href} className="glass-subtle flex items-center gap-3 rounded-xl p-3 text-sm hover:bg-accent/50">
+                  <AlertTriangle aria-hidden className={a.tone === "bad" ? "size-4 text-destructive" : "size-4 text-[var(--warning)]"} />
+                  <span className="flex-1">{a.label}</span>
+                  <span className="font-semibold tabular-nums">{a.count}</span>
+                  <ArrowRight aria-hidden className="size-4 text-muted-foreground" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="glass-subtle flex items-center gap-2 rounded-xl p-3 text-sm"><CheckCircle2 aria-hidden className="size-4 text-[var(--success)]" /> All clear. Nothing needs you right now.</p>
+        )}
+      </Section>
 
-          return (
-            <Card key={stat.title} >
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {stat.title}
-                </CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-                {stat.change !== 0 && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                    {isPositive ? (
-                      <ArrowUpRight className="h-3 w-3 text-success" />
-                    ) : (
-                      <ArrowDownRight className="h-3 w-3 text-destructive" />
-                    )}
-                    <span className={isPositive ? "text-success" : "text-destructive"}>
-                      {Math.abs(stat.change)}%
-                    </span>
-                    <span className="text-muted-foreground">from last month</span>
-                  </p>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <Section title="Growth" more={{ href: "/admin/ads/signups", label: "Sign-ups" }}>
+        <Grid>
+          <StatCard label="Sign-ups today / 7d / 30d" value={`${h.signups.today} / ${h.signups.d7} / ${h.signups.d30}`} hint="Bot and test emails excluded" />
+          <StatCard label="Ad Pack trials started / finished (30d)" value={`${h.trials.started30d} / ${h.trials.finished30d}`} hint={`${h.trials.startedWindows.today} today · ${h.trials.startedWindows.d7} in 7d`} />
+          <StatCard label="Studio sessions today / 7d / 30d" value={`${h.studio.sessions.today} / ${h.studio.sessions.d7} / ${h.studio.sessions.d30}`} />
+          <StatCard label="Studio renders (30d)" value={String(h.studio.renders30d)} hint={`${h.studio.freeRenders30d} were free videos`} />
+        </Grid>
+      </Section>
 
-      {/* Charts */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Revenue Chart */}
-        <Card >
-          <CardHeader>
-            <CardTitle className="text-foreground">Monthly Revenue</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Revenue over the last 6 months
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px] w-full">
-              <LineChart data={stats?.monthlyRevenue ?? []}>
-                <XAxis
-                  dataKey="month"
-                  stroke="var(--muted-foreground)"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="var(--muted-foreground)"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `$${value}`}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="var(--color-revenue)"
-                  strokeWidth={2}
-                  dot={{ fill: "var(--color-revenue)" }}
-                />
-              </LineChart>
-            </ChartContainer>
+      <Section title="Money" more={{ href: "/admin/revenue", label: "Revenue" }}>
+        <Grid>
+          <StatCard label="MRR (both billing systems)" value={formatCents(mrr)} hint={`Ozzy plans ${formatCents(h.money.adsMrrCents)} · legacy testimonials ${formatCents(h.money.legacyMrrCents)} (list prices)`} />
+          <StatCard label="Paying subscribers" value={String(h.money.adsSubscribers + h.money.legacySubscribers)} hint={`${h.money.adsSubscribers} Ozzy · ${h.money.legacySubscribers} legacy`} />
+          <StatCard label="Revenue, last 30d" value={formatCents(h.money.revenue30dCents)} hint="Estimate: MRR + top-ups + testimonial packs" />
+          <StatCard label="Paid conversions (30d)" value={String(h.money.paidConversions30d)} hint={`Trial → paid ${formatPct(h.money.trialToPaid)}`} />
+        </Grid>
+      </Section>
+
+      <Section title="Usage and cost (30d)">
+        <Grid>
+          <StatCard label="Credits spent: Ad Packs" value={String(h.credits30d.ads)} hint={`Engine cost $${h.engine.cost30dUsd.toFixed(2)}`} />
+          <StatCard label="Credits spent: Studio" value={String(h.credits30d.studio)} />
+          <StatCard label="Testimonial videos" value={String(h.testimonials.videos30d)} hint={`${h.credits30d.testimonialVideos} minutes charged`} />
+          <StatCard label="Testimonial vendor cost" value={`$${h.testimonials.costUsd30d.toFixed(2)}`} hint={h.testimonials.videos30d ? `$${(h.testimonials.costUsd30d / h.testimonials.videos30d).toFixed(2)} per video` : undefined} tone={h.testimonials.costUsd30d > 0 ? "bad" : "default"} />
+        </Grid>
+      </Section>
+
+      <Section title="Engine" more={{ href: "/admin/ads/engine", label: "Engine" }}>
+        <Card>
+          <CardContent className="space-y-2 pt-6 text-sm">
+            <p>
+              Codex:{" "}
+              {h.engine.codex ? (
+                <span className={h.engine.codex.ok ? "text-[var(--success)]" : "text-destructive"}>{h.engine.codex.ok ? "logged in" : h.engine.codex.message ?? "not ok"}</span>
+              ) : (
+                <span className="text-muted-foreground">no heartbeat yet</span>
+              )}
+            </p>
+            {h.engine.workers.length ? (
+              <ul className="space-y-1">
+                {h.engine.workers.map((w) => (
+                  <li key={w.id} className="flex items-center gap-2">
+                    <span aria-hidden className={`size-2 rounded-full ${w.live && w.ok ? "bg-[var(--success)]" : "bg-destructive"}`} />
+                    <span className="font-mono text-xs">{w.id}</span>
+                    <span className="text-muted-foreground">{w.live ? (w.ok ? "live" : "unhealthy") : "stale"} · {new Date(w.updatedAt).toLocaleString("en-AU")}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted-foreground">No worker heartbeats.</p>
+            )}
           </CardContent>
         </Card>
-
-        {/* Videos by Status */}
-        <Card >
-          <CardHeader>
-            <CardTitle className="text-foreground">Videos by Status</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Distribution of video generation status
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px] w-full">
-              <BarChart data={stats?.videosByStatus ?? []}>
-                <XAxis
-                  dataKey="status"
-                  stroke="var(--muted-foreground)"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="var(--muted-foreground)"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey="count" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Activity Tables */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Recent Users */}
-        <Card >
-          <CardHeader>
-            <CardTitle className="text-foreground">Recent Users</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Latest user registrations
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {stats?.recentUsers?.slice(0, 5).map((user) => (
-                <div key={user.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
-                      <span className="text-xs font-medium text-foreground/80">
-                        {(user.name || user.email)?.[0]?.toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {user.name || user.email.split("@")[0]}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
-                    </div>
-                  </div>
-                  <span className="text-xs px-2 py-1 rounded-full bg-secondary text-muted-foreground">
-                    {user.plan}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Recent Videos */}
-        <Card >
-          <CardHeader>
-            <CardTitle className="text-foreground">Recent Videos</CardTitle>
-            <CardDescription className="text-muted-foreground">
-              Latest video generations
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {stats?.recentVideos?.slice(0, 5).map((video) => (
-                <div key={video.id} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
-                      <Video className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {video.user.email}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(video.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      video.status === "completed"
-                        ? "bg-success/20 text-success"
-                        : video.status === "processing"
-                        ? "bg-primary/20 text-primary"
-                        : video.status === "pending"
-                        ? "bg-warning/20 text-warning"
-                        : "bg-destructive/20 text-destructive"
-                    }`}
-                  >
-                    {video.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      </Section>
     </div>
   );
+}
+
+function Section({ title, more, children }: { title: string; more?: { href: string; label: string }; children: React.ReactNode }) {
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        {more ? <Link href={more.href} className="text-sm text-primary hover:underline">{more.label} <ArrowRight aria-hidden className="inline size-3.5" /></Link> : null}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Grid({ children }: { children: React.ReactNode }) {
+  return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{children}</div>;
 }

@@ -17,7 +17,8 @@ export function usableLogo(w: number, h: number, path = ""): { ok: boolean; maxW
 
 /** Short brand name for a wordmark: the words matching the domain stem, else the first two words; no tagline. */
 export function shortBrandName(name: string, domain = ""): string {
-  const words = name.split(/\s*[|·–—:-]\s*|\s+/).filter(Boolean);
+  const head = (name.split(/\s+[|·–—:-]\s+|\s*[|·]\s*/)[0] ?? name).trim();
+  const words = head.split(/\s+/).filter(Boolean);
   const stem = domain.replace(/^www\./, "").split(".")[0]?.toLowerCase() ?? "";
   let acc = "";
   for (let i = 0; i < words.length && stem; i++) {
@@ -25,6 +26,8 @@ export function shortBrandName(name: string, domain = ""): string {
     if (acc === stem) return words.slice(0, i + 1).join(" ");
     if (!stem.startsWith(acc)) break;
   }
+  // Keep the full name when it is short (e.g. "Greater Boston HVAC"); trim only long descriptive names.
+  if (words.length <= 4 && head.length <= 28) return words.join(" ");
   return words.slice(0, Math.min(2, words.length)).join(" ");
 }
 

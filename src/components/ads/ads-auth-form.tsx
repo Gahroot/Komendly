@@ -12,7 +12,7 @@ import { postJson, safeNext } from "@/lib/ads/run-client";
 import { track } from "@/lib/analytics/track";
 import { TrackOnMount } from "@/components/analytics/track-on-mount";
 
-export function AdsAuthForm({ mode }: { mode: "signup" | "login" }) {
+export function AdsAuthForm({ mode, referrerName }: { mode: "signup" | "login"; referrerName?: string }) {
   const router = useRouter();
   const params = useSearchParams();
   const next = safeNext(params.get("next"));
@@ -26,7 +26,7 @@ export function AdsAuthForm({ mode }: { mode: "signup" | "login" }) {
     setBusy(true);
     setError(null);
     try {
-      await postJson(`/api/ads/auth/${mode}`, isSignup ? form : { email: form.email, password: form.password });
+      await postJson(`/api/ads/auth/${mode}`, isSignup ? { ...form, ...(params.get("ref") ? { ref: params.get("ref") } : {}) } : { email: form.email, password: form.password });
       track(isSignup ? "sign_up" : "login", { method: "email", has_pending_run: next.startsWith("/ads/start") });
       router.push(next);
       router.refresh();
@@ -41,9 +41,9 @@ export function AdsAuthForm({ mode }: { mode: "signup" | "login" }) {
     <Card className="w-full max-w-md">
       {isSignup && <TrackOnMount event="signup_view" params={{ has_pending_run: next.startsWith("/ads/start") }} />}
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-semibold tracking-tight">{isSignup ? "Create your free account" : "Welcome back"}</CardTitle>
+        <CardTitle className="text-2xl font-semibold tracking-tight">{isSignup ? (referrerName ? `${referrerName} sent you 20 free ads` : "Create your free account") : "Welcome back"}</CardTitle>
         <CardDescription>
-          {isSignup ? "10 static ads + 1 animated ad, free. No card needed." : "Sign in to continue to your ads."}
+          {isSignup ? (referrerName ? "20 static ads + 1 animated ad from your website, free. Double the usual pack. No card needed." : "10 static ads + 1 animated ad, free. No card needed.") : params.get("verified") === "1" ? "Your email is confirmed. Sign in to get your free ads." : "Sign in to continue to your ads."}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -80,6 +80,9 @@ export function AdsAuthForm({ mode }: { mode: "signup" | "login" }) {
             <Link className="text-foreground underline underline-offset-4" href={`${other}?next=${encodeURIComponent(next)}`}>
               {isSignup ? "Sign in" : "Create one"}
             </Link>
+          </p>
+          <p className="text-center text-xs text-muted-foreground">
+            By {isSignup ? "signing up" : "signing in"} you agree to our <Link className="underline underline-offset-2 hover:text-foreground" href="/terms">Terms</Link> and <Link className="underline underline-offset-2 hover:text-foreground" href="/privacy">Privacy Policy</Link>.
           </p>
         </form>
       </CardContent>

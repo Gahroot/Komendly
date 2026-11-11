@@ -1,26 +1,32 @@
 import { Metadata } from 'next'
 import Image from 'next/image'
-import { getBlogPosts, getAllTags } from '@/lib/blog'
+import { CATEGORIES, getAllTags, getBlogPosts } from '@/lib/blog'
+import { blogJsonLd, breadcrumbJsonLd, graph } from '@/lib/seo/jsonld'
 import { BlogPostCard } from '@/components/blog-post-card'
 import { BlogTagPills } from '@/components/blog-tag-pills'
+import { CategoryNav } from '@/components/blog/category-nav'
+import { JsonLd } from '@/components/json-ld'
+
+const TITLE = 'Blog: ad creative, Meta ads and small business marketing'
+const DESCRIPTION =
+  'Guides, comparisons and straight answers on ad creative, Facebook and Instagram (Meta) ads, AI ad generators, video testimonials and marketing for small businesses.'
 
 export const metadata: Metadata = {
-  title: 'Blog | Komendly',
-  description: 'Insights, tutorials, and updates about AI video testimonials and customer reviews.',
-  openGraph: {
-    title: 'Blog | Komendly',
-    description: 'Insights, tutorials, and updates about AI video testimonials and customer reviews.',
-    type: 'website',
-  },
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: '/blog' },
+  openGraph: { title: `${TITLE} | Komendly`, description: DESCRIPTION, type: 'website', url: '/blog' },
 }
 
 export default function BlogPage() {
   const posts = getBlogPosts()
   const tags = getAllTags()
+  const counts = Object.fromEntries(CATEGORIES.map((c) => [c.slug, posts.filter((p) => c.types.includes(p.type)).length]))
   const [featured, ...rest] = posts
 
   return (
     <main className="relative z-10 mx-auto max-w-6xl px-4 pb-12 pt-10 sm:px-6 sm:pt-16">
+      <JsonLd data={graph(blogJsonLd(DESCRIPTION, posts), breadcrumbJsonLd([{ name: 'Home', path: '/' }, { name: 'Blog', path: '/blog' }]))} />
       <header className="studio-rise mb-10 flex items-end justify-between gap-6">
         <div>
           <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-[var(--studio-gold)]">Blog</p>
@@ -28,7 +34,7 @@ export default function BlogPage() {
             The Komendly <em className="italic text-[var(--studio-gold)]">Journal</em>
           </h1>
           <p className="max-w-xl text-lg text-muted-foreground">
-            Notes on ads, social proof and marketing that actually sells.
+            Notes on ad creative, Meta ads, social proof and marketing that actually sells, for small businesses.
           </p>
         </div>
         <Image
@@ -42,6 +48,7 @@ export default function BlogPage() {
         />
       </header>
 
+      <CategoryNav counts={counts} />
       {tags.length > 0 && <BlogTagPills tags={tags} active={null} />}
 
       {!featured ? (

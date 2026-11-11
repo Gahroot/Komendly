@@ -20,14 +20,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { VideoCard } from "@/components/video-card";
 import { VideoModal } from "@/components/video-modal";
 import { useVideos, deleteVideo, type Video as VideoType } from "@/hooks/useVideos";
 import { PageHeader } from "@/components/page-header";
+import { LaunchUpsell } from "@/components/testimonials/create/offer-gate";
+import { useUser } from "@/hooks/useUser";
 
 export default function VideosPage() {
   const { videos, isLoading, error, refresh } = useVideos();
+  const { user } = useUser();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [selectedVideo, setSelectedVideo] = useState<VideoType | null>(null);
@@ -105,17 +107,17 @@ export default function VideosPage() {
         <PageHeader
           className="mb-8"
           eyebrow="Library"
-          title="Video Library"
+          title="Your videos"
           description={`${videos.length} testimonial${videos.length !== 1 ? "s" : ""} generated`}
           actions={
-            <Button asChild>
-              <a href="/dashboard/create">
-                <Plus className="w-4 h-4 mr-2" />
-                Create New Video
-              </a>
-            </Button>
+            <a href="/dashboard/create-fal" className="spellbar__cta inline-flex h-11 items-center gap-2 rounded-xl px-5 text-sm font-semibold">
+              <Plus aria-hidden className="size-4" />
+              Make a video
+            </a>
           }
         />
+
+        {videos.length > 0 ? <div className="mb-8"><LaunchUpsell user={user} placement="videos" /></div> : null}
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -126,14 +128,14 @@ export default function VideosPage() {
               placeholder="Search by business or reviewer name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-primary"
+              className="h-11 pl-10"
             />
           </div>
           <Select
             value={sortOrder}
             onValueChange={(value: "desc" | "asc") => setSortOrder(value)}
           >
-            <SelectTrigger className="w-[180px] bg-card border-border text-foreground">
+            <SelectTrigger className="h-11 w-full sm:w-[180px]">
               <SelectValue placeholder="Sort by date" />
             </SelectTrigger>
             <SelectContent className="bg-card border-border">
@@ -160,11 +162,11 @@ export default function VideosPage() {
         </div>
 
         {/* Content */}
-        <ScrollArea className="h-[calc(100vh-280px)]">
+        <div>
           {isLoading ? (
             // Loading State
             <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
+              <Loader2 aria-hidden className="w-8 h-8 text-[var(--studio-gold)] animate-spin mb-4" />
               <p className="text-muted-foreground">Loading your videos...</p>
             </div>
           ) : error ? (
@@ -194,12 +196,12 @@ export default function VideosPage() {
               animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center justify-center py-20"
             >
-              <div className="w-20 h-20 rounded-3xl bg-primary/10 shadow-[var(--glass-rim)] flex items-center justify-center mb-6">
-                <Film className="w-10 h-10 text-primary" />
+              <div className="pixel-frame w-20 h-20 bg-[linear-gradient(160deg,#3a2266,#1c0f36)] flex items-center justify-center mb-6">
+                <Film aria-hidden className="w-10 h-10 text-[var(--studio-gold)]" />
               </div>
               {searchQuery ? (
                 <>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                  <h3 className="font-display text-2xl font-medium text-foreground mb-2">
                     No videos found
                   </h3>
                   <p className="text-muted-foreground text-center max-w-md mb-6">
@@ -216,22 +218,17 @@ export default function VideosPage() {
                 </>
               ) : (
                 <>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                  <h3 className="font-display text-2xl font-medium text-foreground mb-2">
                     No videos yet
                   </h3>
                   <p className="text-muted-foreground text-center max-w-md mb-6">
-                    You haven&apos;t created any testimonial videos yet.
-                    Transform your Google Reviews into engaging video content!
+                    Paste a customer review, pick a presenter, and your first
+                    testimonial lands here in a few minutes.
                   </p>
-                  <Button
-                    asChild
-                    className="bg-brand hover:bg-primary/90 text-primary-foreground"
-                  >
-                    <a href="/dashboard/create">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Your First Video
-                    </a>
-                  </Button>
+                  <a href="/dashboard/create-fal" className="spellbar__cta inline-flex h-12 items-center gap-2 rounded-xl px-6 font-semibold">
+                    <Plus aria-hidden className="size-4" />
+                    Make my first video
+                  </a>
                 </>
               )}
             </motion.div>
@@ -252,7 +249,7 @@ export default function VideosPage() {
               </AnimatePresence>
             </motion.div>
           )}
-        </ScrollArea>
+        </div>
 
         {/* Video Modal */}
         <VideoModal

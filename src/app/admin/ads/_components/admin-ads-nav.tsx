@@ -6,6 +6,14 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { href: "/admin/ads", label: "Overview" },
+  { href: "/admin/ads/funnel", label: "Funnel" },
+  { href: "/admin/ads/signups", label: "Sign-ups" },
+  { href: "/admin/ads/growth", label: "Growth" },
+  { href: "/admin/ads/referrals", label: "Referrals" },
+  { href: "/admin/ads/gifts", label: "Gifts" },
+  { href: "/admin/ads/outbound", label: "Outbound" },
+  { href: "/admin/ads/partners", label: "Partners" },
+  { href: "/admin/ads/features", label: "Ad of week" },
   { href: "/admin/ads/workspaces", label: "Workspaces" },
   { href: "/admin/ads/refunds", label: "Refunds" },
   { href: "/admin/ads/churn", label: "Churn" },
@@ -13,6 +21,7 @@ const TABS = [
   { href: "/admin/ads/jobs", label: "Jobs" },
   { href: "/admin/ads/engine", label: "Engine" },
   { href: "/admin/ads/flags", label: "Flags" },
+  { href: "/admin/ads/emails", label: "Emails" },
 ];
 
 export function AdminAdsNav() {

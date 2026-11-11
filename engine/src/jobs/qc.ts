@@ -1,18 +1,32 @@
 // qc job: claim grounding + vision + technical checks; re-render with feedback or fail.
 import { logoCrop } from "../render/composed/logo-crop";
+import { motionCheck } from "../modules/ezmotion/motion-checks";
+import { END_CARD_POLICY_SYSTEM, safeZoneCheck } from "../modules/ezmotion/safezone";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { ExtractionSchema, RATIO_PIXELS, RATIOS, type Extraction, type Ratio } from "../../../src/lib/ads/contracts";
 import { classifyFailures, reviseCopy, swapImage } from "./revise";
+import { rejectedAssetKeys } from "./plan";
 import { untrusted } from "../prompts/doctrine";
 import { GROUNDING_SYSTEM, VISION_SYSTEM } from "../prompts/qc";
 import { structured } from "../providers/structured";
 import { enqueue, priorityFor } from "../queue/queue";
 import { PermanentJobError, type JobContext } from "./context";
-import { requestReplacement } from "./replace";
+import { canHedge, requestReplacement, wantsHedge } from "./replace";
 import { maybeFinalizeRun } from "./finalize";
 import { mapClaimsToFacts, type Fact } from "./grounding";
 import { specFromAd } from "./render";
+import { isFreeRun } from "./gift-policy";
+import { BONUS_PRIORITY, countTypeAds, hedgeEnabled, isLocked, maxTypeAds, READY_MILESTONE, retryConcept, typographicSpec } from "./trial-fill";
+import { log } from "../log";
+import { onBonusTerminal } from "./bonus";
+
+/** Intended copy for the vision check; says so when the layout omits the body by design (no false "body missing"). */
+export function intendedCopy(spec: { headline: string; body?: string; cta?: string }, visualBrief: unknown): string {
+  const shown = (visualBrief as { render?: { bodyShown?: unknown } } | null)?.render?.bodyShown;
+  const body = spec.body && shown === false ? "(none: this layout shows no body line by design; do not fail for a missing body)" : `"${spec.body ?? ""}"`;
+  return `Intended copy — headline: "${spec.headline}", body: ${body}, cta: "${spec.cta ?? ""}".`;
+}
 
 export const MAX_QC_RERENDERS = 2;
 export const MAX_ASSET_BYTES = 30 * 1024 * 1024;
@@ -55,9 +69,16 @@ const GroundingOut = z.object({
   unsupported: z.array(z.object({ text: z.string(), why: z.string() })),
 });
 
+const OpeningOut = z.object({ pass: z.boolean(), detail: z.string() });
+
 const VisionOut = z.object({
   checks: z.array(z.object({ name: z.string(), pass: z.boolean(), detail: z.string() })),
 });
+
+export function motionOnScreen(visualBrief: unknown): string[] {
+  const t = (visualBrief as { render?: { onScreenText?: unknown } } | null)?.render?.onScreenText;
+  return Array.isArray(t) ? t.filter((x): x is string => typeof x === "string") : [];
+}
 
 export async function qcJob(ctx: JobContext): Promise<unknown> {
   const { db, storage, job } = ctx;
@@ -76,6 +97,8 @@ export async function qcJob(ctx: JobContext): Promise<unknown> {
   checks.push(...technicalChecks(ad.assets, ratios, durations));
 
   // (a) grounding: deterministic mapping, then LLM judge over the full copy
+  // Motion: the hype edit shows its own short cards; ground every one of them too.
+  const onScreen = ad.kind === "motion" ? motionOnScreen(ad.visualBrief) : [];
   const mapped = mapClaimsToFacts(spec.claims, facts);
   for (const m of mapped) checks.push({ name: "claim_mapped", pass: m.factIndex !== null, detail: m.claim });
   const g = await structured(
@@ -83,7 +106,7 @@ export async function qcJob(ctx: JobContext): Promise<unknown> {
     GroundingOut,
     {
       system: GROUNDING_SYSTEM,
-      prompt: `${untrusted("facts", facts.map((f, i) => `F${i + 1}. ${f.claim} — "${f.quote}"`).join("\n") || "(no facts: any product claim fails)")}\n\nAD:\nheadline: ${spec.headline}\nbody: ${spec.body ?? ""}\ncta: ${spec.cta ?? ""}\nclaims: ${JSON.stringify(spec.claims)}`,
+      prompt: `${untrusted("facts", facts.map((f, i) => `F${i + 1}. ${f.claim} — "${f.quote}"`).join("\n") || "(no facts: any product claim fails)")}\n\nAD:\nheadline: ${spec.headline}\nbody: ${spec.body ?? ""}\ncta: ${spec.cta ?? ""}\nclaims: ${JSON.stringify(spec.claims)}${onScreen.length ? `\non-screen video text (every card, in order): ${JSON.stringify(onScreen)}` : ""}`,
       reasoning: "low",
       signal: ctx.signal,
     },
@@ -102,17 +125,45 @@ export async function qcJob(ctx: JobContext): Promise<unknown> {
       VisionOut,
       {
         system: VISION_SYSTEM,
-        prompt: `Brand: ${brand?.name ?? ""}; brand colors: ${JSON.stringify(brand?.colors ?? [])}.${palette ? `\nEffective palette the renderer used (all of these count as on-brand, as do their tints/shades): ${JSON.stringify(palette)}.` : ""}\nIntended copy — headline: "${spec.headline}", body: "${spec.body ?? ""}", cta: "${spec.cta ?? ""}". Awareness: ${spec.awareness}. Angle: ${spec.angle}.\nReturn one entry per check name listed in your instructions.`,
+        prompt: `Brand: ${brand?.name ?? ""}; brand colors: ${JSON.stringify(brand?.colors ?? [])}.${palette ? `\nEffective palette the renderer used (all of these count as on-brand, as do their tints/shades): ${JSON.stringify(palette)}.` : ""}\n${onScreen.length ? `This is the end-card frame of a video. Text the video shows (any of it may be on this frame): ${JSON.stringify(onScreen)}.` : intendedCopy(spec, ad.visualBrief)} Awareness: ${spec.awareness}. Angle: ${spec.angle}.\nReturn one entry per check name listed in your instructions.`,
         images: [{ mediaType: img.mime, base64: bytes.toString("base64") }, ...(await logoCrop(bytes, ad.visualBrief))],
         reasoning: "low",
         signal: ctx.signal,
       },
       ctx.usage,
     );
-    for (const c of v.checks) checks.push({ name: `vision_${c.name}`, pass: c.pass, detail: c.detail });
+    for (const c of v.checks) {
+      // A video's poster is its end card (brand + CTA): the buyer's moment lives in its opening, judged below.
+      if (onScreen.length && c.name === "buyer_moment") continue;
+      checks.push({ name: `vision_${c.name}`, pass: c.pass, detail: c.detail });
+    }
+    if (onScreen.length) {
+      const o = await structured(
+        ctx.provider,
+        OpeningOut,
+        {
+          system: "You review the opening of a short social video ad. Pass when its first words lead with the buyer's own moment, thought or frustration (not features, brand claims or a slogan). Ignore a small brand name or logo label shown alongside it.",
+          prompt: `Opening on-screen text, in order: ${JSON.stringify(onScreen.slice(0, 5))}. Reply with JSON {pass, detail}.`,
+          reasoning: "low",
+          signal: ctx.signal,
+        },
+        ctx.usage,
+      );
+      checks.push({ name: "vision_buyer_moment", pass: o.pass, detail: `opening: ${o.detail}` });
+      // Motion only: Reels safe zone + no fake button on the end card.
+      if (ad.assets.some((a) => a.ratio === "9:16")) {
+        const e = await structured(ctx.provider, OpeningOut, { system: END_CARD_POLICY_SYSTEM, prompt: "Reply with JSON {pass, detail}.", images: [{ mediaType: img.mime, base64: bytes.toString("base64") }], reasoning: "low", signal: ctx.signal }, ctx.usage);
+        checks.push({ name: "vision_end_card_policy", pass: e.pass, detail: e.detail });
+      }
+    }
   } else if (ad.kind === "static") {
     checks.push({ name: "vision", pass: false, detail: "no image to inspect" });
   }
+
+  const zone = ad.kind === "motion" ? safeZoneCheck(ad.visualBrief) : null;
+  if (zone) checks.push(zone);
+  const motionQc = ad.kind === "motion" ? motionCheck(ad.visualBrief) : null;
+  if (motionQc) checks.push(motionQc);
 
   const pass = checks.every((c) => c.pass);
   const now = ctx.now();
@@ -121,6 +172,7 @@ export async function qcJob(ctx: JobContext): Promise<unknown> {
 
   if (pass) {
     await db.ad.update({ where: { id: ad.id }, data: { status: "ready", qcReport: report, costMicros: { increment: cost } } });
+    if (!isLocked(ad.visualBrief)) await logReadyMilestone(db, run, now);
     const first = await db.adRun.updateMany({ where: { id: run.id, firstAdAt: null }, data: { firstAdAt: now } });
     if (first.count === 1) {
       await db.adsEvent.create({
@@ -139,16 +191,42 @@ export async function qcJob(ctx: JobContext): Promise<unknown> {
     // Fix the cause, not just re-render: rewrite copy and/or swap the image.
     const { copy, image } = classifyFailures(failed);
     let next = spec;
-    const vb = (ad.visualBrief as { triedAssets?: string[] } | null) ?? {};
-    const tried = [...(vb.triedAssets ?? []), ...spec.visual.assetKeys];
-    if (image.length) {
+    const vb = (ad.visualBrief as { triedAssets?: string[]; fallback?: string } | null) ?? {};
+    const offTopic = failed.some((c) => c.name === "vision_image_relevant");
+    // Trial/gift static that failed ONLY on image relevance: keep the (approved) copy, drop the photo/scene and
+    // re-render it typographic (cheap, no image gen; image_relevant cannot fail without a photo).
+    const imageOnly = ad.kind === "static" && !isLocked(ad.visualBrief) && (run.isTrial || isFreeRun(run)) && failed.length > 0 && failed.every((c) => c.name === "vision_image_relevant") && vb.fallback !== "type";
+    // Capped: past maxTypeAds the ad keeps a photo and gets a different one (swapImage below) instead.
+    const retype = imageOnly && countTypeAds(await db.ad.findMany({ where: { runId: run.id, id: { not: ad.id } }, select: { status: true, visualBrief: true, kind: true } })) < maxTypeAds(run);
+    if (offTopic && spec.visual.assetKeys.length) {
+      // Run-wide ban: other ads and replacements must not reuse an off-topic photo (e.g. wine on a law firm).
+      await db.$executeRaw`UPDATE "AdRun" SET extraction = jsonb_set(COALESCE(extraction, '{}'::jsonb), '{rejectedAssetKeys}', COALESCE(extraction->'rejectedAssetKeys', '[]'::jsonb) || ${JSON.stringify(spec.visual.assetKeys)}::jsonb) WHERE id = ${run.id}`;
+    }
+    const tried = [...new Set([...(vb.triedAssets ?? []), ...spec.visual.assetKeys, ...rejectedAssetKeys(run.extraction)])];
+    if (retype) {
       const ex = ExtractionSchema.safeParse(run.extraction);
+      const siblings = await db.ad.findMany({ where: { runId: run.id, kind: "static", id: { not: ad.id } }, select: { visualBrief: true } });
+      next = typographicSpec(spec, siblings.map((s) => (s.visualBrief as { layout?: string } | null)?.layout ?? ""), ex.success ? ex.data.mainOffer : null);
+    } else if (image.length) {
+      const ex = ExtractionSchema.safeParse(run.extraction);
+      if (offTopic) {
+        // Tell the image model WHY the last picture failed and what it must show (AI scenes otherwise retry blind).
+        const why = failed.find((c) => c.name === "vision_image_relevant")?.detail ?? "";
+        const offer = ex.success ? ex.data.mainOffer : null;
+        next = { ...next, visual: { ...next.visual, concept: retryConcept(next.visual.concept, why, offer) } };
+      }
       const assets = (Array.isArray(run.brandProfile?.assets) ? (run.brandProfile.assets as unknown as Extraction["assets"]) : ex.success ? ex.data.assets : []) ?? [];
       next = swapImage(next, assets, tried);
     }
-    if (copy.length) next = await reviseCopy(ctx, next, copy, facts).catch(() => next);
+    if (copy.length && !retype) next = await reviseCopy(ctx, next, copy, facts).catch(() => next);
     const newCost = BigInt(Math.round(ctx.usage.reduce((a, u) => a + u.costMicros, 0)));
+    // Trials: on the first fail also plan a replacement in parallel (hedge), so a slot that keeps failing
+    // does not serialise re-render x2 -> replan before the pack can fill. The QC bar is unchanged.
+    const hedge = wantsHedge({ isTrial: run.isTrial, freeRun: isFreeRun(run), kind: ad.kind, locked: isLocked(ad.visualBrief), qcAttempts: ad.qcAttempts, enabled: hedgeEnabled() }) && (await canHedge(db, run, now));
     await db.$transaction(async (tx) => {
+      if (hedge) {
+        await enqueue(tx, { type: "plan", runId: run.id, workspaceId: run.workspaceId, priority: priorityFor(run.isTrial, 30), payload: { replaceAdId: ad.id, hedge: true, feedback: feedback.slice(0, 2000) } });
+      }
       await tx.ad.update({
         where: { id: ad.id },
         data: {
@@ -161,7 +239,7 @@ export async function qcJob(ctx: JobContext): Promise<unknown> {
           body: next.body ?? null,
           cta: next.cta ?? null,
           claims: next.claims as unknown as Prisma.InputJsonValue,
-          visualBrief: { ...((ad.visualBrief as Record<string, unknown> | null) ?? {}), ...next.visual, spec: next, triedAssets: tried } as unknown as Prisma.InputJsonValue,
+          visualBrief: { ...((ad.visualBrief as Record<string, unknown> | null) ?? {}), ...next.visual, spec: next, triedAssets: tried, ...(retype ? { fallback: "type" } : {}) } as unknown as Prisma.InputJsonValue,
         },
       });
       await enqueue(tx, {
@@ -169,7 +247,7 @@ export async function qcJob(ctx: JobContext): Promise<unknown> {
         runId: run.id,
         adId: ad.id,
         workspaceId: run.workspaceId,
-        priority: priorityFor(run.isTrial, 25),
+        priority: isLocked(ad.visualBrief) ? BONUS_PRIORITY : priorityFor(run.isTrial, 25),
         payload: { qcFeedback: feedback },
       });
     });
@@ -179,6 +257,16 @@ export async function qcJob(ctx: JobContext): Promise<unknown> {
     await requestReplacement(db, ad.id, feedback);
   }
   await maybeFinalizeRun(db, run.id, now);
+  if (isLocked(ad.visualBrief)) await onBonusTerminal(db, storage, ad.id, now, ctx.config.assetTtlDays);
   return { pass, failed: checks.filter((c) => !c.pass).map((c) => c.name) };
 }
 
+
+/** Instrumentation: log + event when a run reaches READY_MILESTONE ready pack ads (time-to-6 from confirm). */
+async function logReadyMilestone(db: JobContext["db"], run: { id: string; workspaceId: string; userId: string | null; isTrial: boolean; confirmedAt: Date | null }, now: Date): Promise<void> {
+  const ads = await db.ad.findMany({ where: { runId: run.id, status: "ready" }, select: { visualBrief: true } });
+  if (ads.filter((a) => !isLocked(a.visualBrief)).length !== READY_MILESTONE) return;
+  const ms = run.confirmedAt ? now.getTime() - run.confirmedAt.getTime() : null;
+  log("info", "run ready milestone", { runId: run.id, ready: READY_MILESTONE, isTrial: run.isTrial, timeToReadyMs: ms });
+  await db.adsEvent.create({ data: { name: "ads_ready_6", workspaceId: run.workspaceId, userId: run.userId, runId: run.id, props: { msFromConfirm: ms, isTrial: run.isTrial } } }).catch(() => undefined);
+}

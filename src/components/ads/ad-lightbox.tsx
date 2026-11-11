@@ -7,12 +7,16 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Ratio } from "@/lib/ads/contracts";
 import type { AdView } from "@/lib/ads/run-types";
+import { notifyAdDownloaded } from "@/lib/ads/offer-session";
 import { AdMedia } from "./ad-media";
+import { useDownloadGate } from "./download-gate";
 import { AwarenessBadge } from "./awareness-badge";
+import { StudioBridgeAction } from "./studio-bridge";
 
 /** Full-size view of one ad, with ratio tabs when it has several. */
 export function AdLightbox({ ad, initialRatio, open, onOpenChange }: { ad: AdView; initialRatio: Ratio; open: boolean; onOpenChange: (o: boolean) => void }) {
   const [ratio, setRatio] = useState<Ratio>(initialRatio);
+  const gate = useDownloadGate();
   const images = ad.assets.filter((a) => a.mime.startsWith("image/"));
   const isMotion = ad.kind === "motion";
   const asset = isMotion ? ad.assets.find((a) => a.mime.startsWith("video/")) : (images.find((a) => a.ratio === ratio) ?? images[0]);
@@ -37,9 +41,16 @@ export function AdLightbox({ ad, initialRatio, open, onOpenChange }: { ad: AdVie
         )}
         {asset && (
           <Button asChild>
-            <a href={asset.downloadUrl} download><Download /> Download {isMotion ? "MP4" : asset.ratio}</a>
+            <a href={asset.downloadUrl} download onClick={(e) => {
+              if (gate.locked) {
+                e.preventDefault();
+                return gate.open();
+              }
+              notifyAdDownloaded(undefined);
+            }}><Download /> Download {isMotion ? "MP4" : asset.ratio}</a>
           </Button>
         )}
+        <StudioBridgeAction adId={ad.id} motion={isMotion} placement="ad_lightbox" className="mx-auto" />
       </DialogContent>
     </Dialog>
   );

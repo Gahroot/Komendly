@@ -4,6 +4,7 @@ import { computePose, jumpHeight } from "./pose";
 import type { OzzyState } from "./types";
 import { paintGlow, paintVoxels } from "./voxel";
 import { SDF_FORMS, sdfFrame } from "./sdf/frame";
+import { sdfWorker } from "./sdf/worker-client";
 
 const warned = new Set<string>();
 /** Never throw from rAF: a broken form falls back to classic (logged once per form in dev). */
@@ -68,6 +69,10 @@ export class OzzyRenderer {
   /** Pixel art animates "on twos": re-rasterize at most RASTER_FPS unless the look changes. */
   private rasterT = -1;
   private rasterKey = "";
+  /** A worker raster is in flight (one at a time per renderer; stale results are still painted, then refreshed). */
+  private rasterPending = false;
+  private rasterAskedAt = 0;
+  private workerFailed = false;
   private readonly size: number;
 
   constructor(
@@ -127,6 +132,11 @@ export class OzzyRenderer {
     const prev = this.look;
     this.look = look;
     if ((prev === null) !== (look === null) || (look && prev && Math.abs(look.x - prev.x) > 20)) this.kickFrame();
+  }
+
+  private paintSdf(rgba: Uint8ClampedArray<ArrayBuffer>, glow: Uint8ClampedArray<ArrayBuffer>, size: number): void {
+    this.sdfArt.getContext("2d")?.putImageData(new ImageData(rgba, size, size), 0, 0);
+    this.sdfGlow.getContext("2d")?.putImageData(new ImageData(glow, size, size), 0, 0);
   }
 
   setActive(on: boolean): void {
@@ -204,9 +214,27 @@ export class OzzyRenderer {
     if (useSdf && (key !== this.rasterKey || t - this.rasterT >= 1 / rasterFps || this.rasterT < 0)) {
       this.rasterKey = key;
       this.rasterT = t;
-      const f = safeSdfFrame(s, t, blink, still);
-      this.sdfArt.getContext("2d")?.putImageData(new ImageData(f.rgba, f.size, f.size), 0, 0);
-      this.sdfGlow.getContext("2d")?.putImageData(new ImageData(f.glow, f.size, f.size), 0, 0);
+      const w = this.workerFailed ? null : sdfWorker();
+      if (w) {
+        // Off the main thread: keep painting the last frame, swap in the new one when it arrives.
+        if (!this.rasterPending) {
+          this.rasterPending = true;
+          this.rasterAskedAt = t;
+          w.request(s, t, blink, still, (f) => {
+            this.rasterPending = false;
+            this.paintSdf(f.rgba, f.glow, f.size);
+            this.kickFrame();
+          });
+        } else if (t - this.rasterAskedAt > 1.5) {
+          // Worker stalled: rasterize on the main thread from now on (same as before the worker existed).
+          this.workerFailed = true;
+          this.rasterPending = false;
+        }
+      } else {
+        // No worker: rasterize here, as before.
+        const f = safeSdfFrame(s, t, blink, still);
+        this.paintSdf(f.rgba, f.glow, f.size);
+      }
     }
     const art = useSdf ? this.sdfArt : this.sprite;
     const glowArt = useSdf ? this.sdfGlow : this.glow;

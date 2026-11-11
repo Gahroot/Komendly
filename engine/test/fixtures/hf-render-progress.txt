@@ -1,0 +1,37 @@
+  █░░░░░░░░░░░░░░░░░░░░░░░░  5%  Compiling composition
+  ██░░░░░░░░░░░░░░░░░░░░░░░  10%  Extracting video frames
+  █████░░░░░░░░░░░░░░░░░░░░  20%  Processing audio tracks
+  ██████░░░░░░░░░░░░░░░░░░░  25%  Starting frame capture
+  ██████░░░░░░░░░░░░░░░░░░░  25%  Checking browser GPU
+  ██████░░░░░░░░░░░░░░░░░░░  25%  Measuring capture speed
+  ██████░░░░░░░░░░░░░░░░░░░  25%  Starting browsers (0/6 ready)
+  ██████░░░░░░░░░░░░░░░░░░░  25%  Starting browsers (1/6 ready)
+  ██████░░░░░░░░░░░░░░░░░░░  25%  Capturing frame 1/180 (6 workers)
+  ██████░░░░░░░░░░░░░░░░░░░  27%  Capturing frame 7/180 (6 workers)
+  ███████░░░░░░░░░░░░░░░░░░  29%  Capturing frame 14/180 (6 workers)
+  ███████░░░░░░░░░░░░░░░░░░  31%  Capturing frame 22/180 (6 workers)
+  ████████░░░░░░░░░░░░░░░░░  33%  Capturing frame 30/180 (6 workers)
+  ████████░░░░░░░░░░░░░░░░░  34%  Capturing frame 37/180 (6 workers)
+  █████████░░░░░░░░░░░░░░░░  36%  Capturing frame 44/180 (6 workers)
+  █████████░░░░░░░░░░░░░░░░  38%  Capturing frame 53/180 (6 workers)
+  ██████████░░░░░░░░░░░░░░░  40%  Capturing frame 61/180 (6 workers)
+  ██████████░░░░░░░░░░░░░░░  42%  Capturing frame 68/180 (6 workers)
+  ███████████░░░░░░░░░░░░░░  44%  Capturing frame 76/180 (6 workers)
+  ███████████░░░░░░░░░░░░░░  46%  Capturing frame 84/180 (6 workers)
+  ████████████░░░░░░░░░░░░░  48%  Capturing frame 92/180 (6 workers)
+  ████████████░░░░░░░░░░░░░  50%  Capturing frame 101/180 (6 workers)
+  █████████████░░░░░░░░░░░░  52%  Capturing frame 108/180 (6 workers)
+  █████████████░░░░░░░░░░░░  54%  Capturing frame 116/180 (6 workers)
+  ██████████████░░░░░░░░░░░  56%  Capturing frame 124/180 (6 workers)
+  ██████████████░░░░░░░░░░░  58%  Capturing frame 133/180 (6 workers)
+  ███████████████░░░░░░░░░░  60%  Capturing frame 140/180 (6 workers)
+  ███████████████░░░░░░░░░░  62%  Capturing frame 148/180 (6 workers)
+  ████████████████░░░░░░░░░  64%  Capturing frame 156/180 (6 workers)
+  ████████████████░░░░░░░░░  66%  Capturing frame 164/180 (6 workers)
+  █████████████████░░░░░░░░  68%  Capturing frame 173/180 (6 workers)
+  █████████████████░░░░░░░░  70%  Capturing frame 180/180 (6 workers)
+  ██████████████████░░░░░░░  75%  Encoding video
+  ██████████████████████░░░  90%  Assembling final video
+  █████████████████████████  100%  Render complete
+  ██████████████░░░░░░░░░░░  56%  Streaming frame 100/180 (6 workers)
+  ████████████████████░░░░░  80%  Streaming frame 180/180 (6 workers)

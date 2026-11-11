@@ -4,7 +4,7 @@ import { RunScreen } from "@/components/ads/run-screen";
 import { loadRunView } from "@/lib/ads/run-view";
 import { AdsHttpError, requireWorkspaceMember } from "@/lib/ads/workspace";
 
-export const metadata = { title: "Your ads | Komendly Ads" };
+export const metadata = { title: "Your ads", robots: { index: false, follow: false } };
 
 export default async function AdRunPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

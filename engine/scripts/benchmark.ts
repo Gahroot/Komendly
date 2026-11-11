@@ -1,6 +1,6 @@
 // Benchmark: runs the full pipeline in-process against the dev DB/bucket on N public sites.
 // Usage: set -a; . ../.env.local; set +a; CODEX_AUTH_FILE=~/.ezcoder/auth.json \
-//   npx tsx scripts/benchmark.ts [--sites url1,url2] [--n 5] [--timeout-min 15] [--batch 3|all] [--drain-min 2]
+//   npx tsx scripts/benchmark.ts [--workspace id] [--sites url1,url2] [--n 5] [--timeout-min 15] [--batch 3|all] [--drain-min 2]
 // Runs are auto-confirmed immediately after extraction (no 30s user wait), so
 // "from submit" = extract + plan + render + qc with zero review time.
 import { mkdir, writeFile } from "node:fs/promises";
@@ -9,6 +9,8 @@ import { chromium } from "playwright";
 import { loadConfig } from "../src/config";
 import { createDb } from "../src/db";
 import { createProvider } from "../src/providers/index";
+import { CodexAuth } from "../src/providers/codex-auth";
+import type { AIProvider } from "../src/providers/types";
 import { Runner } from "../src/runner";
 import { reapOrphans } from "../src/queue/reaper";
 import { createStorage } from "../src/storage/s3";
@@ -20,9 +22,10 @@ const DEFAULT_SITES = [
   { url: "https://www.kopywritingkourse.com", kind: "info product" },
   { url: "https://www.headspace.com", kind: "mobile app" },
 ];
-const OUT_DIR = "/Users/groot/.ezcoder/goals/website2ads/benchmark";
+const OUT_DIR = arg("out") ?? "/Users/groot/.ezcoder/goals/website2ads/benchmark";
 
 function arg(name: string): string | undefined {
+  // (hoisted function: OUT_DIR above uses it)
   const i = process.argv.indexOf(`--${name}`);
   return i >= 0 ? process.argv[i + 1] : undefined;
 }
@@ -32,19 +35,26 @@ const timeoutMs = Number(arg("timeout-min") ?? 25) * 60_000;
 /** On timeout, in-flight jobs get this long to finish before they are aborted (released for retry). */
 const drainMs = Number(arg("drain-min") ?? 2) * 60_000;
 
+const meter: Meter = { text: {}, image: {}, errors: 0 };
 const db = createDb();
 const config = { ...loadConfig(), workerId: `worker:benchmark:${process.pid}`, }; // concurrency etc. from the engine defaults / env (was hard-coded to 6 here)
 const runner = new Runner({
   db,
   storage: createStorage(),
-  provider: createProvider(config.aiProvider),
+  provider: meteredProvider(createProvider(config.aiProvider), meter),
   config,
   launchBrowser: () => chromium.launch({ args: ["--force-color-profile=srgb", "--font-render-hinting=none"] }),
 });
 
+const usageBefore = config.aiProvider === "codex" ? await codexUsage() : null;
+const batchStarted = Date.now();
 const email = "engine-benchmark@komendly.test";
 const user = (await db.user.findUnique({ where: { email } })) ?? (await db.user.create({ data: { email, passwordHash: "benchmark-not-a-login" } }));
-const ws = await db.adsWorkspace.create({ data: { name: `benchmark ${new Date().toISOString()}`, ownerId: user.id } });
+// --workspace <id>: reuse an earlier benchmark workspace (tests brand memory: "month 2" for the same sites).
+const wsArg = arg("workspace");
+const ws = wsArg
+  ? await db.adsWorkspace.findUniqueOrThrow({ where: { id: wsArg } })
+  : await db.adsWorkspace.create({ data: { name: `benchmark ${new Date().toISOString()}`, ownerId: user.id } });
 
 await runner.start();
 if (!runner.providerHealthy) {
@@ -58,7 +68,7 @@ const batch = batchArg === "all" ? sites.length : Math.max(1, Number(batchArg) |
 const runs: Array<{ url: string; kind: string; id: string }> = [];
 const startRun = async (s: { url: string; kind: string }) => {
   const run = await db.adRun.create({
-    data: { workspaceId: ws.id, userId: user.id, url: s.url, isTrial: true, status: "extracting", ratios: ["1:1"], staticCount: 10, motionCount: 1, creditsReserved: 15 },
+    data: { workspaceId: ws.id, userId: user.id, url: s.url, isTrial: true, status: "extracting", ratios: ["4:5"], staticCount: 10, motionCount: 1, creditsReserved: 15 },
   });
   await db.adJob.create({ data: { type: "extract", runId: run.id, workspaceId: ws.id, priority: 50 } });
   runs.push({ ...s, id: run.id });
@@ -161,6 +171,7 @@ for (const r of runs) {
 const reaped = await reapOrphans(db, { now: new Date(), maxRunAgeHours: 0.0001, stuckRunHours: 0.0001, onlyWorkspaceIds: [ws.id] });
 if (reaped.canceledJobs || reaped.finalizedRuns) console.log("cleaned up leftovers", reaped);
 await db.$disconnect();
+const usageAfter = config.aiProvider === "codex" ? await codexUsage() : null;
 
 const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 await mkdir(OUT_DIR, { recursive: true });
@@ -195,5 +206,91 @@ const md = [
   "Costs are API list-price equivalents (src/providers/cost.ts); on the Codex subscription the marginal cost is the plan's flat fee.",
 ].join("\n");
 await writeFile(path.join(OUT_DIR, `benchmark-${stamp}.md`), md);
+if (arg("out")) {
+  // Per-run folder: results.json + every ready ad (PNGs, motion.mp4) + per-site contact sheet.
+  const runDir = path.join(OUT_DIR, `run-${stamp}`);
+  await mkdir(runDir, { recursive: true });
+  const { execFileSync } = await import("node:child_process");
+  if (runs.length) {
+    try {
+      execFileSync("npx", ["tsx", "scripts/export-examples.ts", ...runs.map((r) => r.id)], { env: { ...process.env, EXAMPLES_DIR: runDir }, stdio: "inherit" });
+    } catch (e) {
+      console.error("export failed", e);
+    }
+  }
+  await writeFile(
+    path.join(runDir, "results.json"),
+    JSON.stringify(
+      {
+        startedAt: new Date(batchStarted).toISOString(),
+        wallSec: sec(Date.now() - batchStarted),
+        provider: config.aiProvider,
+        textModel: process.env.CODEX_TEXT_MODEL ?? "gpt-6.1-sol",
+        motionAgentModel: process.env.EZMOTION_AGENT_MODEL ?? "gpt-6.1-sol",
+        batch,
+        codexUsage: { before: usageBefore, after: usageAfter },
+        calls: { ...meter, motionJobs: results.reduce((a, r) => a + r.stages.render_motion.n, 0) },
+        sites: results.concat(neverStarted.map((url) => ({ site: url, status: "never_started", unfinished: true }) as never)),
+      },
+      null,
+      2,
+    ),
+  );
+  console.log("results in", runDir);
+}
 console.log(md);
 process.exit(0);
+
+// --- instrumentation (hoisted) ---
+/** Provider call totals for this process (text by model, images by quality); motion-agent child calls are not seen here, only via job costMicros. */
+type Meter = { text: Record<string, { calls: number; inputTokens: number; outputTokens: number; costMicros: number }>; image: Record<string, { calls: number; references: number; costMicros: number }>; errors: number };
+function meteredProvider(base: AIProvider, meter: Meter): AIProvider {
+  const model = process.env.CODEX_TEXT_MODEL ?? "gpt-6.1-sol";
+  const p = Object.create(base) as AIProvider;
+  p.text = async (req) => {
+    try {
+      const r = await base.text(req);
+      const t = (meter.text[model] ??= { calls: 0, inputTokens: 0, outputTokens: 0, costMicros: 0 });
+      t.calls++;
+      t.inputTokens += r.usage.inputTokens ?? 0;
+      t.outputTokens += r.usage.outputTokens ?? 0;
+      t.costMicros += r.usage.costMicros;
+      return r;
+    } catch (e) {
+      meter.errors++;
+      throw e;
+    }
+  };
+  p.image = async (req) => {
+    try {
+      const r = await base.image(req);
+      const k = `gpt-image-2:${req.quality ?? "auto"}`;
+      const t = (meter.image[k] ??= { calls: 0, references: 0, costMicros: 0 });
+      t.calls++;
+      t.references += req.references?.length ?? 0;
+      t.costMicros += r.usage.costMicros;
+      return r;
+    } catch (e) {
+      meter.errors++;
+      throw e;
+    }
+  };
+  return p;
+}
+
+/** ChatGPT plan usage windows (same endpoint the codex CLI's /status uses). Never logs tokens. */
+async function codexUsage(): Promise<unknown> {
+  try {
+    const { accessToken, accountId } = await CodexAuth.fromEnv(process.env).resolve();
+    const claims = JSON.parse(Buffer.from(accessToken.split(".")[1] ?? "", "base64url").toString("utf8")) as Record<string, { chatgpt_plan_type?: string } | undefined>;
+    const res = await fetch("https://chatgpt.com/backend-api/wham/usage", {
+      headers: { authorization: `Bearer ${accessToken}`, ...(accountId ? { "chatgpt-account-id": accountId } : {}), "user-agent": "codex_cli_rs" },
+      signal: AbortSignal.timeout(15_000),
+    });
+    const body = res.ok ? ((await res.json()) as Record<string, unknown>) : { status: res.status };
+    for (const k of ["email", "user_id", "account_id"]) delete body[k];
+    return { at: new Date().toISOString(), jwtPlan: claims["https://api.openai.com/auth"]?.chatgpt_plan_type ?? null, body };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : String(e) };
+  }
+}

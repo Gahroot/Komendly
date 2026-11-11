@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { FBC_COOKIE, FIRST_TOUCH_COOKIE, FIRST_TOUCH_MAX_AGE, LAST_TOUCH_COOKIE, firstTouchFromUrl, serializeFirstTouch } from "@/lib/analytics/first-touch";
 import { ANON_ID_COOKIE, EXP_COOKIE, EXP_COOKIE_MAX_AGE, applyOverride, completeAssignments, parseAssignments, serializeAssignments } from "@/lib/analytics/experiments";
 
 /** Give every page visitor a stable anon id + A/B assignments, visible to this same request's server render. */
@@ -11,28 +12,50 @@ function withExperiments(request: NextRequest): NextResponse {
   const before = request.cookies.get(EXP_COOKIE)?.value;
   const assignments = applyOverride(completeAssignments(anonId, parseAssignments(before)), searchParams.get("exp"));
   const serialized = serializeAssignments(assignments);
-  if (!isNew && serialized === before) return NextResponse.next();
+  // First-touch attribution (e.g. a blog CTA's UTM params): recorded once, read at ads sign-up.
+  // Last touch is overwritten by every attributed visit (UTM, fbclid or external referrer); first touch only once.
+  const touch = firstTouchFromUrl(request.nextUrl, new Date(), request.headers.get("referer"));
+  const firstTouch = request.cookies.has(FIRST_TOUCH_COOKIE) ? null : touch;
+  if (!isNew && serialized === before && !touch) return NextResponse.next();
   request.cookies.set(ANON_ID_COOKIE, anonId);
   request.cookies.set(EXP_COOKIE, serialized);
   const res = NextResponse.next({ request: { headers: request.headers } });
   const opts = { path: "/", maxAge: EXP_COOKIE_MAX_AGE, sameSite: "lax" as const, secure: process.env.NODE_ENV === "production" };
   res.cookies.set(ANON_ID_COOKIE, anonId, { ...opts, httpOnly: true });
   res.cookies.set(EXP_COOKIE, serialized, opts);
+  if (firstTouch) res.cookies.set(FIRST_TOUCH_COOKIE, serializeFirstTouch(firstTouch), { ...opts, maxAge: FIRST_TOUCH_MAX_AGE, httpOnly: true });
+  if (touch) res.cookies.set(LAST_TOUCH_COOKIE, serializeFirstTouch(touch), { ...opts, maxAge: FIRST_TOUCH_MAX_AGE, httpOnly: true });
+  // Meta click cookie: the pixel sets it too, but only after JS loads; set it server-side so CAPI sees it on sign-up.
+  if (touch?.fbc && !request.cookies.has(FBC_COOKIE)) res.cookies.set(FBC_COOKIE, touch.fbc, { ...opts, maxAge: FIRST_TOUCH_MAX_AGE });
   return res;
 }
 
 // Routes that don't require authentication
-const publicRoutes = ["/", "/testimonials", "/login", "/register", "/pricing"];
+const publicRoutes = ["/", "/testimonials", "/login", "/register", "/pricing", "/ads/pricing", "/robots.txt", "/sitemap.xml", "/llms.txt", "/llms-full.txt"];
 
 // Routes that start with these prefixes are public
 const publicPrefixes = [
+  "/blog",                 // Blog pages, hubs and /blog/feed.xml (RSS)
   "/api/auth/",
   "/api/stripe/webhooks",  // Stripe webhooks must be public
   "/api/stripe/checkout",  // Checkout API for unauthenticated users
   "/checkout/",            // Checkout pages
   "/api/ads/auth/",        // Website2ads sign-up / login
-  "/api/ads/device",       // First-party device cookie (pre-auth abuse fingerprint)
+  "/api/ads/device",
+  "/api/ads/trial-check",  // Pre-sign-up "website already had its free pack?" check (rate-limited)
+  "/api/ads/landed",       // Anonymous landing beacon (visit_landed, deduped per visitor per day)       // First-party device cookie (pre-auth abuse fingerprint)
+  "/api/ads/email-img/",   // Signed (HMAC, ~30 days) ad thumbnails in lifecycle emails
+  "/api/ads/email-unsubscribe", // Signed one-click unsubscribe from lifecycle emails
+  "/api/ads/email-click/", // Signed click-tracking redirect in lifecycle emails (app-relative paths only)
+  "/api/outbound/",       // Cold outbound claim-link redirect + one-click unsubscribe (token-checked)
+  "/api/ads/gift-public/", // Gift pack page beacon + token-checked ad images (public /gift/<token>)
+  "/api/ad-of-the-week/",  // Public images of consented ads only (Ad of the week, /ad-examples)
   "/api/ads-billing/webhook", // Stripe webhook for ads billing (signature-verified)
+  "/s/",                   // Ozzy Studio public share pages (/s/<token>)
+  "/api/studio/share/",    // Public share data (token-checked)
+  "/studio/invite/",       // Ozzy Studio invite landing ("2 free videos")
+  "/api/studio/invite/",   // Invite accept: sets the invite cookie, redirects to sign-up
+  "/api/testimonials/price-survey", // Van Westendorp survey: anonymous /pricing visitors answer too (rate-limited)
 ];
 
 // Routes that require active subscription (not just authentication)
@@ -102,6 +125,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder files
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|txt|xml)$).*)",
   ],
 };

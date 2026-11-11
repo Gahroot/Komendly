@@ -9,11 +9,11 @@ export interface Frame {
   safe: { top: number; right: number; bottom: number; left: number };
 }
 
-/** 9:16 keeps clear of feed UI (top ~14%, bottom ~20%, right rail); others keep a 6% margin. */
+/** 9:16 keeps clear of Reels UI (top 14%, bottom 35%, right rail); others keep a 7% margin. */
 export function frameFor(ratio: Ratio): Frame {
   const { width, height } = RATIO_PIXELS[ratio];
   if (ratio === "9:16") {
-    return { ratio, width, height, safe: { top: Math.round(height * 0.14), bottom: Math.round(height * 0.2), left: 72, right: 120 } };
+    return { ratio, width, height, safe: { top: Math.round(height * 0.14), bottom: Math.round(height * 0.35), left: 72, right: 120 } };
   }
   const m = Math.round(width * 0.07);
   return { ratio, width, height, safe: { top: m, bottom: m, left: m, right: m } };

@@ -2,6 +2,7 @@
 
 import { EXP_COOKIE, experimentParams, parseAssignments, type Assignments } from "./experiments";
 import type { FunnelEvent } from "./funnel-events";
+import { trackMetaPixel } from "./meta-pixel";
 
 type Params = Record<string, string | number | boolean | undefined>;
 type Gtag = (...args: unknown[]) => void;
@@ -27,6 +28,7 @@ export function track(event: FunnelEvent, params: Params = {}): void {
       const w = window as unknown as { dataLayer?: unknown[] };
       (w.dataLayer ??= []).push({ event, ...payload });
     }
+    trackMetaPixel(event, params);
     if (process.env.NODE_ENV !== "production") console.debug("[track]", event, payload);
   } catch {
     // analytics must never break the product

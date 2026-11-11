@@ -33,6 +33,14 @@ export interface AIProvider {
   readonly name: "codex" | "openai";
   text(req: TextRequest): Promise<{ text: string; json?: unknown; usage: UsageMeter }>;
   image(req: ImageRequest): Promise<{ png: Buffer; width: number; height: number; usage: UsageMeter }>;
+  /**
+   * Codex only: the ChatGPT login for a child agent run (EZ Motion agent). `lease` returns the
+   * openai auth.json entry valid for a while; `adopt` takes back a pair the child refreshed.
+   */
+  readonly agentCredentials?: {
+    lease(minMs?: number): Promise<{ accessToken: string; refreshToken: string; expiresAt: number; accountId?: string }>;
+    adopt(next: { accessToken: string; refreshToken: string; expiresAt: number; accountId?: string }): Promise<boolean>;
+  };
   /** Cheap check used by the heartbeat (e.g. Codex login expired -> ok:false). */
   health(): Promise<{ ok: boolean; message?: string }>;
 }

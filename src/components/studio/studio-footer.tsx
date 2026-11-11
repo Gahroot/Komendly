@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { OzzyLazy } from "@/components/ozzy/OzzyLazy";
 import { ridgeHeights, ridgePath } from "./pixel-art";
+import { BrandMark } from "@/components/brand-mark";
 
 const CELL = 8;
 const RIDGE = ridgeHeights(200, 29, 5, 3);
 
 const COLS: { title: string; links: { href: string; label: string }[] }[] = [
-  { title: "Make ads", links: [{ href: "/#studio-url", label: "Start free" }, { href: "/#examples", label: "Examples" }, { href: "/ads/pricing", label: "Pricing" }, { href: "/ads/login", label: "Sign in" }] },
-  { title: "Read", links: [{ href: "/blog", label: "The Journal" }, { href: "/testimonials", label: "Video testimonials" }] },
+  { title: "Make", links: [{ href: "/#studio-url", label: "Start free" }, { href: "/ozzy-studio", label: "Ozzy Studio" }, { href: "/#examples", label: "Examples" }, { href: "/pricing", label: "Pricing" }, { href: "/login", label: "Sign in" }] },
+  { title: "Read", links: [{ href: "/blog", label: "The Journal" }, { href: "/ad-of-the-week", label: "Ad of the week" }, { href: "/ad-examples", label: "Ad examples" }, { href: "/testimonials", label: "Video testimonials" }, { href: "/partners", label: "Partner program" }] },
+  { title: "Legal", links: [{ href: "/privacy", label: "Privacy" }, { href: "/terms", label: "Terms" }, { href: "/terms#refunds", label: "Refunds" }] },
 ];
 
 /** Campfire footer: the night ends on a ridge where Ozzy naps by a pixel fire. Shared by home, blog and pricing. */
@@ -15,10 +17,10 @@ export function StudioFooter() {
   const h = 10 * CELL;
   return (
     <footer className="relative mt-10 overflow-hidden" aria-label="Site footer">
-      <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pb-10 pt-6 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
+      <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pb-10 pt-6 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div className="space-y-3">
           <p className="font-display flex items-center gap-2 text-2xl font-semibold">
-            <span aria-hidden className="inline-block size-3 rotate-45 bg-[var(--studio-gold)] shadow-[0_0_14px_#ffcf4a99]" />
+            <BrandMark className="size-8" />
             Komendly
           </p>
           <p className="max-w-xs text-sm text-muted-foreground">Ozzy turns your website into ads your customers recognise themselves in. Built under the southern sky.</p>

@@ -1,0 +1,746 @@
+[
+  {
+    "name": "Jess",
+    "slug": "jess-car",
+    "gender": "female",
+    "style": "friendly",
+    "ageRange": "30-39",
+    "persona": "busy mom",
+    "occupation": "marketing coordinator",
+    "setting": "car",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Jessica",
+    "voicePrompt": "a 34-year-old white American woman, general American accent; warm, upbeat, a bit quick, like a busy mom talking to a friend",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "34-year-old marketing coordinator, filmed sitting in the driver's seat of her parked car on a sunny afternoon.",
+    "tags": [
+      "warm",
+      "casual",
+      "relatable"
+    ],
+    "industries": [
+      "home services",
+      "dental/medical",
+      "retail",
+      "pet services"
+    ],
+    "sortOrder": 1,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 34-year-old white woman with wavy brown hair in a loose ponytail, light freckles, no makeup, wearing a grey crewneck sweatshirt, sitting in the driver's seat of her parked car on a sunny afternoon, natural daylight through the windshield, slight overexposure on the window. She is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "General American"
+  },
+  {
+    "name": "Marcus",
+    "slug": "marcus-job-site",
+    "gender": "male",
+    "style": "casual",
+    "ageRange": "40-49",
+    "persona": "contractor",
+    "occupation": "general contractor",
+    "setting": "job-site",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Roger",
+    "voicePrompt": "a 41-year-old Black American man with a relaxed African-American accent; deep, easygoing, confident",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "41-year-old general contractor, filmed standing next to his pickup truck at a residential job site.",
+    "tags": [
+      "trustworthy",
+      "calm",
+      "down-to-earth"
+    ],
+    "industries": [
+      "home services",
+      "auto",
+      "real estate",
+      "legal/finance"
+    ],
+    "sortOrder": 2,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 41-year-old Black man with a short trimmed beard and close-cropped hair, a little heavier build, wearing a navy work polo shirt, standing next to his pickup truck at a residential job site, overcast daylight, ladders and lumber softly blurred behind. He is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "African-American"
+  },
+  {
+    "name": "Priya",
+    "slug": "priya-home-office",
+    "gender": "female",
+    "style": "professional",
+    "ageRange": "25-34",
+    "persona": "startup employee",
+    "occupation": "product manager",
+    "setting": "home-office",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Sarah",
+    "voicePrompt": "a 29-year-old Indian-American woman with a light, natural Indian accent; bright, articulate, friendly",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "29-year-old product manager, filmed sitting at her small home office desk.",
+    "tags": [
+      "professional",
+      "smart",
+      "friendly"
+    ],
+    "industries": [
+      "SaaS/tech",
+      "coaching",
+      "legal/finance",
+      "dental/medical"
+    ],
+    "sortOrder": 3,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 29-year-old South Asian woman with long dark hair down, thin gold nose stud, round tortoiseshell glasses, wearing a mustard knit cardigan over a white tee, sitting at her small home office desk, a laptop and a plant blurred behind her, window light from the side. She is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Indian"
+  },
+  {
+    "name": "Dave",
+    "slug": "dave-porch",
+    "gender": "male",
+    "style": "friendly",
+    "ageRange": "55-64",
+    "persona": "retiree homeowner",
+    "occupation": "retired electrician",
+    "setting": "porch",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Bill",
+    "voicePrompt": "a 58-year-old white American man with a Midwestern accent; gravelly, kind, unhurried",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "58-year-old retired electrician, filmed standing on the front porch of his suburban house.",
+    "tags": [
+      "warm",
+      "trustworthy",
+      "grandfatherly"
+    ],
+    "industries": [
+      "home services",
+      "auto",
+      "legal/finance",
+      "pet services"
+    ],
+    "sortOrder": 4,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 58-year-old white man with grey stubble, receding grey hair, reading glasses pushed up on head, weathered skin, ruddy cheeks, wearing a faded red flannel shirt, standing on the front porch of his suburban house, late afternoon sun, porch railing and front yard behind. He is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Midwestern"
+  },
+  {
+    "name": "Mei",
+    "slug": "mei-shop-counter",
+    "gender": "female",
+    "style": "friendly",
+    "ageRange": "40-49",
+    "persona": "small business owner",
+    "occupation": "bakery owner",
+    "setting": "shop-counter",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Matilda",
+    "voicePrompt": "a 45-year-old Chinese immigrant woman with a light Mandarin Chinese accent in English; warm, sincere, measured",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "45-year-old bakery owner, filmed standing behind the counter of her small bakery shop.",
+    "tags": [
+      "warm",
+      "sincere",
+      "calm"
+    ],
+    "industries": [
+      "restaurants",
+      "retail",
+      "SaaS/tech",
+      "legal/finance"
+    ],
+    "sortOrder": 5,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 45-year-old East Asian woman with shoulder-length black hair with a few greys, minimal makeup, small smile lines, wearing a black apron over a striped shirt, standing behind the counter of her small bakery shop, shelves and a display case softly blurred behind, warm indoor light. She is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Chinese"
+  },
+  {
+    "name": "Carlos",
+    "slug": "carlos-gym",
+    "gender": "male",
+    "style": "energetic",
+    "ageRange": "25-34",
+    "persona": "fitness enthusiast",
+    "occupation": "personal trainer",
+    "setting": "gym",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Liam",
+    "voicePrompt": "a 27-year-old Mexican-American man with a light Latino accent; energetic, punchy, enthusiastic",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "27-year-old personal trainer, filmed in a gym locker area after a workout.",
+    "tags": [
+      "energetic",
+      "motivated",
+      "casual"
+    ],
+    "industries": [
+      "fitness",
+      "coaching",
+      "SaaS/tech",
+      "retail"
+    ],
+    "sortOrder": 6,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 27-year-old Latino man with a thick dark beard, short faded haircut, athletic build, slightly sweaty forehead, wearing a black sleeveless gym shirt, in a gym locker area after a workout, lockers and benches behind, fluorescent overhead light. He is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Mexican-American"
+  },
+  {
+    "name": "Linda",
+    "slug": "linda-living-room",
+    "gender": "female",
+    "style": "friendly",
+    "ageRange": "55-64",
+    "persona": "grandmother",
+    "occupation": "retired teacher",
+    "setting": "living-room",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Lily",
+    "voicePrompt": "a 62-year-old white American woman with a soft Midwestern accent; kind, gentle, a bit slower",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "62-year-old retired teacher, filmed sitting on her living room couch.",
+    "tags": [
+      "warm",
+      "gentle",
+      "trustworthy"
+    ],
+    "industries": [
+      "dental/medical",
+      "home services",
+      "pet services",
+      "legal/finance"
+    ],
+    "sortOrder": 7,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 62-year-old white woman with short silver hair, light wrinkles, small pearl earrings, rosy cheeks, slightly fuller figure, wearing a soft lavender cardigan, sitting on her living room couch, a lamp and framed photos blurred behind, soft window light. She is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Midwestern"
+  },
+  {
+    "name": "Andre",
+    "slug": "andre-barbershop",
+    "gender": "male",
+    "style": "casual",
+    "ageRange": "30-39",
+    "persona": "regular customer",
+    "occupation": "logistics manager",
+    "setting": "barbershop",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Chris",
+    "voicePrompt": "a 35-year-old Black American man with a smooth African-American accent; laid-back, friendly",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "35-year-old logistics manager, filmed sitting in a barbershop chair.",
+    "tags": [
+      "cool",
+      "casual",
+      "friendly"
+    ],
+    "industries": [
+      "beauty/salon",
+      "auto",
+      "retail",
+      "restaurants"
+    ],
+    "sortOrder": 8,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 35-year-old Black man with a clean shaven head, neat goatee, medium build, wearing a white t-shirt under an open denim shirt, sitting in a barbershop chair, barber tools and mirror softly blurred behind, warm overhead light. He is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "African-American"
+  },
+  {
+    "name": "Sofia",
+    "slug": "sofia-sidewalk",
+    "gender": "female",
+    "style": "energetic",
+    "ageRange": "18-24",
+    "persona": "college student",
+    "occupation": "barista and student",
+    "setting": "sidewalk",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Laura",
+    "voicePrompt": "a 24-year-old Latina woman with a light Mexican-American accent; bubbly, quick, expressive",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "24-year-old barista and student, filmed walking outside on a city sidewalk on a bright day.",
+    "tags": [
+      "energetic",
+      "fun",
+      "casual"
+    ],
+    "industries": [
+      "restaurants",
+      "beauty/salon",
+      "fitness",
+      "retail"
+    ],
+    "sortOrder": 9,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 24-year-old Latina woman with curly dark hair pulled up in a claw clip, small hoop earrings, light acne marks, wearing a oversized beige hoodie, walking outside on a city sidewalk on a bright day, storefronts and trees softly blurred behind. She is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Mexican-American"
+  },
+  {
+    "name": "Tom",
+    "slug": "tom-home-office",
+    "gender": "male",
+    "style": "professional",
+    "ageRange": "40-49",
+    "persona": "small business owner",
+    "occupation": "accountant",
+    "setting": "home-office",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "George",
+    "voicePrompt": "a 47-year-old white American man, general American accent; measured, articulate, calm",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "47-year-old accountant, filmed in his home office.",
+    "tags": [
+      "professional",
+      "calm",
+      "credible"
+    ],
+    "industries": [
+      "legal/finance",
+      "SaaS/tech",
+      "real estate",
+      "coaching"
+    ],
+    "sortOrder": 10,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 47-year-old white man with short sandy hair, light beard with some grey, rectangular black glasses, slight dad bod, wearing a quarter-zip pullover in charcoal, in his home office, bookshelf blurred behind, laptop light and window light on his face. He is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "General American"
+  },
+  {
+    "name": "Aisha",
+    "slug": "aisha-kitchen",
+    "gender": "female",
+    "style": "friendly",
+    "ageRange": "35-44",
+    "persona": "working mom",
+    "occupation": "nurse",
+    "setting": "kitchen",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Alice",
+    "voicePrompt": "a 38-year-old Black American woman with a warm African-American accent; confident, clear, expressive",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "38-year-old nurse, filmed standing in her home kitchen.",
+    "tags": [
+      "warm",
+      "confident",
+      "sincere"
+    ],
+    "industries": [
+      "dental/medical",
+      "home services",
+      "restaurants",
+      "coaching"
+    ],
+    "sortOrder": 11,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 38-year-old Black woman with natural hair in a short twist-out, small gold studs, warm brown skin, wearing a emerald green blouse, standing in her home kitchen, cabinets and a fruit bowl softly blurred behind, morning window light. She is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "African-American"
+  },
+  {
+    "name": "Raj",
+    "slug": "raj-cafe",
+    "gender": "male",
+    "style": "professional",
+    "ageRange": "45-54",
+    "persona": "consultant",
+    "occupation": "IT consultant",
+    "setting": "cafe",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Daniel",
+    "voicePrompt": "a 52-year-old Indian man with a clear Indian English accent; calm, thoughtful, precise",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "52-year-old IT consultant, filmed sitting at a cafe table with a coffee cup out of focus.",
+    "tags": [
+      "professional",
+      "thoughtful",
+      "calm"
+    ],
+    "industries": [
+      "SaaS/tech",
+      "legal/finance",
+      "dental/medical",
+      "real estate"
+    ],
+    "sortOrder": 12,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 52-year-old South Asian man with salt-and-pepper hair, neat grey moustache, wire-rimmed glasses, wearing a light blue button-down shirt, sitting at a cafe table with a coffee cup out of focus, cafe interior blurred behind, window daylight. He is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Indian"
+  },
+  {
+    "name": "Hannah",
+    "slug": "hannah-gym",
+    "gender": "female",
+    "style": "energetic",
+    "ageRange": "25-34",
+    "persona": "fitness lover",
+    "occupation": "physical therapist",
+    "setting": "gym",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Jessica",
+    "voicePrompt": "a 31-year-old white American woman with a casual Californian accent; upbeat, peppy",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "31-year-old physical therapist, filmed in a gym near the locker area.",
+    "tags": [
+      "energetic",
+      "positive",
+      "casual"
+    ],
+    "industries": [
+      "fitness",
+      "dental/medical",
+      "coaching",
+      "beauty/salon"
+    ],
+    "sortOrder": 13,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 31-year-old white woman with straight blonde hair, light makeup, a few freckles, slight sunburn on nose, wearing a teal athletic zip jacket, in a gym near the locker area, mirrors and racks softly blurred behind, bright overhead light. She is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Californian"
+  },
+  {
+    "name": "Kenji",
+    "slug": "kenji-living-room",
+    "gender": "male",
+    "style": "casual",
+    "ageRange": "30-39",
+    "persona": "tech worker",
+    "occupation": "software engineer",
+    "setting": "living-room",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Callum",
+    "voicePrompt": "a 33-year-old Japanese man with a light Japanese accent in English; relaxed, dry humor, natural pace",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "33-year-old software engineer, filmed sitting on his living room couch.",
+    "tags": [
+      "casual",
+      "dry humor",
+      "genuine"
+    ],
+    "industries": [
+      "SaaS/tech",
+      "retail",
+      "pet services",
+      "restaurants"
+    ],
+    "sortOrder": 14,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 33-year-old East Asian man with messy black hair, thin black-frame glasses, clean shaven, slim build, wearing a olive green crewneck sweater, sitting on his living room couch, bookshelf and plant blurred behind, warm evening lamp light. He is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Japanese"
+  },
+  {
+    "name": "Gloria",
+    "slug": "gloria-salon",
+    "gender": "female",
+    "style": "friendly",
+    "ageRange": "55-64",
+    "persona": "loyal client",
+    "occupation": "real estate agent",
+    "setting": "salon",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Charlotte",
+    "voicePrompt": "a 55-year-old Mexican woman with a noticeable Mexican Spanish accent in English; warm, lively, chatty",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "55-year-old real estate agent, filmed sitting in a salon chair with fresh blowout.",
+    "tags": [
+      "warm",
+      "chatty",
+      "expressive"
+    ],
+    "industries": [
+      "beauty/salon",
+      "real estate",
+      "dental/medical",
+      "restaurants"
+    ],
+    "sortOrder": 15,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 55-year-old Latina woman with shoulder-length dyed auburn hair, gold necklace, warm smile lines, fuller figure, wearing a floral print blouse, sitting in a salon chair with fresh blowout, salon mirrors and products softly blurred behind. She is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Mexican"
+  },
+  {
+    "name": "Mike",
+    "slug": "mike-job-site",
+    "gender": "male",
+    "style": "casual",
+    "ageRange": "40-49",
+    "persona": "tradesman",
+    "occupation": "HVAC technician",
+    "setting": "job-site",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Brian",
+    "voicePrompt": "a 44-year-old white American tradesman with a light Southern accent; gruff, friendly, plainspoken",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "44-year-old HVAC technician, filmed sitting in the driver's seat of his work truck at a job site.",
+    "tags": [
+      "down-to-earth",
+      "honest",
+      "casual"
+    ],
+    "industries": [
+      "home services",
+      "auto",
+      "retail",
+      "legal/finance"
+    ],
+    "sortOrder": 16,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 44-year-old white man with a full brown beard, ball cap, broad shoulders, sunburnt face, wearing a grey company work t-shirt with no logo, sitting in the driver's seat of his work truck at a job site, dusty dashboard, daylight through the window. He is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Southern American"
+  },
+  {
+    "name": "Fatima",
+    "slug": "fatima-car",
+    "gender": "female",
+    "style": "professional",
+    "ageRange": "35-44",
+    "persona": "professional mom",
+    "occupation": "pharmacist",
+    "setting": "car",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Sarah",
+    "voicePrompt": "a 42-year-old Arab woman with a light Arabic accent in English; composed, warm, clear",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "42-year-old pharmacist, filmed sitting in the passenger seat of a parked car.",
+    "tags": [
+      "professional",
+      "warm",
+      "credible"
+    ],
+    "industries": [
+      "dental/medical",
+      "legal/finance",
+      "SaaS/tech",
+      "retail"
+    ],
+    "sortOrder": 17,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 42-year-old Middle Eastern woman wearing a soft beige hijab, light makeup, warm brown eyes, wearing a dark navy cardigan, sitting in the passenger seat of a parked car, soft overcast daylight through the side window. She is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Arabic"
+  },
+  {
+    "name": "Jamal",
+    "slug": "jamal-sidewalk",
+    "gender": "male",
+    "style": "energetic",
+    "ageRange": "18-24",
+    "persona": "college student",
+    "occupation": "delivery driver",
+    "setting": "sidewalk",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Will",
+    "voicePrompt": "a 23-year-old Black American man with a young African-American accent; chill but upbeat, casual",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "23-year-old delivery driver, filmed walking outside on a neighborhood sidewalk.",
+    "tags": [
+      "energetic",
+      "fun",
+      "young"
+    ],
+    "industries": [
+      "restaurants",
+      "fitness",
+      "auto",
+      "retail"
+    ],
+    "sortOrder": 18,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 23-year-old Black man with short twists, light moustache, slim build, small stud earring, wearing a black hoodie, walking outside on a neighborhood sidewalk, parked cars and houses softly blurred behind, golden hour light. He is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "African-American"
+  },
+  {
+    "name": "Rosa",
+    "slug": "rosa-backyard",
+    "gender": "female",
+    "style": "friendly",
+    "ageRange": "65+",
+    "persona": "grandmother",
+    "occupation": "retired homemaker",
+    "setting": "backyard",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Matilda",
+    "voicePrompt": "a 67-year-old Mexican grandmother with a strong Mexican Spanish accent in English; gentle, motherly, slow",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "67-year-old retired homemaker, filmed sitting in her backyard garden.",
+    "tags": [
+      "warm",
+      "gentle",
+      "sincere"
+    ],
+    "industries": [
+      "home services",
+      "dental/medical",
+      "pet services",
+      "restaurants"
+    ],
+    "sortOrder": 19,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 67-year-old Latina woman with grey hair in a low bun, deep smile lines, small glasses on a beaded chain, wearing a pale pink sweater, sitting in her backyard garden, flower beds and a wooden fence softly blurred behind, soft afternoon sun. She is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Mexican"
+  },
+  {
+    "name": "Greg",
+    "slug": "greg-backyard",
+    "gender": "male",
+    "style": "friendly",
+    "ageRange": "55-64",
+    "persona": "retiree",
+    "occupation": "retired sales manager",
+    "setting": "backyard",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Bill",
+    "voicePrompt": "a 61-year-old white American man with a hearty Midwestern accent; cheerful, chatty",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "61-year-old retired sales manager, filmed standing in his backyard near a grill.",
+    "tags": [
+      "warm",
+      "funny",
+      "chatty"
+    ],
+    "industries": [
+      "home services",
+      "auto",
+      "legal/finance",
+      "pet services"
+    ],
+    "sortOrder": 20,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 61-year-old white man, mostly bald with a grey horseshoe hairline, clean shaven, rosy complexion, slightly heavy, wearing a light green polo shirt, standing in his backyard near a grill, lawn and fence softly blurred behind, bright afternoon light. He is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Midwestern"
+  },
+  {
+    "name": "Nina",
+    "slug": "nina-cafe",
+    "gender": "female",
+    "style": "professional",
+    "ageRange": "35-44",
+    "persona": "entrepreneur",
+    "occupation": "boutique owner",
+    "setting": "cafe",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Aria",
+    "voicePrompt": "a 36-year-old Eastern European woman with a light Russian accent in English; smooth, poised, slightly low pitch",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "36-year-old boutique owner, filmed sitting at a cafe table.",
+    "tags": [
+      "professional",
+      "stylish",
+      "confident"
+    ],
+    "industries": [
+      "retail",
+      "beauty/salon",
+      "SaaS/tech",
+      "coaching"
+    ],
+    "sortOrder": 21,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 36-year-old Eastern European white woman with a dark brown bob haircut, minimal makeup, slight under-eye shadows, wearing a black turtleneck, sitting at a cafe table, espresso machine and patrons' tables blurred behind with no visible people, window light. She is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Eastern European"
+  },
+  {
+    "name": "Luis",
+    "slug": "luis-kitchen",
+    "gender": "male",
+    "style": "friendly",
+    "ageRange": "35-44",
+    "persona": "dad",
+    "occupation": "restaurant manager",
+    "setting": "kitchen",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Eric",
+    "voicePrompt": "a 38-year-old Mexican-American man with a light Latino accent; friendly, warm, conversational",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "38-year-old restaurant manager, filmed standing in his home kitchen.",
+    "tags": [
+      "warm",
+      "friendly",
+      "relatable"
+    ],
+    "industries": [
+      "restaurants",
+      "home services",
+      "pet services",
+      "auto"
+    ],
+    "sortOrder": 22,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 38-year-old Latino man with short black hair, light stubble, friendly round face, medium build, wearing a maroon zip hoodie, standing in his home kitchen, stove and cabinets softly blurred behind, warm overhead light. He is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Mexican-American"
+  },
+  {
+    "name": "Tasha",
+    "slug": "tasha-porch",
+    "gender": "female",
+    "style": "energetic",
+    "ageRange": "25-34",
+    "persona": "young professional",
+    "occupation": "hairstylist",
+    "setting": "porch",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Laura",
+    "voicePrompt": "a 27-year-old Black American woman with a Southern African-American accent; lively, fast, fun",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "27-year-old hairstylist, filmed standing outside the front door of her townhouse.",
+    "tags": [
+      "energetic",
+      "fun",
+      "expressive"
+    ],
+    "industries": [
+      "beauty/salon",
+      "fitness",
+      "retail",
+      "real estate"
+    ],
+    "sortOrder": 23,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 27-year-old Black woman with long box braids, gold hoop earrings, glossy lips, curvy build, wearing a burnt orange ribbed tank top under a denim jacket, standing outside the front door of her townhouse, steps and potted plants softly blurred behind, bright daylight. She is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "African-American"
+  },
+  {
+    "name": "Sam",
+    "slug": "sam-shop-counter",
+    "gender": "male",
+    "style": "casual",
+    "ageRange": "25-34",
+    "persona": "small business owner",
+    "occupation": "bike shop owner",
+    "setting": "shop-counter",
+    "voiceProvider": "elevenlabs",
+    "voiceId": "Charlie",
+    "voicePrompt": "a 29-year-old Irish man with a light Irish accent; easygoing, genuine, casual",
+    "voiceSettings": {
+      "stability": 0.45
+    },
+    "description": "29-year-old bike shop owner, filmed standing behind the counter of his small bike repair shop.",
+    "tags": [
+      "casual",
+      "genuine",
+      "friendly"
+    ],
+    "industries": [
+      "retail",
+      "auto",
+      "fitness",
+      "SaaS/tech"
+    ],
+    "sortOrder": 24,
+    "prompt": "Vertical frame grab from an iPhone 15 front-camera selfie video, held at arm's length. A real 29-year-old white man with red hair, ginger beard, freckles, slim build, wearing a heather blue t-shirt, standing behind the counter of his small bike repair shop, bikes and tools softly blurred behind, warm indoor light. He is mid-sentence, mouth slightly open showing natural lips, relaxed natural expression, eyes looking directly into the lens. Face fully visible, centered and evenly lit, head, shoulders and upper torso in frame, no hands near the face. Realistic skin texture with pores, mild front-camera wide-angle distortion, slightly soft focus, a little noise in the shadows. Ordinary, unposed, authentic UGC look. No other people. No text, no logos, no watermark.",
+    "accent": "Irish"
+  }
+]

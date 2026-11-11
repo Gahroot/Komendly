@@ -22,7 +22,7 @@ export function GenerateMoreForm({ url, brandProfileId }: { url: string; brandPr
   const router = useRouter();
   const [count, setCount] = useState(10);
   const [levels, setLevels] = useState<Awareness[]>(["problem_aware", "solution_aware"]);
-  const [ratios, setRatios] = useState<Ratio[]>(["4:5", "1:1"]);
+  const [ratios, setRatios] = useState<Ratio[]>(["4:5"]);
   const [motion, setMotion] = useState(false);
   const [busy, setBusy] = useState(false);
   const [needCredits, setNeedCredits] = useState(false);

@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { Suspense } from "react";
+import { MetaPixel } from "@/components/analytics/meta-pixel";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { resolveAuthor } from "@/lib/authors";
+import { graph, jsonLdString, organizationJsonLd, websiteJsonLd } from "@/lib/seo/jsonld";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -18,7 +22,7 @@ const siteConfig = {
   name: "Komendly",
   tagline: "Your website in. Ready-to-run ads out.",
   description: "Paste your website and Ozzy, Komendly's AI ad wizard, builds on-brand, export-ready ads for every stage of awareness. 10 static ads + 1 animated ad free. No card required.",
-  url: "https://komendly.com",
+  url: "https://www.komendly.com",
   twitterHandle: "@komendly",
 };
 
@@ -75,27 +79,7 @@ export const metadata: Metadata = {
 };
 
 // Site-wide JSON-LD. Product-specific data lives on its page (/ and /testimonials).
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Organization",
-      "@id": `${siteConfig.url}/#organization`,
-      name: siteConfig.name,
-      url: siteConfig.url,
-      logo: { "@type": "ImageObject", url: `${siteConfig.url}/brand/icon-512.png` },
-      sameAs: [],
-    },
-    {
-      "@type": "WebSite",
-      "@id": `${siteConfig.url}/#website`,
-      url: siteConfig.url,
-      name: siteConfig.name,
-      description: siteConfig.description,
-      publisher: { "@id": `${siteConfig.url}/#organization` },
-    },
-  ],
-};
+const jsonLd = graph(organizationJsonLd(resolveAuthor(null)), websiteJsonLd(siteConfig.description));
 
 export default function RootLayout({
   children,
@@ -127,7 +111,7 @@ export default function RootLayout({
 
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-THCR5EQWY2"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
         <Script id="google-analytics" strategy="afterInteractive">
           {`
@@ -139,11 +123,14 @@ export default function RootLayout({
         </Script>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdString(jsonLd) }}
         />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
+        <Suspense fallback={null}>
+          <MetaPixel />
+        </Suspense>
       </body>
     </html>
   );

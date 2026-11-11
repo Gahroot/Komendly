@@ -7,7 +7,7 @@ import { ComposedRejectedError, renderComposedAd } from "./index";
 
 interface Ctx { provider: AIProvider; usage: UsageMeter[]; signal?: AbortSignal }
 
-export async function tryComposed(ctx: Ctx, i: { spec: AdSpec; brand: BrandKit; ratios: Ratio[]; workDir: string; avoidHashes?: string[] }): Promise<{ files: RenderedFile[] | null; meta: Record<string, unknown> }> {
+export async function tryComposed(ctx: Ctx, i: { spec: AdSpec; brand: BrandKit; ratios: Ratio[]; workDir: string; avoidHashes?: string[]; sceneOffset?: number }): Promise<{ files: RenderedFile[] | null; meta: Record<string, unknown> }> {
   const started = Date.now();
   try {
     const once = () => renderComposedAd({ ...i, provider: ctx.provider, signal: ctx.signal });

@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 const FLAGS = [
   { key: "ezmotion", label: "EZ Motion", description: "Animated (motion) ad generation." },
   { key: "meta_publish", label: "Meta publishing", description: "Let paid workspaces publish ads to Meta." },
+  { key: "lifecycle_email", label: "Lifecycle emails", description: "Engine sends the post-sign-up / post-trial email sequence (preview at Admin > Emails)." },
 ] as const;
 
 export default async function AdminAdsFlagsPage() {

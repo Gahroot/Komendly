@@ -59,5 +59,5 @@ export function clearPendingRun(): void {
 
 /** Only allow in-app redirects after auth (prevents open redirects). */
 export function safeNext(next: string | null, fallback = "/ads/app"): string {
-  return next && /^\/(ads|verify-email)(\/|$|\?)/.test(next) ? next : fallback;
+  return next && /^\/(ads|verify-email|partners)(\/|$|\?)/.test(next) ? next : fallback;
 }

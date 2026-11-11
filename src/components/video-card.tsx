@@ -48,7 +48,7 @@ export function VideoCard({ video, onClick }: VideoCardProps) {
         {/* Thumbnail */}
         <div className="relative aspect-video bg-secondary overflow-hidden">
           {/* Placeholder gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-zinc-700 via-zinc-800 to-card" />
+          <div className="absolute inset-0 bg-[linear-gradient(160deg,#3a2266,#1c0f36)]" />
 
           {/* Video thumbnail - uses first frame of video */}
           <VideoThumbnail

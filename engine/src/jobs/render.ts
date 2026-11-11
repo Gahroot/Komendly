@@ -7,6 +7,7 @@ import { runKey } from "../storage/keys";
 import { buildBrandKit } from "./brandkit";
 import { supersededReason } from "./render-guard";
 import { PermanentJobError, type JobContext } from "./context";
+import { loadBrandHistory, sceneOffset } from "./brand-history";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { PLAN_SYSTEM } from "../prompts/plan";
@@ -16,6 +17,31 @@ import { staticMode } from "../render/composed/mode";
 import { tryComposed } from "../render/composed/fallback";
 import { newComposedTimings } from "../render/composed/index";
 import { log } from "../log";
+import { renderedBody } from "../render/composed/prompt";
+import { BONUS_PRIORITY, bonusKindOf, fallbackOf, isLocked } from "./trial-fill";
+import { onBonusTerminal, storyFrame } from "./bonus";
+
+/** Templates show body copy only up to this length (shortBody); longer bodies are shortened, not dropped. */
+export const BODY_FIT_MAX = 70;
+
+/** Shorten an over-long body to fit (same meaning, no new claims); keeps headline and CTA. */
+export async function fitBody(ctx: JobContext, spec: AdSpec, max = BODY_FIT_MAX): Promise<AdSpec> {
+  if (!spec.body || spec.body.length <= max) return spec;
+  const r = await structured(
+    ctx.provider,
+    z.object({ body: z.string() }),
+    {
+      system: PLAN_SYSTEM,
+      prompt: `This ad's body line is too long for the layout. Rewrite it in at most ${max} characters: same point, plain words, no new claims, no numbers that are not already in it.\nheadline: ${spec.headline}\nbody: ${spec.body}`,
+      reasoning: "low",
+      signal: ctx.signal,
+    },
+    ctx.usage,
+  ).catch(() => null);
+  const firstSentence = /^(.+?[.!?])(\s|$)/.exec(spec.body)?.[1];
+  const body = r && r.body.trim().length > 0 && r.body.trim().length <= max ? r.body.trim() : firstSentence && firstSentence.length <= max ? firstSentence : null;
+  return body ? AdSpecSchema.parse({ ...spec, body }) : spec;
+}
 
 const ShortCopy = z.object({ headline: z.string(), body: z.string().optional(), cta: z.string().optional() });
 
@@ -56,7 +82,7 @@ export function specFromAd(ad: { visualBrief: unknown }): AdSpec {
 
 function runRatios(ratios: string[]): Ratio[] {
   const r = ratios.filter((x): x is Ratio => (RATIOS as readonly string[]).includes(x));
-  return r.length ? r : ["1:1"];
+  return r.length ? r : ["4:5"];
 }
 
 /** Templates already used by the run's other static ads (from their render meta), for the per-set cap. */
@@ -101,6 +127,14 @@ async function timedBrowser<T>(
   }, signal);
 }
 
+/** Buyer brief for the motion script: the brand profile's audience, offer and pains (in the buyer's words). */
+export function motionBrief(bp: { audience?: string | null; mainOffer?: string | null; pains?: unknown; facts?: unknown } | null): { audience?: string; offer?: string; pains: string[]; facts: string[] } {
+  const pains = Array.isArray(bp?.pains) ? (bp.pains as unknown[]).map((p) => (typeof p === "string" ? p : typeof (p as { text?: unknown })?.text === "string" ? (p as { text: string }).text : "")).filter(Boolean) : [];
+  // Verified site facts (QC grounds every on-screen claim against these).
+  const facts = Array.isArray(bp?.facts) ? (bp.facts as unknown[]).map((f) => (typeof (f as { claim?: unknown })?.claim === "string" ? (f as { claim: string }).claim : "")).filter(Boolean).slice(0, 40) : [];
+  return { ...(bp?.audience ? { audience: bp.audience } : {}), ...(bp?.mainOffer ? { offer: bp.mainOffer } : {}), pains, facts };
+}
+
 export async function renderJob(ctx: JobContext): Promise<unknown> {
   const { db, storage, job } = ctx;
   if (!job.adId) throw new PermanentJobError("render job without adId");
@@ -109,7 +143,10 @@ export async function renderJob(ctx: JobContext): Promise<unknown> {
   const early = await supersededReason(db, job, ctx.config.workerId);
   if (early) return { skipped: early };
   const run = ad.run;
-  const spec = specFromAd(ad);
+  let spec = specFromAd(ad);
+  const fallback = fallbackOf(ad.visualBrief);
+  const bonusKind = bonusKindOf(ad.visualBrief);
+  const locked = isLocked(ad.visualBrief);
   const qcFeedback = typeof job.payload.qcFeedback === "string" ? job.payload.qcFeedback : undefined;
   const started = Date.now();
   // Instrumentation: per-phase wall-clock ms, stored in render meta and logged.
@@ -138,28 +175,48 @@ export async function renderJob(ctx: JobContext): Promise<unknown> {
         maxSeconds: 15,
         signal: ctx.signal,
         qcFeedback,
+        brief: motionBrief(run.brandProfile),
       });
       ctx.usage.push(...res.usage);
       files = res.files;
       posterPath = res.posterPath;
+      renderMeta = { path: "motion", ...(res.meta ?? {}), ...(res.onScreenText ? { onScreenText: res.onScreenText } : {}) };
     } else {
+      // Long body copy is shortened up front so every layout shows it (QC fails "intended body missing").
+      if (!bonusKind) {
+        const fitted = await fitBody(ctx, spec);
+        if (fitted !== spec) {
+          spec = fitted;
+          await db.ad.update({ where: { id: ad.id }, data: { body: spec.body ?? null, visualBrief: { ...((ad.visualBrief as Record<string, unknown> | null) ?? {}), ...spec.visual, spec } as unknown as Prisma.InputJsonValue } });
+        }
+      }
       const timings = newComposedTimings();
       const tComposed = Date.now();
-      const composedInput = { spec, brand, ratios: runRatios(run.ratios), workDir, avoidHashes: await runComposedHashes(db, run.id, ad.id), timings };
-      const composed = staticMode() === "composed" ? await tryComposed(ctx, composedInput) : null;
+      // Diversity also against this brand's earlier runs, and rotate scenes per run (brand memory).
+      const history = await loadBrandHistory(db, run);
+      const avoidHashes = [...(await runComposedHashes(db, run.id, ad.id)), ...history.hashes.slice(0, 40)];
+      const story = bonusKind === "story" ? await storySource(ctx, ad.visualBrief) : null;
+      const ratios: Ratio[] = story ? ["9:16"] : runRatios(run.ratios);
+      if (story) spec = { ...spec, visual: { ...spec.visual, ...(story.template ? { layout: story.template } : {}) } };
+      const composedInput = { spec, brand, ratios, workDir, avoidHashes, sceneOffset: sceneOffset(history), timings };
+      // Trial fallbacks and bonus stories skip the AI-composed image (template renderer only).
+      const composed = staticMode() === "composed" && !fallback && !story ? await tryComposed(ctx, composedInput) : story?.frameOnly ? await framedStory(story, workDir) : null;
       if (composed) {
         lap("composedMs", tComposed);
         Object.assign(phases, timings);
       }
-      renderMeta = composed?.meta ?? { path: "template", mode: staticMode() };
+      renderMeta = composed?.meta ?? { path: "template", mode: staticMode(), ...(fallback ? { fallback } : {}) };
+      if (composed?.files) renderMeta = { ...renderMeta, bodyShown: Boolean(renderedBody(spec)) || !spec.body };
       if (composed?.files) files = composed.files;
       const m = composed?.files ? null : await loadStaticModule();
       if (m && !m.ok) throw new PermanentJobError(m.error);
       let cur = spec;
       for (let fit = 0; m?.ok; fit++) {
         try {
-          const [usedTemplates, usedFields] = await Promise.all([runTemplatesUsed(db, run.id, ad.id), runFieldsUsed(db, run.id, ad.id)]);
-          const input = { spec: cur, brand, ratios: runRatios(run.ratios), workDir, provider: ctx.provider, signal: ctx.signal, qcFeedback, usedTemplates, usedFields };
+          const [usedAll, usedFields] = await Promise.all([runTemplatesUsed(db, run.id, ad.id), runFieldsUsed(db, run.id, ad.id)]);
+          // Typographic fallback / stories keep their layout (set-variety rotation could move them onto a photo layout).
+          const usedTemplates = fallback === "type" || story ? [] : usedAll;
+          const input = { spec: cur, brand, ratios, workDir, provider: ctx.provider, signal: ctx.signal, qcFeedback, usedTemplates, usedFields };
           const withB = m.mod.renderStaticAdWith;
           const res = withB
             ? ctx.shared.withRenderBrowser
@@ -171,10 +228,19 @@ export async function renderJob(ctx: JobContext): Promise<unknown> {
           const tpl = (res as { template?: unknown }).template;
           if (typeof tpl === "string" && renderMeta) renderMeta = { ...renderMeta, template: tpl };
           // Record the background family so later ads in the run can spread across families.
-          const field = (res as { reports?: Array<{ field?: unknown }> }).reports?.find((r) => typeof r.field === "string")?.field;
+          const reports = (res as { reports?: Array<{ field?: unknown; bodyShown?: unknown }> }).reports ?? [];
+          const field = reports.find((r) => typeof r.field === "string")?.field;
           if (typeof field === "string" && renderMeta) renderMeta = { ...renderMeta, field };
+          if (renderMeta && reports.some((r) => typeof r.bodyShown === "boolean")) renderMeta = { ...renderMeta, bodyShown: reports.every((r) => r.bodyShown !== false) };
           break;
         } catch (e) {
+          if (story && !ctx.signal.aborted) {
+            // Story re-render did not fit: re-frame the already-approved ad instead.
+            const framed = await framedStory(story, workDir);
+            files = framed.files;
+            renderMeta = framed.meta;
+            break;
+          }
           const code = (e as { code?: unknown }).code;
           if (code !== "text_overflow" || fit >= 2) throw e;
           cur = await shortenCopy(ctx, cur, e instanceof Error ? e.message : "text overflow");
@@ -230,16 +296,18 @@ export async function renderJob(ctx: JobContext): Promise<unknown> {
       await tx.ad.update({
         where: { id: ad.id },
         data: {
-          status: "qc",
+          // Bonus stories reuse copy + design that already passed QC: technical output only, no second review.
+          status: bonusKind === "story" ? "ready" : "qc",
           visualBrief: { ...freshBrief, ...(palette ? { palette } : {}), ...(renderMeta ? { render: renderMeta } : {}) } as unknown as Prisma.InputJsonValue,
           costMicros: { increment: BigInt(Math.round(cost)) }, durationMs: Date.now() - started },
       });
+      if (bonusKind === "story") return true;
       await enqueue(tx, {
         type: "qc",
         runId: run.id,
         adId: ad.id,
         workspaceId: run.workspaceId,
-        priority: priorityFor(run.isTrial, 30),
+        priority: locked ? BONUS_PRIORITY : priorityFor(run.isTrial, 30),
         payload: { durations: files.map((f) => ({ ratio: f.ratio, durationSec: f.durationSec ?? null })) },
       });
       return true;
@@ -250,8 +318,33 @@ export async function renderJob(ctx: JobContext): Promise<unknown> {
     }
     // Only now that this render landed are the previous attempt's objects safe to delete.
     if (stale.length) await storage.deleteRunObjects(stale);
+    if (bonusKind === "story") await onBonusTerminal(db, storage, ad.id, now, ctx.config.assetTtlDays);
     return { files: rows.length };
   } finally {
     await rm(workDir, { recursive: true, force: true });
   }
+}
+
+interface StorySource { png: Buffer; template: string | null; frameOnly: boolean }
+
+/** Source of a bonus story: the approved ad's image, and its template when it can be re-rendered natively at 9:16. */
+async function storySource(ctx: JobContext, visualBrief: unknown): Promise<StorySource> {
+  const srcId = (visualBrief as { bonusOf?: unknown } | null)?.bonusOf;
+  if (typeof srcId !== "string") throw new PermanentJobError("bonus story without bonusOf");
+  const src = await ctx.db.ad.findUnique({ where: { id: srcId }, include: { assets: true } });
+  const img = src?.assets.find((a) => a.mime === "image/png" && a.ratio !== "poster" && a.ratio !== "preview") ?? src?.assets.find((a) => a.mime.startsWith("image/") && a.ratio !== "poster" && a.ratio !== "preview");
+  if (!src || !img) throw new PermanentJobError("bonus story source has no image");
+  const vb = (src.visualBrief as { render?: { path?: unknown; template?: unknown }; spec?: { visual?: { generateImagery?: unknown } } } | null) ?? {};
+  const template = typeof vb.render?.template === "string" ? vb.render.template : null;
+  // Composed (AI image) or generated-imagery ads are re-framed from the same image: no new image generation.
+  const frameOnly = vb.render?.path !== "template" || !template || vb.spec?.visual?.generateImagery === true;
+  return { png: await ctx.storage.get(img.storageKey), template, frameOnly };
+}
+
+async function framedStory(story: StorySource, workDir: string): Promise<{ files: Array<{ ratio: Ratio; path: string; mime: string; width: number; height: number; bytes: number }>; meta: Record<string, unknown> }> {
+  const { writeFile } = await import("node:fs/promises");
+  const png = await storyFrame(story.png);
+  const p = path.join(workDir, "story-9x16.png");
+  await writeFile(p, png);
+  return { files: [{ ratio: "9:16", path: p, mime: "image/png", width: 1080, height: 1920, bytes: png.length }], meta: { path: "story_frame", bodyShown: true } };
 }
