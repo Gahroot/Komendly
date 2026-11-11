@@ -121,7 +121,7 @@ claims:
     source: 4
   - text: "As of November 2026, Pencil lists Core at $14 per month and Growth at $55 per month, billed monthly."
     source: 5
-  - text: "Pencil's pricing FAQ mentions a free trial without specifying its allowance."
+  - text: "Pencil lets users create six ads free through a guided experience; full platform access requires a paid subscription."
     source: 5
   - text: "Pencil's pricing page lists launching and tracking ads on Facebook and Instagram."
     source: 5
@@ -182,7 +182,7 @@ The table separates documented capabilities from my editorial best-for verdicts.
 | Komendly | Check current pricing; see the plan link below | 10 static ads + 1 animated ad, no card required | Static and animated; 4:5, 1:1, 9:16 | A founder starting with a website URL |
 | Smartly | As of November 2026, check current pricing with sales; no subscription price on the reviewed homepage.[^3] | Demo offered; self-serve free trial not confirmed there.[^3] | Image, video, display and connected TV.[^1] | Teams requiring coordinated creative and media operations |
 | AdCreative.ai | As of November 2026, entry Starter is $39/month on monthly billing.[^4] | Seven-day free trial.[^4] | Banners, copy, photoshoots and videos.[^4] | Teams wanting scoring alongside creative production |
-| Pencil | As of November 2026, Core is $14/month; Growth is $55/month, billed monthly.[^5] | Free trial mentioned in FAQ; confirm allowance.[^5] | Text, image and video assets.[^5] | Teams exploring generative ad production |
+| Pencil | As of November 2026, Core is $14/month; Growth is $55/month, billed monthly.[^5] | Six ads free through a guided experience; full platform access requires a paid subscription.[^5] | Text, image and video assets.[^5] | Teams exploring generative ad production |
 | Canva | As of November 2026, US Pro is $144/year for one person; Business is $250/year per person.[^7] | Free plan; Pro and Business trials advertised.[^7] | Image and video editing tools.[^7] | Teams prioritizing manual design control |
 | Quickads | As of November 2026, software starts at $199/month, or $299/month with AI agents, publishing and the influencer agent.[^9] | As of November 2026, a $1 trial is advertised.[^9] | AI image and video ads.[^9] | Teams considering software plus managed services |
 
@@ -228,7 +228,7 @@ Pencil produces text, image and video ad assets and lists launching and tracking
 
 **Cons:** Core and Growth stop further generation when their monthly allocation is exhausted unless you upgrade or wait; unused generations do not roll over.[^6]
 
-**Verdict:** Pencil deserves an evaluation when generative production is the main requirement. Ask about current trial access, test a real brief, then confirm how your intended production workload consumes the paid allocation.
+**Verdict:** Pencil deserves an evaluation when generative production is the main requirement. Test a real brief within the documented evaluation access, then confirm how your intended production workload consumes the paid allocation.
 
 ### Quickads: best for considering managed help
 
