@@ -10,8 +10,9 @@ tags:
   - "AI advertising"
   - "Creatify alternatives"
   - "Ad creative tools"
-published: false
-status: "draft"
+published: true
+status: "approved"
+approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "creatify alternatives"
 secondary_keywords:
   - "apps like creatify"
