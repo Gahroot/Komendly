@@ -54,4 +54,5 @@ A paid SaaS with two products sharing one Next.js app and one Postgres database:
 - Titles: the root template appends ` | Komendly`; never add it in page titles.
 - **Attribution:** middleware stores the first visit's UTM params in the `kmd_ft` cookie; `/api/ads/auth/signup` records `AdsEvent` `signed_up` with `props.firstTouch` (blog CTAs: `utm_campaign` = post slug, `utm_content` = inline|end).
 - IndexNow key file: `public/78c8478292a52ad65d0087edc113df99.txt`.
+- `blog-engine/` (separate Railway service `blog-engine`, own Postgres) writes posts as PRs and auto-merges them after its gate. See `blog-engine/README.md`.
 
