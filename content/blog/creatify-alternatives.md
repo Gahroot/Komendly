@@ -170,7 +170,7 @@ The table separates billing commitments deliberately. An annual-plan monthly dis
 | Product | Published price and billing | Free plan or trial | Formats | My best-for verdict |
 | --- | --- | --- | --- | --- |
 | Creatify, baseline | Standard displays $10/month alongside an annual-plan savings notice, as of November 2026; confirm the billing term at checkout.[^1] | Free plan; watermarked exports, as of November 2026.[^1] | Video, avatars and static image ads.[^10] | Product-link videos with an AI presenter |
-| Komendly | Starter: $49/month, 20 credits | 10 static ads + 1 animated ad, no card required | Static and animated; 4:5, 1:1, 9:16 | Turning a website into on-brand ad creatives |
+| Komendly | Check current pricing on the pricing page | 10 static ads + 1 animated ad, no card required | Static and animated; 4:5, 1:1, 9:16 | Turning a website into on-brand ad creatives |
 | AdCreative.ai | Starter: $39/month with monthly billing, as of November 2026.[^3] | 7-day free trial, as of November 2026.[^3] | Banners and videos.[^3] | Adding creative scoring to production |
 | Predis.ai | Core: $230 billed yearly, as of November 2026.[^5] | 3-day free trial; card required; automatic charge unless canceled, as of November 2026.[^5] | Images, carousels and videos.[^5] | Combining social content with publishing |
 | Pencil | Core: $14/month billed monthly, as of November 2026.[^6] | Check trial terms at signup | Image, video, text and audio generation.[^7] | Exploring different generative models |
@@ -190,7 +190,7 @@ Komendly turns a website URL into on-brand, ready-to-run ad creatives, static an
 
 **Cons:** One-click publish to Meta requires Growth or Scale. If direct publishing is essential, include that requirement in your plan decision. For a presenter-led video brief, I would evaluate the avatar workflow discussed under Creatify before choosing.
 
-Komendly Starter costs $49/month and includes 20 credits. Komendly Growth costs $119/month and includes 55 credits. Komendly Scale costs $229/month and includes 115 credits. See [Komendly pricing](/pricing). Komendly offers a 30-day money-back guarantee on the first month.
+Compare current plans on the [Komendly pricing page](/pricing). Komendly offers a 30-day money-back guarantee on the first month.
 
 The trial requires email verification and allows one trial per website/device/network. For a closer comparison, read [Komendly vs Creatify](/blog/komendly-vs-creatify).
 
