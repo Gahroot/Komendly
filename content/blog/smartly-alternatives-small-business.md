@@ -11,8 +11,9 @@ tags:
   - "AI ad creatives"
   - "small business"
   - "creative production"
-published: false
-status: "draft"
+published: true
+status: "approved"
+approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "smartly alternatives for small business"
 secondary_keywords:
   - "smartly.io alternatives"
