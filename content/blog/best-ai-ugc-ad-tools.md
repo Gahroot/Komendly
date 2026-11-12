@@ -244,7 +244,7 @@ Meta describes AI labeling for ads.[^8] I would not treat its transparency annou
 
 In its June 2026 update, Meta said About this ad was beginning to roll out and would include existing labels for ads made or significantly edited with its generative AI tools. Meta also said it would begin detecting third-party AI ads through industry-standard signals and label detected content in About this ad.[^8]
 
-My recommendation is to review the final Facebook and Instagram creative, spoken script, captions, and landing-page promises before submitting through Meta Ads Manager. Treat any Advantage+ settings you select as another review item. Do not interpret an AI label as an endorsement of the message.
+My recommendation is to review the final creative, spoken script, captions, and landing-page promises before submission. Review the finished ad again after making any changes. Do not interpret an AI label as an endorsement of the message.
 
 ## How should you handle disclosure and authenticity?
 
