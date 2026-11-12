@@ -11,8 +11,9 @@ tags:
   - "Video advertising"
   - "Ad creative"
   - "Small business"
-published: false
-status: "draft"
+published: true
+status: "approved"
+approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "ai ugc ads"
 secondary_keywords:
   - "ai ugc video generator"
