@@ -21,7 +21,7 @@ answer: "For AI UGC ads, shortlist Arcads for AI actors, Creatify for product-li
 key_takeaways:
   - "Choose the creative format before choosing the subscription: explanation, product demonstration, customer experience, and visual offers call for different briefs."
   - "My shortlist is Arcads for actor-led creative, Creatify for product-link videos, Pippit for template experimentation, and Icon for human production.[^1][^3][^6][^5]"
-  - "Meta describes labeling AI-generated ads and detecting third-party AI content; an AI label should not be treated as approval of an advertisement.[^8]"
+  - "Meta announced plans to detect third-party AI ads and include AI labels in About this ad.[^8] Do not treat a label as approval."
   - "The FTC distinguishes AI avatars from fake testimonials, while warning that avatar use can still be deceptive.[^9]"
   - "Komendly offers 10 static ads + 1 animated ad, no card required, for testing an alternative to presenter-led creative."
 competitors:
@@ -34,7 +34,7 @@ faq:
   - q: "Do AI UGC ads work?"
     a: "Treat AI UGC ads as a creative hypothesis, not a promised result. Test a presenter-led explanation against a static or animated version of the same offer. Judge purchases or qualified leads alongside production cost, rather than selecting a winner from clicks alone."
   - q: "Are AI UGC ads allowed on Meta?"
-    a: "Yes, in principle: Meta describes labeling ads made with generative AI, including detecting third-party AI content. This supports using AI creative, but does not establish that a particular ad will be approved. Review its message and disclosure before submission.[^8]"
+    a: "Meta describes AI labeling for ads.[^8] I would not treat that announcement as approval of a particular AI UGC ad. Review the message, supporting evidence, and disclosure before submission."
   - q: "Which AI UGC tools can I try free?"
     a: "As of November 2026, Pippit lists a free plan with no card required, while Creatify lists a free plan with watermarked exports.[^7][^4] For static and animated alternatives, Komendly offers 10 static ads + 1 animated ad, no card required."
   - q: "Can an AI avatar present a real customer review?"
@@ -100,7 +100,7 @@ claims:
     source: 3
   - text: "As of November 2026, Creatify's pricing page displays Standard at a discounted $10/month alongside a crossed-out $15/month."
     source: 4
-  - text: "Creatify's free plan includes watermarked exports."
+  - text: "As of November 2026, Creatify lists a free plan with watermarked exports."
     source: 4
   - text: "Creatify says regenerating a video, avatar, voice, or script uses credits."
     source: 4
@@ -116,11 +116,11 @@ claims:
     source: 7
   - text: "Pippit's pricing page lists avatar video, a video editor, product photos, and sales posters."
     source: 7
-  - text: "Meta describes AI-generated advertising and its labeling system; interpreting that guidance as permitting AI creative in principle does not establish approval of an individual ad."
+  - text: "Meta describes AI labeling for ads."
     source: 8
-  - text: "Meta says its About this ad destination includes AI info labels for ads created or significantly edited with its generative AI tools."
+  - text: "In its June 2026 update, Meta said About this ad was beginning to roll out and would include existing labels for ads made or significantly edited with its generative AI tools."
     source: 8
-  - text: "Meta says it is rolling out detection of ads created or edited with third-party AI tools using industry-standard signals, with detected content receiving an AI info label in About this ad."
+  - text: "Meta said it would begin detecting third-party AI ads through industry-standard signals and label detected content in About this ad."
     source: 8
   - text: "The FTC says its Consumer Reviews and Testimonials Rule does not categorically prohibit AI-generated avatars in marketing."
     source: 9
@@ -139,8 +139,8 @@ Start with this shortlist. The best-for column gives my recommendation, rather t
 | Tool | Price | Free trial or plan | Formats | My best-for verdict |
 | --- | --- | --- | --- | --- |
 | Arcads | Check in-app pricing as of November 2026.[^2] | 72-hour trial; card required; converts to Starter unless canceled.[^2] | AI-actor and generated video.[^1] | Presenter-led creative |
-| Creatify | Standard displays discounted $10/month alongside $15/month as of November 2026; confirm billing term.[^4] | Free plan; watermarked exports.[^4] | Product-link video with AI-avatar workflow.[^3] | Turning product pages into video drafts |
-| Pippit | Free; Starter displays $101/year as of November 2026.[^7] | Free plan; no card required.[^7] | Avatar video, product images, sales posters.[^7] | Experimenting with templates and formats |
+| Creatify | Standard displays discounted $10/month alongside $15/month as of November 2026; confirm billing term.[^4] | Free plan as of November 2026; watermarked exports.[^4] | Product-link video with AI-avatar workflow.[^3] | Turning product pages into video drafts |
+| Pippit | Free; Starter displays $101/year as of November 2026.[^7] | Free plan as of November 2026; no card required.[^7] | Avatar video, product images, sales posters.[^7] | Experimenting with templates and formats |
 | Icon | $1,000/month after the trial, as of November 2026.[^5] | 3-day free trial.[^5] | Human-made UGC video.[^5] | Outsourcing human creator production |
 | Komendly | Starter: $49/month; 20 credits | 10 static ads + 1 animated ad, no card required | Static and animated ads | Testing visual alternatives to a presenter |
 
@@ -164,7 +164,7 @@ Creatify's URL-to-video workflow extracts product assets, writes a script, and i
 
 **Pros:** I would shortlist this workflow for a founder who wants a draft to critique instead of beginning with an empty script. Treat the draft as an interpretation of the page, then check every promise against the actual offer.
 
-**Cons:** Free exports are watermarked, and regenerating video, avatars, voices, or scripts consumes credits.[^4] My recommendation is to approve the message before repeatedly generating alternate deliveries.
+**Cons:** As of November 2026, Creatify's free plan has watermarked exports.[^4] Regenerating video, avatars, voices, or scripts consumes credits.[^4] My recommendation is to approve the message before repeatedly generating alternate deliveries.
 
 **Best for:** Product-page-led video experimentation. Choose it over Komendly when your immediate requirement is an avatar video; choose Komendly when you want to explore static and animated ad creative instead.
 
@@ -172,7 +172,7 @@ For the broader workflow decision, see [Komendly vs Creatify](/blog/komendly-vs-
 
 ## 3. Is Pippit a good starting point for template experimentation?
 
-Pippit offers AI avatars, customizable UGC templates, and editing controls for visuals, text, and pacing.[^6] Its free plan includes daily credits.[^7]
+Pippit offers AI avatars, customizable UGC templates, and editing controls for visuals, text, and pacing.[^6] As of November 2026, its free plan includes daily credits.[^7]
 
 **Pros:** My recommendation is to try it when you want to explore several presentations before settling on a production style. Start from the same message and examine whether a template helps explain it.
 
@@ -240,9 +240,9 @@ For creative fatigue, my recommendation is to change the argument before changin
 
 ## Are AI UGC ads allowed on Meta?
 
-Yes, in principle: Meta describes labeling ads made with generative AI. That supports using AI creative, but does not establish approval of any particular advertisement.[^8]
+Meta describes AI labeling for ads.[^8] I would not treat its transparency announcement as approval of a particular AI UGC advertisement.
 
-Meta says its About this ad destination includes AI info labels for creative made or significantly edited with its own generative tools. It also describes rolling out detection of third-party AI content and applying labels when detected.[^8]
+In its June 2026 update, Meta said About this ad was beginning to roll out and would include existing labels for ads made or significantly edited with its generative AI tools. Meta also said it would begin detecting third-party AI ads through industry-standard signals and label detected content in About this ad.[^8]
 
 My recommendation is to review the final Facebook and Instagram creative, spoken script, captions, and landing-page promises before submitting through Meta Ads Manager. Treat any Advantage+ settings you select as another review item. Do not interpret an AI label as an endorsement of the message.
 
