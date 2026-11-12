@@ -10,8 +10,9 @@ tags:
   - "AI ad generators"
   - "Predis.ai alternatives"
   - "Ad creative tools"
-published: false
-status: "draft"
+published: true
+status: "approved"
+approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "predis.ai alternatives"
 secondary_keywords:
   - "apps like predis.ai"
