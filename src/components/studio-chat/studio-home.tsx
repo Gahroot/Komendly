@@ -140,7 +140,7 @@ function RemixCard({ initialUrl, account }: { initialUrl: string | null; account
   const submitLink = () => {
     if (chip?.upload) return void go({ uploadId: chip.upload.id });
     const u = normalizeRemixUrl(url);
-    if (!u) return setError("Paste a link to the ad (YouTube, TikTok, Instagram, Facebook, X or any page with the ad).");
+    if (!u) return setError("Paste a link to the ad (TikTok, Instagram, Facebook, X or any page with the ad).");
     void go({ url: u });
   };
 

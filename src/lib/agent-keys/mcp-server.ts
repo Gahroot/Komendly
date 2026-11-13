@@ -565,7 +565,7 @@ export function buildOzzyServer(info: McpRequestInfo): McpServer {
     "studio_remix",
     {
       title: "Remix an ad with Ozzy",
-      description: "Show Ozzy any ad (a YouTube/Shorts, TikTok, Instagram, Facebook Ad Library or X link, a direct video/image link, or a page with the ad) and Ozzy rebuilds its structure and style (hook, pacing, text, transitions) for the user's own brand. Never copies the original's footage, logos or words. Counts like any Ozzy video (free first video, credits after).",
+      description: "Show Ozzy any ad (a TikTok, Instagram, Facebook Ad Library or X link, a direct video/image link, or a page with the ad) and Ozzy rebuilds its structure and style (hook, pacing, text, transitions) for the user's own brand. Never copies the original's footage, logos or words. Counts like any Ozzy video (free first video, credits after).",
       inputSchema: {
         url: z.string().min(4).max(2000).optional().describe("Link to the ad to remix."),
         upload_id: z.string().min(1).max(64).optional().describe("Instead of a link: an upload_id from upload_media (a video or screenshot of the ad)."),

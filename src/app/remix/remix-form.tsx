@@ -25,7 +25,7 @@ export function RemixForm({ id = "remix-url" }: { id?: string }) {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const link = normalizeRemixUrl(text);
-    if (!link) return setError("Paste the link to an ad, e.g. a TikTok, Reel, YouTube Short or Facebook ad.");
+    if (!link) return setError("Paste the link to an ad, e.g. a TikTok, Reel or Facebook ad.");
     router.push(remixHref(link, signedIn));
   }
 

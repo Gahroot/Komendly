@@ -15,20 +15,20 @@ import { RemixForm } from "./remix-form";
 export const metadata: Metadata = {
   title: "Remix any ad with Ozzy: show Ozzy any ad, get yours",
   description:
-    "Paste a link to any ad you love (TikTok, Reels, YouTube Shorts, Facebook, X) and Ozzy rebuilds its hook, pacing and style for your brand. Your first video is free.",
+    "Paste a link to any ad you love (TikTok, Reels, Facebook, X) and Ozzy rebuilds its hook, pacing and style for your brand. Your first video is free.",
   alternates: { canonical: "/remix" },
   openGraph: { title: "Show Ozzy any ad. Get yours.", url: "/remix" },
 };
 
 const STEPS = [
-  { title: "Paste any ad", body: "A link to a TikTok, Reel, YouTube Short, Facebook or X ad, or a screen recording of one." },
+  { title: "Paste any ad", body: "A link to a TikTok, Reel, Facebook or X ad, or a screen recording of one (including YouTube ads)." },
   { title: "Ozzy studies it", body: "He maps the hook, every beat, the pacing, the text style, the transitions and the music feel." },
   { title: "Get your version", body: "The same structure and energy, rebuilt with your logo, colours, product and offer." },
 ] as const;
 
 const FAQ = [
   { q: "Will it copy the other brand's ad?", a: "No. Ozzy borrows the structure and style only: the hook, rhythm, text treatment and transitions. Logos, people, footage, brand names and wording are never reused. Your video is built from your own brand." },
-  { q: "Which links work?", a: "TikTok, Instagram Reels, YouTube and Shorts, the Facebook Ad Library, X, direct video or image links, and most pages that show the ad. If a link won't open, upload a screen recording or screenshot instead." },
+  { q: "Which links work?", a: "TikTok, Instagram Reels, the Facebook Ad Library, X, direct video or image links, and most pages that show the ad. If a link won't open, upload a screen recording or screenshot instead." },
   { q: "Does a remix cost more?", a: `No. A remix is a normal Ozzy Studio video: your first one is free, then ${STUDIO_PRICE.newShort} credits for a new video with ${STUDIO_PRICE.includedRevisions} revisions included.` },
   { q: "Can I change things after?", a: "Yes. Just ask in the chat: a different offer, a new colour, shorter, square instead of vertical." },
 ] as const;

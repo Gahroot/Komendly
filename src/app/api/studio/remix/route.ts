@@ -16,6 +16,8 @@ import { claimStudioFreeVideo, revokeStudioFreeVideos } from "@/lib/studio/abuse
 import {
   canStartStudioTurn,
   normalizeRemixUrl,
+  isYouTubeUrl,
+  STUDIO_REMIX_YOUTUBE_MESSAGE,
   remixMessage,
   STUDIO_INGEST_JOB_TYPE,
   STUDIO_TURN_JOB_TYPE,
@@ -46,6 +48,7 @@ export async function POST(request: NextRequest) {
     if (parsed.data.url) {
       url = normalizeRemixUrl(parsed.data.url);
       if (!url) throw new AdsHttpError(400, "invalid_url", "That doesn't look like a link. Paste the ad's address, or upload a recording of it.");
+      if (isYouTubeUrl(url)) throw new AdsHttpError(400, "youtube_unsupported", STUDIO_REMIX_YOUTUBE_MESSAGE);
       try {
         await assertSafeTargetUrl(url);
       } catch {

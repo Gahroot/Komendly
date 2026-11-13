@@ -120,6 +120,16 @@ export function normalizeRemixUrl(raw: string): string | null {
   }
 }
 
+/** YouTube blocks server downloads, so a YouTube link can't be remixed: ask for a screen recording instead. */
+export const STUDIO_REMIX_YOUTUBE_MESSAGE = "YouTube doesn't let me download its videos. Upload a screen recording of the ad instead, or paste a TikTok, Instagram or Facebook Ad Library link.";
+export function isYouTubeUrl(url: string): boolean {
+  try {
+    return /(^|\.)(youtube\.com|youtu\.be|youtube-nocookie\.com)$/i.test(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+}
+
 /** What the chat shows as the user's message for a remix. */
 export function remixMessage(o: { url?: string | null; notes?: string | null }): string {
   const head = o.url ? `Remix this ad for my brand: ${o.url}` : "Remix this ad for my brand.";
