@@ -110,8 +110,9 @@ export async function findLayoutProblems(projectDir, { sinceMs = 0 } = {}) {
 }
 
 /** One combined fix prompt for everything the QA found (one extra agent round at most). */
-export function qaFixPrompt({ blank = [], sparse = [], layout = [], music = false, missing = [] }) {
+export function qaFixPrompt({ blank = [], sparse = [], layout = [], music = false, missing = [], prices = [] }) {
   const parts = [];
+  if (prices.length) parts.push(`- The offer is wrong: the user's price${prices.length > 1 ? "s" : ""} ${prices.join(", ")} ${prices.length > 1 ? "don't" : "doesn't"} appear in the video (a shell command probably ate the dollar sign and digits). Fix the text so it shows exactly ${prices.join(", ")}, and write files with your file tool, never with echo or an unquoted heredoc.`);
   if (missing.length) parts.push(`- These files are used in index.html but don't exist, so they show as empty spaces: ${missing.join(", ")}. Point each one at a file that exists (check with ls: kit/illustrations, kit/icons, brand/photos, brand/site, uploads) or remove it and fill the space.`);
   if (sparse.length) parts.push(`- Large empty areas: at ${sparse.map((t) => `${t}s`).join(", ")} half the frame or more is one flat colour with nothing in it. Fill the frame: make the hero image, footage or website piece much bigger (or full-bleed with a scrim), scale the type up, or centre the content block vertically. Nothing should sit in one half with the other half empty.`);
   if (blank.length) parts.push(`- Blank frames (one flat colour, nothing readable) at ${blank.map((t) => `${t}s`).join(", ")}: those scenes don't show. Find why (hidden elements, a wipe/overlay left covering the frame, elements never animated in, wrong timing) and fix it.`);
@@ -160,6 +161,13 @@ export async function findMissingAssets(projectDir, { sinceMs = 0 } = {}) {
     if (await access(p).then(() => false, () => true)) missing.push(f);
   }
   return missing.slice(0, 12);
+}
+
+/** Pure: money amounts in the user's words ("$40", "$1.25M", "$9.99") that the composition doesn't show. */
+export function missingPrices(userText, html) {
+  const want = [...new Set((String(userText).match(/\$\s?\d[\d,]*(?:\.\d+)?\s?[kKmM]?\b/g) || []).map((p) => p.replace(/\s/g, "")))];
+  const page = String(html).replace(/<[^>]+>/g, " ").replace(/&#36;|&dollar;/g, "$").replace(/\s+/g, " ");
+  return want.filter((p) => !page.includes(p) && !page.includes(p.replace(/\.\d+$/, ""))).slice(0, 6);
 }
 
 /** Newest composition html, or null. */

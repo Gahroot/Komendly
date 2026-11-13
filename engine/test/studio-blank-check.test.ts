@@ -83,3 +83,15 @@ describe("missing assets", () => {
     expect(referencedFiles(html).sort()).toEqual(["audio/music.wav", "brand/photos/a.jpg", "kit/illustrations/croissant.svg", "kit/x.png", "style.css"]);
   });
 });
+
+// @ts-expect-error plain .mjs helper
+import { missingPrices } from "../src/modules/ezmotion/agent/blank-check.mjs";
+describe("price check", () => {
+  it("finds prices the video dropped", () => {
+    expect(missingPrices("Offer: $40 off your first deep clean", "<b>0 off</b> your first deep clean")).toEqual(["$40"]);
+    expect(missingPrices("free knots over $25", "<p>Free garlic knots over $25.</p>")).toEqual([]);
+    expect(missingPrices("listed at $1.25M", "<h2>$1.25M</h2>")).toEqual([]);
+    expect(missingPrices("$49 drain cleaning", "<span>&#36;49</span>")).toEqual([]);
+    expect(missingPrices("no price here", "<p>x</p>")).toEqual([]);
+  });
+});
