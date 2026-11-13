@@ -108,7 +108,7 @@ export const CURSOR_INIT = `(() => {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", install); else install();
 })();`;
 
-const DISMISS_COOKIES_JS = `(() => {
+export const DISMISS_COOKIES_JS = `(() => {
   const known = ["#onetrust-accept-btn-handler", "#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll", "#CybotCookiebotDialogBodyButtonAccept", ".cc-allow", ".cc-accept", "[data-testid='uc-accept-all-button']", "#didomi-notice-agree-button", ".fc-cta-consent", "#truste-consent-button", "[aria-label='Accept all']", "[data-cky-tag='accept-button']", "#hs-eu-confirmation-button", ".onetrust-close-btn-handler", ".cky-btn-accept", ".cc-btn.cc-dismiss", ".cc-accept-all", "#accept-cookies", "#acceptCookies", ".accept-cookies", "[data-testid='cookie-policy-dialog-accept-button']", "[data-testid='accept-cookies']", ".gdpr-accept", "#gdpr-accept"];
   let clicked = 0;
   for (const s of known) { const b = document.querySelector(s); if (b instanceof HTMLElement && b.offsetParent !== null) { b.click(); clicked++; } }

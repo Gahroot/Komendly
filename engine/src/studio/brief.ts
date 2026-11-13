@@ -1,6 +1,7 @@
 // Ozzy Studio: the ./studio.md brief block and the per-turn prompt the agent receives.
 import { STUDIO_MAX_SECONDS } from "../../../src/lib/studio/contracts";
 import { type BriefPhoto, describePhoto } from "./brand-photos";
+import { type SiteComponent, describeComponent } from "./site-components";
 
 export interface BriefBrand {
   name: string | null;
@@ -10,6 +11,8 @@ export interface BriefBrand {
   logoFile: string | null;
   /** Their own website photos copied into ./brand/photos (best first). */
   photos?: BriefPhoto[];
+  /** Real pieces of their website (hero, pricing, reviews, cards) cut out into ./brand/site. */
+  site?: SiteComponent[];
 }
 
 export interface BriefUpload {
@@ -62,6 +65,7 @@ export function studioBrief(o: { brand: BriefBrand | null; uploads: BriefUpload[
     if (o.brand.colors.length) lines.push(`- Colours: ${o.brand.colors.map((c) => `${c.hex}${c.role ? ` (${c.role})` : ""}`).join(", ")}`);
     if (o.brand.fonts.length) lines.push(`- Fonts: ${o.brand.fonts.map((f) => `${f.family}${f.role ? ` (${f.role})` : ""}`).join(", ")}`);
     if (o.brand.logoFile) lines.push(`- Logo: ./brand/${o.brand.logoFile}`);
+    if (o.brand.site?.length) lines.push("- Pieces of their own website, cut out (their real hero, pricing, reviews, service cards):", ...o.brand.site.map((c) => `  - ${describeComponent(c)}`));
     if (o.brand.photos?.length) lines.push("- Photos from their own website (their real business, best first):", ...o.brand.photos.map((p) => `  - ${describePhoto(p)}`));
     lines.push("- Use the brand when it fits the request; the user's words win over it.");
   }
@@ -92,13 +96,14 @@ export const CRAFT_RULES = [
   "- ./kit/starters/INDEX.md lists tested layout starters. Read it, pick the style that best fits the business and the request (vary it; never default to the same one), copy that file to ./index.html and adapt it: the SIZE marks, palette, copy, images and SCENES timing. ./kit/starter.html is the 'illustrated' style.",
   "- ./kit/illustrations/*.svg are polished, layered illustrations (latte-cup, croissant, burger, storefront, house, van, toolbox, faucet, phone, laptop-dashboard, beauty-bottle, dumbbell, product-box, and accents: sparkle, burst-badge, star-rating, check-badge, map-pin, calendar, coffee-bean, confetti, review-card). Use them as <img src=\"kit/illustrations/<name>.svg\">. Prefer them over drawing your own; if you need a new object, match their style (gradients, a highlight, a soft contact shadow, one light direction) and keep every part attached.",
   "- ./kit/icons/*.svg: 2,000+ line icons for any trade (tooth, paw-print, scissors, car, wrench, ...); find names with `grep -i <word> kit/icons/INDEX.txt`. They use stroke=currentColor: inline the SVG (or use it as a CSS mask) and set color to recolour.",
-  "- Images, in this order: (1) their uploads/footage; (2) ./brand/photos (their real business): use them as hero images in rounded cards or frames with depth (shadow, plate) and slow ken-burns motion; (3) a ./kit/illustrations piece when one fits; (4) ./kit/icons for accents and callouts; (5) generate an image ONLY when none of these fit the subject (one or two max). Never show a photo of another business.",
+  "- Images, in this order: (1) their uploads/footage; (2) ./brand/photos (their real business): use them as hero images in rounded cards or frames with depth (shadow, plate) and slow ken-burns motion; (3) ./brand/site pieces of their real website (show them big and crisp: in a browser frame, as floating cards with shadow, or zoom into the part that matters; great for pricing, reviews and services); (4) a ./kit/illustrations piece when one fits; (5) ./kit/icons for accents and callouts; (6) generate an image ONLY when none of these fit the subject (one or two max). Never show a photo of another business.",
   "- Fonts in ./kit/fonts (Fraunces, Bricolage Grotesque, Host Grotesk) are already wired in the starter. Their brand fonts win when given.",
   "",
   "## Craft rules",
   "- Plan first: write ./plan.md with 3-6 scenes (seconds, the exact on-screen words, which illustration or footage), then build. Total must match the length asked.",
   "- Make it theirs, not the template: pick a palette from their brand (or one that fits the business, not the starter's coffee colours), use a different hero illustration in each scene (never the same one more than twice), and vary at least one layout (e.g. a full-bleed type scene, a big price or number, a split screen).",
   "- One idea per scene: 2-6 big words, at most one short sub line. Type: eyebrow (small caps) > headline (huge) > sub. Every text stays readable at least 1.2 s after it lands.",
+  "- Sound: unless the user says no music, every video gets its own music bed and sound effects. Write ./audio/score.json and run `node kit/bin/score-synth.mjs audio/score.json audio/` (read the top of that file for the score format: style pulse|cinematic|minimal|lofi, bpm, key/scale or chords, sections with energy, hits like whoosh/impact/riser on your cuts), then add audio/music.wav and audio/sfx.wav to the composition as <audio> elements. Pick the music for THIS business and mood, never a default: e.g. lofi 75-90 bpm for cafes, bakeries and cozy brands; pulse 120-128 bpm for sales, launches, fitness and bold offers; cinematic for premium, real estate, emotional or before/after reveals; minimal for clean tech and SaaS. Choose your own key, chords and seed every time; give it a hook (a riser into the offer, an impact on the price or logo). No bland corporate bed.",
   "- Fill the frame: no scene may leave a third or more of the frame empty (a bare white or flat band). A photo is either full-bleed (with a dark scrim behind the text) or a big card centred in the space with the text; never a photo stuck in one half with nothing in the other. Use different photos across scenes when you have several.",
   "- Depth and polish: hero object on a soft plate or shadow, a few accents (sparkle, beans, confetti), gentle push-in or float while holding. Never a flat empty frame; never text touching the edges (stay inside the safe zone).",
   "- Copy: say the offer exactly as the user said it. Never invent prices, dates, discounts, claims or reviews.",

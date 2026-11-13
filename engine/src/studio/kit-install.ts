@@ -36,7 +36,10 @@ export async function installStudioKit(project: string): Promise<void> {
   const dest = join(project, "kit");
   await cp(KIT_DIR, dest, { recursive: true, force: true });
   await mkdir(join(dest, "fonts"), { recursive: true });
+  await mkdir(join(dest, "bin"), { recursive: true });
   await Promise.all([
+    // Music + sound effects maker (offline, no licensing questions): node kit/bin/score-synth.mjs score.json audio/
+    copyFile(join(VENDOR_DIR, "bin", "score-synth.mjs"), join(dest, "bin", "score-synth.mjs")),
     ...KIT_FONTS.map((f) => copyFile(join(VENDOR_DIR, "fonts", f), join(dest, "fonts", f.split("/").pop() ?? f))),
     installIcons(join(dest, "icons")),
   ]);

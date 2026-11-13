@@ -25,6 +25,9 @@ import { Limiter } from "../providers/limiter";
 import { pickStudioModel } from "./model-choice";
 import { installStudioKit } from "./kit-install";
 import { installBrandPhotos } from "./brand-photos";
+import { installSiteComponents } from "./site-components";
+import { guardRoute } from "../jobs/extract/crawl";
+import { assertPublicUrl } from "../net/ssrf";
 import { chooseStudioBrain, codexWeeklyPctSeen, isCodexLimitError, mimoAtPct, mimoAuth, MIMO_DEFAULT_MODEL, type StudioBrain } from "./brain";
 import { type BriefUpload, cleanUploadNames, launchBrief, studioBrief, turnPrompt } from "./brief";
 import { chargeAndRecord, decideCharge, isPaidStudioWorkspace } from "./charge";
@@ -196,6 +199,10 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       logoFile = `logo${extname(bp.logoKey) || ".png"}`;
       await storage.get(bp.logoKey).then((b) => writeFile(join(project, "brand", logoFile as string), b)).catch(() => { logoFile = null; });
     }
+    // Real pieces of their website (cached per brand version; first capture ~6-10 s, never fails the turn).
+    const site = bp?.url && process.env.STUDIO_SITE_COMPONENTS !== "0"
+      ? await installSiteComponents({ storage, project, workspaceId: session.workspaceId, brandProfileId: bp.id, version: String(bp.updatedAt.getTime()), url: bp.url, browser: () => ctx.shared.renderBrowser(), guard: guardRoute, assertUrl: (u) => assertPublicUrl(u), log: (m, d) => log("warn", m, d) })
+      : [];
     const photos = bp ? await installBrandPhotos({ storage, project, assets: bp.assets, logoKey: bp.logoKey, onError: (error, key) => log("warn", "studio brand photo skipped", { key, error }) }) : [];
     const paid = isPaidStudioWorkspace(ws);
     const brand = bp ? {
@@ -204,6 +211,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       fonts: (Array.isArray(bp.fonts) ? bp.fonts : []).flatMap((f) => (f && typeof f === "object" && typeof (f as { family?: unknown }).family === "string" ? [{ family: (f as { family: string }).family, role: (f as { role?: string }).role }] : [])).slice(0, 3),
       logoFile,
       photos,
+      site,
     } : null;
     await installStudioKit(project).catch((e) => log("warn", "studio kit install failed", { error: errMsg(e) }));
     await writeFile(join(project, "studio.md"), studioBrief({ brand, uploads: briefUploads, paid }));
