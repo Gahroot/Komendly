@@ -11,8 +11,9 @@ tags:
   - "Instagram ads"
   - "Ad creative"
   - "Ad sizes"
-published: false
-status: "draft"
+published: true
+status: "approved"
+approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "facebook ad sizes 2026"
 secondary_keywords:
   - "instagram ad sizes"
