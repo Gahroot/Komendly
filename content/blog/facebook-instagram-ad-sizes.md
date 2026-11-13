@@ -18,16 +18,16 @@ secondary_keywords:
   - "instagram ad sizes"
   - "meta ad dimensions"
   - "4:5 vs 1:1"
-answer: "For Facebook ad sizes 2026, begin with a 4:5 feed image at 1440 × 1800 pixels, as documented by Buffer.[^3] Adobe documents 9:16 Story templates at 1080 × 1920 pixels.[^2] Prepare a square alternative and separate vertical layouts. These are vendor-documented starting sizes; direct verification of Meta's current specifications remains outstanding."
+answer: "For Facebook ad sizes 2026, start with a 4:5 feed image at 1440 × 1800 pixels, following Buffer's guidance.[^3] For vertical artwork, Adobe documents 9:16 Story templates at 1080 × 1920 pixels.[^2] Prepare separate portrait, square and vertical compositions, then confirm the requirements and preview for each intended Facebook or Instagram placement before publishing."
 key_takeaways:
-  - "Prepare portrait, square and full-screen layouts around the same offer."
-  - "Use the table as vendor-documented guidance; direct Meta specification verification remains outstanding."
+  - "Prepare portrait, square and vertical layouts around the same offer."
+  - "Use the table as a source-specific export reference, then confirm the requirements for your intended placement."
   - "Use the FRAME check to review fit, readability, essential elements, offer consistency and the finished preview."
   - "Komendly supports 4:5, 1:1 and 9:16 ad sizes, with 10 static ads + 1 animated ad in the free trial, no card required."
 cta: "ads"
 faq:
   - q: "What size is a Facebook feed ad?"
-    a: "For a portrait Facebook Feed image, Buffer lists 1440 × 1800 pixels at 4:5.[^3] Use that as a starting export size and confirm the current requirements for your selected placement."
+    a: "Buffer lists 1440 × 1800 pixels at 4:5 for portrait Facebook single-image ads.[^3] Use that as a starting export size and confirm the current requirements for your selected placement."
   - q: "Should I use 4:5 or 1:1?"
     a: "My recommendation is to begin with portrait for a vertically arranged feed concept and square for a compact, centered design. Prepare both when practical, keep the offer consistent, and evaluate the finished layouts against your campaign goal."
   - q: "What size are Instagram story ads?"
@@ -57,24 +57,21 @@ sources:
     publisher: "Hootsuite"
     url: "https://blog.hootsuite.com/facebook-ad-sizes/"
     accessed: 2026-11-13
-  - id: 5
-    title: "Meta Ads Guide: Facebook Feed image — access restricted during research"
-    publisher: "Meta"
-    url: "https://www.facebook.com/business/ads-guide/image/facebook-feed"
-    accessed: 2026-11-13
   - id: 6
     title: "How to Run Facebook Ads: 2026 Beginner's Guide"
     publisher: "Buffer"
     url: "https://buffer.com/resources/facebook-ads-beginners-guide/"
     accessed: 2026-11-13
 claims:
-  - text: "Buffer documents 1440 × 1800 pixels at 4:5 for Facebook single-image ads."
+  - text: "Buffer recommends 1440 × 1800 pixels at 4:5 for Facebook single-image ads."
+    source: 3
+  - text: "Buffer recommends 1440 × 1440 pixels at 1:1 for Facebook single-image ads."
     source: 3
   - text: "Hootsuite lists 1440 × 1440 pixels at 1:1 for Facebook Feed image ads."
     source: 4
   - text: "Buffer lists JPG or PNG files and a maximum image file size of 30MB for Facebook single-image ads."
     source: 3
-  - text: "Buffer separates design recommendations from technical requirements, including minimum dimensions, in its Facebook single-image ad guidance."
+  - text: "Buffer separates design recommendations from technical requirements, including minimum dimensions, for Facebook single-image ads."
     source: 3
   - text: "Metadata recommends 1440 × 1800 pixels at 4:5 for Instagram Feed images."
     source: 1
@@ -94,8 +91,6 @@ claims:
     source: 2
   - text: "Adobe describes square Meta templates as recommended for broad compatibility."
     source: 2
-  - text: "The Meta Facebook Feed image Ads Guide returned a login restriction when opened during research; its specifications could not be read."
-    source: 5
   - text: "Buffer's Facebook ads setup guide shows creative previews in Meta Ads Manager."
     source: 6
   - text: "Buffer's Facebook ads setup guide describes Advantage+ placements and the Manual placements option."
@@ -104,9 +99,9 @@ claims:
     source: 2
 ---
 
-For Facebook ad sizes 2026, begin with a 4:5 feed image at 1440 × 1800 pixels.[^3] Adobe documents 9:16 Story templates at 1080 × 1920 pixels.[^2] Build separate feed and full-screen layouts, then check the actual ad preview before publishing.
+For Facebook ad sizes 2026, start with a 4:5 feed image at 1440 × 1800 pixels, following Buffer's guidance.[^3] Adobe documents 9:16 Story templates at 1080 × 1920 pixels.[^2] Build separate feed and vertical layouts, then confirm the requirements and preview for each intended placement before publishing.
 
-**Research note, November 2026:** Meta's Ads Guide returned a login restriction during research, so its specifications could not be independently read.[^5] The table below uses accessible vendor documentation and identifies each source. It is a practical export reference, pending direct confirmation against Meta's current placement specifications.
+**How to use this reference:** The table below identifies the publisher behind each recommendation. Use it to choose a starting canvas, then confirm your intended placement's current specifications before launch.
 
 ## What are the Facebook and Instagram ad sizes for 2026?
 
@@ -127,11 +122,11 @@ These entries describe the cited publishers' guidance. They are not a complete l
 
 My recommendation for a small team is to organize production around **portrait feed, square and full-screen vertical**. Choose the relevant dimensions from the table, then make each composition readable on its own. Keep the same offer, product and visual identity across the set.
 
-Do not treat an export preset as proof that the ad is ready. A correctly shaped file can still contain a headline that is too small or a product photo that is awkwardly cropped. Give the finished composition its own review.
+Do not treat an export preset as proof that the ad is ready. Give the finished composition its own review: check headline size, product cropping and the order in which you notice each element.
 
 ## What size is a Facebook feed ad?
 
-For a portrait Facebook Feed image, use the documented feed size in the table. Buffer also lists a square version, with JPG or PNG files and a maximum image file size of 30MB.[^3]
+For portrait artwork, use the feed size in the table. Buffer also recommends a square version at 1440 × 1440 pixels, lists JPG or PNG files, and specifies a maximum image file size of 30MB.[^3]
 
 Start with portrait when your message needs a clear vertical sequence: headline, product, supporting detail and next step. For example, a hypothetical cleaning business could put its service promise above a photograph and its service area beneath it.
 
@@ -145,7 +140,7 @@ Buffer separates design recommendations from technical requirements, including m
 
 My starting recommendation is portrait for a feed-focused concept and square for a compact, centered composition. Treat that as a design decision to test, rather than a prediction about campaign results.
 
-Adobe's template documentation describes portrait as providing more vertical space and square as a broadly compatible format.[^2] That supports preparing both, but it does not establish which will generate more leads for your business.
+Adobe's template documentation describes portrait as providing more vertical space and square as a broadly compatible format.[^2] My recommendation is to prepare both when practical and evaluate them against your own campaign goal.
 
 ### When should you choose portrait?
 
@@ -219,7 +214,7 @@ Compare the layouts together. Check the wording, eligibility conditions, product
 
 Review the uploaded version before approval. Save a screenshot with the filename so another person can see which version you checked.
 
-Give each item a pass or a revision note. Require every item to pass before launch. This keeps a subjective discussion such as “the vertical version feels wrong” focused on a specific fix: unreadable text, an awkward crop or a missing detail.
+Give each item a pass or a revision note. Require every item to pass before launch. Use the checklist to turn a subjective discussion such as “the vertical version feels wrong” into a specific revision: enlarge unreadable text, adjust an awkward crop or restore a missing detail.
 
 ## How should you check your ads in Meta Ads Manager?
 
@@ -227,7 +222,7 @@ Buffer's setup guide shows creative previews in Meta Ads Manager and describes b
 
 For each intended placement, inspect the exact asset you plan to publish. Check the headline, product, logo and next step. When reviewing motion, include the moments where essential information appears.
 
-Keep your review notes concrete. “Move the offer away from the lower edge” gives a designer a clear task. “Make it pop” does not establish what needs to change or how to judge the revision.
+Keep your review notes concrete. “Move the offer away from the lower edge” gives a designer a clear task. Replace vague feedback such as “make it pop” with the element to change and the result you want.
 
 Also record which settings and preview you reviewed. If you change the creative or placement choices afterward, repeat the affected part of the check. Do not rely on a screenshot of an earlier version.
 
@@ -245,7 +240,7 @@ Then prepare a layout set around the same concept:
 
 Name files with the concept, shape and version. Keep the editable artwork with the exported files. When you revise the offer, update the brief first and check every variation against it.
 
-Plan message variations separately from layout variations. For example, draft a problem-focused message and a product-focused message, then adapt each into the required shapes. That gives you a clear record of what changed when reviewing the work.
+Plan message variations separately from layout variations. For example, draft a problem-focused message and a product-focused message, then adapt each into the required shapes. Keep a record of those changes beside the brief for your next review.
 
 Komendly turns a website URL into on-brand, ready-to-run static and animated ad creatives through Ozzy, its AI ad wizard. It supports 4:5, 1:1 and 9:16 ad sizes, plus ads for all 5 awareness stages: unaware, problem aware, solution aware, product aware and most aware.
 
