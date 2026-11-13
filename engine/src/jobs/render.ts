@@ -1,5 +1,6 @@
 // render_static / render_motion jobs.
 import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
+import { imageMime } from "../storage/image-mime";
 import path from "node:path";
 import { AdSpecSchema, type AdSpec, type Ratio, RATIOS } from "../../../src/lib/ads/contracts";
 import { enqueue, priorityFor } from "../queue/queue";
@@ -269,9 +270,13 @@ export async function renderJob(ctx: JobContext): Promise<unknown> {
       rows.push({ adId: ad.id, ratio: f.ratio, storageKey: key, mime: f.mime, width: f.width, height: f.height, bytes: body.length, expiresAt });
     }
     if (posterPath) {
-      const key = runKey(run.workspaceId, run.id, "ads", ad.id, `poster-${version}.png`);
-      await storage.put(key, await readFile(posterPath), "image/png");
-      rows.push({ adId: ad.id, ratio: "poster", storageKey: key, mime: "image/png", width: 0, height: 0, bytes: (await stat(posterPath)).size, expiresAt });
+      // Posters are JPEG frame grabs or PNG agent stills: label them by their bytes (a JPEG sent as image/png makes
+      // the vision QC call fail with "Bad Request" every time).
+      const body = await readFile(posterPath);
+      const mime = imageMime(body);
+      const key = runKey(run.workspaceId, run.id, "ads", ad.id, `poster-${version}.${mime === "image/jpeg" ? "jpg" : "png"}`);
+      await storage.put(key, body, mime);
+      rows.push({ adId: ad.id, ratio: "poster", storageKey: key, mime, width: 0, height: 0, bytes: body.length, expiresAt });
     }
     lap("uploadMs", tUpload);
     phases.totalMs = Date.now() - started;

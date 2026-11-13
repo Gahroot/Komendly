@@ -12,6 +12,11 @@ const DEFAULT_PIPELINE = { ...BASE, mode: "audio_driven" as const };
 import { scriptProblems, sharedNgrams, writeScript } from "../src/testimonial/script";
 import type { AIProvider } from "../src/providers/types";
 import { memStore, world, type World } from "./helpers/testimonial-mem";
+import { mkdtempSync as __mkdtemp } from "node:fs";
+import { tmpdir as __tmpdir } from "node:os";
+import { join as __join } from "node:path";
+// Own scratch dir per test file: parallel files shared /tmp/testimonial-<id> and deleted each other's work.
+const SCRATCH = __mkdtemp(__join(__tmpdir(), "kmd-testimonial-"));
 
 const env = { FAL_API_KEY: "fk" } as NodeJS.ProcessEnv;
 const TTS = "fal-ai/elevenlabs/tts/eleven-v3";
@@ -74,7 +79,7 @@ function media(voiceSeconds: number) {
 }
 
 function deps(w: World, impl: typeof fetch, m: MediaOps, signal?: AbortSignal): TestimonialDeps {
-  return { store: memStore(w), adapters: createAdapters(DEFAULT_PIPELINE, { fetchImpl: impl, sleepImpl: async () => {}, env }), media: m, provider: null, config: DEFAULT_PIPELINE, scratchDir: "/tmp", usage: [], signal };
+  return { store: memStore(w), adapters: createAdapters(DEFAULT_PIPELINE, { fetchImpl: impl, sleepImpl: async () => {}, env }), media: m, provider: null, config: DEFAULT_PIPELINE, scratchDir: SCRATCH, usage: [], signal };
 }
 const payload = { compositeVideoId: "v1", useAIScript: false };
 

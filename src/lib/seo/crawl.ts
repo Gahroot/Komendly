@@ -10,6 +10,7 @@ export const PRIVATE_PATHS = [
   '/ads/start',
   '/ads/refer',
   '/ads/gifts',
+  '/ads/coach',
   '/checkout',
   '/test-video',
   '/ozzy-lab',

@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Check, Clock, CreditCard, ExternalLink, Loader2, Minus, Plus } from "lucide-react";
+import { PricingBeacon } from "@/components/analytics/pricing-beacon";
 import { PageHeader } from "@/components/page-header";
 import Link from "next/link";
 import { LegacySwitchOffer } from "@/components/billing/legacy-switch-offer";
@@ -94,6 +95,7 @@ function BillingContent() {
 
   return (
     <div className="space-y-10">
+      <PricingBeacon page="/dashboard/billing" />
       <PageHeader eyebrow="Account" title="Billing" description="Your videos, your plan, and top-ups." />
 
       {error ? <p role="alert" className="rounded-xl border border-[oklch(0.7_0.17_25/0.5)] bg-[oklch(0.7_0.17_25/0.12)] p-3 text-sm text-[oklch(0.86_0.1_25)]">{error}</p> : null}
@@ -161,7 +163,7 @@ function BillingContent() {
               <button type="button" aria-label="One more minute" onClick={() => setMinutesToBuy((n) => Math.min(100, n + 1))} className="spell-chip flex size-11 items-center justify-center rounded-xl"><Plus aria-hidden className="size-4" /></button>
             </div>
           </div>
-          <button type="button" onClick={() => void post("credits", "/api/stripe/credits", { minutes: minutesToBuy })} disabled={busy === "credits"} className="spellbar__cta mt-6 inline-flex h-12 items-center justify-center gap-2 rounded-xl px-6 font-semibold disabled:opacity-70">
+          <button type="button" data-pricing-plan="testimonial_minutes" onClick={() => void post("credits", "/api/stripe/credits", { minutes: minutesToBuy })} disabled={busy === "credits"} className="spellbar__cta mt-6 inline-flex h-12 items-center justify-center gap-2 rounded-xl px-6 font-semibold disabled:opacity-70">
             {busy === "credits" ? <Loader2 aria-hidden className="size-5 animate-spin" /> : null}
             Buy {minutesToBuy} video{minutesToBuy === 1 ? "" : "s"} · ${minutesToBuy * CREDIT_PRICE_PER_MINUTE_USD}
           </button>
@@ -173,7 +175,7 @@ function BillingContent() {
               <h2 id="plans-h" className="font-display text-2xl font-medium">Testimonials every month: Ozzy Scale and Agency</h2>
               <p className="mt-1 text-sm text-muted-foreground">Scale includes 1 testimonial video a month, Agency 3, plus Ozzy credits for Ad Packs and Ozzy Studio. Plan testimonials don&apos;t roll over.</p>
             </div>
-            <Link href="/ads/billing" className="spellbar__cta inline-flex h-11 shrink-0 items-center justify-center rounded-xl px-5 text-sm font-semibold">See Ozzy plans</Link>
+            <Link href="/ads/billing" data-pricing-plan="see_ozzy_plans" className="spellbar__cta inline-flex h-11 shrink-0 items-center justify-center rounded-xl px-5 text-sm font-semibold">See Ozzy plans</Link>
           </div>
           {!showOffer ? (
             <div className={`${panel} flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between`}>
@@ -181,7 +183,7 @@ function BillingContent() {
                 <h3 className="font-display text-xl font-medium">Not ready for monthly?</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{VIDEO_PACK_OFFER.name}: {videosLabel(VIDEO_PACK_OFFER.minutes)}, up to 60s each, {formatUsd(VIDEO_PACK_OFFER.priceCents)} once.</p>
               </div>
-              <button type="button" onClick={() => void post("pack", "/api/stripe/credits", { offer: VIDEO_PACK_OFFER.key })} disabled={busy === "pack"} className="spell-chip inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-5 text-sm font-medium">
+              <button type="button" data-pricing-plan={VIDEO_PACK_OFFER.key} onClick={() => void post("pack", "/api/stripe/credits", { offer: VIDEO_PACK_OFFER.key })} disabled={busy === "pack"} className="spell-chip inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-5 text-sm font-medium">
                 {busy === "pack" ? <Loader2 aria-hidden className="size-4 animate-spin" /> : null}Get the pack
               </button>
             </div>

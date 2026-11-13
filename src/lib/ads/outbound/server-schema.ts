@@ -1,5 +1,6 @@
 // Input schemas for outbound admin actions / CLI (no DB imports).
 import { z } from "zod";
+import { KlySettingsSchema } from "@/lib/kly/settings";
 
 export const OutboundRunSchema = z.object({
   niche: z.string().trim().min(2).max(40),
@@ -13,6 +14,7 @@ export const OutboundActionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("run"), niche: OutboundRunSchema.shape.niche, cities: OutboundRunSchema.shape.cities, count: OutboundRunSchema.shape.count }),
   z.object({ action: z.literal("kill_switch"), enabled: z.boolean() }),
   z.object({ action: z.literal("suppress"), value: z.string().trim().min(3).max(200) }),
+  z.object({ action: z.literal("settings"), settings: KlySettingsSchema }),
 ]);
 export type OutboundAction = z.infer<typeof OutboundActionSchema>;
 

@@ -29,6 +29,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, LineChart, Line } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
+import { StatCard } from "../ads/_components/stat-card";
 
 interface RevenueStats {
   totalRevenue: number;
@@ -94,7 +95,7 @@ export default function RevenuePage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader eyebrow="Admin" title="Revenue" description="Track platform revenue and purchases" />
+        <PageHeader eyebrow="Testimonials" title="Revenue" description="Testimonial credit-pack purchases. Ad Pack money lives on Ozzy HQ and the Ads overview." />
         <div className="grid gap-4 md:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <Card key={i} >
@@ -140,28 +141,13 @@ export default function RevenuePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Admin" title="Revenue" description="Track platform revenue and purchases" />
+      <PageHeader eyebrow="Testimonials" title="Revenue" description="Testimonial credit-pack purchases. Ad Pack money lives on Ozzy HQ and the Ads overview." />
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        {statCards.map((stat) => {
-          const Icon = stat.icon;
-
-          return (
-            <Card key={stat.title} >
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {stat.title}
-                </CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-                <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
+        {statCards.map((stat) => (
+          <StatCard key={stat.title} label={stat.title} value={String(stat.value)} hint={stat.description} />
+        ))}
       </div>
 
       {/* Charts */}

@@ -1,5 +1,6 @@
 // Ozzy Studio charging: the contract's studioCharge applied in one transaction with the StudioRender row.
 import { studioCharge, type StudioCharge } from "../../../src/lib/studio/contracts";
+import { isUnlimitedPlan } from "../../../src/lib/ads/billing-config";
 import type { Db } from "../db";
 
 const PAID_STATUSES = new Set(["active", "trialing", "past_due"]);
@@ -27,7 +28,9 @@ export interface ChargeDecision extends StudioCharge {
 
 /** Pure: the contract price, then the balance rule (never negative; short balance -> watermarked, free). */
 export function decideCharge(ws: ChargeWorkspace, o: { priorRenders: number; seconds: number; sessionFree: boolean }): ChargeDecision {
-  const c = studioCharge({ priorRenders: o.priorRenders, seconds: o.seconds, sessionFree: o.sessionFree, freeVideosLeft: ws.studioFreeVideos, isPaidWorkspace: isPaidStudioWorkspace(ws) });
+  // Unlimited plan (Ozzy Ad Department, Founding Unlimited): every render is free, never watermarked.
+  const unlimited = isUnlimitedPlan(ws);
+  const c = studioCharge({ priorRenders: o.priorRenders, seconds: o.seconds, sessionFree: o.sessionFree, freeVideosLeft: ws.studioFreeVideos, isPaidWorkspace: isPaidStudioWorkspace(ws), unlimited });
   if (c.credits > ws.creditBalance) return { ...c, credits: c.credits, deducted: 0, insufficient: true, watermark: true };
   return { ...c, deducted: c.credits, insufficient: false };
 }

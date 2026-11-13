@@ -71,7 +71,12 @@ export async function reapOrphans(db: Db, o: ReaperOptions): Promise<ReaperResul
   const jobs = await db.adJob.updateMany({
     where: {
       status: { in: [...OPEN_JOB] },
-      run: { workspaceId: ws, OR: [{ status: { in: ["failed", "canceled"] } }, { createdAt: { lt: hours(o.maxRunAgeHours) } }] },
+      // Old runs: only jobs that are old themselves. A fresh job on an old run is deliberate (QC revision of a
+      // requeued ad, ops make-good) and used to be canceled within a minute.
+      OR: [
+        { run: { workspaceId: ws, status: { in: ["failed", "canceled"] } } },
+        { run: { workspaceId: ws, createdAt: { lt: hours(o.maxRunAgeHours) } }, createdAt: { lt: hours(o.maxRunAgeHours) } },
+      ],
     },
     data: { status: "canceled", finishedAt: o.now, lockedBy: null, lockedAt: null },
   });

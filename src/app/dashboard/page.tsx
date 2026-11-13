@@ -9,6 +9,10 @@ import { STUDIO_LAUNCH_OFFER } from "@/lib/hub/money-model";
 import { OzzyPerch } from "@/components/testimonials/ozzy-perch";
 import { HubPrompt } from "@/components/hub/hub-prompt";
 import { HubItemTile } from "@/components/hub/hub-items";
+import { AdsUrlForm } from "@/components/ads/ads-url-form";
+import { hasAdDepartment } from "@/lib/ads/billing-config";
+import { CoachCard } from "@/components/ads/coach/coach-card";
+import { WeeklyDropCard } from "@/components/ads/weekly-drop-card";
 
 export const metadata: Metadata = { title: "Home" };
 export const dynamic = "force-dynamic";
@@ -22,12 +26,23 @@ export default async function HubHome() {
   const s = await loadHubSummary(user, ws, new Date());
   return (
     <div className="space-y-10">
-      <section className="pt-16">
+      {s.counts.ads === 0 && !ws.trialUsedAt ? (
+        // New account with the free pack unused: one box, one click (most new sign-ups never found /ads/app).
+        <section aria-labelledby="free-pack" className={`${card} mt-16 border-[var(--studio-gold)]/40 p-6 sm:p-8`}>
+          <p className="font-mono text-xs font-bold uppercase tracking-wider text-[var(--studio-gold)]">Your free ad pack is waiting</p>
+          <h2 id="free-pack" className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">Drop in your website. Ozzy makes your ads.</h2>
+          <p className="mt-1 text-muted-foreground">10 ads + 1 animated ad in your brand, free. The first ones show up in a few minutes.</p>
+          <div className="mt-5 max-w-2xl"><AdsUrlForm signedIn cta="Make my free ads" /></div>
+        </section>
+      ) : null}
+      <section className={s.counts.ads === 0 && !ws.trialUsedAt ? "pt-4" : "pt-16"}>
         <OzzyPerch size={88} className="-mb-2 ml-2" mood={{ form: "classic", expression: "happy", motion: "wave", line: greetingLine(s) }} />
         <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">What do you want to make?</h1>
         <p className="mt-1 text-muted-foreground">Tell Ozzy in plain words. He&apos;ll make it in Ozzy Studio.</p>
         <div className="mt-5 max-w-3xl"><HubPrompt /></div>
       </section>
+
+      <WeeklyDropCard workspace={ws} />
 
       <section aria-labelledby="apps" className="space-y-4">
         <h2 id="apps" className="font-display text-xl font-semibold">Your apps</h2>
@@ -37,6 +52,12 @@ export default async function HubHome() {
           <AppCard href="/dashboard/testimonials" icon={Video} name="Testimonials" count={s.counts.testimonials} unit="video" blurb="A realistic presenter reads your best customer review on camera." cta={s.canMakeTestimonials ? "Make a testimonial" : "See how to unlock"} locked={!s.canMakeTestimonials} />
         </div>
       </section>
+
+      <CoachCard className={card} />
+
+      <Link href="/ads/app#your-ad-department" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        {hasAdDepartment(ws) ? "Your Ad Department: website check-up, 30-day ad plan and hook library" : "See what Ozzy Ad Department adds: website check-up, 30-day ad plan, hook library"} <ArrowRight aria-hidden className="inline size-3.5" />
+      </Link>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
         <section aria-labelledby="recent" className="min-w-0 space-y-4">

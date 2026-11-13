@@ -12,13 +12,13 @@ const now = new Date("2026-11-03T00:00:00Z");
 
 describe("lifecycle copywriter", () => {
   it("uses valid AI copy", async () => {
-    const r = await writeCopy(fake({ subject: "Acme's launch offer ends tomorrow", preheader: "p", paragraphs: ["Hi Jane,", "The Launch Quarter is $129 for 3 months."], ctaLabel: "See the offer" }), ctx, now);
+    const r = await writeCopy(fake({ subject: "Acme's launch offer ends tomorrow", preheader: "p", paragraphs: ["Hi Jane,", "Your first month of Ozzy Ad Department is $97, then $197 a month."], ctaLabel: "See the offer" }), ctx, now);
     expect(r.source).toBe("ai");
   });
   it("falls back on invented prices", async () => {
     const r = await writeCopy(fake({ subject: "Deal", preheader: "p", paragraphs: ["Hi Jane,", "Only $19 today!"], ctaLabel: "Buy" }), ctx, now);
     expect(r.source).toBe("fallback");
-    expect(r.copy.paragraphs.join(" ")).toContain("$129");
+    expect(r.copy.paragraphs.join(" ")).toContain("$97");
   });
   it("falls back when the provider throws", async () => {
     const p = fake(null);

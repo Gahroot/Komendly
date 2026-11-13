@@ -117,3 +117,19 @@ describe.skipIf(!hasDb)("claim fairness across concurrent runs (dev DB)", async 
     expect(fresh.id).toBeTruthy();
   });
 });
+
+import { cappedTypes, overCap } from "../src/queue/fairness";
+
+describe("per-type caps (render_motion)", () => {
+  const caps = { render_motion: 3 };
+  it("stops claiming animated renders once 3 are running", () => {
+    const types = ["extract", "render_static", "render_motion", "qc"];
+    expect(cappedTypes(types, ["render_motion", "render_motion"], caps)).toContain("render_motion");
+    expect(cappedTypes(types, ["render_motion", "render_motion", "render_motion", "qc"], caps)).toEqual(["extract", "render_static", "qc"]);
+  });
+  it("hands back only the animated renders a batch claimed over the cap", () => {
+    const batch = [{ id: "a", type: "render_motion" }, { id: "b", type: "qc" }, { id: "c", type: "render_motion" }, { id: "d", type: "render_motion" }];
+    expect(overCap(batch, ["render_motion"], caps).map((j) => j.id)).toEqual(["d"]);
+    expect(overCap(batch, [], caps)).toEqual([]);
+  });
+});

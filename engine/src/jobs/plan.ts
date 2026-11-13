@@ -22,12 +22,14 @@ import { releaseForAd } from "./credits";
 import { findNearDuplicates } from "./dedupe";
 import { mapClaimsToFacts, type Fact } from "./grounding";
 import { maybeFinalizeRun } from "./finalize";
-import { giftPolicy } from "./gift-policy";
+import { giftPolicy, isWeeklyRun } from "./gift-policy";
+import { weeklyAvoidPrompt } from "./weekly";
 import { EMPTY_HISTORY, historyPrompt, hookOffset, loadBrandHistory } from "./brand-history";
 import { assignLayouts } from "./layouts";
 import { abandonReplacement, attemptCap, hedgeLockKey, qcObj } from "./replace";
 import { countTypeAds, fallbackFor, fallbackOf, isLocked, maxTypeAds, typographicSpec } from "./trial-fill";
 import { loadLayoutCatalog, loadMotionModule } from "./modules";
+import { loadRunSeed, seedPrompt } from "../coach/seed";
 
 const LlmAd = z.object({
   slot: z.number().int(),
@@ -157,13 +159,16 @@ export async function planJob(ctx: JobContext): Promise<unknown> {
   const history = process.env.BRAND_MEMORY_PLAN === "1" ? await loadBrandHistory(db, run) : EMPTY_HISTORY;
   const hOff = hookOffset(history);
   const slotList = slots.map((l, i) => `slot ${i}: ${l}${hOff ? ` (hook format ${(i + hOff) % 10})` : ""}`).join("\n");
-  const memory = historyPrompt(history, ex.assets);
-  const basePrompt = `${untrusted("brand-brief", brief)}${memory ? `\n\n${untrusted("brand-history", memory)}` : ""}\n\nWrite ${slots.length} static ads, one per slot:\n${slotList}${hOff ? "\n(Hook format per slot is given in brackets above; it overrides the slot-number rule.)" : ""}\n\nAlso return strongestSlot: the slot whose angle is the strongest (it will also become the animated ad).`;
+  const weeklyAvoid = isWeeklyRun(run) ? await weeklyAvoidPrompt(db, run) : "";
+  const memory = [historyPrompt(history, ex.assets), weeklyAvoid].filter(Boolean).join("\n\n");
+  // "Make 5 more like the winner" (Ozzy Ad Coach): planning is seeded from the winning ad.
+  const seed = await loadRunSeed(db, run.id, job.payload);
+  const basePrompt = `${untrusted("brand-brief", brief)}${memory ? `\n\n${untrusted("brand-history", memory)}` : ""}${seed ? `\n\n${untrusted("winner-seed", seedPrompt(seed))}` : ""}\n\nWrite ${slots.length} static ads, one per slot:\n${slotList}${hOff ? "\n(Hook format per slot is given in brackets above; it overrides the slot-number rule.)" : ""}\n\nAlso return strongestSlot: the slot whose angle is the strongest (it will also become the animated ad).`;
 
   // Two parallel batches; each gets its own share of the pains so angles diverge.
   const half = Math.ceil(slots.length / 2);
   const batches = [slots.map((_, i) => i).slice(0, half), slots.map((_, i) => i).slice(half)].filter((b) => b.length);
-  const painsFor = (bi: number) => ex.pains.filter((_, i) => i % batches.length === bi).map((p) => p.text);
+  const painsFor = (bi: number) => (seed ? [] : ex.pains).filter((_, i) => i % batches.length === bi).map((p) => p.text);
   const assetKeys = new Set(ex.assets.map((a) => a.key));
   const toSpec = (a: LlmAdT, index: number, kind: "static" | "motion", awareness: Awareness): AdSpec =>
     AdSpecSchema.parse({

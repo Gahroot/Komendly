@@ -82,6 +82,9 @@ describe.skipIf(!hasDb)("render guard + leases (dev DB)", async () => {
     const [h, c] = await Promise.all([db.adJob.findUniqueOrThrow({ where: { id: healthy.id } }), db.adJob.findUniqueOrThrow({ where: { id: crashed.id } })]);
     expect(h.status).toBe("running");
     expect(h.lockedBy).toBe(W);
-    expect(c.status).toBe("dead"); // recovered (out of attempts), never re-queued for live workers
+    // recovered: the crash was not the job's fault, so the attempt is given back and the restart counted
+    expect(c.status).toBe("queued");
+    expect(c.attempts).toBe(2);
+    expect((c.payload as { restarts?: number }).restarts).toBe(1);
   });
 });

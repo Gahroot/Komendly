@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatDate } from "@/lib/ads/billing-format";
 import { prisma } from "@/lib/prisma";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
+import { AdminEmpty } from "../../_components/admin-empty";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,7 @@ async function Workspaces() {
                 <TableCell className="text-muted-foreground">{formatDate(w.createdAt)}</TableCell>
               </TableRow>
             ))}
-            {rows.length === 0 && <TableRow><TableCell colSpan={7} className="text-muted-foreground">No workspaces yet.</TableCell></TableRow>}
+            {rows.length === 0 && <TableRow><TableCell colSpan={7}><AdminEmpty>No workspaces yet. &apos;s show up here.</AdminEmpty></TableCell></TableRow>}
           </TableBody>
         </Table>
       </CardContent>

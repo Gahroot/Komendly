@@ -13,5 +13,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "scripts/**/*.ts", "test/**/*.ts", "../src/lib/ads/contracts.ts", "../src/lib/testimonial/contracts.ts", "../src/lib/ads/billing-config.ts", "../src/lib/ads/lifecycle/*.ts", "../src/lib/ads/outbound/policy.ts", "../src/lib/ads/outbound/copy.ts", "../src/lib/ads/outbound/inbound.ts", "vitest.config.ts"]
+  "include": ["src/**/*.ts", "scripts/**/*.ts", "test/**/*.ts", "../src/lib/ads/contracts.ts", "../src/lib/testimonial/contracts.ts", "../src/lib/ads/billing-config.ts", "../src/lib/ads/lifecycle/*.ts", "vitest.config.ts"]
 }

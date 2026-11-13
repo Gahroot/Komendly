@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
@@ -29,10 +28,11 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/hooks/useUser";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { OzzyLazy } from "@/components/ozzy/OzzyLazy";
 
 const navGroups = [
   {
-    label: "Overview",
+    label: "HQ",
     items: [
       { label: "Ozzy HQ", href: "/admin", icon: LayoutDashboard },
       { label: "Users", href: "/admin/users", icon: Users },
@@ -41,32 +41,27 @@ const navGroups = [
   {
     label: "Ad Packs",
     items: [
-      { label: "Ads overview", href: "/admin/ads", icon: Megaphone, exact: true },
+      { label: "Overview", href: "/admin/ads", icon: Megaphone, exact: true },
       { label: "Workspaces", href: "/admin/ads/workspaces", icon: Users },
       { label: "Jobs & engine", href: "/admin/ads/jobs", icon: Cpu, also: ["/admin/ads/engine"] },
-    ],
-  },
-  { label: "Studio", items: [{ label: "Studio sessions", href: "/admin/studio", icon: Sparkles }] },
-  { label: "Testimonials", items: [{ label: "Videos", href: "/admin/videos", icon: Video }] },
-  {
-    label: "Growth",
-    items: [
       { label: "Sign-ups", href: "/admin/ads/signups", icon: UserPlus },
       { label: "Funnel", href: "/admin/ads/funnel", icon: BarChart3, also: ["/admin/ads/growth"] },
       { label: "Referrals & partners", href: "/admin/ads/referrals", icon: Gift, also: ["/admin/ads/partners"] },
-      { label: "Analytics", href: "/admin/analytics", icon: LineChartIcon },
-      { label: "Price survey", href: "/admin/price-survey", icon: LineChartIcon },
-    ],
-  },
-  {
-    label: "Money",
-    items: [
-      { label: "Revenue", href: "/admin/revenue", icon: CreditCard },
       { label: "Refunds", href: "/admin/ads/refunds", icon: RotateCcw },
       { label: "Churn", href: "/admin/ads/churn", icon: TrendingDown },
     ],
   },
-  { label: "", items: [{ label: "Settings", href: "/admin/settings", icon: Settings }] },
+  { label: "Ozzy Studio", items: [{ label: "Studio sessions", href: "/admin/studio", icon: Sparkles }] },
+  {
+    label: "Testimonials",
+    items: [
+      { label: "Videos", href: "/admin/videos", icon: Video },
+      { label: "Revenue", href: "/admin/revenue", icon: CreditCard },
+      { label: "Analytics", href: "/admin/analytics", icon: LineChartIcon },
+      { label: "Price survey", href: "/admin/price-survey", icon: LineChartIcon },
+    ],
+  },
+  { label: "Settings", items: [{ label: "Settings", href: "/admin/settings", icon: Settings }] },
 ] as const satisfies readonly { label: string; items: readonly { label: string; href: string; icon: unknown; exact?: boolean; also?: readonly string[] }[] }[];
 
 function navActive(pathname: string, item: { href: string; exact?: boolean; also?: readonly string[] }): boolean {
@@ -97,15 +92,11 @@ export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
       {/* Logo */}
       <div className="flex h-16 items-center justify-between px-6 pr-3">
         <Link href="/admin" className="flex items-center gap-2">
-          <Image
-            src="/brand/komendly-mark-128.png"
-            alt="Komendly"
-            width={32}
-            height={32}
-            className="h-8 w-8"
-            priority
-          />
-          <span className="text-xl font-bold tracking-tight">Ozzy HQ</span>
+          <OzzyLazy size={36} speech={false} pose={{ form: "classic", expression: "happy", motion: "idle" }} />
+          <span className="leading-tight">
+            <span className="block text-lg font-semibold tracking-tight">Ozzy HQ</span>
+            <span className="block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Admin</span>
+          </span>
         </Link>
         <ThemeToggle />
       </div>
@@ -128,7 +119,7 @@ export function AdminSidebar({ onNavigate }: AdminSidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
         {navGroups.map((group) => (
-          <div key={group.label || "more"} className="space-y-1">
+          <div key={group.label} className="space-y-1">
             {group.label ? <p className="px-3 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{group.label}</p> : null}
             {group.items.map((item) => {
               const isActive = navActive(pathname, item);

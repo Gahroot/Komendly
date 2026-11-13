@@ -5,7 +5,7 @@ import type { Prisma } from "@prisma/client";
 import type { Db } from "../db";
 import { enqueue, priorityFor } from "../queue/queue";
 import { releaseForAd } from "./credits";
-import { GIFT_ATTEMPT_CAP, isGiftRun, isNurtureRun, NURTURE_ATTEMPT_CAP, nurtureOverBudget } from "./gift-policy";
+import { GIFT_ATTEMPT_CAP, isGiftRun, isNurtureRun, isWeeklyRun, NURTURE_ATTEMPT_CAP, nurtureOverBudget, weeklyOverBudget } from "./gift-policy";
 import { isLocked, trialAttemptFactor, withinFillWindow } from "./trial-fill";
 
 /** Max ads (originals + replacements) per kind per run. */
@@ -41,7 +41,7 @@ export async function requestReplacement(db: Db, adId: string, feedback: string,
   const run = ad.run;
   const total = await packAttempts(db, run.id, ad.kind);
   const live = ["queued", "generating"].includes(run.status);
-  const overBudget = isNurtureRun(run) && nurtureOverBudget(run.costMicros);
+  const overBudget = (isNurtureRun(run) && nurtureOverBudget(run.costMicros)) || (isWeeklyRun(run) && weeklyOverBudget(run.costMicros, ad.kind));
   if (!live || overBudget || total >= attemptCap(ad.kind, run) || !withinFillWindow(run, now)) {
     await releaseForAd(db, adId);
     return false;

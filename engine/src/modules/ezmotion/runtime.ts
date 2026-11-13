@@ -17,15 +17,41 @@ export interface RunResult {
 export function run(cmd: string, args: string[], opts: { signal?: AbortSignal; env?: NodeJS.ProcessEnv; cwd?: string; timeoutMs?: number; onChunk?: (s: string) => void } = {}): Promise<RunResult> {
   const started = Date.now();
   return new Promise((resolve) => {
-    const child = spawn(cmd, args, { cwd: opts.cwd, env: { ...process.env, ...opts.env }, signal: opts.signal, timeout: opts.timeoutMs, stdio: ["ignore", "pipe", "pipe"] });
+    // Own process group, so a timeout/abort also kills the Chrome processes the renderer started (they inherit
+    // our pipes; left alive they kept 'close' from ever firing and the job hung for hours).
+    const child = spawn(cmd, args, { cwd: opts.cwd, env: { ...process.env, ...opts.env }, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
+    let done = false;
+    const finish = (r: RunResult) => { if (done) return; done = true; cleanup(); resolve(r); };
+    const stop = () => killTree(child.pid);
+    const timer = opts.timeoutMs ? setTimeout(stop, opts.timeoutMs) : null;
+    opts.signal?.addEventListener("abort", stop, { once: true });
+    if (opts.signal?.aborted) stop();
+    let exitGrace: NodeJS.Timeout | null = null;
+    const cleanup = () => { if (timer) clearTimeout(timer); if (exitGrace) clearTimeout(exitGrace); opts.signal?.removeEventListener("abort", stop); };
+    // 'exit' fires when our child is gone even if a grandchild still holds the pipes: reap the group, give the
+    // streams a moment to drain, then resolve regardless.
+    child.on("exit", (code) => {
+      killTree(child.pid);
+      exitGrace = setTimeout(() => { child.stdout?.destroy(); child.stderr?.destroy(); finish({ code: code ?? -1, stdout, stderr, ms: Date.now() - started }); }, 5_000);
+    });
     // Keep only the tail: un-quiet renders print a lot of progress redraws.
     child.stdout.on("data", (d: Buffer) => { const t = d.toString(); stdout = (stdout + t).slice(-200_000); opts.onChunk?.(t); });
     child.stderr.on("data", (d: Buffer) => { const t = d.toString(); stderr = (stderr + t).slice(-200_000); opts.onChunk?.(t); });
-    child.on("error", (e) => resolve({ code: -1, stdout, stderr: stderr + String(e), ms: Date.now() - started }));
-    child.on("close", (code) => resolve({ code: code ?? -1, stdout, stderr, ms: Date.now() - started }));
+    child.on("error", (e) => finish({ code: -1, stdout, stderr: stderr + String(e), ms: Date.now() - started }));
+    child.on("close", (code) => finish({ code: code ?? -1, stdout, stderr, ms: Date.now() - started }));
   });
+}
+
+/** SIGKILL a detached child's whole process group (falls back to the child alone). */
+export function killTree(pid: number | undefined): void {
+  if (!pid) return;
+  try {
+    process.kill(process.platform === "win32" ? pid : -pid, "SIGKILL");
+  } catch {
+    try { process.kill(pid, "SIGKILL"); } catch { /* already gone */ }
+  }
 }
 
 export async function which(name: string): Promise<string | null> {

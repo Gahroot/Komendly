@@ -19,6 +19,7 @@ export interface EngineConfig {
   leaseRenewMs: number;
   /** Worker slots reserved for run-start work (extract/plan). */
   startLaneSlots: number;
+  maxMotion: number;
   heartbeatMs: number;
   aiProvider: "codex" | "openai";
   sharedSecret: string | undefined;
@@ -38,6 +39,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): EngineConfig {
     staleLockMs: int("ENGINE_STALE_LOCK_MS", 15 * 60_000),
     leaseRenewMs: int("ENGINE_LEASE_RENEW_MS", 30_000),
     startLaneSlots: int("ENGINE_START_LANE_SLOTS", 1),
+    // Animated renders running at once on this replica (each runs Chrome + ffmpeg); the rest wait in the queue.
+    maxMotion: int("ENGINE_MAX_MOTION", 3),
     heartbeatMs: int("ENGINE_HEARTBEAT_MS", 30_000),
     aiProvider: provider,
     sharedSecret: env.ENGINE_SHARED_SECRET || undefined,

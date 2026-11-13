@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { ADS_PLANS, ADS_TOPUPS, annualCredits, annualPriceCents } from "../billing-config";
+import { ADS_PLANS, ADS_TOPUPS, annualCredits, annualPriceCents, WEEKLY_DROP_CREDIT_EQUIVALENTS_PER_MONTH } from "../billing-config";
+
+// Per-credit plans; the unlimited plan has its own cost test below (no credit count to price).
+const CREDIT_PLANS = ADS_PLANS.filter((p) => !p.unlimited);
 import { marginAt, P90_PER_CREDIT } from "../../../../scripts/ads-pricing-sim";
 
 describe("ads pricing v3 margins", () => {
@@ -8,7 +11,7 @@ describe("ads pricing v3 margins", () => {
     expect(P90_PER_CREDIT).toBeLessThan(0.7);
   });
 
-  it.each(ADS_PLANS.map((p) => [p.name, p.priceCents, p.monthlyCredits] as const))("plan %s keeps >= 70%% margin at p90 API cost", (_n, cents, credits) => {
+  it.each(CREDIT_PLANS.map((p) => [p.name, p.priceCents, p.monthlyCredits] as const))("plan %s keeps >= 70%% margin at p90 API cost", (_n, cents, credits) => {
     expect(marginAt(cents / 100, credits, P90_PER_CREDIT)).toBeGreaterThanOrEqual(0.7);
   });
 
@@ -17,21 +20,24 @@ describe("ads pricing v3 margins", () => {
   });
 
   it("prices top-ups per credit above every plan and keeps Scale as the highest-priced anchor", () => {
-    const planMax = Math.max(...ADS_PLANS.map((p) => p.priceCents / p.monthlyCredits));
+    const planMax = Math.max(...CREDIT_PLANS.map((p) => p.priceCents / p.monthlyCredits));
     for (const t of ADS_TOPUPS) expect(t.priceCents / t.credits).toBeGreaterThan(planMax);
     // Scale is the self-serve anchor of the post-trial menu; Agency sits above it for multi-brand teams.
-    const selfServe = ADS_PLANS.filter((p) => p.key !== "agency");
+    const selfServe = CREDIT_PLANS.filter((p) => p.key !== "agency");
     expect(Math.max(...selfServe.map((p) => p.priceCents))).toBe(ADS_PLANS.find((p) => p.key === "scale")?.priceCents);
   });
 
-  it("gives Agency the lowest price per credit of any plan", () => {
+  // Agency went unlimited (2026-11-11): 10 brands, 3 at a time. It must stay the top plan, above Ad Department.
+  it("prices Agency (unlimited, 10 brands) above the unlimited Ad Department", () => {
     const agency = ADS_PLANS.find((p) => p.key === "agency");
-    expect(agency).toBeDefined();
-    for (const p of ADS_PLANS) if (p !== agency && agency) expect(agency.priceCents / agency.monthlyCredits).toBeLessThan(p.priceCents / p.monthlyCredits);
+    const hero = ADS_PLANS.find((p) => p.key === "ad_department");
+    expect(agency?.unlimited && hero?.unlimited).toBe(true);
+    expect(agency!.priceCents).toBeGreaterThan(hero!.priceCents);
+    expect((agency!.unlimitedBrands ?? 0) > (hero!.unlimitedBrands ?? 0)).toBe(true);
   });
 
   // Annual prepay = 10 months for 12 months of credits: margin at p90 API cost drops to ~65% (>= 80% at p50).
-  it.each(ADS_PLANS.map((p) => [p.name, annualPriceCents(p), annualCredits(p)] as const))("annual %s keeps >= 60%% margin at p90 API cost", (_n, cents, credits) => {
+  it.each(CREDIT_PLANS.map((p) => [p.name, annualPriceCents(p), annualCredits(p)] as const))("annual %s keeps >= 60%% margin at p90 API cost", (_n, cents, credits) => {
     expect(marginAt(cents / 100, credits, P90_PER_CREDIT)).toBeGreaterThanOrEqual(0.6);
   });
 });
@@ -76,7 +82,58 @@ describe("unlock_pack tripwire", () => {
   it("keeps >= 70% margin at p90 API cost and costs more per credit than any plan", async () => {
     const { UNLOCK_PACK } = await import("../billing-config");
     expect(marginAt(UNLOCK_PACK.priceCents / 100, UNLOCK_PACK.credits, P90_PER_CREDIT)).toBeGreaterThanOrEqual(0.7);
-    const planMax = Math.max(...ADS_PLANS.map((p) => p.priceCents / p.monthlyCredits));
+    const planMax = Math.max(...CREDIT_PLANS.map((p) => p.priceCents / p.monthlyCredits));
     expect(UNLOCK_PACK.priceCents / UNLOCK_PACK.credits).toBeGreaterThan(planMax);
+  });
+});
+
+// Ozzy Ad Department, Founding Unlimited ($197/mo): Ad Packs + Studio cost 0 credits, so the per-credit p90 test
+// above can't apply. Cost basis: generation runs on the flat Codex subscription (image + LLM marginal cost ~0); only
+// compute (CODEX_PER_CREDIT, Railway share) scales with use. Fair use (one run + one Studio turn in progress at a
+// time) caps throughput. Budget: Weekly Drop (~43 credit-equivalents) + 100 more must keep >= 70% even at the p50 API
+// list cost ($0.27/credit), and Weekly Drop + a heavy 300 must keep >= 90% on Codex compute.
+describe("unlimited Ad Department cost basis", () => {
+  it("keeps >= 70% margin for a heavy month at p50 API cost and >= 90% on the Codex subscription", async () => {
+    const { CODEX_PER_CREDIT } = await import("../../../../scripts/ads-pricing-sim");
+    const hero = ADS_PLANS.find((p) => p.key === "ad_department");
+    if (!hero) throw new Error("no ad_department");
+    expect(hero.unlimited).toBe(true);
+    expect(hero.monthlyCredits).toBe(0);
+    const heavy = WEEKLY_DROP_CREDIT_EQUIVALENTS_PER_MONTH + 300;
+    expect(marginAt(hero.priceCents / 100, 100 + WEEKLY_DROP_CREDIT_EQUIVALENTS_PER_MONTH, 0.27)).toBeGreaterThanOrEqual(0.7);
+    expect(marginAt(hero.priceCents / 100, heavy, CODEX_PER_CREDIT)).toBeGreaterThanOrEqual(0.9);
+  });
+});
+
+import { brandAllowed, concurrentLimit, FOUNDING_TERMS, hasAdDepartment, isUnlimitedPlan, unlimitedBrandLimit, unlimitedLine } from "@/lib/ads/billing-config";
+
+describe("unlimited plans: Ad Department (1 business) vs Agency (10 brands, 3 at a time)", () => {
+  const ws = (adsPlan: string, subscriptionStatus = "active") => ({ adsPlan, subscriptionStatus });
+  it("Agency is unlimited, gets Ad Department features, 10 brands, 3 at a time", () => {
+    expect(isUnlimitedPlan(ws("agency"))).toBe(true);
+    expect(hasAdDepartment(ws("agency"))).toBe(true);
+    expect(unlimitedBrandLimit(ws("agency"))).toBe(10);
+    expect(concurrentLimit(ws("agency"))).toBe(3);
+  });
+  it("Ad Department covers 1 business, one at a time; credit plans have no brand cap", () => {
+    expect(unlimitedBrandLimit(ws("ad_department"))).toBe(1);
+    expect(concurrentLimit(ws("ad_department"))).toBe(1);
+    expect(unlimitedBrandLimit(ws("starter"))).toBeNull();
+    expect(unlimitedBrandLimit(ws("ad_department", "canceled"))).toBeNull();
+  });
+  it("brand rule: same business always ok; a new one only under the cap", () => {
+    expect(brandAllowed("acme.com", [], 1)).toBe(true);
+    expect(brandAllowed("acme.com", ["acme.com"], 1)).toBe(true);
+    expect(brandAllowed("other.com", ["acme.com"], 1)).toBe(false);
+    expect(brandAllowed("b10.com", Array.from({ length: 9 }, (_, i) => `b${i}.com`), 10)).toBe(true);
+    expect(brandAllowed("b11.com", Array.from({ length: 10 }, (_, i) => `b${i}.com`), 10)).toBe(false);
+    expect(brandAllowed("x.com", ["a.com", "b.com"], null)).toBe(true);
+  });
+  it("plain copy for each plan, and the founding promise is 3 months", () => {
+    expect(unlimitedLine({ unlimited: true, unlimitedBrands: 1, concurrent: 1 })).toBe("Unlimited ads and Studio videos for your business, made one at a time");
+    expect(unlimitedLine({ unlimited: true, unlimitedBrands: 10, concurrent: 3 })).toBe("Unlimited ads and Studio videos for up to 10 brands, 3 at a time");
+    expect(unlimitedLine({ unlimited: false })).toBeNull();
+    expect(FOUNDING_TERMS).toContain("first 3 months");
+    expect(FOUNDING_TERMS).not.toMatch(/6 months/);
   });
 });

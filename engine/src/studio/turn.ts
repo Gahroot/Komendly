@@ -3,6 +3,7 @@
 // child process (run-studio-agent.mjs) -> stream friendly StudioEvent rows -> deliver the newest MP4 the agent
 // rendered (watermark + length cap by the engine) -> charge in one transaction -> persist the session.
 import { spawn } from "node:child_process";
+import { dropMissingAudio, isMissingAudioError } from "./missing-audio";
 import { access, copyFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { delimiter, dirname, extname, join } from "node:path";
 import { createInterface } from "node:readline";
@@ -24,7 +25,7 @@ import { type RenderProgress, ffmpegPath, renderComposition } from "../modules/e
 import { Limiter } from "../providers/limiter";
 import { type BriefUpload, cleanUploadNames, studioBrief, turnPrompt } from "./brief";
 import { chargeAndRecord, decideCharge, isPaidStudioWorkspace } from "./charge";
-import { type StudioEventRow, StudioEventMapper, parseChildLine } from "./events";
+import { type StudioEventRow, StudioEventMapper, finalReply, parseChildLine, userFacingText } from "./events";
 import { finalizeDelivery, posterFrame, probeMedia, ratioOf } from "./media";
 import { changedComposition, packProject, pickDelivered, unpackProject, videoFiles } from "./project";
 
@@ -325,6 +326,11 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
           await new Promise((r) => setTimeout(r, waitMs));
           rr = await renderComposition(comp, out, { fps: 30, signal: turnAbort.signal, timeoutMs: 10 * 60_000, onProgress: (p) => prog.emit(p, p.pct === 0), ...(i === 2 ? { workers: 1 } : {}) });
         }
+        // A dangling music/audio reference blocks the whole render: drop it and render once more.
+        if (rr.code !== 0 && !turnAbort.signal.aborted && isMissingAudioError(rr.stderr || rr.stdout) && (await dropMissingAudio(comp)) > 0) {
+          log("warn", "studio render: dropped missing audio, rendering again", {});
+          rr = await renderComposition(comp, out, { fps: 30, signal: turnAbort.signal, timeoutMs: 10 * 60_000, onProgress: (p) => prog.emit(p, p.pct === 0) });
+        }
         log("info", "studio render", { ms: rr.ms, code: rr.code });
         if (rr.code === 0 && (await stat(out).catch(() => null))?.size) { source = out; prog.emit({ pct: 100, stage: "done" }, true); }
         else log("warn", "studio render failed", { error: (rr.stderr || rr.stdout).slice(-300) });
@@ -354,7 +360,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     if (reason) {
       const code = reason === "cancelled" ? "cancelled" : "timeout";
       ev.write([{ type: "error", data: { message: friendlyError(code), code } }]);
-      await db.studioMessage.update({ where: { id: assistantMessageId }, data: { status: code === "cancelled" ? "cancelled" : "error", content: mapper.finalText(), error: code, attachments } });
+      await db.studioMessage.update({ where: { id: assistantMessageId }, data: { status: code === "cancelled" ? "cancelled" : "error", content: userFacingText(mapper.finalText()), error: code, attachments } });
       await db.studioSession.update({ where: { id: sessionId }, data: { ...update, status: code === "cancelled" ? "idle" : "error", lastActivityAt: new Date() } });
       ev.write([{ type: "done", data: { messageId: assistantMessageId } }]);
       await ev.drain();
@@ -362,7 +368,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     }
     if (!result.ok && !asked && !delivered) throw new Error(result.error ?? "agent failed");
     for (const q of mapper.questions) attachments.push({ question: q });
-    let content = mapper.finalText();
+    let content = finalReply(mapper.finalText(), { delivered: Boolean(delivered), asked });
     if (!content && delivered) content = "Here's your video.";
     mapper.setPhase("done", "Done");
     await db.studioMessage.update({ where: { id: assistantMessageId }, data: { status: "done", content, attachments } });
@@ -378,7 +384,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     mapper.flush();
     ev.write([{ type: "status", data: { phase: "error" satisfies StudioPhase, label: "Something went wrong" } }, { type: "error", data: { message: friendlyError(code), code } }, { type: "done", data: { messageId: assistantMessageId } }]);
     // A failed render must not leave Ozzy's "it's ready" text standing as the answer.
-    const content = code === "render" ? friendlyError(code) : mapper.finalText();
+    const content = code === "render" ? friendlyError(code) : userFacingText(mapper.finalText());
     await db.studioMessage.update({ where: { id: assistantMessageId }, data: { status: "error", error: errMsg(e).slice(0, 500), content } }).catch(() => undefined);
     await db.studioSession.update({ where: { id: sessionId }, data: { status: "error", lastActivityAt: new Date() } }).catch(() => undefined);
     await ev.drain();

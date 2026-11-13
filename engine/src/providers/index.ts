@@ -1,6 +1,7 @@
 // Provider factory: AI_PROVIDER=codex (default) | openai.
 import type { AIProvider } from "./types";
 import { CodexAuth } from "./codex-auth";
+import { sharedCodexStore, type CredDb } from "./codex-store";
 import { CodexProvider } from "./codex";
 import { loadPrices } from "./cost";
 import { Limiter } from "./limiter";
@@ -11,7 +12,8 @@ function num(env: NodeJS.ProcessEnv, k: string, d: number): number {
   return Number.isFinite(v) && v > 0 ? v : d;
 }
 
-export function createProvider(kind: "codex" | "openai", env: NodeJS.ProcessEnv = process.env): AIProvider {
+/** `opts.db` + CODEX_SHARED_STORE=db: the Codex login lives in the shared CodexCredential row. */
+export function createProvider(kind: "codex" | "openai", env: NodeJS.ProcessEnv = process.env, opts: { db?: CredDb; by?: string } = {}): AIProvider {
   const prices = loadPrices(env);
   if (kind === "openai") {
     return new OpenAIProvider({
@@ -23,7 +25,7 @@ export function createProvider(kind: "codex" | "openai", env: NodeJS.ProcessEnv 
     });
   }
   return new CodexProvider({
-    auth: CodexAuth.fromEnv(env),
+    auth: CodexAuth.fromEnv(env, sharedCodexStore(opts.db, env, opts.by ?? "engine")),
     prices,
     textModel: env.CODEX_TEXT_MODEL ?? "gpt-6.1-sol",
     // Subscription caps. Images: 6 parallel probed OK (scripts/image-concurrency-probe.ts, ~9s each).

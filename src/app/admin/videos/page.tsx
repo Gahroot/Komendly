@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
+import { AdminEmpty } from "../_components/admin-empty";
 
 interface GeneratedVideo {
   id: string;
@@ -137,13 +138,13 @@ export default function VideosPage() {
       case "failed":
         return "bg-destructive/20 text-destructive border-destructive/30";
       default:
-        return "bg-zinc-500/20 text-muted-foreground border-zinc-500/30";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Admin" title="Videos" description="Manage generated videos" />
+      <PageHeader eyebrow="Testimonials" title="Videos" description="Every testimonial video people have made, newest first." />
 
       {/* Filters */}
       <Card >
@@ -236,8 +237,8 @@ export default function VideosPage() {
                   ))
                 ) : data?.videos.length === 0 ? (
                   <TableRow className="border-border">
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                      No videos found
+                    <TableCell colSpan={7}>
+                      <AdminEmpty>No videos match that. Try another filter.</AdminEmpty>
                     </TableCell>
                   </TableRow>
                 ) : (

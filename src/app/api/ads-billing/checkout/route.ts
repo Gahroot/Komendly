@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { komendlyCheckoutText } from "@/lib/checkout-branding";
 import { z } from "zod";
-import { annualPriceIdFor, getOffer, getPlan, getTopup, priceIdFor, UNLOCK_PACK, UNLOCK_PACK_NOTE, unlockPackCouponId } from "@/lib/ads/billing-config";
+import { annualPriceIdFor, getOffer, getPlan, isPlanForSale, LAUNCH_QUARTER, offerCouponId, getTopup, priceIdFor, UNLOCK_PACK, UNLOCK_PACK_NOTE, unlockPackCouponId } from "@/lib/ads/billing-config";
 import { getLaunchOfferState } from "@/lib/ads/launch-offer";
 import { appUrl, getAdsStripe } from "@/lib/ads/billing-stripe";
 import { trackAdsEvent } from "@/lib/ads/events";
@@ -34,11 +34,17 @@ export async function POST(request: NextRequest) {
     if (!stripe) return NextResponse.json({ error: "Billing is not configured yet.", code: "billing_not_configured" }, { status: 503 });
     const parsed = Body.safeParse(await request.json().catch(() => null));
     if (!parsed.success) return NextResponse.json({ error: "Invalid request", code: "invalid" }, { status: 400 });
-    const { kind, key, placement } = parsed.data;
+    const { kind, placement } = parsed.data;
+    // Pages opened before the founding offer launched still send the old offer key: sell them the current launch offer.
+    const key = kind === "offer" && parsed.data.key === "launch_quarter" ? LAUNCH_QUARTER.key : parsed.data.key;
     const studioLaunch = parsed.data.offer === STUDIO_LAUNCH_OFFER.key;
     if (studioLaunch && (kind !== "plan" || key !== STUDIO_LAUNCH_OFFER.plan || parsed.data.interval === "year")) {
       return NextResponse.json({ error: "That offer is only for the monthly Growth plan.", code: "invalid" }, { status: 400 });
     }
+    // New subscriptions only on plans for sale (Growth/Scale are hidden during the founding offer; their
+    // existing subscribers change plans in the Customer Portal, never here). Only the current launch offer is sold.
+    if (kind === "plan" && !isPlanForSale(key)) return NextResponse.json({ error: "That plan isn't available anymore.", code: "unknown_price" }, { status: 400 });
+    if (kind === "offer" && key !== LAUNCH_QUARTER.key) return NextResponse.json({ error: "This launch offer has expired.", code: "offer_expired" }, { status: 410 });
     const annual = kind === "plan" && parsed.data.interval === "year";
     const freeMonth = kind === FREE_MONTH_KIND;
     const item = kind === "plan" || freeMonth ? getPlan(freeMonth ? "starter" : key) : kind === "offer" ? getOffer(key) : getTopup(key);
@@ -71,6 +77,10 @@ export async function POST(request: NextRequest) {
     const offer = kind === "offer" ? getOffer(key) : undefined;
     // $9 unlock_pack credited off the first Starter month: only for buyers of the pack who never subscribed.
     const couponId = kind === "plan" && key === "starter" && !annual && !studioLaunch && !legacySwitch ? unlockPackCouponId() : null;
+    // Launch offers (72h post-trial, Studio launch): $100 off the first hero-plan invoice. No coupon = not sold.
+    const launchCoupon = offer ? offerCouponId(offer) : studioLaunch ? offerCouponId(LAUNCH_QUARTER) : null;
+    if ((offer?.couponEnv || studioLaunch) && !launchCoupon) return NextResponse.json({ error: "That option isn't available.", code: "unknown_price" }, { status: 400 });
+    const founding = (kind === "plan" && getPlan(key)?.unlimited) || (offer && getPlan(offer.plan)?.unlimited);
     const unlockCredit = couponId && !ws.stripeSubscriptionId
       ? Boolean(await prisma.creditLedger.findFirst({ where: { workspaceId: ws.id, reason: "topup", note: UNLOCK_PACK_NOTE, delta: { gt: 0 } }, select: { id: true } }))
       : false;
@@ -80,11 +90,11 @@ export async function POST(request: NextRequest) {
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
       metadata,
-      ...komendlyCheckoutText(recurring ? "plan" : "pack"),
+      ...komendlyCheckoutText(founding ? "founding" : recurring ? "plan" : "pack"),
       ...(recurring
         ? { subscription_data: { metadata, ...(freeMonth ? { trial_period_days: freeMonthCheckoutParams().trialDays } : {}) } }
         : { payment_intent_data: { metadata } }),
-      ...(unlockCredit && couponId ? { discounts: [{ coupon: couponId }] } : {}),
+      ...(launchCoupon ? { discounts: [{ coupon: launchCoupon }] } : unlockCredit && couponId ? { discounts: [{ coupon: couponId }] } : {}),
       ...(freeMonth ? { payment_method_collection: freeMonthCheckoutParams().payment_method_collection } : {}),
       success_url: `${appUrl()}/ads/billing?checkout=success${kind === "topup" && key === UNLOCK_PACK.key ? `&bought=${UNLOCK_PACK.key}` : ""}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl()}/ads/billing?checkout=canceled${kind === "topup" || freeMonth ? "" : `&declined=${encodeURIComponent(key)}`}`,

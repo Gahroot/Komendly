@@ -34,7 +34,7 @@ describe("grounding", () => {
 });
 
 import { expandToSentence, isCompleteSentence } from "../src/jobs/grounding";
-import { isTransient } from "../src/runner";
+import { isResourceExhaustion, isTransient } from "../src/runner";
 
 describe("quote completeness", () => {
   const text = "Reviews\nWorking with Jane was great. She was able to help us close on the perfect home within our tight timeline. Highly recommend!";
@@ -47,5 +47,9 @@ describe("quote completeness", () => {
   it("classifies transient network errors", () => {
     expect(isTransient(new TypeError("fetch failed", { cause: Object.assign(new Error("x"), { code: "ECONNRESET" }) }))).toBe(true);
     expect(isTransient(new Error("model output did not match schema"))).toBe(false);
+    expect(isResourceExhaustion(new Error("HyperFrames render failed (9:16): node[34361]: pthread_create: Resource temporarily unavailable"))).toBe(true);
+    expect(isResourceExhaustion(new Error("HyperFrames render failed (9:16): TROUBLESHOOTING: https://pptr.dev/troubleshooting Chrome could not launch"))).toBe(true);
+    expect(isResourceExhaustion(new Error("browser.newPage: Target page, context or browser has been closed"))).toBe(true);
+    expect(isResourceExhaustion(new Error("vision QC failed: offer unclear"))).toBe(false);
   });
 });

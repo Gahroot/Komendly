@@ -4,7 +4,7 @@ import { BrandMark } from "@/components/brand-mark";
 
 const COLS = [
   { title: "Apps", links: [{ href: "/ozzy-studio", label: "Ozzy Studio" }, { href: "/", label: "Ad Packs" }, { href: "/testimonials", label: "Testimonials" }, { href: "/pricing", label: "Pricing" }, { href: "/login", label: "Sign in" }] },
-  { title: "More", links: [{ href: "/testimonials#examples", label: "Testimonial examples" }, { href: "/ad-examples", label: "Ad examples" }, { href: "/blog", label: "Blog" }, { href: "/partners", label: "Partner program" }] },
+  { title: "More", links: [{ href: "/examples", label: "Examples" }, { href: "/agents", label: "For AI agents" }, { href: "/ad-examples", label: "Ad examples" }, { href: "/blog", label: "Blog" }, { href: "/partners", label: "Partner program" }] },
   { title: "Legal", links: [{ href: "/privacy", label: "Privacy" }, { href: "/terms", label: "Terms" }, { href: "/terms#refunds", label: "Refunds" }] },
 ];
 

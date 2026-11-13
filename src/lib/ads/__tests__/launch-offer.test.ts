@@ -3,7 +3,10 @@ import {
   getOffer,
   isLaunchOfferOpen,
   LAUNCH_QUARTER,
+  LAUNCH_QUARTER_LEGACY,
   launchOfferExpiresAt,
+  offerCouponId,
+  offerFirstPaymentCents,
   offerCreditsFor,
   offerFromPriceId,
   offerSavingsCents,
@@ -14,14 +17,17 @@ const ready = new Date("2026-11-07T12:00:00Z");
 const h = (n: number) => new Date(ready.getTime() + n * 3_600_000);
 
 describe("launch quarter offer", () => {
-  it("is $129 for 3 months of 60 credits, +5 on the first invoice only", () => {
-    expect(LAUNCH_QUARTER.priceCents).toBe(12900);
-    expect(offerCreditsFor(LAUNCH_QUARTER, true)).toBe(65);
-    expect(offerCreditsFor(LAUNCH_QUARTER, false)).toBe(60);
-    expect(offerSavingsCents(LAUNCH_QUARTER)).toBe(1800);
+  it("is the first month of Ozzy Ad Department for $97 ($100 off $197, once), renewing as the plan", () => {
+    expect(LAUNCH_QUARTER).toMatchObject({ key: "launch_department", plan: "ad_department", priceCents: 19700, intervalMonths: 1, priceEnv: "STRIPE_ADS_AD_DEPARTMENT_PRICE_ID" });
+    expect(offerFirstPaymentCents(LAUNCH_QUARTER)).toBe(9700);
+    expect(offerSavingsCents(LAUNCH_QUARTER)).toBe(10000);
+    expect(offerCreditsFor(LAUNCH_QUARTER, true)).toBe(0);
+    expect(offerCouponId(LAUNCH_QUARTER, { STRIPE_ADS_LAUNCH_FIRST_MONTH_COUPON_ID: "c" })).toBe("c");
   });
 
-  it("keeps >= 70% margin at p90 API cost on the bonus quarter", () => {
+  it("keeps the legacy Launch Quarter ($129, 60 + 5 credits) for existing subscribers at >= 70% margin", () => {
+    expect(offerCreditsFor(LAUNCH_QUARTER_LEGACY, true)).toBe(65);
+    expect(offerCreditsFor(LAUNCH_QUARTER_LEGACY, false)).toBe(60);
     expect(marginAt(129, 65, P90_PER_CREDIT)).toBeGreaterThanOrEqual(0.7);
   });
 
@@ -35,9 +41,12 @@ describe("launch quarter offer", () => {
   });
 
   it("resolves by key and price id", () => {
-    expect(getOffer("launch_quarter")).toBe(LAUNCH_QUARTER);
+    expect(getOffer("launch_department")).toBe(LAUNCH_QUARTER);
+    expect(getOffer("launch_quarter")).toBe(LAUNCH_QUARTER_LEGACY);
     expect(getOffer("starter")).toBeUndefined();
-    expect(offerFromPriceId("price_x", { STRIPE_ADS_LAUNCH_QUARTER_PRICE_ID: "price_x" })).toBe(LAUNCH_QUARTER);
+    // Legacy price id still maps (renewals); the coupon offer rides on the plan price and never matches as an offer.
+    expect(offerFromPriceId("price_x", { STRIPE_ADS_LAUNCH_QUARTER_PRICE_ID: "price_x" })).toBe(LAUNCH_QUARTER_LEGACY);
+    expect(offerFromPriceId("price_ad", { STRIPE_ADS_AD_DEPARTMENT_PRICE_ID: "price_ad" })).toBeUndefined();
     expect(offerFromPriceId("price_x", {})).toBeUndefined();
   });
 });

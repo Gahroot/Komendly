@@ -50,7 +50,7 @@ const SAMPLES = [
 const FAQ = [
   { q: "How and when do I get paid?", a: `Monthly, via PayPal or Wise. A commission becomes payable once the payment is past our ${T.refundWindowDays}-day refund window, and we pay out once your balance reaches ${MIN}. Anything under ${MIN} rolls over to the next month.` },
   { q: "What counts as a referral?", a: `Anyone who signs up within ${T.attributionDays} days of clicking your link. If someone clicked another partner's link first, the first referral wins.` },
-  { q: "What do I earn on?", a: `Every subscription payment (including the Launch Quarter) and every credit pack your referral buys, for ${T.commissionMonths} months from their sign-up. Refunded payments don't earn commission.` },
+  { q: "What do I earn on?", a: `Every subscription payment (including founding first months) and every credit pack your referral buys, for ${T.commissionMonths} months from their sign-up. Refunded payments don't earn commission.` },
   { q: "Can I refer myself or my own business?", a: "No. Self-referrals and referrals of your own company aren't eligible. Your partner account comes with its own free pack instead." },
   { q: "What are demo packs?", a: `Each month you can make ${T.demoGiftsPerMonth} free packs of 3 ads from any client's website and send them a private link. They see their own brand in real ads before they sign up.` },
   { q: "Do I need to manage my clients' accounts?", a: "No. Clients run their own studio. You can help them if you like, but you're paid either way." },

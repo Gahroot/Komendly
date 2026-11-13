@@ -39,7 +39,7 @@ export function AdsRecentRuns() {
               <li key={run.id}>
                 <Link href={`/ads/runs/${run.id}`} className="-mx-2 flex min-h-14 items-center gap-3 rounded-lg px-2 py-3 transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{domainOf(run.url)}</p>
+                    <p className="truncate font-medium">{run.title ? `${run.title} · ${domainOf(run.url)}` : domainOf(run.url)}</p>
                     <p className="text-xs text-muted-foreground tabular-nums">
                       {dateFmt.format(new Date(run.createdAt))} · {run.readyCount}/{run.totalCount} ads{run.isTrial ? " · trial" : ""}
                     </p>

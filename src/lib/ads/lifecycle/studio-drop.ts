@@ -2,7 +2,7 @@
 // Pure + raw-SQL loader; shared by the engine (sends) and tests. No package imports (the engine imports this file).
 // Kill switches: AdsFeatureFlag lifecycle_email AND studio_drop (default off). Same suppression as the lifecycle
 // emails: unsubscribes, LIFECYCLE_EXCLUDE / internal domains (isTestEmail), suspended workspaces.
-import { ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS, LAUNCH_QUARTER } from "../billing-config";
+import { ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS, LAUNCH_QUARTER, offerFirstPaymentCents } from "../billing-config";
 import { STUDIO_LAUNCH_OFFER } from "../../hub/money-model";
 import { STUDIO_INVITE, STUDIO_MAX_SECONDS, STUDIO_PRICE, STUDIO_STARTERS, STUDIO_UPLOAD_LIMITS } from "../../studio/contracts";
 import type { EmailCopy } from "./copy";
@@ -226,7 +226,7 @@ export const STUDIO_FACTS = {
   invite: `Give a friend ${STUDIO_INVITE.friendFreeVideos} free Studio videos with their invite link in Ozzy Studio; they get ${STUDIO_INVITE.senderRewardVideos} more free video when the friend joins (up to ${STUDIO_INVITE.maxRewardsPerMonth} a month).`,
   noExpiry: "The free video never expires. Be honest: there is no deadline on it.",
   credits: `Paid plans use Ozzy credits, one wallet for Ad Packs and Studio: a new Studio video is ${STUDIO_PRICE.newShort} credits (${STUDIO_PRICE.newLong} if longer than ${STUDIO_PRICE.longOverSeconds}s).`,
-  offer: growth ? `${STUDIO_LAUNCH_OFFER.name}: the ${growth.name} plan at ${usd(growth.priceCents)}/month (${growth.monthlyCredits} credits a month, own footage up to ${STUDIO_MAX_SECONDS.paid}s) plus ${STUDIO_LAUNCH_OFFER.bonusCredits} bonus credits on the first month. Only open for ${STUDIO_LAUNCH_OFFER.windowHours} hours after their first free video. ${ADS_GUARANTEE}` : "",
+  offer: growth ? `${STUDIO_LAUNCH_OFFER.name}: the ${growth.name} plan (their AI ad department: unlimited Studio videos and Ad Packs made one at a time, 6 fresh ads every Monday, Ozzy Ad Coach, own footage up to ${STUDIO_MAX_SECONDS.paid}s), first month ${usd(offerFirstPaymentCents(LAUNCH_QUARTER))} instead of ${usd(growth.priceCents)}, then ${usd(growth.priceCents)}/month. Only open for ${STUDIO_LAUNCH_OFFER.windowHours} hours after their first free video. ${ADS_GUARANTEE}` : "",
   downsell: starter && topup ? `Smaller options that stay available: ${starter.name} at ${usd(starter.priceCents)}/month, or ${topup.name} once for ${usd(topup.priceCents)}.` : "",
   testimonials: "They already use Komendly for AI testimonial videos. Studio is a separate new app in the same account.",
   linksBelow: "Starter prompts or links are shown as buttons under your text: refer to them, never write URLs.",
@@ -235,7 +235,7 @@ export const STUDIO_FACTS = {
 /** Invite block text under the D5 email. */
 export const STUDIO_INVITE_SAFE = `Your friend gets ${STUDIO_INVITE.friendFreeVideos} free Ozzy Studio videos; you get ${STUDIO_INVITE.senderRewardVideos} more when they join (up to ${STUDIO_INVITE.maxRewardsPerMonth} a month). Tap the "Give 2 free videos" button in Ozzy Studio.`;
 
-export const STUDIO_ALLOWED_PRICES = new Set([...ADS_PLANS.map((p) => usd(p.priceCents)), ...ADS_TOPUPS.map((t) => usd(t.priceCents))]);
+export const STUDIO_ALLOWED_PRICES = new Set([usd(offerFirstPaymentCents(LAUNCH_QUARTER)), ...ADS_PLANS.map((p) => usd(p.priceCents)), ...ADS_TOPUPS.map((t) => usd(t.priceCents))]);
 
 const STAGE: Record<StudioDropKind, string> = {
   studio_d0: "Announcement: Ozzy Studio just launched and their first video is free. Goal: get them to open Studio and send a first message. Mention the starter prompts below. No prices.",
@@ -273,7 +273,7 @@ export function buildStudioCopyPrompt(ctx: StudioCopyContext, now: Date): string
   return `EMAIL: ${ctx.kind}\nSUBJECT (fixed): ${STUDIO_SUBJECTS[ctx.kind]}\nSTAGE: ${STAGE[ctx.kind]}\nFACTS:\n- ${facts.join("\n- ")}\nUSER: <untrusted>${JSON.stringify({ firstName: ctx.firstName })}</untrusted>\nReturn JSON {subject, preheader (<= 90 chars), paragraphs (2-4 strings), ctaLabel (<= 28 chars)}.`;
 }
 
-const OFFER_RE = /\bbonus\b|launch offer|\$119|\bgrowth\b/i;
+const OFFER_RE = /\bbonus\b|launch offer|\$119|\$97\b|\$197|\bgrowth\b|ad department/i;
 const URGENCY_RE = /\bhurry\b|last chance|limited time|act now|ends (soon|today|tonight)|\bonly \d+ (hours?|days?) left\b|before it'?s gone/i;
 
 /** null = acceptable; else why the AI copy is rejected (caller falls back). */
@@ -325,8 +325,8 @@ export function studioFallbackCopy(ctx: StudioCopyContext, now: Date): EmailCopy
       return ctx.offerOpen
         ? {
             subject,
-            preheader: `Watch it now. Plus ${STUDIO_LAUNCH_OFFER.bonusCredits} bonus credits if you keep going this week.`,
-            paragraphs: [hi, `Your first Ozzy Studio video is done. Have a look, and ask me for changes in the same chat: ${STUDIO_PRICE.includedRevisions} are included.`, `Want to keep me on your team? For the next ${STUDIO_LAUNCH_OFFER.windowHours} hours, ${g} comes with ${STUDIO_LAUNCH_OFFER.bonusCredits} bonus credits on your first month. ${ADS_GUARANTEE}`],
+            preheader: `Watch it now. Plus your first month for ${usd(offerFirstPaymentCents(LAUNCH_QUARTER))} if you keep going this week.`,
+            paragraphs: [hi, `Your first Ozzy Studio video is done. Have a look, and ask me for changes in the same chat: ${STUDIO_PRICE.includedRevisions} are included.`, `Want to keep me on your team? For the next ${STUDIO_LAUNCH_OFFER.windowHours} hours, your first month of ${g} is ${usd(offerFirstPaymentCents(LAUNCH_QUARTER))}. ${ADS_GUARANTEE}`],
             ctaLabel: "Watch my video",
           }
         : {
@@ -338,8 +338,8 @@ export function studioFallbackCopy(ctx: StudioCopyContext, now: Date): EmailCopy
     case "studio_last24":
       return {
         subject,
-        preheader: `${g} + ${STUDIO_LAUNCH_OFFER.bonusCredits} bonus credits, about ${left} hours left.`,
-        paragraphs: [hi, `A heads-up: the ${STUDIO_LAUNCH_OFFER.name} offer closes in about ${left} hours. It's ${g} with ${STUDIO_LAUNCH_OFFER.bonusCredits} bonus credits on your first month.`, ADS_GUARANTEE, starter && topup ? `Prefer something smaller? ${starter.name} at ${usd(starter.priceCents)}/month or ${topup.name} for ${usd(topup.priceCents)} stay available after.` : "The smaller options stay available after."],
+        preheader: `${g}, first month ${usd(offerFirstPaymentCents(LAUNCH_QUARTER))}, about ${left} hours left.`,
+        paragraphs: [hi, `A heads-up: the ${STUDIO_LAUNCH_OFFER.name} offer closes in about ${left} hours. It's ${g}, your first month for ${usd(offerFirstPaymentCents(LAUNCH_QUARTER))}.`, ADS_GUARANTEE, starter && topup ? `Prefer something smaller? ${starter.name} at ${usd(starter.priceCents)}/month or ${topup.name} for ${usd(topup.priceCents)} stay available after.` : "The smaller options stay available after."],
         ctaLabel: "See the offer",
       };
     case "studio_second_wow":

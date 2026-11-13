@@ -8,7 +8,7 @@ import { errMsg, log } from "./log";
 import { ProviderUnavailableError } from "./providers/errors";
 import type { AIProvider, UsageMeter } from "./providers/types";
 import { JobAbortedError } from "./jobs/abort";
-import { DEFAULT_FAIRNESS, startLaneLimits } from "./queue/fairness";
+import { cappedTypes, DEFAULT_FAIRNESS, overCap, startLaneLimits } from "./queue/fairness";
 import { claimJobs, completeJob, enqueueOnce, failJob, recoverOrphanedJobs, recoverStaleJobs, releaseJob, renewLeases, type ClaimedJob } from "./queue/queue";
 import type { Storage } from "./storage/s3";
 import { cleanupJob } from "./jobs/cleanup";
@@ -22,11 +22,15 @@ import { handlePublishMeta } from "./jobs/publish-meta";
 import { qcJob } from "./jobs/qc";
 import { renderJob } from "./jobs/render";
 import { bonusJob, onBonusTerminal } from "./jobs/bonus";
+import { bonusGenerateJob } from "./bonuses/job";
+import { BONUS_JOB_TYPE } from "../../src/lib/ads/bonuses/contracts";
 import { sleep } from "./util/sleep";
 import { TESTIMONIAL_JOB_TYPE, TESTIMONIAL_RECOMMEND_JOB_TYPE } from "../../src/lib/testimonial/contracts";
 import { onTestimonialDeadDb, recommendActorsJob, sweepDeadTestimonials, testimonialJob } from "./testimonial/job";
 import { STUDIO_PROBE_JOB_TYPE, STUDIO_TURN_JOB_TYPE } from "../../src/lib/studio/contracts";
 import { createStudioTurnHandler, studioProbeJob } from "./studio/index";
+import { COACH_JOB_TYPE } from "../../src/lib/ads/coach/contracts";
+import { coachReviewJob, onCoachDead } from "./coach/job";
 
 export const HANDLERS: Record<string, JobHandler> = {
   extract: (c) => extractJob(c),
@@ -35,15 +39,17 @@ export const HANDLERS: Record<string, JobHandler> = {
   render_motion: renderJob,
   qc: qcJob,
   bonus: bonusJob,
+  [BONUS_JOB_TYPE]: bonusGenerateJob,
   cleanup: cleanupJob,
   publish_meta: (c) => handlePublishMeta(c),
   [TESTIMONIAL_JOB_TYPE]: testimonialJob,
   [TESTIMONIAL_RECOMMEND_JOB_TYPE]: recommendActorsJob,
   [STUDIO_TURN_JOB_TYPE]: createStudioTurnHandler(),
   [STUDIO_PROBE_JOB_TYPE]: studioProbeJob,
+  [COACH_JOB_TYPE]: coachReviewJob,
 };
 /** Job types that need the AI provider. */
-export const AI_TYPES = ["extract", "plan", "render_static", "render_motion", "qc", "bonus", STUDIO_TURN_JOB_TYPE];
+export const AI_TYPES = ["extract", "plan", "render_static", "render_motion", "qc", "bonus", BONUS_JOB_TYPE, STUDIO_TURN_JOB_TYPE, COACH_JOB_TYPE];
 // Testimonial jobs degrade to the free template without Codex, so they never wait on provider health.
 export const NON_AI_TYPES = ["cleanup", "publish_meta", TESTIMONIAL_JOB_TYPE, TESTIMONIAL_RECOMMEND_JOB_TYPE, STUDIO_PROBE_JOB_TYPE];
 const START_TYPES = new Set(DEFAULT_FAIRNESS.start);
@@ -71,6 +77,26 @@ export function isTransient(e: unknown): boolean {
     }
   }
   return /fetch failed|ECONNRESET|ETIMEDOUT|EAI_AGAIN|ENOTFOUND|socket hang up|UND_ERR|other side closed|network|5\d\d Service|SlowDown|InternalError/i.test(parts.join(" "));
+}
+
+/** The box ran out of processes/memory/Chrome slots (overload): wait and retry, it is not the job's fault. */
+export function isResourceExhaustion(e: unknown): boolean {
+  const m = e instanceof Error ? `${e.message} ${(e as { code?: string }).code ?? ""}` : String(e);
+  return /Resource temporarily unavailable|pthread_create|EAGAIN|ENOMEM|EMFILE|Cannot allocate memory|Chrome could not (start|launch)|Failed to launch the browser|browser\.newPage: Target page, context or browser has been closed|spawn .* (EAGAIN|ENOMEM)/i.test(m);
+}
+
+/** Wall-clock limit per job type (env ENGINE_JOB_TIMEOUT_MS_<TYPE> overrides). Motion renders normally take 12-16 min. */
+export function jobTimeoutMs(type: string, env: NodeJS.ProcessEnv = process.env): number {
+  const own = Number(env[`ENGINE_JOB_TIMEOUT_MS_${type.toUpperCase()}`]);
+  if (own > 0) return own;
+  const defaults: Record<string, number> = { render_motion: 45 * 60_000, studio_turn: 40 * 60_000, extract: 15 * 60_000 };
+  return defaults[type] ?? 30 * 60_000;
+}
+
+export class JobTimeoutError extends Error {
+  constructor(type: string, ms: number) {
+    super(`${type} took longer than ${Math.round(ms / 60_000)} min and was stopped`);
+  }
 }
 
 export function isBrowserCrash(e: unknown): boolean {
@@ -176,7 +202,9 @@ export class Runner {
       const free = this.d.config.concurrency - this.active.size;
       let claimed: ClaimedJob[] = [];
       if (free > 0) {
-        const types = this.providerOk ? [...AI_TYPES, ...NON_AI_TYPES] : NON_AI_TYPES;
+        const caps = { render_motion: Math.max(1, this.d.config.maxMotion ?? 3) };
+        const activeList = [...this.activeTypes.values()];
+        const types = cappedTypes(this.providerOk ? [...AI_TYPES, ...NON_AI_TYPES] : NON_AI_TYPES, activeList, caps);
         // Lane split: reserved slots are kept for start work (extract/plan) so a new run never
         // waits for long renders to finish.
         const activeStart = [...this.activeTypes.values()].filter((t) => START_TYPES.has(t)).length;
@@ -188,6 +216,13 @@ export class Runner {
           const reservedFree = lim.start - rest0.length;
           const first = reservedFree > 0 && startTypes.length ? await claimJobs(this.d.db, this.d.config.workerId, startTypes, reservedFree, DEFAULT_FAIRNESS, this.d.scopeRunId ?? null) : [];
           claimed = [...rest0, ...first];
+          // A batch can overshoot a per-type cap: hand the extras straight back (no attempt spent).
+          const extra = overCap(claimed, activeList, caps);
+          if (extra.length) {
+            for (const j of extra) await releaseJob(this.d.db, j.id, 0);
+            const back = new Set(extra.map((j) => j.id));
+            claimed = claimed.filter((j) => !back.has(j.id));
+          }
           if (claimed.length) {
             const byType: Record<string, number> = {};
             for (const j of claimed) byType[j.type] = (byType[j.type] ?? 0) + 1;
@@ -217,25 +252,48 @@ export class Runner {
     const started = Date.now();
     const cost = () => usage.reduce((a, u) => a + u.costMicros, 0);
     log("info", "job start", { id: job.id, type: job.type, attempt: job.attempts, runId: job.runId, adId: job.adId });
+    const jobAbort = new AbortController();
     try {
       if (!handler) throw new PermanentJobError(`no handler for job type ${job.type}`);
-      const result = await handler({
+      // Hard per-job wall clock: a hung render (e.g. a Chrome grandchild holding the pipes open) used to keep its
+      // lease renewed forever and block a motion slot. Past the limit the job is aborted and, if the handler still
+      // doesn't return, abandoned as a failure so the slot frees up.
+      const limitMs = jobTimeoutMs(job.type);
+      const timer = setTimeout(() => jobAbort.abort(new JobTimeoutError(job.type, limitMs)), limitMs);
+      const onStop = () => jobAbort.abort(this.abort.signal.reason);
+      this.abort.signal.addEventListener("abort", onStop, { once: true });
+      let hardTimer: NodeJS.Timeout | undefined;
+      const hard = new Promise<never>((_, reject) => {
+        jobAbort.signal.addEventListener("abort", () => {
+          if (this.abort.signal.aborted) return;
+          hardTimer = setTimeout(() => reject(new JobTimeoutError(job.type, limitMs)), 60_000);
+        }, { once: true });
+      });
+      const result = await Promise.race([handler({
         db: this.d.db,
         storage: this.d.storage,
         provider: this.d.provider,
         config: this.d.config,
         job,
-        signal: this.abort.signal,
+        signal: jobAbort.signal,
         usage,
         now: () => new Date(),
         shared: this.shared,
+      }), hard]).finally(() => {
+        clearTimeout(timer);
+        if (hardTimer) clearTimeout(hardTimer);
+        this.abort.signal.removeEventListener("abort", onStop);
       });
       await completeJob(this.d.db, job.id, { result, durationMs: Date.now() - started, costMicros: cost() });
       if (job.runId) await syncRunCost(this.d.db, job.runId).catch(() => undefined);
       this.stats.done++;
       log("info", "job done", { id: job.id, type: job.type, ms: Date.now() - started, costMicros: cost() });
-    } catch (e) {
+    } catch (caught) {
+      // A job stopped by its wall-clock limit is a real failure (spends an attempt), whatever the handler threw.
+      const timedOut = jobAbort.signal.reason instanceof JobTimeoutError ? jobAbort.signal.reason : null;
+      const e: unknown = timedOut ?? caught;
       const msg = errMsg(e);
+      if (timedOut) log("error", "job timed out", { id: job.id, type: job.type });
       if (e instanceof ProviderUnavailableError || e instanceof JobAbortedError || (this.stopping && this.abort.signal.aborted)) {
         if (e instanceof ProviderUnavailableError) {
           this.providerOk = false;
@@ -254,6 +312,17 @@ export class Runner {
           .catch(() => undefined);
         await releaseJob(this.d.db, job.id, 5_000 * 2 ** transient, `transient: ${msg}`).catch(() => undefined);
         log("warn", "job transient retry", { id: job.id, type: job.type, n: transient + 1, error: msg });
+        return;
+      }
+      // Overload (no threads/memory, Chrome won't launch): back off longer and retry without spending an
+      // attempt, up to 6 times per job. These killed paying-quality renders under load before.
+      const resource = Number(job.payload.resourceRetries ?? 0);
+      if (isResourceExhaustion(e) && resource < 6) {
+        await this.d.db.adJob
+          .update({ where: { id: job.id }, data: { payload: { ...job.payload, resourceRetries: resource + 1 } as object } })
+          .catch(() => undefined);
+        await releaseJob(this.d.db, job.id, 30_000 * 2 ** Math.min(resource, 4), `overloaded: ${msg}`).catch(() => undefined);
+        log("warn", "job overload retry", { id: job.id, type: job.type, n: resource + 1, error: msg });
         return;
       }
       this.stats.failed++;
@@ -275,6 +344,10 @@ export class Runner {
     const { db } = this.d;
     if ((job.type as string) === TESTIMONIAL_JOB_TYPE) {
       await onTestimonialDeadDb(db, job.payload, msg);
+      return;
+    }
+    if ((job.type as string) === COACH_JOB_TYPE) {
+      await onCoachDead(db, job.payload);
       return;
     }
     if (job.type === "plan" && job.runId && typeof job.payload.replaceAdId === "string") {

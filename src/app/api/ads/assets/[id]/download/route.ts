@@ -15,7 +15,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     assertCanDownload(user, workspace, asset.ad.run);
     if (!canServeAsset({ visualBrief: asset.ad.visualBrief, assetRatio: asset.ratio, unlocked: await isBonusUnlocked(workspace), use: "download" })) {
       await trackAdsEvent("locked_asset_refused", { workspaceId: workspace.id, userId: user.id, runId: asset.ad.runId, props: { assetId: id, kind: "asset" } });
-      throw new AdsHttpError(403, "locked", "Unlock this bonus ad with the Launch Quarter or any paid plan.");
+      throw new AdsHttpError(403, "locked", "Unlock this bonus ad with Ozzy Ad Department or any paid plan.");
     }
     const name = `ad-${String(asset.ad.index + 1).padStart(2, "0")}-${asset.ad.awareness}-${asset.ratio.replace(":", "x")}.${extensionForMime(asset.mime)}`;
     const url = await presignGet(asset.storageKey, { seconds: 300, downloadName: name });

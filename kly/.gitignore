@@ -1,0 +1,4 @@
+node_modules/
+.prisma-schema/
+outbound-dry-run/
+kly-dry-run/

@@ -13,6 +13,7 @@ import { useOzzyRunSync } from "@/hooks/useOzzyRunSync";
 import { RunCompanion } from "./run-companion";
 import type { RunView } from "@/lib/ads/run-types";
 import { AdGallery } from "./ad-gallery";
+import { LaunchGuideCard } from "./launch-guide-card";
 import { ExtractionReview } from "./extraction-review";
 import { GenerateMoreForm } from "./generate-more-form";
 import { RunProgress } from "./run-progress";
@@ -106,6 +107,7 @@ export function RunScreen({ initial }: { initial: RunView }) {
           <div className="w-full sm:max-w-md"><RunCompanion run={run} domain={domain} /></div>
         </div>
         {body}
+        {done && readyMain > 0 && <LaunchGuideCard runId={run.id} ready={readyMain} defaultOpen={!trialUnpaid} />}
         {showEarlyOffer && <OfferNudge runId={run.id} ready={readyMain} bonus={run.bonus ?? null} remainingMs={offer.remainingMs} onDismiss={dismissLaunch} valueLine={valueLine} />}
         {offerReady && stage === "unlock_pack" && run.bonus && <UnlockPackCard runId={run.id} bonus={run.bonus} />}
         {offerReady && done && trialUnpaid && stage !== "unlock_pack" && <TrialUpsell runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} onDecline={offerOpen ? dismissLaunch : undefined} valueLine={valueLine} />}

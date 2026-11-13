@@ -79,7 +79,7 @@ describe("copy", () => {
     expect(checkCopy({ ...ok, paragraphs: ["Get 50% off"] }, ctx)).toMatch(/discount/);
     expect(checkCopy({ ...ok, paragraphs: ["go to https://x.com"] }, ctx)).toMatch(/link/);
     expect(checkCopy({ ...ok, subject: "x".repeat(51) }, ctx)).toMatch(/subject/);
-    expect(checkCopy({ ...ok, paragraphs: ["The Launch Quarter is $129"] }, { ...ctx, kind: "day7_downsell" })).toMatch(/closed/);
+    expect(checkCopy({ ...ok, paragraphs: ["The launch offer is $97 for your first month"] }, { ...ctx, kind: "day7_downsell" })).toMatch(/closed/);
   });
 });
 

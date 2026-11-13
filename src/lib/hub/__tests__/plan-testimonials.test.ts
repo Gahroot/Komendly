@@ -54,8 +54,9 @@ function fakeDb(user: { minutesLimit: number; minutesUsed: number; bonusMinutes:
 }
 
 describe("money model", () => {
-  it("only Scale and Agency include testimonials", () => {
-    expect(TESTIMONIALS_PER_MONTH).toEqual({ starter: 0, growth: 0, scale: 1, agency: 3 });
+  it("only Scale and Agency include testimonials (never the unlimited Ad Department)", () => {
+    expect(TESTIMONIALS_PER_MONTH).toEqual({ starter: 0, ad_department: 0, growth: 0, scale: 1, agency: 3 });
+    expect(planAppsSummary("ad_department").join(" ")).toMatch(/Unlimited ads and Studio videos for your business/);
     expect(planTestimonialsFor("agency", true)).toBe(36);
     expect(planAppsSummary("growth").join(" ")).toMatch(/Scale and Agency only/);
   });

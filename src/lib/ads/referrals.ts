@@ -3,6 +3,7 @@
 // 10 expiring credits (CreditLedger reason referral_reward, expiresAt); the web only records sign-ups.
 import { Prisma, type AdsWorkspace, type User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { claimOutboundGift } from "@/lib/kly/gift-claim";
 import { hashIdentity, ipPrefix, normalizeEmail, type RequestFingerprint } from "./abuse";
 import { isPaidWorkspace } from "./billing-gates";
 import { trackAdsEvent } from "./events";
@@ -152,11 +153,16 @@ export async function trialStaticCountFor(workspaceId: string, base: number): Pr
   return trialStaticFor(base, await hasActiveReferral(workspaceId));
 }
 
-/** When a referred (gift) workspace starts its trial: mark the gift claimed. Never throws. */
+/** When a referred (gift) or Kly outbound workspace starts its trial: mark the gift claimed. Never throws. */
 export async function markGiftClaimed(workspaceId: string, userId: string): Promise<void> {
   try {
     const r = await prisma.adsReferral.findUnique({ where: { referredWorkspaceId: workspaceId }, select: { giftId: true, status: true } });
-    if (!r?.giftId || r.status === "rejected") return;
+    if (!r) {
+      // Kly outbound gift: the lead was linked to this workspace at signup (kmd_kly cookie).
+      await claimOutboundGift(workspaceId, userId, "trial_started");
+      return;
+    }
+    if (!r.giftId || r.status === "rejected") return;
     const res = await prisma.adsGift.updateMany({ where: { id: r.giftId, claimedAt: null }, data: { claimedAt: new Date(), claimedWorkspaceId: workspaceId } });
     if (res.count > 0) await trackAdsEvent("gift_claimed", { workspaceId, userId, props: { giftId: r.giftId, stage: "trial_started" } });
   } catch (error) {

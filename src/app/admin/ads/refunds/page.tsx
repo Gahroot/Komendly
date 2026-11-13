@@ -6,6 +6,7 @@ import { formatCents, formatDate } from "@/lib/ads/billing-format";
 import { prisma } from "@/lib/prisma";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
 import { RefundDialog } from "../_components/refund-dialog";
+import { AdminEmpty } from "../../_components/admin-empty";
 
 export const dynamic = "force-dynamic";
 
@@ -69,7 +70,7 @@ async function Refunds() {
                   <TableCell className="text-muted-foreground">{actors.get(r.actorId) ?? r.actorId}</TableCell>
                 </TableRow>
               ))}
-              {refunds.length === 0 && <TableRow><TableCell colSpan={5} className="text-muted-foreground">No refunds yet.</TableCell></TableRow>}
+              {refunds.length === 0 && <TableRow><TableCell colSpan={5}><AdminEmpty>No refunds yet. Nice.</AdminEmpty></TableCell></TableRow>}
             </TableBody>
           </Table>
         </CardContent>

@@ -44,6 +44,19 @@ export interface CodexAuthOptions {
   tokenStore?: string;
   fetchImpl?: typeof fetch;
   now?: () => number;
+  /** Shared store (CodexCredential row) so several services rotate one login without locking each other out. */
+  store?: CodexCredStore;
+}
+
+/**
+ * Cross-process credential store. `locked` runs `fn` while holding an exclusive lock and passes the stored pair
+ * (re-read under the lock); whatever `fn` returns is written back.
+ */
+export interface CodexCredStore {
+  read(): Promise<CodexCreds | null>;
+  /** Write only when `c` expires later than the stored pair (newest expiry wins). */
+  seed(c: CodexCreds): Promise<void>;
+  locked(fn: (stored: CodexCreds | null) => Promise<{ creds: CodexCreds; write: boolean }>): Promise<CodexCreds>;
 }
 
 export class CodexAuth {
@@ -59,16 +72,17 @@ export class CodexAuth {
     this.now = o.now ?? Date.now;
   }
 
-  static fromEnv(env: NodeJS.ProcessEnv = process.env): CodexAuth {
+  static fromEnv(env: NodeJS.ProcessEnv = process.env, store?: CodexCredStore): CodexAuth {
     return new CodexAuth({
       authJson: env.CODEX_AUTH_JSON || undefined,
       authFile: env.CODEX_AUTH_FILE || undefined,
       tokenStore: env.CODEX_TOKEN_STORE || undefined,
+      store,
     });
   }
 
   get configured(): boolean {
-    return Boolean(this.o.authJson || this.o.authFile);
+    return Boolean(this.o.authJson || this.o.authFile || this.o.store);
   }
 
   /** Concurrent first callers share one in-flight load (a flag set before the read finished let them see null). */
@@ -93,7 +107,18 @@ export class CodexAuth {
     else if (this.o.authFile) candidates.push(parseCredsJson(await readFile(this.o.authFile, "utf8")));
     // Newest expiry wins (refresh tokens rotate; the store holds the latest pair).
     candidates.sort((a, b) => b.expiresAt - a.expiresAt);
-    this.creds = candidates[0] ?? null;
+    const local = candidates[0] ?? null;
+    if (this.o.store) {
+      const shared = await this.o.store.read();
+      if (local && (!shared || local.expiresAt > shared.expiresAt)) {
+        await this.o.store.seed(local);
+        this.creds = local;
+      } else {
+        this.creds = shared;
+      }
+      return this.creds;
+    }
+    this.creds = local;
     return this.creds;
   }
 
@@ -116,6 +141,24 @@ export class CodexAuth {
   private async doRefresh(): Promise<CodexCreds> {
     const cur = await this.load();
     if (!cur) throw new Error("Codex login not configured");
+    const store = this.o.store;
+    if (!store) return this.refreshFrom(cur, true);
+    const next = await store.locked(async (stored) => {
+      // Another process already rotated the pair: adopt it instead of refreshing (its refresh token is the live one).
+      if (stored && stored.refreshToken !== cur.refreshToken && stored.expiresAt > cur.expiresAt && this.now() < stored.expiresAt - MIN_REFRESH_THRESHOLD_MS) {
+        return { creds: stored, write: false };
+      }
+      const base = stored && stored.expiresAt > cur.expiresAt ? stored : cur;
+      return { creds: await this.refreshFrom(base, false), write: true };
+    });
+    this.creds = next;
+    this.loading = Promise.resolve(next);
+    this.lastError = null;
+    await this.persist(next);
+    return next;
+  }
+
+  private async refreshFrom(cur: CodexCreds, save: boolean): Promise<CodexCreds> {
     const res = await this.fetchImpl(TOKEN_URL, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -133,6 +176,7 @@ export class CodexAuth {
       expiresAt: this.now() + d.expires_in * 1000,
       accountId: accountIdFromToken(d.access_token) ?? cur.accountId,
     };
+    if (!save) return next;
     this.creds = next;
     this.lastError = null;
     await this.persist(next);
@@ -164,6 +208,7 @@ export class CodexAuth {
     this.creds = next;
     this.loading = Promise.resolve(next);
     await this.persist(next);
+    if (this.o.store) await this.o.store.seed(next);
     return true;
   }
 

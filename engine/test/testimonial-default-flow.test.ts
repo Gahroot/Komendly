@@ -9,6 +9,11 @@ import { DEFAULT_PIPELINE as BASE } from "../src/testimonial/models";
 const DEFAULT_PIPELINE = { ...BASE, mode: "audio_driven" as const };
 import type { FinishOptions } from "../src/testimonial/ffmpeg";
 import { memStore, world } from "./helpers/testimonial-mem";
+import { mkdtempSync as __mkdtemp } from "node:fs";
+import { tmpdir as __tmpdir } from "node:os";
+import { join as __join } from "node:path";
+// Own scratch dir per test file: parallel files shared /tmp/testimonial-<id> and deleted each other's work.
+const SCRATCH = __mkdtemp(__join(__tmpdir(), "kmd-testimonial-"));
 
 const env = { FAL_API_KEY: "fk" } as NodeJS.ProcessEnv;
 const TTS = "fal-ai/elevenlabs/tts/eleven-v3";
@@ -76,7 +81,7 @@ async function run(o: { omniFails?: boolean }) {
   const md = media(24, 24);
   const usage: Array<{ costMicros: number; latencyMs: number }> = [];
   const res = await runTestimonial(
-    { store: memStore(w), adapters: createAdapters(DEFAULT_PIPELINE, { fetchImpl: http.impl, sleepImpl: async () => {}, env }), media: md.m, provider: null, config: DEFAULT_PIPELINE, scratchDir: "/tmp", usage },
+    { store: memStore(w), adapters: createAdapters(DEFAULT_PIPELINE, { fetchImpl: http.impl, sleepImpl: async () => {}, env }), media: md.m, provider: null, config: DEFAULT_PIPELINE, scratchDir: SCRATCH, usage },
     { compositeVideoId: "v1", useAIScript: true },
   );
   return { w, http, md, res, usage };
@@ -131,7 +136,7 @@ describe("default pipeline (mocked FAL)", () => {
     const http = falMock({ videoSeconds: 100 });
     const md = media(300, 100);
     await runTestimonial(
-      { store: memStore(w), adapters: createAdapters(DEFAULT_PIPELINE, { fetchImpl: http.impl, sleepImpl: async () => {}, env }), media: md.m, provider: null, config: DEFAULT_PIPELINE, scratchDir: "/tmp", usage: [] },
+      { store: memStore(w), adapters: createAdapters(DEFAULT_PIPELINE, { fetchImpl: http.impl, sleepImpl: async () => {}, env }), media: md.m, provider: null, config: DEFAULT_PIPELINE, scratchDir: SCRATCH, usage: [] },
       { compositeVideoId: "v1", useAIScript: false },
     );
     expect(http.submits.filter((s) => s.endpoint === TTS)).toHaveLength(1);

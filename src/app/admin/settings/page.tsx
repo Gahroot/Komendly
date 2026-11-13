@@ -21,7 +21,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Admin" title="Settings" description="Configure platform settings" />
+      <PageHeader eyebrow="Settings" title="Settings" description="Plan limits and platform switches for the testimonial app." />
 
       {/* Platform Settings */}
       <Card >

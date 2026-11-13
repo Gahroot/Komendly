@@ -119,16 +119,25 @@ export async function releaseJob(db: Db, id: string, delayMs: number, note?: str
     WHERE id = ${id}`;
 }
 
-/** Jobs left 'running' by a crashed worker are re-queued (or killed if out of attempts). */
+/**
+ * A worker that died (deploy/restart, OOM) or lost its lease did not fail the job: give the attempt back
+ * and count the interruption in payload.restarts instead. Only a job that keeps taking its worker down
+ * (MAX_RESTARTS interruptions) is killed, so a poison job can't loop forever.
+ */
+export const MAX_RESTARTS = 3;
+
+/** Jobs left 'running' by a crashed worker are re-queued without spending an attempt (dead after MAX_RESTARTS). */
 export async function recoverStaleJobs(db: Db, staleMs: number, scope: { types?: readonly string[]; workspaceId?: string } = {}): Promise<number> {
   // scope narrows recovery (tests use it so they never touch other workers' rows); runners pass none.
   const types = scope.types ? [...scope.types] : null;
   const ws = scope.workspaceId ?? null;
   const n = await db.$executeRaw`
     UPDATE "AdJob" SET
-      status = CASE WHEN attempts >= "maxAttempts" THEN 'dead'::"AdJobStatus" ELSE 'queued'::"AdJobStatus" END,
+      status = CASE WHEN COALESCE((payload->>'restarts')::int, 0) + 1 >= ${MAX_RESTARTS} THEN 'dead'::"AdJobStatus" ELSE 'queued'::"AdJobStatus" END,
+      attempts = GREATEST(attempts - 1, 0),
+      payload = jsonb_set(COALESCE(payload, '{}'::jsonb), '{restarts}', to_jsonb(COALESCE((payload->>'restarts')::int, 0) + 1)),
       "lockedBy" = NULL, "lockedAt" = NULL, "lastError" = 'stale lock recovered',
-      "finishedAt" = CASE WHEN attempts >= "maxAttempts" THEN now() ELSE NULL END
+      "finishedAt" = CASE WHEN COALESCE((payload->>'restarts')::int, 0) + 1 >= ${MAX_RESTARTS} THEN now() ELSE NULL END
     WHERE status = 'running' AND "lockedAt" < now() - (${staleMs}::int * interval '1 millisecond')
       AND (${types}::text[] IS NULL OR type = ANY(${types}::text[]))
       AND (${ws}::text IS NULL OR "workspaceId" = ${ws}::text)`;
@@ -139,13 +148,16 @@ export async function recoverStaleJobs(db: Db, staleMs: number, scope: { types?:
  * Jobs locked by a worker that is no longer alive (its EngineHeartbeat is older than deadMs, or it has none).
  * Single-replica deploys restart the container: without this, a job locked by the old container waits the
  * full stale-lock window (15 min) before anyone retries it. Never touches jobs of live workers.
+ * Like recoverStaleJobs, the interrupted attempt is given back (dead only after MAX_RESTARTS restarts).
  */
 export async function recoverOrphanedJobs(db: Db, selfWorkerId: string, deadMs: number): Promise<number> {
   return db.$executeRaw`
     UPDATE "AdJob" j SET
-      status = CASE WHEN j.attempts >= j."maxAttempts" THEN 'dead'::"AdJobStatus" ELSE 'queued'::"AdJobStatus" END,
+      status = CASE WHEN COALESCE((j.payload->>'restarts')::int, 0) + 1 >= ${MAX_RESTARTS} THEN 'dead'::"AdJobStatus" ELSE 'queued'::"AdJobStatus" END,
+      attempts = GREATEST(j.attempts - 1, 0),
+      payload = jsonb_set(COALESCE(j.payload, '{}'::jsonb), '{restarts}', to_jsonb(COALESCE((j.payload->>'restarts')::int, 0) + 1)),
       "lockedBy" = NULL, "lockedAt" = NULL, "lastError" = 'worker gone (restart): retried',
-      "finishedAt" = CASE WHEN j.attempts >= j."maxAttempts" THEN now() ELSE NULL END
+      "finishedAt" = CASE WHEN COALESCE((j.payload->>'restarts')::int, 0) + 1 >= ${MAX_RESTARTS} THEN now() ELSE NULL END
     WHERE j.status = 'running' AND j."lockedBy" IS NOT NULL AND j."lockedBy" <> ${selfWorkerId}
       AND NOT EXISTS (SELECT 1 FROM "EngineHeartbeat" h WHERE h.id = j."lockedBy" AND h."updatedAt" > now() - (${deadMs}::int * interval '1 millisecond'))`;
 }
@@ -213,3 +225,4 @@ export async function holdsLock(db: Db | Prisma.TransactionClient, jobId: string
   const row = await db.adJob.findUnique({ where: { id: jobId }, select: { status: true, lockedBy: true } });
   return row?.status === "running" && row.lockedBy === workerId;
 }
+

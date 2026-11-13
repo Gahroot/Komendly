@@ -6,6 +6,7 @@ import { formatCents, formatDate } from "@/lib/ads/billing-format";
 import { prisma } from "@/lib/prisma";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
 import { OutreachGiftForm } from "../_components/outreach-gift-form";
+import { AdminEmpty } from "../../_components/admin-empty";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,7 @@ export default async function AdminGiftsPage({ searchParams }: { searchParams: P
                     <TableCell className="text-right tabular-nums">{formatCents(Math.round(Number(g.costMicros) / 1e4))}</TableCell>
                   </TableRow>
                 ))}
-                {gifts.length === 0 && <TableRow><TableCell colSpan={8} className="text-muted-foreground">No gifts yet.</TableCell></TableRow>}
+                {gifts.length === 0 && <TableRow><TableCell colSpan={8}><AdminEmpty>No gifts sent yet.</AdminEmpty></TableCell></TableRow>}
               </TableBody>
             </Table>
           </CardContent>

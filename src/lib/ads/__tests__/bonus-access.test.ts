@@ -80,11 +80,12 @@ describe("shouldAwaitBonus", () => {
 
 describe("offer value stack", () => {
   it("uses real billing-config numbers", () => {
-    expect(offerPerAdCents()).toEqual({ offer: 215, plan: 245 });
+    // Unlimited hero plan: no per-ad price; the stack lists stated values and the first-month price.
+    expect(offerPerAdCents()).toEqual({ offer: 0, plan: 0 });
     const lines = launchQuarterValueStack({ stories: 3, videos: 2, locked: true });
-    expect(lines[0]).toContain("60 new ads every 3 months");
-    expect(lines[1]).toContain("+5 bonus credits");
-    expect(lines[2]).toBe("$2.15 per ad vs $2.45 on Starter: save $18 over 3 months");
+    expect(lines[0]).toContain("Unlimited ads + Ozzy Studio videos");
+    expect(lines.some((l) => l.includes("Weekly Drop"))).toBe(true);
+    expect(lines.find((l) => l.startsWith("Total value"))).toContain("Your first month: $97 (save $100), then $197/month");
     expect(lines).toContain("Unlocks your 3 Stories versions + 2 more videos right away");
     expect(launchQuarterValueStack(null).some((l) => l.startsWith("Unlocks"))).toBe(false);
   });

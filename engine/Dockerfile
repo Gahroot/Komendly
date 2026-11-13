@@ -11,7 +11,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     DO_NOT_TRACK=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      ca-certificates openssl ffmpeg fontconfig \
+      ca-certificates openssl ffmpeg fontconfig tini \
       fonts-liberation fonts-noto-core fonts-noto-color-emoji fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system app && useradd --system --gid app --create-home --home-dir /home/app app
@@ -26,10 +26,15 @@ COPY src/lib/testimonial/contracts.ts src/lib/testimonial/contracts.ts
 COPY src/lib/studio/contracts.ts src/lib/studio/contracts.ts
 COPY src/lib/hub/money-model.ts src/lib/hub/money-model.ts
 COPY src/lib/ads/billing-config.ts src/lib/ads/billing-config.ts
+COPY src/lib/ads/weekly-drop.ts src/lib/ads/weekly-drop.ts
 COPY src/lib/ads/lifecycle/ src/lib/ads/lifecycle/
-COPY src/lib/ads/outbound/ src/lib/ads/outbound/
 COPY src/lib/ads/bonus-access.ts src/lib/ads/bonus-access.ts
+COPY src/lib/ads/bonuses/contracts.ts src/lib/ads/bonuses/contracts.ts
 COPY src/lib/ads/referral-code.ts src/lib/ads/referral-code.ts
+COPY src/lib/ads/coach/contracts.ts src/lib/ads/coach/contracts.ts
+COPY src/lib/ads/coach/table.ts src/lib/ads/coach/table.ts
+COPY src/lib/ads/coach/assess.ts src/lib/ads/coach/assess.ts
+COPY src/lib/ads/coach/match.ts src/lib/ads/coach/match.ts
 COPY engine/package.json engine/package-lock.json engine/
 COPY engine/scripts/prisma-generate.mjs engine/scripts/prisma-generate.mjs
 
@@ -57,5 +62,7 @@ ENV HOME=/home/app
 ENV PRODUCER_HEADLESS_SHELL_PATH=/opt/headless-shell
 
 EXPOSE 4100
-# Run node directly (npm does not forward SIGTERM for graceful shutdown).
+# tini is PID 1: it forwards SIGTERM to node and reaps orphaned Chrome/renderer processes. Without it node was
+# PID 1, zombies piled up until the container hit its process limit (spawn EAGAIN, Chrome won't launch, DB lost).
+ENTRYPOINT ["/usr/bin/tini", "-g", "--"]
 CMD ["node", "--import", "tsx", "src/main.ts"]

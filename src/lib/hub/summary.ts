@@ -96,10 +96,19 @@ export interface HubPlan {
   offerEndsAt: string | null;
 }
 
-const PLAN_NAMES: Record<string, string> = { starter: "Starter", growth: "Growth", scale: "Scale", agency: "Agency" };
+const PLAN_NAMES: Record<string, string> = { starter: "Starter", ad_department: "Ad Department", growth: "Growth", scale: "Scale", agency: "Agency" };
 
 /** Which plan card + upgrade CTA the hub shows. Paid Ozzy plan wins over a legacy testimonial plan. */
 export function planView(u: HubUserInput, w: HubWorkspaceInput, now: Date): HubPlan {
+  if (isPaidOzzyPlan(w) && w.adsPlan === "ad_department") {
+    return {
+      kind: "paid",
+      label: "Ozzy Ad Department",
+      line: "Fresh ads land every Monday. Unlimited Ad Packs and Studio videos, made one at a time. Ad Coach is ready when you have results.",
+      cta: { label: "Post your ads on Meta", href: "/ads/billing#launch-guide" },
+      offerEndsAt: null,
+    };
+  }
   if (isPaidOzzyPlan(w)) {
     return {
       kind: "paid",
@@ -123,7 +132,7 @@ export function planView(u: HubUserInput, w: HubWorkspaceInput, now: Date): HubP
     return {
       kind: "studio_offer",
       label: "Free",
-      line: `${STUDIO_LAUNCH_OFFER.headline}: +${STUDIO_LAUNCH_OFFER.bonusCredits} bonus credits on your first month.`,
+      line: `${STUDIO_LAUNCH_OFFER.headline}: your AI ad department, first month $97 instead of $197.`,
       cta: { label: "Claim the launch offer", href: `/ads/billing?offer=${STUDIO_LAUNCH_OFFER.key}` },
       offerEndsAt: ends.toISOString(),
     };
@@ -131,7 +140,7 @@ export function planView(u: HubUserInput, w: HubWorkspaceInput, now: Date): HubP
   return {
     kind: "free",
     label: "Free",
-    line: "One credit wallet for every app: ads, Studio videos and more.",
+    line: "Your AI ad department: fresh ads every Monday, a coach that tells you what's working, 30-day no-questions refund.",
     cta: { label: "See plans", href: "/ads/billing" },
     offerEndsAt: null,
   };

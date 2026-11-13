@@ -59,3 +59,21 @@ export function giftPolicy(run: { kind?: string | null; isTrial?: boolean }): Ru
   if (isFreeRun(run)) return { autoConfirm: true, claimTrial: false, credits: false, bonus: false, motionCount: () => 0 };
   return { autoConfirm: false, claimTrial: Boolean(run.isTrial), credits: true, bonus: Boolean(run.isTrial), motionCount: (n) => n };
 }
+
+// Weekly Drop runs (AdRun.kind = "weekly", Ad Department plan): 5 statics + 1 animated, 0 credits, auto-confirm,
+// shown in the user's runs list. Cost guard like nurture's: skipped when the first try is estimated over the cap,
+// and no replacement once the run has spent close to the cap.
+export const WEEKLY_COST_CAP_MICROS = 3_000_000;
+export const WEEKLY_EST_MICROS = { plan: 50_000, static: 250_000, motion: 500_000 } as const;
+
+export function weeklyFirstTryMicros(statics = 5, motion = 1): number {
+  return WEEKLY_EST_MICROS.plan + statics * WEEKLY_EST_MICROS.static + motion * WEEKLY_EST_MICROS.motion;
+}
+
+export function weeklyOverBudget(spentMicros: number | bigint, kind: "static" | "motion" = "static"): boolean {
+  return Number(spentMicros) + WEEKLY_EST_MICROS[kind] > WEEKLY_COST_CAP_MICROS;
+}
+
+export function isWeeklyRun(run: { kind?: string | null }): boolean {
+  return run.kind === "weekly";
+}

@@ -5,6 +5,7 @@ import { formatDate } from "@/lib/ads/billing-format";
 import { workspaceLabels } from "@/lib/ads/growth-queries";
 import { prisma } from "@/lib/prisma";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
+import { AdminEmpty } from "../../_components/admin-empty";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +46,7 @@ export default async function AdminReferralsPage({ searchParams }: { searchParam
                     <TableCell className="text-right tabular-nums">{r.rewardCredits || "—"}{r.rewardedAt && <div className="text-xs text-muted-foreground">{formatDate(r.rewardedAt)}</div>}</TableCell>
                   </TableRow>
                 ))}
-                {rows.length === 0 && <TableRow><TableCell colSpan={6} className="text-muted-foreground">No referrals yet.</TableCell></TableRow>}
+                {rows.length === 0 && <TableRow><TableCell colSpan={6}><AdminEmpty>No referrals yet. Ozzy&apos;s keeping an eye out.</AdminEmpty></TableCell></TableRow>}
               </TableBody>
             </Table>
           </CardContent>

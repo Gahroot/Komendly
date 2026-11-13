@@ -11,7 +11,7 @@ const TABS = [
   { href: "/admin/ads/growth", label: "Growth" },
   { href: "/admin/ads/referrals", label: "Referrals" },
   { href: "/admin/ads/gifts", label: "Gifts" },
-  { href: "/admin/ads/outbound", label: "Outbound" },
+  { href: "/admin/ads/outbound", label: "Kly" },
   { href: "/admin/ads/partners", label: "Partners" },
   { href: "/admin/ads/features", label: "Ad of week" },
   { href: "/admin/ads/workspaces", label: "Workspaces" },
@@ -27,7 +27,7 @@ const TABS = [
 export function AdminAdsNav() {
   const pathname = usePathname();
   return (
-    <nav className="flex flex-wrap gap-1 rounded-xl border border-border bg-card p-1" aria-label="Website2ads admin">
+    <nav className="flex flex-wrap gap-1 glass-subtle rounded-xl p-1" aria-label="Ad Packs admin">
       {TABS.map((t) => {
         const active = t.href === "/admin/ads" ? pathname === t.href : pathname.startsWith(t.href);
         return (

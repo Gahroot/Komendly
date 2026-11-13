@@ -1,5 +1,6 @@
 // qc job: claim grounding + vision + technical checks; re-render with feedback or fail.
 import { logoCrop } from "../render/composed/logo-crop";
+import { imageMime } from "../storage/image-mime";
 import { motionCheck } from "../modules/ezmotion/motion-checks";
 import { END_CARD_POLICY_SYSTEM, safeZoneCheck } from "../modules/ezmotion/safezone";
 import type { Prisma } from "@prisma/client";
@@ -16,7 +17,7 @@ import { canHedge, requestReplacement, wantsHedge } from "./replace";
 import { maybeFinalizeRun } from "./finalize";
 import { mapClaimsToFacts, type Fact } from "./grounding";
 import { specFromAd } from "./render";
-import { isFreeRun } from "./gift-policy";
+import { isFreeRun, isGiftRun } from "./gift-policy";
 import { BONUS_PRIORITY, countTypeAds, hedgeEnabled, isLocked, maxTypeAds, READY_MILESTONE, retryConcept, typographicSpec } from "./trial-fill";
 import { log } from "../log";
 import { onBonusTerminal } from "./bonus";
@@ -29,6 +30,12 @@ export function intendedCopy(spec: { headline: string; body?: string; cta?: stri
 }
 
 export const MAX_QC_RERENDERS = 2;
+/** Gift runs (cold outbound) get one redraw: on prod data a third render rescued 5 of 37 gift ads (2026-11-12), and
+ * Kly's own reviewer already regenerates a weak gift. Saves ~18% of gift image generation. */
+export const GIFT_QC_RERENDERS = 1;
+export function maxQcRerenders(run: { kind?: string | null }): number {
+  return isGiftRun(run) ? GIFT_QC_RERENDERS : MAX_QC_RERENDERS;
+}
 export const MAX_ASSET_BYTES = 30 * 1024 * 1024;
 export const MAX_VIDEO_SECONDS = 60;
 
@@ -126,7 +133,7 @@ export async function qcJob(ctx: JobContext): Promise<unknown> {
       {
         system: VISION_SYSTEM,
         prompt: `Brand: ${brand?.name ?? ""}; brand colors: ${JSON.stringify(brand?.colors ?? [])}.${palette ? `\nEffective palette the renderer used (all of these count as on-brand, as do their tints/shades): ${JSON.stringify(palette)}.` : ""}\n${onScreen.length ? `This is the end-card frame of a video. Text the video shows (any of it may be on this frame): ${JSON.stringify(onScreen)}.` : intendedCopy(spec, ad.visualBrief)} Awareness: ${spec.awareness}. Angle: ${spec.angle}.\nReturn one entry per check name listed in your instructions.`,
-        images: [{ mediaType: img.mime, base64: bytes.toString("base64") }, ...(await logoCrop(bytes, ad.visualBrief))],
+        images: [{ mediaType: imageMime(bytes, img.mime), base64: bytes.toString("base64") }, ...(await logoCrop(bytes, ad.visualBrief))],
         reasoning: "low",
         signal: ctx.signal,
       },
@@ -152,7 +159,7 @@ export async function qcJob(ctx: JobContext): Promise<unknown> {
       checks.push({ name: "vision_buyer_moment", pass: o.pass, detail: `opening: ${o.detail}` });
       // Motion only: Reels safe zone + no fake button on the end card.
       if (ad.assets.some((a) => a.ratio === "9:16")) {
-        const e = await structured(ctx.provider, OpeningOut, { system: END_CARD_POLICY_SYSTEM, prompt: "Reply with JSON {pass, detail}.", images: [{ mediaType: img.mime, base64: bytes.toString("base64") }], reasoning: "low", signal: ctx.signal }, ctx.usage);
+        const e = await structured(ctx.provider, OpeningOut, { system: END_CARD_POLICY_SYSTEM, prompt: "Reply with JSON {pass, detail}.", images: [{ mediaType: imageMime(bytes, img.mime), base64: bytes.toString("base64") }], reasoning: "low", signal: ctx.signal }, ctx.usage);
         checks.push({ name: "vision_end_card_policy", pass: e.pass, detail: e.detail });
       }
     }
@@ -185,7 +192,7 @@ export async function qcJob(ctx: JobContext): Promise<unknown> {
         },
       });
     }
-  } else if (ad.qcAttempts < MAX_QC_RERENDERS) {
+  } else if (ad.qcAttempts < maxQcRerenders(run)) {
     const failed = checks.filter((c) => !c.pass);
     const feedback = failed.map((c) => `${c.name}: ${c.detail ?? "failed"}`).join("\n");
     // Fix the cause, not just re-render: rewrite copy and/or swap the image.

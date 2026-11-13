@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, Loader2, ShieldAlert } from "lucide-react";
-import Image from "next/image";
+import { Menu } from "lucide-react";
+import { OzzyLazy } from "@/components/ozzy/OzzyLazy";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -57,17 +57,18 @@ export default function AdminLayout({
   if (isChecking) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
-        <div className="text-center">
+        <div className="glass-subtle flex flex-col items-center rounded-2xl px-8 py-6 text-center">
           {accessError ? (
             <>
-              <ShieldAlert className="h-12 w-12 text-destructive mx-auto mb-4" />
-              <p className="text-destructive">{accessError}</p>
-              <p className="text-muted-foreground text-sm mt-2">Redirecting to dashboard...</p>
+              <OzzyLazy size={72} speech={false} pose={{ form: "classic", expression: "confused", motion: "idle" }} />
+              <p className="mt-3 font-medium text-destructive">{accessError}</p>
+              <p className="mt-1 text-sm text-muted-foreground">Ozzy HQ is for admins only. Taking you back to your dashboard…</p>
             </>
           ) : (
             <>
-              <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-muted-foreground">Verifying admin access...</p>
+              <OzzyLazy size={72} speech={false} pose={{ form: "classic", expression: "happy", motion: "idle" }} />
+              <p className="mt-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">Ozzy HQ</p>
+              <p className="mt-1 text-sm text-muted-foreground">Checking you&apos;re an admin…</p>
             </>
           )}
         </div>
@@ -87,10 +88,8 @@ export default function AdminLayout({
         {/* Mobile Header */}
         <header className="flex h-16 items-center justify-between sticky top-0 z-30 border-b border-border glass-float px-4 lg:hidden">
           <div className="flex items-center gap-2">
-            <Image src="/brand/komendly-mark-128.png" alt="" width={28} height={28} className="h-7 w-7" />
-            <span className="text-base font-semibold tracking-wide text-foreground">
-              ADMIN
-            </span>
+            <OzzyLazy size={28} speech={false} pose={{ form: "classic", expression: "happy", motion: "idle" }} />
+            <span className="text-base font-semibold tracking-tight text-foreground">Ozzy HQ</span>
           </div>
 
           <div className="flex items-center gap-1">

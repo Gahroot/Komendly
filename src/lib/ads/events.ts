@@ -34,6 +34,9 @@ export type AdsEventName =
   | "locked_asset_refused"
   // engine: trial bonus ads finished after the run completed
   | "bonus_ready"
+  // Ozzy Ad Department bonuses (props.program = "ad_department", props.kind)
+  | "bonus_viewed"
+  | "bonus_hook_used"
   // Partner program + Ad of the week (admin_* = admin actions, props.actorId)
   | "partner_applied"
   | "admin_partner_approved"
@@ -71,7 +74,20 @@ export type AdsEventName =
   | "studio_invite_rewarded"
   // Ads trial -> Studio bridge (flag studio_bridge): props.placement, clicked also adKind
   | "studio_bridge_shown"
-  | "studio_bridge_clicked";
+  | "studio_bridge_clicked"
+  // Ozzy Ad Coach (coach_ready is emitted by the engine; upsell_shown props.reason: trial | free_used)
+  | "coach_upload"
+  | "coach_ready"
+  | "coach_more_like_winner"
+  | "coach_upsell_shown"
+  // Pricing pages (/pricing, /ads/pricing, /ads/billing, /dashboard/billing): one per page view / plan click (props.page, signedIn, anonId)
+  | "pricing_viewed"
+  | "pricing_plan_clicked"
+  // 30-day guarantee: the customer refunded their first payment themselves (props: reason, invoiceId, email, cardFingerprint)
+  | "self_refund"
+  // Komendly for agents: personal API keys (props: { via: "mcp"|"cli"|"api", keyId }; api_used once per key per day)
+  | "api_key_created"
+  | "api_used";
 
 /** Fire-and-forget funnel event. Never throws. */
 export async function trackAdsEvent(

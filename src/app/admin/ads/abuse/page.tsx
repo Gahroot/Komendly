@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/ads/billing-format";
 import { prisma } from "@/lib/prisma";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
 import { PostActionButton } from "../_components/post-action-button";
+import { AdminEmpty } from "../../_components/admin-empty";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +62,7 @@ async function Abuse() {
                 </TableRow>
               );
             })}
-            {flags.length === 0 && <TableRow><TableCell colSpan={6} className="text-muted-foreground">No open flags.</TableCell></TableRow>}
+            {flags.length === 0 && <TableRow><TableCell colSpan={6}><AdminEmpty>No open flags. All clear.</AdminEmpty></TableCell></TableRow>}
           </TableBody>
         </Table>
       </CardContent>

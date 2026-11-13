@@ -53,12 +53,12 @@ beforeEach(() => {
 });
 
 describe("studio launch bonus", () => {
-  it("grants 25 offer_bonus credits once, on the first paid invoice only", async () => {
-    const ev = invoice("in_1", "subscription_create", { plan: "growth", offer: "studio_launch" });
+  // Since 2026-11-11 the Studio launch offer is the unlimited Ad Department with a first-month coupon: no bonus credits.
+  it("grants no offer_bonus credits on the unlimited Ad Department launch offer", async () => {
+    const ev = invoice("in_1", "subscription_create", { plan: "ad_department", offer: "studio_launch" }, 9700);
     await handleAdsStripeEvent(ev);
-    await handleAdsStripeEvent(ev); // replay
-    await handleAdsStripeEvent(invoice("in_2", "subscription_cycle", { plan: "growth", offer: "studio_launch" }));
-    expect(h.bonus).toEqual([expect.objectContaining({ stripeRef: "offer_bonus:in_1", delta: 25, reason: "offer_bonus" })]);
+    await handleAdsStripeEvent(invoice("in_2", "subscription_cycle", { plan: "ad_department", offer: "studio_launch" }, 19700));
+    expect(h.bonus).toEqual([]);
   });
   it("no bonus without the offer or on a $0 invoice", async () => {
     await handleAdsStripeEvent(invoice("in_3", "subscription_create", { plan: "growth" }));

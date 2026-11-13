@@ -3,7 +3,7 @@
 // Usage: set -a; . ./.env.local; set +a; npx tsx scripts/ads-stripe-setup.ts [--live] [--api-key sk_...] [--only unlock_pack]
 // --only unlock_pack: just the $9 "Unlock this pack" price + its "$9 off the first Starter month" coupon (touches nothing else).
 import Stripe from "stripe";
-import { ADS_PLANS, ADS_TOPUPS, LAUNCH_QUARTER, UNLOCK_PACK, UNLOCK_PACK_COUPON_ENV } from "../src/lib/ads/billing-config";
+import { ADS_PLANS, ADS_TOPUPS, annualCredits, annualPriceCents, LAUNCH_FIRST_MONTH_OFF_CENTS, LAUNCH_QUARTER, UNLOCK_PACK, UNLOCK_PACK_COUPON_ENV } from "../src/lib/ads/billing-config";
 
 const UNLOCK_COUPON_ID = `ads_unlock_pack_credit_${UNLOCK_PACK.priceCents}`;
 
@@ -20,6 +20,18 @@ async function ensureUnlockCoupon(stripe: Stripe): Promise<string> {
     if (!(e instanceof Stripe.errors.StripeInvalidRequestError) || e.statusCode !== 404) throw e;
   }
   const coupon = await stripe.coupons.create({ id: UNLOCK_COUPON_ID, name: "Your pack unlock, credited", amount_off: UNLOCK_PACK.priceCents, currency: "usd", duration: "once", metadata: { product: "ads", offer: UNLOCK_PACK.key } });
+  return coupon.id;
+}
+
+/** Founding first month: $100 off the first Ozzy Ad Department invoice ($197 -> $97), duration once. Idempotent. */
+const FIRST_MONTH_COUPON_ID = `ads_founding_first_month_${LAUNCH_FIRST_MONTH_OFF_CENTS}`;
+async function ensureFirstMonthCoupon(stripe: Stripe): Promise<string> {
+  try {
+    return (await stripe.coupons.retrieve(FIRST_MONTH_COUPON_ID)).id;
+  } catch (e) {
+    if (!(e instanceof Stripe.errors.StripeInvalidRequestError) || e.statusCode !== 404) throw e;
+  }
+  const coupon = await stripe.coupons.create({ id: FIRST_MONTH_COUPON_ID, name: "Founding first month", amount_off: LAUNCH_FIRST_MONTH_OFF_CENTS, currency: "usd", duration: "once", metadata: { product: "ads", offer: LAUNCH_QUARTER.key } });
   return coupon.id;
 }
 
@@ -59,14 +71,18 @@ async function main() {
     const id = await ensurePrice(stripe, { name: `${p.name} (monthly)`, priceCents: p.priceCents, lookupKey: `ads_${p.key}_monthly_${p.priceCents}_${p.monthlyCredits}`, recurring: true, credits: p.monthlyCredits });
     lines.push(`${p.priceEnv}=${id}`);
   }
+  // Annual price for the hero plan (the other plans' annual prices already exist; live product prod_VbxU5EorFQcPJJ).
+  for (const p of ADS_PLANS.filter((x) => x.key === "ad_department")) {
+    const id = await ensurePrice(stripe, { name: `${p.name} (yearly)`, priceCents: annualPriceCents(p), lookupKey: `ads_${p.key}_annual_${annualPriceCents(p)}_${annualCredits(p)}`, recurring: true, intervalCount: 12, credits: annualCredits(p) });
+    lines.push(`${p.annualPriceEnv}=${id}`);
+  }
   for (const t of ADS_TOPUPS) {
     const id = await ensurePrice(stripe, { name: `Top-up ${t.name}`, priceCents: t.priceCents, lookupKey: `ads_${t.key}_${t.priceCents}_${t.credits}`, recurring: false, credits: t.credits });
     lines.push(`${t.priceEnv}=${id}`);
   }
-  // Additive offer price (post-trial upsell); never replaces or archives the plan prices.
-  const lq = LAUNCH_QUARTER;
-  const lqId = await ensurePrice(stripe, { name: `${lq.name} (every ${lq.intervalMonths} months)`, priceCents: lq.priceCents, lookupKey: `ads_${lq.key}_${lq.priceCents}_${lq.creditsPerPeriod}`, recurring: true, intervalCount: lq.intervalMonths, credits: lq.creditsPerPeriod });
-  lines.push(`${lq.priceEnv}=${lqId}`);
+  // Post-trial launch offer = the hero plan's monthly price + a once coupon (no separate price).
+  // The legacy Launch Quarter price (STRIPE_ADS_LAUNCH_QUARTER_PRICE_ID) stays for existing subscribers; never archive it.
+  if (LAUNCH_QUARTER.couponEnv) lines.push(`${LAUNCH_QUARTER.couponEnv}=${await ensureFirstMonthCoupon(stripe)}`);
   console.log(`# Website2ads Stripe prices (${live ? "LIVE" : "test"} mode). Add to your env:`);
   console.log(lines.join("\n"));
   console.log("# Also create a webhook endpoint -> /api/ads-billing/webhook (checkout.session.completed, invoice.paid,");

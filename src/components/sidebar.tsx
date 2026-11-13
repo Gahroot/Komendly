@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Sparkles, Megaphone, Video, Library, Gift, CreditCard, Settings, LogOut, type LucideIcon } from "lucide-react";
+import { Home, Sparkles, Megaphone, Video, Library, Gift, CreditCard, Settings, KeyRound, LogOut, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/hooks/useUser";
 import { BrandMark } from "@/components/brand-mark";
@@ -34,6 +34,7 @@ const ACCOUNT: NavItem[] = [
   { label: "Refer & earn", href: "/ads/refer", icon: Gift },
   { label: "Billing", href: "/ads/billing", icon: CreditCard, also: ["/dashboard/billing"] },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
+  { label: "Ozzy for agents", href: "/dashboard/api", icon: KeyRound },
 ];
 
 function isActive(pathname: string, item: NavItem): boolean {

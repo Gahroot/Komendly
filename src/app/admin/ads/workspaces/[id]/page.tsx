@@ -8,6 +8,7 @@ import { AdjustCreditsForm } from "../../_components/adjust-credits-form";
 import { AdminAdsShell } from "../../_components/admin-ads-shell";
 import { PostActionButton } from "../../_components/post-action-button";
 import { StatCard } from "../../_components/stat-card";
+import { AdminEmpty } from "../../../_components/admin-empty";
 
 export const dynamic = "force-dynamic";
 
@@ -65,7 +66,7 @@ async function Detail({ id }: { id: string }) {
                     <TableCell className="max-w-xs truncate text-xs text-muted-foreground">{l.note ?? l.stripeRef ?? ""}</TableCell>
                   </TableRow>
                 ))}
-                {ledger.length === 0 && <TableRow><TableCell colSpan={5} className="text-muted-foreground">No ledger entries.</TableCell></TableRow>}
+                {ledger.length === 0 && <TableRow><TableCell colSpan={5}><AdminEmpty>No ledger entries yet.</AdminEmpty></TableCell></TableRow>}
               </TableBody>
             </Table>
           </CardContent>
@@ -86,7 +87,7 @@ async function Detail({ id }: { id: string }) {
                     <TableCell className="text-right tabular-nums">{r.creditsReserved}</TableCell>
                   </TableRow>
                 ))}
-                {runs.length === 0 && <TableRow><TableCell colSpan={4} className="text-muted-foreground">No runs.</TableCell></TableRow>}
+                {runs.length === 0 && <TableRow><TableCell colSpan={4}><AdminEmpty>No runs yet.</AdminEmpty></TableCell></TableRow>}
               </TableBody>
             </Table>
           </CardContent>
@@ -105,7 +106,7 @@ async function Detail({ id }: { id: string }) {
                     <TableCell className="text-muted-foreground">{f.status}</TableCell>
                   </TableRow>
                 ))}
-                {flags.length === 0 && <TableRow><TableCell colSpan={4} className="text-muted-foreground">No flags.</TableCell></TableRow>}
+                {flags.length === 0 && <TableRow><TableCell colSpan={4}><AdminEmpty>No flags. All tidy.</AdminEmpty></TableCell></TableRow>}
               </TableBody>
             </Table>
           </CardContent>

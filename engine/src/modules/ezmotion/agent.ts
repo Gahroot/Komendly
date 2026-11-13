@@ -1,4 +1,5 @@
 import sharp from "sharp";
+import { killTree } from "./runtime";
 // Agent style: the real EZ Motion agent (EZ Coder's Motion mode, @prestyj/cli) makes the video from
 // the website and a 3-4 sentence brief, the way a person would prompt it. It runs headless in a
 // child process with its own HOME, using the engine's ChatGPT login (leased; refreshed pairs adopted
@@ -166,19 +167,26 @@ export async function runMotionAgent(input: MotionRenderInput, ratios: Ratio[], 
   const model = process.env.EZMOTION_AGENT_MODEL ?? "gpt-6.1-sol";
   const thinking = process.env.EZMOTION_AGENT_THINKING ?? "high";
   const spawnAgent = (briefFile: string) => new Promise<{ code: number; stdout: string; stderr: string }>((resolve) => {
-    const child = spawn(process.execPath, [runner, project, briefFile, "--model", model, "--thinking", thinking], { cwd: project, env, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(process.execPath, [runner, project, briefFile, "--model", model, "--thinking", thinking], { cwd: project, env, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
     child.stdout.on("data", (d: Buffer) => (stdout += d.toString()));
     child.stderr.on("data", (d: Buffer) => (stderr = (stderr + d.toString()).slice(-20_000)));
-    const kill = () => child.kill("SIGTERM");
+    // The agent starts preview servers and Chrome: kill its whole process group, not just the agent.
+    const kill = () => killTree(child.pid);
     const timer = setTimeout(kill, AGENT_TIMEOUT_MS);
     input.signal?.addEventListener("abort", kill, { once: true });
-    child.on("close", (code) => {
+    let settled = false;
+    const settle = (code: number | null) => {
+      if (settled) return;
+      settled = true;
       clearTimeout(timer);
       input.signal?.removeEventListener("abort", kill);
       resolve({ code: code ?? -1, stdout, stderr });
-    });
+    };
+    child.on("close", settle);
+    // Leftover grandchildren can hold the pipes open after the agent exits: reap them and stop waiting.
+    child.on("exit", (code) => { killTree(child.pid); setTimeout(() => { child.stdout?.destroy(); child.stderr?.destroy(); settle(code); }, 5_000); });
   });
   let res = await spawnAgent(join(root, "brief.txt"));
   let log = res.stderr;

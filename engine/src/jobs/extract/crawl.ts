@@ -82,7 +82,8 @@ export function rankKeyLinks(base: string, links: Array<{ href: string; text: st
   return [...scored.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, max).map(([k]) => k);
 }
 
-async function guardRoute(route: Route): Promise<void> {
+/** SSRF guard for any engine browser context (exported for the website check-up). */
+export async function guardRoute(route: Route): Promise<void> {
   const url = route.request().url();
   if (route.request().resourceType() === "media" || /\.(mp4|webm|mov|m3u8)(\?|$)/i.test(url)) return route.abort("blockedbyclient");
   if (url.startsWith("data:") || url.startsWith("blob:")) return route.continue();

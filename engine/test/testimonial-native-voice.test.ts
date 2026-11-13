@@ -79,7 +79,7 @@ const sentence = (i: number) => `Sentence number ${i} is about the great service
 const script = (sentences: number) => Array.from({ length: sentences }, (_, i) => sentence(i + 1)).join(" ");
 
 function deps(w: World, impl: typeof fetch, m: MediaOps, signal?: AbortSignal): TestimonialDeps {
-  return { store: memStore(w), adapters: createAdapters(DEFAULT_PIPELINE, { fetchImpl: impl, sleepImpl: async () => {}, env }), media: m, provider: null, config: DEFAULT_PIPELINE, scratchDir: "/tmp", usage: [], signal };
+  return { store: memStore(w), adapters: createAdapters(DEFAULT_PIPELINE, { fetchImpl: impl, sleepImpl: async () => {}, env }), media: m, provider: null, config: DEFAULT_PIPELINE, scratchDir: SCRATCH, usage: [], signal };
 }
 function unlocked(w: World): World {
   w.video.actor = { ...w.video.actor, voiceProvider: "kling", voiceId: null, voicePrompt: "a 24-year-old Latina woman with a light Mexican-American accent; bubbly" };
@@ -208,6 +208,11 @@ describe("accentFromVoicePrompt (actor picker label)", () => {
 });
 
 import { isInputError } from "../src/testimonial/job";
+import { mkdtempSync as __mkdtemp } from "node:fs";
+import { tmpdir as __tmpdir } from "node:os";
+import { join as __join } from "node:path";
+// Own scratch dir per test file: parallel files shared /tmp/testimonial-<id> and deleted each other's work.
+const SCRATCH = __mkdtemp(__join(__tmpdir(), "kmd-testimonial-"));
 describe("isInputError", () => {
   it("detects FAL 4xx input rejections (no same-model retry)", () => {
     expect(isInputError(new Error("FAL result failed: 422 {detail}"))).toBe(true);

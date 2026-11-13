@@ -4,7 +4,8 @@ import { BrandMark } from "@/components/brand-mark";
 
 const LINKS = [
   { href: "/ozzy-studio", label: "Ozzy Studio (new)" },
-  { href: "/testimonials#examples", label: "Examples" },
+  { href: "/examples", label: "Examples" },
+  { href: "/agents", label: "Agents" },
   { href: "/pricing", label: "Pricing" },
   { href: "/blog", label: "Blog" },
 ];

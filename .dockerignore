@@ -16,3 +16,4 @@ engine/.prisma-schema
 engine/node_modules
 **/.DS_Store
 .claude
+kly/.prisma-schema

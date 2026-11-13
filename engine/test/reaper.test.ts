@@ -55,6 +55,9 @@ describe.skipIf(!hasDb)("reapOrphans (dev DB)", async () => {
     await db.ad.createMany({ data: [ad(stuck.id, 0, "ready"), ad(stuck.id, 1, "rendering")] });
     const job = (runId: string, status: "queued" | "failed" | "running") => db.adJob.create({ data: { type: `test_${tag}`, runId, workspaceId: wsId, status } });
     const [jFailed, jOld, jLive, jStuck] = await Promise.all([job(failed.id, "queued"), job(old.id, "failed"), job(live.id, "queued"), job(stuck.id, "queued")]);
+    // jOld is as old as its run (left over); jFresh is new work on that old run (QC revision / make-good): kept.
+    await db.adJob.update({ where: { id: jOld.id }, data: { createdAt: hoursAgo(0.5) } });
+    const jFresh = await job(old.id, "queued");
 
     const res = await reapOrphans(db, { now, maxRunAgeHours: 0.25, stuckRunHours: 0.1, onlyWorkspaceIds: [wsId] });
     expect(res.finalizedRuns).toBe(1);
@@ -64,6 +67,7 @@ describe.skipIf(!hasDb)("reapOrphans (dev DB)", async () => {
     expect(await status(jOld.id)).toBe("canceled");
     expect(await status(jStuck.id)).toBe("canceled");
     expect(await status(jLive.id)).toBe("queued");
+    expect(await status(jFresh.id)).toBe("queued");
 
     const s = await db.adRun.findUniqueOrThrow({ where: { id: stuck.id } });
     expect(s.status).toBe("partial");
@@ -73,5 +77,6 @@ describe.skipIf(!hasDb)("reapOrphans (dev DB)", async () => {
 
     // Idempotent: a second pass touches nothing.
     expect(await reapOrphans(db, { now, maxRunAgeHours: 0.25, stuckRunHours: 0.1, onlyWorkspaceIds: [wsId] })).toEqual({ canceledJobs: 0, finalizedRuns: 0 });
+    await db.adJob.update({ where: { id: jFresh.id }, data: { status: "canceled" } });
   });
 });

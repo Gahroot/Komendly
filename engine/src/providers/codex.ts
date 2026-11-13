@@ -1,6 +1,8 @@
 // Default provider: ChatGPT (Codex) subscription. Text via @prestyj/ai's Codex transport,
 // images via the Codex images endpoint. All calls go through one shared Limiter.
 import { stream } from "@prestyj/ai";
+import sharp from "sharp";
+import { imageMime } from "../storage/image-mime";
 import type { AIProvider, ImageRequest, TextRequest, UsageMeter } from "./types";
 import { CodexAuth } from "./codex-auth";
 import { codexImage, ImageAccessError, ImageLimitError } from "./codex-images";
@@ -39,9 +41,10 @@ export class CodexProvider implements AIProvider {
       const { accessToken, accountId } = await this.creds();
       const started = Date.now();
       const prompt = req.jsonSchema ? req.prompt + jsonInstruction(req.jsonSchema) : req.prompt;
+      const images = await Promise.all((req.images ?? []).map(asPng));
       const content = [
         { type: "text" as const, text: prompt },
-        ...(req.images ?? []).map((i) => ({ type: "image" as const, mediaType: i.mediaType, data: i.base64 })),
+        ...images.map((i) => ({ type: "image" as const, mediaType: i.mediaType, data: i.base64 })),
       ];
       let res;
       try {
@@ -118,5 +121,19 @@ export class CodexProvider implements AIProvider {
 
   health(): Promise<{ ok: boolean; message?: string }> {
     return this.o.auth.health();
+  }
+}
+
+/**
+ * Vision input as PNG. The Codex backend answered "Bad Request" to ffmpeg JPEG frame grabs (video posters) while the
+ * same frame as PNG passed, so anything that isn't already PNG (by its bytes) is re-encoded. Falls back to the original.
+ */
+export async function asPng(i: { mediaType: string; base64: string }): Promise<{ mediaType: string; base64: string }> {
+  const head = Buffer.from(i.base64.slice(0, 24), "base64");
+  if (imageMime(head, i.mediaType) === "image/png") return { mediaType: "image/png", base64: i.base64 };
+  try {
+    return { mediaType: "image/png", base64: (await sharp(Buffer.from(i.base64, "base64")).png().toBuffer()).toString("base64") };
+  } catch {
+    return { mediaType: imageMime(head, i.mediaType), base64: i.base64 };
   }
 }

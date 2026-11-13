@@ -33,7 +33,7 @@ export function BillingActionButton({ endpoint, body, label, disabled, variant =
     }
   }
   return (
-    <Button className="w-full" variant={variant} disabled={disabled || busy} onClick={() => void go()}>
+    <Button className="w-full" variant={variant} data-pricing-plan={body ? `${body.kind === "plan" ? "" : `${body.kind}:`}${body.key}` : undefined} data-pricing-interval={body?.interval} disabled={disabled || busy} onClick={() => void go()}>
       {busy ? "Opening…" : label}
     </Button>
   );

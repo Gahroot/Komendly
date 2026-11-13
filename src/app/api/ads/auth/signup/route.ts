@@ -10,6 +10,10 @@ import { GIFT_COOKIE, REFERRAL_COOKIE, recordReferralAtSignup } from "@/lib/ads/
 import { adsErrorResponse, AdsHttpError, getOrCreateWorkspace } from "@/lib/ads/workspace";
 import { STUDIO_INVITE_COOKIE } from "@/lib/studio/invite";
 import { claimStudioInviteAtSignup } from "@/lib/studio/invite-server";
+import { KLY_COOKIE, sameInbox } from "@/lib/kly/claim";
+import { prisma } from "@/lib/prisma";
+import { linkKlyLeadAtSignup } from "@/lib/kly/attribution";
+import { claimOutboundGift } from "@/lib/kly/gift-claim";
 import { ANON_ID_COOKIE, EXP_COOKIE, parseAssignments } from "@/lib/analytics/experiments";
 
 const BodySchema = z.object({
@@ -37,7 +41,14 @@ export async function POST(request: NextRequest) {
     const workspace = await getOrCreateWorkspace(user);
     // Attribution: which blog post / campaign first brought this user (set by middleware from UTM params).
     const firstTouch = parseFirstTouch(request.cookies.get(FIRST_TOUCH_COOKIE)?.value);
-    await trackAdsEvent("signed_up", { workspaceId: workspace.id, userId: user.id, props: { firstTouch, anonId: request.cookies.get(ANON_ID_COOKIE)?.value, exp: parseAssignments(request.cookies.get(EXP_COOKIE)?.value) } });
+    // Kly (cold outbound): link the lead whose claim link set kmd_kly. Never throws.
+    const klyLead = await linkKlyLeadAtSignup(request.cookies.get(KLY_COOKIE)?.value, { userId: user.id, workspaceId: workspace.id });
+    // Their gifted ad is waiting in the new account (claims the outbound gift, copies the ad). Never throws.
+    if (klyLead) await claimOutboundGift(workspace.id, user.id, "signed_up");
+    // Same inbox we emailed (they clicked our link from it): already proven, so skip the confirmation step.
+    const preVerified = klyLead ? await prisma.outboundLead.findUnique({ where: { id: klyLead }, select: { email: true } }).then((l) => sameInbox(l?.email, user.email)).catch(() => false) : false;
+    if (preVerified) await prisma.user.update({ where: { id: user.id }, data: { emailVerifiedAt: new Date() } });
+    await trackAdsEvent("signed_up", { workspaceId: workspace.id, userId: user.id, props: { firstTouch, ...(klyLead ? { klyLead } : {}), anonId: request.cookies.get(ANON_ID_COOKIE)?.value, exp: parseAssignments(request.cookies.get(EXP_COOKIE)?.value) } });
     await recordReferralAtSignup({
       code: request.cookies.get(REFERRAL_COOKIE)?.value ?? parsed.data.ref,
       giftId: request.cookies.get(GIFT_COOKIE)?.value ?? null,
@@ -49,7 +60,7 @@ export async function POST(request: NextRequest) {
     const studioInvite = request.cookies.get(STUDIO_INVITE_COOKIE)?.value;
     if (studioInvite) await claimStudioInviteAtSignup({ token: studioInvite, user, workspace, fp: fingerprintFrom(request), friendIsNew: true });
     await setSessionCookie(await createSession(user.id));
-    await sendVerificationEmail(user, request.nextUrl.origin).catch((error) => console.error("[ads] verification email failed", error));
+    if (!preVerified) await sendVerificationEmail(user, request.nextUrl.origin).catch((error) => console.error("[ads] verification email failed", error));
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     return adsErrorResponse(error);

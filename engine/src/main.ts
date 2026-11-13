@@ -10,14 +10,16 @@ import { createStorage } from "./storage/s3";
 import { createSmtpSender, smtpConfigured } from "./lifecycle/mail";
 import { startLifecycleLoop } from "./lifecycle/send";
 import { startGrowthLoop } from "./lifecycle/growth";
-import { startOutboundLoop } from "./outbound/loop";
+import { startBonusLoop } from "./bonuses/loop";
+import { startWeeklyLoop } from "./jobs/weekly";
 
 async function main(): Promise<void> {
   const config = loadConfig();
   const db = createDb();
   await db.$connect();
   const storage = createStorage();
-  const provider = createProvider(config.aiProvider);
+  // CODEX_SHARED_STORE=db: the Codex login is shared with Kly through the CodexCredential row.
+  const provider = createProvider(config.aiProvider, process.env, { db, by: "engine" });
   const runner = new Runner({
     db,
     storage,
@@ -32,15 +34,10 @@ async function main(): Promise<void> {
   const stopLifecycle = startLifecycleLoop({ db, provider, send, storage });
   // Growth loops: gift-ready / referral-reward emails + referral credit expiry sweep.
   const stopGrowth = startGrowthLoop({ db, send });
-  // Cold outbound: lead finding on request; sending only with OUTBOUND_ENABLED=1 + flag "outbound". Reply alerts use our normal mailer.
-  const alertTo = process.env.ADS_ALERT_EMAIL || process.env.SMTP_REPLY_TO;
-  const stopOutbound = startOutboundLoop({
-    db,
-    provider,
-    alert: async (subject, text) => {
-      if (alertTo) await send({ to: alertTo, subject, text, html: "", headers: {} });
-    },
-  });
+  // Ozzy Ad Department bonuses (check-up, 30-day plan, hook library); ADS_BONUSES=0 turns it off.
+  const stopBonuses = startBonusLoop(db);
+  // Weekly Drop (Ad Department): Monday ads + "Your new ads are ready" email. ADS_WEEKLY_DROP=0 disables creation.
+  const stopWeekly = startWeeklyLoop({ db, send });
   log("info", "engine started", { worker: config.workerId, port: config.port, provider: provider.name, concurrency: config.concurrency, providerOk: runner.providerHealthy });
 
   let shutting = false;
@@ -52,7 +49,8 @@ async function main(): Promise<void> {
       server.close();
       stopLifecycle();
       stopGrowth();
-      stopOutbound();
+      stopBonuses();
+      stopWeekly();
       await runner.stop();
       await db.$disconnect();
       process.exit(0);

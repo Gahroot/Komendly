@@ -5,6 +5,7 @@ import { loadAdsOverview } from "@/lib/ads/metrics-queries";
 import { AdminAdsShell } from "./_components/admin-ads-shell";
 import { RunsChart } from "./_components/runs-chart";
 import { StatCard } from "./_components/stat-card";
+import { AdminEmpty } from "../_components/admin-empty";
 
 export const dynamic = "force-dynamic";
 
@@ -77,7 +78,7 @@ async function Overview() {
                   </TableRow>
                 ))}
                 {recentCohorts.length === 0 && (
-                  <TableRow><TableCell colSpan={4} className="text-muted-foreground">No trials yet.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4}><AdminEmpty>No trials yet.</AdminEmpty></TableCell></TableRow>
                 )}
               </TableBody>
             </Table>

@@ -17,8 +17,8 @@ import { LQ_STUDIO_LINE } from "@/lib/studio/bridge";
 const usd = (cents: number) => `$${(cents / 100).toFixed(0)}`;
 
 /**
- * Menu upsell when the trial run is done: Scale anchor, Launch Quarter recommended (value stack + live 72h countdown),
- * Growth alternative. "Shown" is recorded once per run per browser session (it used to fire on every visit).
+ * Menu upsell when the trial run is done: Starter fallback, Ozzy Ad Department recommended (first month $97 inside the
+ * 72h window, value stack + live countdown), Agency anchor. "Shown" is recorded once per run per browser session (it used to fire on every visit).
  */
 export function TrialUpsell({ runId, bonus, offerOpen, remainingMs, onDecline, valueLine = null }: { valueLine?: string | null; runId: string; bonus: BonusSummary | null; offerOpen: boolean; remainingMs: number | null; onDecline?: () => void }) {
   const stored = useSyncExternalStore(noopSubscribe, () => dismissedInSession(`trial_done:${runId}`), () => false);
@@ -31,10 +31,10 @@ export function TrialUpsell({ runId, bonus, offerOpen, remainingMs, onDecline, v
     postOfferEvent("upsell_shown", { placement: "trial_done", launchOffer: open, runId, locked: Boolean(bonus?.locked) });
   }, [hidden, open, runId, bonus?.locked]);
 
-  const scale = getPlan("scale");
-  const growth = getPlan("growth");
+  const hero = getPlan("ad_department");
+  const agency = getPlan("agency");
   const starter = getPlan("starter");
-  if (hidden || !scale || !growth || !starter) return null;
+  if (hidden || !hero || !agency || !starter) return null;
 
   function decline() {
     track("upsell_declined", { placement: "trial_done" });
@@ -50,17 +50,17 @@ export function TrialUpsell({ runId, bonus, offerOpen, remainingMs, onDecline, v
     <section className="space-y-4" aria-labelledby="upsell-title">
       {valueLine && <p className="text-sm text-muted-foreground">{valueLine}</p>}
       <div className="space-y-1">
-        <h2 id="upsell-title" className="text-2xl font-semibold tracking-tight">Your ads are ready. Keep going:</h2>
-        <p className="text-sm text-muted-foreground">Paid plans unlock all 3 sizes (4:5, 1:1, 9:16), all 5 awareness levels and animated ads.</p>
+        <h2 id="upsell-title" className="text-2xl font-semibold tracking-tight">Your ads are ready. Want me on your team?</h2>
+        <p className="text-sm text-muted-foreground">Your AI ad department: fresh ads every Monday, a coach that tells you what&apos;s working, 30-day no-questions refund.</p>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>{scale.name}</CardTitle>
-            <CardDescription><span className="text-3xl font-semibold text-foreground">{usd(scale.priceCents)}</span> / month</CardDescription>
+            <CardTitle>{starter.name}</CardTitle>
+            <CardDescription><span className="text-3xl font-semibold text-foreground">{usd(starter.priceCents)}</span> / month</CardDescription>
           </CardHeader>
-          <CardContent><Highlights items={scale.highlights} /></CardContent>
-          <CardFooter><BillingActionButton endpoint="/api/ads-billing/checkout" body={body("plan", "scale")} label={`Choose ${scale.name}`} variant="outline" /></CardFooter>
+          <CardContent><Highlights items={starter.highlights} /></CardContent>
+          <CardFooter><BillingActionButton endpoint="/api/ads-billing/checkout" body={body("plan", "starter")} label={`Choose ${starter.name}`} variant="outline" /></CardFooter>
         </Card>
 
         {open ? (
@@ -68,21 +68,21 @@ export function TrialUpsell({ runId, bonus, offerOpen, remainingMs, onDecline, v
         ) : (
           <Card className="glow-primary border-2 border-primary md:-my-2">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">{starter.name}<Badge>Start here</Badge></CardTitle>
-              <CardDescription><span className="text-3xl font-semibold text-foreground">{usd(starter.priceCents)}</span> / month</CardDescription>
+              <CardTitle className="flex items-center gap-2">{hero.name}<Badge>Founding · Unlimited</Badge></CardTitle>
+              <CardDescription><span className="text-3xl font-semibold text-foreground">{usd(hero.priceCents)}</span> / month</CardDescription>
             </CardHeader>
-            <CardContent><Highlights items={starter.highlights} /></CardContent>
-            <CardFooter><BillingActionButton endpoint="/api/ads-billing/checkout" body={body("plan", "starter")} label={`Choose ${starter.name}`} /></CardFooter>
+            <CardContent><Highlights items={hero.highlights} /></CardContent>
+            <CardFooter><BillingActionButton endpoint="/api/ads-billing/checkout" body={body("plan", "ad_department")} label={`Choose ${hero.name}`} /></CardFooter>
           </Card>
         )}
 
         <Card>
           <CardHeader>
-            <CardTitle>{growth.name}</CardTitle>
-            <CardDescription><span className="text-3xl font-semibold text-foreground">{usd(growth.priceCents)}</span> / month</CardDescription>
+            <CardTitle>{agency.name}</CardTitle>
+            <CardDescription><span className="text-3xl font-semibold text-foreground">{usd(agency.priceCents)}</span> / month · for agencies</CardDescription>
           </CardHeader>
-          <CardContent><Highlights items={growth.highlights} /></CardContent>
-          <CardFooter><BillingActionButton endpoint="/api/ads-billing/checkout" body={body("plan", "growth")} label={`Choose ${growth.name}`} variant="outline" /></CardFooter>
+          <CardContent><Highlights items={agency.highlights} /></CardContent>
+          <CardFooter><BillingActionButton endpoint="/api/ads-billing/checkout" body={body("plan", "agency")} label={`Choose ${agency.name}`} variant="outline" /></CardFooter>
         </Card>
       </div>
       <p className="flex items-center justify-center gap-2 text-center text-sm text-muted-foreground">

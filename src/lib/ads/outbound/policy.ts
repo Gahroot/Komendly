@@ -1,4 +1,4 @@
-// Cold outbound ("I made you a free ad"): pure rules shared by the engine (sender, finder, IMAP) and the web
+// Cold outbound ("I made you a free ad"): pure rules shared by Kly (sender, finder, IMAP) and the web
 // (admin, claim/unsubscribe routes). No DB, no I/O, no clock reads: callers pass `now`.
 import { z } from "zod";
 
@@ -15,7 +15,8 @@ export function isStopped(status: string): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Mailboxes (env only: passwords never touch the DB)
+// Mailboxes: the Gmail boxes come from env (OUTBOUND_MAILBOXES); rented ones (Maildoso, SMTP) live in OutboundMailbox
+// with an encrypted password (kly/src/mailboxes.ts).
 
 export const MailboxEnvSchema = z.object({
   address: z.string().trim().toLowerCase().email(),
@@ -50,17 +51,32 @@ export function parseMailboxes(raw: string | undefined): ParsedMailboxes {
 // Pacing / warm-up
 
 export const DEFAULT_DAILY_CAP = 40;
-export const WARMUP_FLAT_DAYS = 3;
-export const WARMUP_START_PER_DAY = 5;
-export const WARMUP_STEP_PER_DAY = 3;
+export const WARMUP_FLAT_DAYS = 1;
+export const WARMUP_START_PER_DAY = 10;
+export const WARMUP_STEP_PER_DAY = 15; // 10 -> 25 -> 40: a 3-day ramp (user: DNS is set, keep warm-up short)
 export const MIN_GAP_MS = 3 * 60_000;
 export const MAX_GAP_MS = 9 * 60_000;
 export const FOLLOW_UP_AFTER_MS = 4 * 86_400_000;
 export const MAX_STEPS = 2;
 
-/** Today's send limit: 5/day on days 1-3 of warm-up, then +3/day up to the cap. */
+/** The sending day is the US Eastern calendar day (business hours are US): every quota resets at ET midnight. */
+export const SEND_DAY_TZ = "America/New_York";
+
+/** The instant of the most recent ET midnight at or before `now` (off by <= 1h only on DST-change days). */
+export function sendDayStart(now: Date): Date {
+  const p = new Intl.DateTimeFormat("en-US", { timeZone: SEND_DAY_TZ, hour: "numeric", minute: "numeric", second: "numeric", hourCycle: "h23" }).formatToParts(now);
+  const get = (t: string) => Number(p.find((x) => x.type === t)?.value ?? "0");
+  return new Date(now.getTime() - ((get("hour") * 60 + get("minute")) * 60 + get("second")) * 1000 - now.getMilliseconds());
+}
+
+/** 1-based warm-up day in ET calendar days (day 2 starts at the first ET midnight after the start). */
+export function warmupDay(warmupStartedAt: Date, now: Date): number {
+  return Math.max(1, Math.round((sendDayStart(now).getTime() - sendDayStart(warmupStartedAt).getTime()) / 86_400_000) + 1);
+}
+
+/** Today's send limit: 10 on day 1 of warm-up, then +5/day up to the cap (40 by day 7). */
 export function warmupLimit(warmupStartedAt: Date, now: Date, cap: number = DEFAULT_DAILY_CAP): number {
-  const day = Math.max(1, Math.floor((now.getTime() - warmupStartedAt.getTime()) / 86_400_000) + 1);
+  const day = warmupDay(warmupStartedAt, now);
   const ramp = day <= WARMUP_FLAT_DAYS ? WARMUP_START_PER_DAY : WARMUP_START_PER_DAY + WARMUP_STEP_PER_DAY * (day - WARMUP_FLAT_DAYS);
   return Math.max(0, Math.min(cap, ramp));
 }
@@ -79,21 +95,107 @@ export function inBusinessHours(now: Date, timeZone: string): boolean {
   return !["Sat", "Sun"].includes(wd) && hour >= 9 && hour < 17;
 }
 
-export interface MailboxPace {
-  paused: boolean;
+export const MAILBOX_PROVIDERS = ["gmail", "maildoso", "smtp"] as const;
+export type MailboxProvider = (typeof MAILBOX_PROVIDERS)[number];
+/** Maildoso: 15 cold emails/day per mailbox, after ~14 days of Maildoso's own warm-up. */
+export const MAILDOSO_DAILY_CAP = 15;
+export const VENDOR_WARMUP_DAYS = 14;
+/** Default cold emails/day across all mailboxes of one sending domain (Maildoso sells ~3 mailboxes per domain). */
+export const DEFAULT_DOMAIN_DAILY_CAP = 45;
+
+/** Kly's own 10 -> 25 -> 40 ramp applies to mailboxes nobody warmed for us (Gmail, plain SMTP); vendor-warmed ones skip it. */
+export function rampApplies(provider: string | null | undefined): boolean {
+  return provider !== "maildoso";
+}
+
+// Kly peer warm-up gate (kly/src/warmup.ts): rented mailboxes need >= 14 days of our own warm-up with a clean
+// 7-day spam placement before cold sending, then ramp 5 -> 10 -> 15/day over their first sending days.
+export const WARMUP_MIN_DAYS = 14;
+export const WARMUP_READY_SPAM_RATE = 0.1;
+export const WARMUP_PAUSE_SPAM_RATE = 0.25;
+/** Placements (inbox + spam) needed before a spam rate counts. */
+export const WARMUP_MIN_PLACEMENT_SAMPLE = 20;
+/** Cold limit on sending day 1, 2, ... (then the mailbox cap). */
+export const COLD_RAMP = [5, 10] as const;
+export const WARMUP_PAUSE_PREFIX = "auto: warm-up spam placement";
+
+export interface WarmupGate {
+  /** First warm-up send (null = never warmed). */
+  since: Date | null;
+  /** 7-day spam / (inbox + spam), null below WARMUP_MIN_PLACEMENT_SAMPLE. */
+  spamRate: number | null;
+  /** First cold send (drives COLD_RAMP). */
+  coldStartedAt: Date | null;
+  minDays?: number;
+  maxSpamRate?: number;
+}
+
+/** Spam placement rate over judged placements; null below the minimum sample. */
+export function spamPlacementRate(inbox: number, spam: number, minSample = WARMUP_MIN_PLACEMENT_SAMPLE): number | null {
+  const n = inbox + spam;
+  return n >= Math.max(1, minSample) ? spam / n : null;
+}
+
+/** Days of warm-up so far (ET calendar days, day 1 = the first warm-up day; 0 = never warmed). */
+export function warmupDays(since: Date | null, now: Date): number {
+  return since ? warmupDay(since, now) : 0;
+}
+
+/** May this mailbox send cold yet? Needs `minDays` of warm-up and a measured spam rate under the threshold. */
+export function warmupReadiness(g: WarmupGate, now: Date): { ready: boolean; reason: string | null; days: number } {
+  const days = warmupDays(g.since, now);
+  const min = g.minDays ?? WARMUP_MIN_DAYS;
+  const max = g.maxSpamRate ?? WARMUP_READY_SPAM_RATE;
+  // Day N means N-1 full days done: ready from day min+1.
+  if (days <= min) return { ready: false, reason: days ? `warm-up day ${days} of ${min}` : "not warmed up yet", days };
+  if (g.spamRate === null) return { ready: false, reason: "no warm-up placement data yet", days };
+  if (g.spamRate >= max) return { ready: false, reason: `warm-up spam placement ${(g.spamRate * 100).toFixed(0)}% (needs < ${(max * 100).toFixed(0)}%)`, days };
+  return { ready: true, reason: null, days };
+}
+
+/** Cold limit after warm-up readiness: 5 on the first sending day, 10 on the second, then the cap. */
+export function coldRampLimit(coldStartedAt: Date | null, now: Date, cap: number): number {
+  const day = coldStartedAt ? warmupDay(coldStartedAt, now) : 1;
+  return Math.max(0, Math.min(cap, COLD_RAMP[day - 1] ?? cap));
+}
+
+export interface MailboxLimitInput {
+  provider?: string | null;
   dailyCap: number;
   warmupStartedAt: Date;
+  readyAt?: Date | null;
+  /** Kly warm-up gate; absent/null = the mailbox is not in Kly's warm-up (vendor readyAt only). */
+  warmup?: WarmupGate | null;
+}
+
+/** Today's cold-send limit of one mailbox: 0 before readyAt (or before warm-up readiness), the ramp (Gmail/SMTP), the
+ * 5 -> 10 -> cap cold ramp (Kly-warmed) or the flat cap (vendor-warmed). */
+export function mailboxDayLimit(m: MailboxLimitInput, now: Date): number {
+  if (m.readyAt && now.getTime() < m.readyAt.getTime()) return 0;
+  if (m.warmup) return warmupReadiness(m.warmup, now).ready ? coldRampLimit(m.warmup.coldStartedAt, now, m.dailyCap) : 0;
+  return rampApplies(m.provider) ? warmupLimit(m.warmupStartedAt, now, m.dailyCap) : Math.max(0, m.dailyCap);
+}
+
+export interface MailboxPace {
+  paused: boolean;
+  warmup?: WarmupGate | null;
+  dailyCap: number;
+  warmupStartedAt: Date;
+  provider?: string | null;
+  readyAt?: Date | null;
   lastSentAt: Date | null;
   sentToday: number;
   /** Gap chosen after the last send (ms). */
   gapMs: number;
 }
 
-export type PaceDecision = { ok: true } | { ok: false; reason: "paused" | "daily_limit" | "gap" };
+export type PaceDecision = { ok: true } | { ok: false; reason: "paused" | "not_ready" | "daily_limit" | "gap" };
 
 export function canSendNow(m: MailboxPace, now: Date): PaceDecision {
   if (m.paused) return { ok: false, reason: "paused" };
-  if (m.sentToday >= warmupLimit(m.warmupStartedAt, now, m.dailyCap)) return { ok: false, reason: "daily_limit" };
+  if (m.readyAt && now.getTime() < m.readyAt.getTime()) return { ok: false, reason: "not_ready" };
+  if (m.warmup && !warmupReadiness(m.warmup, now).ready) return { ok: false, reason: "not_ready" };
+  if (m.sentToday >= mailboxDayLimit(m, now)) return { ok: false, reason: "daily_limit" };
   if (m.lastSentAt && now.getTime() - m.lastSentAt.getTime() < m.gapMs) return { ok: false, reason: "gap" };
   return { ok: true };
 }
@@ -102,17 +204,35 @@ export function canSendNow(m: MailboxPace, now: Date): PaceDecision {
 // Health / auto-pause
 
 export const HEALTH_WINDOW = 100;
-export const MAX_BOUNCE_RATE = 0.03;
+export const MAX_BOUNCE_RATE = 0.06;
+/** A bounce rate needs a real sample: one dead address in the first few sends is noise, not a bad list. */
+export const MIN_BOUNCE_SAMPLE = 50;
+export const MIN_BOUNCES = 4;
+/** A burst still pauses fast: this many bounces within the last BURST_WINDOW sends. */
+export const BURST_BOUNCES = 3;
+export const BURST_WINDOW = 10;
 
-/** Over the last 100 sends: any complaint, or bounce rate > 3% -> pause reason; else null. */
+/** Most recent first. Any complaint; a bounce burst; or (>= 50 sends, >= 4 bounces) bounce rate > 6% -> reason; else null.
+ * Websites often list dead addresses (we can't verify a mailbox before sending), so a few bounces are expected. */
+/** Auto-pauses lift themselves after a cool-down so nobody has to babysit them; admin pauses never auto-lift. */
+export const BOUNCE_COOLDOWN_MS = 24 * 3600_000;
+export const COMPLAINT_COOLDOWN_MS = 72 * 3600_000;
+export function autoResumeDue(pausedReason: string | null, pausedAt: Date | null, now: Date): boolean {
+  if (!pausedReason?.startsWith("auto:") || !pausedAt) return false;
+  const cool = pausedReason.includes("complaint") ? COMPLAINT_COOLDOWN_MS : BOUNCE_COOLDOWN_MS;
+  return now.getTime() - pausedAt.getTime() >= cool;
+}
+
 export function autoPauseReason(recent: ReadonlyArray<{ bounced: boolean; complained: boolean }>): string | null {
   const w = recent.slice(0, HEALTH_WINDOW);
   if (w.length === 0) return null;
   const complaints = w.filter((s) => s.complained).length;
   if (complaints > 0) return `spam complaint (${complaints} in last ${w.length})`;
+  const burst = w.slice(0, BURST_WINDOW).filter((s) => s.bounced).length;
+  if (burst >= BURST_BOUNCES) return `${burst} bounces in the last ${Math.min(BURST_WINDOW, w.length)} sends`;
   const bounces = w.filter((s) => s.bounced).length;
   const rate = bounces / w.length;
-  return rate > MAX_BOUNCE_RATE ? `bounce rate ${(rate * 100).toFixed(1)}% over last ${w.length} sends` : null;
+  return w.length >= MIN_BOUNCE_SAMPLE && bounces >= MIN_BOUNCES && rate > MAX_BOUNCE_RATE ? `bounce rate ${(rate * 100).toFixed(1)}% over last ${w.length} sends` : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -127,12 +247,12 @@ export interface LeadSeq {
 }
 
 /** Which step to send next, or null: first email once the ad is made; one follow-up 4 days later if no reply/click; then stop. */
-export function nextStep(l: LeadSeq, now: Date): 1 | 2 | null {
+export function nextStep(l: LeadSeq, now: Date, followUpMs: number = FOLLOW_UP_AFTER_MS): 1 | 2 | null {
   if (isStopped(l.status) || l.repliedAt) return null;
   if (l.step === 0) return l.status === "ad_made" || l.status === "queued" ? 1 : null;
   if (l.step === 1) {
     if (l.clickedAt || l.status === "clicked") return null;
-    if (!l.lastSentAt || now.getTime() - l.lastSentAt.getTime() < FOLLOW_UP_AFTER_MS) return null;
+    if (!l.lastSentAt || now.getTime() - l.lastSentAt.getTime() < followUpMs) return null;
     return 2;
   }
   return null;

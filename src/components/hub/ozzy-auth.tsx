@@ -16,11 +16,11 @@ import { loadDraft } from "@/lib/testimonial-draft";
  * Uses the ads auth API: signup records first-touch attribution, referrals, the Studio invite cookie and sends
  * the verification email. Lands on ?next (same-origin only) or /dashboard.
  */
-export function OzzyAuth({ mode, referrerName, freeStatic = 10 }: { mode: "login" | "signup"; referrerName?: string; freeStatic?: number }) {
+export function OzzyAuth({ mode, referrerName, freeStatic = 10, defaultEmail, giftFor }: { mode: "login" | "signup"; referrerName?: string; freeStatic?: number; /** Kly prospects: the address we emailed. */ defaultEmail?: string; /** Kly prospects: their business name. */ giftFor?: string }) {
   const router = useRouter();
   const params = useSearchParams();
   const next = safeAppNext(params.get("next") ?? params.get("redirect"));
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: defaultEmail ?? "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const isSignup = mode === "signup";
@@ -45,9 +45,11 @@ export function OzzyAuth({ mode, referrerName, freeStatic = 10 }: { mode: "login
 
   const q = params.get("next") ? `?next=${encodeURIComponent(next)}` : "";
   const other = isSignup ? `/login${q}` : `/register${q}`;
-  const title = isSignup ? (referrerName ? `${referrerName} sent you free ads` : "Meet Ozzy") : "Welcome back";
+  const title = isSignup ? (giftFor ? `Your 10 free ads for ${giftFor}` : referrerName ? `${referrerName} sent you free ads` : "Meet Ozzy") : "Welcome back";
   const description = isSignup
-    ? referrerName
+    ? giftFor
+      ? `${freeStatic} more ads + 1 animated ad from your website, free. Your gifted ads are already waiting inside. No card needed.`
+      : referrerName
       ? `${freeStatic} static ads + 1 animated ad from your website, free. No card needed.`
       : "Ozzy makes your ads, videos and testimonials. Start free: a pack of ads and your first Studio video, no card needed."
     : params.get("verified") === "1"

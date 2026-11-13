@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, type LegalSection } from "@/components/legal/legal-page";
-import { ADS_PLANS, ADS_TOPUPS, LAUNCH_QUARTER } from "@/lib/ads/billing-config";
+import { ADS_PLANS, ADS_TOPUPS, FOUNDING_PRICE_LOCK, FOUNDING_TERMS, LAUNCH_QUARTER, offerFirstPaymentCents, unlimitedLine } from "@/lib/ads/billing-config";
 import { FIRST_VIDEO_OFFER, formatUsd } from "@/lib/first-video-offer";
 
 // Static on purpose (no session read) so it is publicly cacheable per next.config.ts headers.
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/terms" },
 };
 
-const plans = ADS_PLANS.map((p) => `${p.name} ${formatUsd(p.priceCents)}/month (${p.monthlyCredits} credits)`).join(", ");
+const plans = ADS_PLANS.map((p) => `${p.name} ${formatUsd(p.priceCents)}/month (${unlimitedLine(p) ?? `${p.monthlyCredits} credits`})${p.hiddenForNewBuyers ? " (existing subscribers only)" : ""}`).join(", ");
 const topups = ADS_TOPUPS.map((t) => `${t.credits} credits for ${formatUsd(t.priceCents)}`).join(" and ");
 
 const SECTIONS: readonly LegalSection[] = [
@@ -52,7 +52,7 @@ const SECTIONS: readonly LegalSection[] = [
     title: "Subscriptions, renewal and cancellation",
     body: (
       <ul>
-        <li>Komendly Ads plans: {plans}. The {LAUNCH_QUARTER.name} offer is {formatUsd(LAUNCH_QUARTER.priceCents)} every {LAUNCH_QUARTER.intervalMonths} months with {LAUNCH_QUARTER.creditsPerPeriod} credits per period (plus {LAUNCH_QUARTER.firstPeriodBonus} bonus credits on the first payment).</li>
+        <li>Komendly Ads plans: {plans}. Launch offer: within {LAUNCH_QUARTER.windowHours} hours of your free ads, the first month of Ozzy Ad Department is {formatUsd(offerFirstPaymentCents(LAUNCH_QUARTER))}; it then renews at {formatUsd(LAUNCH_QUARTER.priceCents)}/month. {FOUNDING_TERMS} {FOUNDING_PRICE_LOCK} Existing Launch Quarter subscribers keep their terms.</li>
         <li>Subscriptions renew automatically at the end of each period and Stripe charges the card on file until you cancel. Prices are in US dollars, plus any tax shown at checkout.</li>
         <li>You can cancel any time from your billing page. Cancelling stops future renewals; you keep access until the end of the period you have paid for. Apart from the guarantees below, we do not refund part-used periods.</li>
         <li>We may change prices for future periods. We will tell you before a change affects your next renewal so you can cancel first.</li>
@@ -64,8 +64,7 @@ const SECTIONS: readonly LegalSection[] = [
     title: "Refund policy and money-back guarantees",
     body: (
       <>
-        <p><strong>Komendly Ads plans:</strong> 30-day money-back guarantee on your first month. Not happy with the ads? Ask within 30 days of your first payment and we refund it.</p>
-        <p><strong>{LAUNCH_QUARTER.name}:</strong> 30-day money-back guarantee on your first payment. Not happy with the ads? Ask within 30 days of your first payment and we refund it.</p>
+        <p><strong>Komendly Ads plans and launch offers:</strong> 30-day money-back guarantee on your first payment. Within 30 days of it, use &quot;Refund my first payment&quot; on your billing page: we refund it in full, end the plan and remove the credits it gave you.</p>
         <p><strong>Testimonials {FIRST_VIDEO_OFFER.name}:</strong> looks real or it&apos;s free: unlimited re-renders, or a full refund on your {FIRST_VIDEO_OFFER.name} within 14 days.</p>
         <p>The guarantees cover the first payment only, once per customer. Renewals, top-up credit packs, testimonial video packs and later subscription payments are not refundable, except where the law gives you a right to a refund or we made a billing mistake. To ask for a refund, email us from your account address. Refunds go back to the original payment method through Stripe.</p>
       </>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FBC_COOKIE, FIRST_TOUCH_COOKIE, FIRST_TOUCH_MAX_AGE, LAST_TOUCH_COOKIE, firstTouchFromUrl, serializeFirstTouch } from "@/lib/analytics/first-touch";
+import { ROUTE_HEADER, isRefusedForApiKey, parseBearer } from "@/lib/agent-keys/policy";
 import { ANON_ID_COOKIE, EXP_COOKIE, EXP_COOKIE_MAX_AGE, applyOverride, completeAssignments, parseAssignments, serializeAssignments } from "@/lib/analytics/experiments";
 
 /** Give every page visitor a stable anon id + A/B assignments, visible to this same request's server render. */
@@ -43,11 +44,14 @@ const publicPrefixes = [
   "/api/ads/auth/",        // Website2ads sign-up / login
   "/api/ads/device",
   "/api/ads/trial-check",  // Pre-sign-up "website already had its free pack?" check (rate-limited)
+  "/api/ads/pricing-event", // Pricing page view / plan click beacon (anonymous too, rate-limited)
   "/api/ads/landed",       // Anonymous landing beacon (visit_landed, deduped per visitor per day)       // First-party device cookie (pre-auth abuse fingerprint)
   "/api/ads/email-img/",   // Signed (HMAC, ~30 days) ad thumbnails in lifecycle emails
   "/api/ads/email-unsubscribe", // Signed one-click unsubscribe from lifecycle emails
   "/api/ads/email-click/", // Signed click-tracking redirect in lifecycle emails (app-relative paths only)
   "/api/outbound/",       // Cold outbound claim-link redirect + one-click unsubscribe (token-checked)
+  "/g/",                   // Kly short claim link (same as /api/outbound/c/)
+  "/u/",                   // Kly short unsubscribe link (same as /api/outbound/unsubscribe)
   "/api/ads/gift-public/", // Gift pack page beacon + token-checked ad images (public /gift/<token>)
   "/api/ad-of-the-week/",  // Public images of consented ads only (Ad of the week, /ad-examples)
   "/api/ads-billing/webhook", // Stripe webhook for ads billing (signature-verified)
@@ -55,6 +59,7 @@ const publicPrefixes = [
   "/api/studio/share/",    // Public share data (token-checked)
   "/studio/invite/",       // Ozzy Studio invite landing ("2 free videos")
   "/api/studio/invite/",   // Invite accept: sets the invite cookie, redirects to sign-up
+  "/api/mcp",              // Hosted Ozzy MCP server: authenticates its own API key (header or /api/mcp/k/<key>)
   "/api/testimonials/price-survey", // Van Westendorp survey: anonymous /pricing visitors answer too (rate-limited)
 ];
 
@@ -69,6 +74,17 @@ const subscriptionRequiredApiPrefixes = [
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Personal API keys (agents): `Authorization: Bearer kmd_...` on /api/*. The route handler resolves the key
+  // (getCurrentUser); here we refuse forbidden routes early and stamp the trusted route header it relies on.
+  if (pathname.startsWith("/api/") && parseBearer(request.headers.get("authorization"))) {
+    if (!request.cookies.get("session_token")?.value && isRefusedForApiKey(pathname)) {
+      return NextResponse.json({ error: "API keys can't be used for this. Sign in on komendly.com instead.", code: "api_key_refused" }, { status: 403 });
+    }
+    const headers = new Headers(request.headers);
+    headers.set(ROUTE_HEADER, `${request.method} ${pathname}`);
+    return NextResponse.next({ request: { headers } });
+  }
 
   // Check if the route is public
   const isPublicRoute = publicRoutes.includes(pathname);

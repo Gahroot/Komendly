@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ADS_PLANS } from '@/lib/ads/billing-config'
+import { PLANS_FOR_SALE } from '@/lib/ads/billing-config'
 import { resolveAuthor } from '@/lib/authors'
 import { parsePostFile } from '@/lib/blog'
 import { blogPostingJsonLd, breadcrumbJsonLd, faqJsonLd, graph, jsonLdString, organizationJsonLd, softwareApplicationJsonLd, studioApplicationJsonLd } from '@/lib/seo/jsonld'
@@ -50,7 +50,8 @@ describe('JSON-LD builders', () => {
     const offers = softwareApplicationJsonLd().offers as Array<{ name: string; price: string }>
     expect(offers.map((o) => [o.name, o.price])).toEqual([
       ['Free trial', '0'],
-      ...ADS_PLANS.map((p) => [`${p.name} plan`, (p.priceCents / 100).toFixed(2)]),
+      // New-buyer plans only: Growth/Scale are hidden during the founding offer.
+      ...PLANS_FOR_SALE.map((p) => [`${p.name} plan`, (p.priceCents / 100).toFixed(2)]),
     ])
   })
   it('graph skips nulls and serialization escapes <', () => {
@@ -97,7 +98,7 @@ describe('Ozzy Studio SEO', () => {
     const offers = app.offers as Array<{ name: string; price: string }>
     expect(app.url).toBe('https://www.komendly.com/ozzy-studio')
     expect(offers[0]).toMatchObject({ name: 'Free video', price: '0' })
-    expect(offers).toHaveLength(ADS_PLANS.length + 1)
+    expect(offers).toHaveLength(PLANS_FOR_SALE.length + 1)
   })
   it('is listed in llms.txt and llms-full.txt', () => {
     expect(buildLlmsTxt([])).toContain('## Ozzy Studio')

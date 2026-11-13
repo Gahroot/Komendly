@@ -6,6 +6,7 @@ import { BrandMark } from "@/components/brand-mark";
 const SIGNED_IN: AdsNavLink[] = [
   { href: "/dashboard", label: "← All apps" },
   { href: "/ads/app", label: "Home" },
+  { href: "/ads/coach", label: "Ad Coach" },
   { href: "/ads/brands", label: "Brands" },
   { href: "/ads/gifts", label: "Gifts" },
   { href: "/ads/refer", label: "Give 10, get 10" },

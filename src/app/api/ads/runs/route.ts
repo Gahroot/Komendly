@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { DEVICE_COOKIE, fingerprintFrom } from "@/lib/ads/run";
 import { startRun, StartRunSchema } from "@/lib/ads/run-start";
 import type { RunSummary } from "@/lib/ads/run-types";
+import { isWeeklyRun, weeklyDropTitle } from "@/lib/ads/weekly-drop";
 import { adsErrorResponse, AdsHttpError, getOrCreateWorkspace, requireUser } from "@/lib/ads/workspace";
 
 export async function GET() {
@@ -23,6 +24,7 @@ export async function GET() {
       createdAt: r.createdAt.toISOString(),
       readyCount: r.ads.filter((a) => a.status === "ready").length,
       totalCount: r.staticCount + r.motionCount,
+      ...(isWeeklyRun(r) ? { title: weeklyDropTitle(r.createdAt) } : {}),
     }));
     return NextResponse.json({ runs: items });
   } catch (error) {

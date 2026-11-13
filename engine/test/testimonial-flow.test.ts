@@ -7,6 +7,11 @@ import type { MediaOps } from "../src/testimonial/media";
 import { DEFAULT_PIPELINE, type PipelineConfig } from "../src/testimonial/models";
 import { memStore, world, type World } from "./helpers/testimonial-mem";
 import type { AIProvider } from "../src/providers/types";
+import { mkdtempSync as __mkdtemp } from "node:fs";
+import { tmpdir as __tmpdir } from "node:os";
+import { join as __join } from "node:path";
+// Own scratch dir per test file: parallel files shared /tmp/testimonial-<id> and deleted each other's work.
+const SCRATCH = __mkdtemp(__join(__tmpdir(), "kmd-testimonial-"));
 
 function fakes(opts: { failClipOnce?: number; finalSeconds?: number } = {}) {
   const calls = { speak: [] as string[], tts: 0, animate: 0, finish: 0 };
@@ -89,7 +94,7 @@ const payload: TestimonialJobPayload = { compositeVideoId: "v1", useAIScript: tr
 const NATIVE: PipelineConfig = { ...DEFAULT_PIPELINE, mode: "native_speech" };
 
 function deps(w: World, f: ReturnType<typeof fakes>, cfg: PipelineConfig = NATIVE, provider: AIProvider | null = null): TestimonialDeps {
-  return { store: memStore(w), adapters: f.adapters, media: f.media, provider, config: cfg, scratchDir: "/tmp", usage: [] };
+  return { store: memStore(w), adapters: f.adapters, media: f.media, provider, config: cfg, scratchDir: SCRATCH, usage: [] };
 }
 
 /** Minimal stand-in for the runner: claim -> handler -> retry until maxAttempts -> onDead. */

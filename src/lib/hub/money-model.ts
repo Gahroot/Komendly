@@ -10,10 +10,10 @@
 // Plans/prices are the EXISTING Stripe ads plans (no new subscription prices). Existing testimonial
 // subscribers (User.plan starter/pro/enterprise) are grandfathered: shown as "Legacy testimonials plan" in the hub,
 // with a one-click switch offer to an Ozzy plan.
-import { ADS_PLANS, type AdsPlanKey } from "../ads/billing-config";
+import { ADS_PLANS, type AdsPlanKey, unlimitedLine } from "../ads/billing-config";
 
 /** Testimonial videos (1 video = up to 60s = 1 testimonial minute) included per month by plan. */
-export const TESTIMONIALS_PER_MONTH: Record<AdsPlanKey, number> = { starter: 0, growth: 0, scale: 1, agency: 3 };
+export const TESTIMONIALS_PER_MONTH: Record<AdsPlanKey, number> = { starter: 0, ad_department: 0, growth: 0, scale: 1, agency: 3 };
 
 /** Attraction offers (free, no card). */
 export const ATTRACTION = {
@@ -24,22 +24,23 @@ export const ATTRACTION = {
 
 /**
  * Studio launch offer (upsell at peak value): shown for 72h after the first free Studio video is delivered
- * (AdsWorkspace.studioOfferReadyAt). = the existing Growth monthly price + 25 bonus credits on the first invoice
- * (CreditReason offer_bonus, stripeRef offer_bonus:<invoiceId>). Checkout metadata offer=studio_launch;
- * the server enforces the window. Guarantee: the existing 30-day money-back on the first month.
+ * (AdsWorkspace.studioOfferReadyAt). Since 2026-11-11 = the hero plan (Ozzy Ad Department, Founding Unlimited)
+ * with the same first-month coupon as the trial launch offer ($100 off: $97 today). bonusCredits = 0: unlimited
+ * replaces credits. Checkout metadata offer=studio_launch; the server enforces the window.
  */
 export const STUDIO_LAUNCH_OFFER = {
   key: "studio_launch",
   name: "Ozzy Studio Launch",
-  plan: "growth" as AdsPlanKey,
-  bonusCredits: 25,
+  plan: "ad_department" as AdsPlanKey,
+  bonusCredits: 0,
   windowHours: 72,
   headline: "Keep Ozzy on your team",
   stack: [
-    "55 credits every month: about 10 Studio videos, or 55 ads, mix as you like",
-    "+25 bonus credits on your first month (only for the next 72 hours)",
-    "Edit your own footage up to 90 seconds, 500 MB uploads",
-    "30-day money-back guarantee",
+    "Unlimited Studio videos and Ad Packs, made one at a time",
+    "6 fresh ads every Monday, made for you",
+    "Ozzy Ad Coach: he tells you what's working",
+    "First month $97 instead of $197 (only for the next 72 hours)",
+    "Post Ozzy's ads for 30 days. Not happy? One click, full refund.",
   ],
 } as const;
 
@@ -51,6 +52,14 @@ export function planAppsSummary(key: AdsPlanKey): string[] {
   const p = ADS_PLANS.find((x) => x.key === key);
   if (!p) return [];
   const t = TESTIMONIALS_PER_MONTH[key];
+  if (p.unlimited) {
+    return [
+      unlimitedLine(p) ?? "Unlimited Ad Packs and Ozzy Studio videos",
+      "6 fresh ads every Monday (5 static + 1 animated), made for you",
+      "Ozzy Ad Coach: he tells you what's working and makes more of it",
+      t > 0 ? `${t} AI testimonial videos / month` : "AI testimonial videos: Agency only",
+    ];
+  }
   return [
     `${p.monthlyCredits} Ozzy credits / month for Ad Packs and Ozzy Studio`,
     `About ${Math.floor(p.monthlyCredits / 5)} Studio videos or ${p.monthlyCredits} static ads`,

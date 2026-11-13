@@ -77,6 +77,8 @@ export interface StudioChargeInput {
   freeVideosLeft: number;
   /** Paid plan or credit balance > 0 means paid output (no watermark). */
   isPaidWorkspace: boolean;
+  /** Unlimited plan (billing-config isUnlimitedPlan): every render costs 0 credits. */
+  unlimited?: boolean;
 }
 
 export interface StudioCharge {
@@ -90,6 +92,7 @@ export interface StudioCharge {
 /** Pure: what a delivered render costs. The engine applies it in one transaction with the render row. */
 export function studioCharge(i: StudioChargeInput): StudioCharge {
   const kind = i.priorRenders === 0 ? "new" : "revision";
+  if (i.unlimited) return { kind, credits: 0, useFreeVideo: false, watermark: false };
   if (kind === "new") {
     if (!i.isPaidWorkspace && i.freeVideosLeft > 0) return { kind, credits: 0, useFreeVideo: true, watermark: false };
     return { kind, credits: i.seconds > STUDIO_PRICE.longOverSeconds ? STUDIO_PRICE.newLong : STUDIO_PRICE.newShort, useFreeVideo: false, watermark: false };
@@ -99,9 +102,10 @@ export function studioCharge(i: StudioChargeInput): StudioCharge {
 }
 
 /** Pure: can the user send a message that may produce a render? (web gate before enqueueing a turn) */
-export function canStartStudioTurn(o: { priorRenders: number; sessionFree: boolean; freeVideosLeft: number; balance: number; isPaidWorkspace: boolean }):
+export function canStartStudioTurn(o: { priorRenders: number; sessionFree: boolean; freeVideosLeft: number; balance: number; isPaidWorkspace: boolean; unlimited?: boolean }):
   | { ok: true }
   | { ok: false; code: "no_credits" | "free_used"; neededCredits: number } {
+  if (o.unlimited) return { ok: true };
   if (o.priorRenders === 0) {
     if (!o.isPaidWorkspace && o.freeVideosLeft > 0) return { ok: true };
     return o.balance >= STUDIO_PRICE.newShort ? { ok: true } : { ok: false, code: o.freeVideosLeft > 0 ? "no_credits" : "free_used", neededCredits: STUDIO_PRICE.newShort };

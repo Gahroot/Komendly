@@ -1,5 +1,5 @@
 // extract job: crawl -> LLM extraction -> grounding -> upload assets -> BrandProfile + AdRun.
-import { isFreeRun, isGiftRun } from "../gift-policy";
+import { isFreeRun, isGiftRun, isWeeklyRun } from "../gift-policy";
 import { markGiftGenerating } from "../gift";
 import { createHash } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -71,7 +71,7 @@ export async function extractJob(ctx: JobContext, crawlFn: typeof crawlSite = cr
   if (run.status !== "extracting") return { skipped: `run status ${run.status}` };
   const gift = isGiftRun(run);
   if (gift) await markGiftGenerating(db, run.id);
-  const autoConfirm = isFreeRun(run);
+  const autoConfirm = isFreeRun(run) || isWeeklyRun(run); // weekly drops re-extract stale brands with no human in the loop
 
   const corrections = CorrectionsSchema.safeParse(run.corrections ?? {});
   const note = corrections.success ? corrections.data.note : undefined;

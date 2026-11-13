@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { parseFirstTouch, serializeFirstTouch, type FirstTouch } from "@/lib/analytics/first-touch";
 import { campaignEconomics, cohortsByWeek, funnelBySource, funnelTotal, isBotVisit, isFunnelTestEmail, revenuePayments, studioFunnel, sumRevenueCents, type GroupBy, type SignupRow, type StudioWorkspaceFacts, adEconomics } from "./funnel";
 import { isTestEmail } from "./signups";
+import { PRICING_FUNNEL_EVENTS, pricingDropoff } from "./pricing-funnel";
 import { loadMetaAdSpend, loadMetaCampaignSpend } from "./meta-insights";
 
 const DAY_MS = 24 * 3600 * 1000;
@@ -128,4 +129,19 @@ export async function loadStudioFunnel(days: number, now: Date = new Date()) {
     else if (e.name === "purchased" || e.name === "paid_converted") f.paymentsAt = [...f.paymentsAt, e.createdAt];
   }
   return { days, from: from.toISOString(), excludedTest: signedUp.length - signedUp.filter((s) => !s.userId || !test.has(s.userId)).length, steps: studioFunnel([...facts.values()]) };
+}
+
+/** Pricing & offer drop-off for [from, to): pricing views/clicks + existing offer, checkout and payment events; internal accounts excluded. */
+export async function loadPricingDropoff(from: Date, to: Date) {
+  const internal = await loadInternalIds();
+  const events = await prisma.adsEvent.findMany({
+    where: { name: { in: [...PRICING_FUNNEL_EVENTS] }, createdAt: { gte: from, lt: to } },
+    select: { name: true, userId: true, workspaceId: true, props: true, createdAt: true },
+  });
+  const wsIds = [...new Set(events.map((e) => e.workspaceId).filter((x): x is string => !!x))];
+  const userIds = [...new Set(events.map((e) => e.userId).filter((x): x is string => !!x))];
+  const workspaces = await prisma.adsWorkspace.findMany({ where: { OR: [{ id: { in: wsIds } }, { ownerId: { in: userIds } }] }, select: { id: true, ownerId: true, trialUsedAt: true } });
+  const ownerOf = new Map(workspaces.map((w) => [w.id, w.ownerId]));
+  const freePackUsers = new Set(workspaces.filter((w) => w.trialUsedAt).map((w) => w.ownerId));
+  return pricingDropoff({ events, ownerOf, freePackUsers, internal });
 }

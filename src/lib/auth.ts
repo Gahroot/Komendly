@@ -149,14 +149,42 @@ export async function createUser(data: {
   });
 }
 
-// Get current authenticated user from session
-export async function getCurrentUser() {
+/** The signed-in user from the session cookie only (never an API key). Key management uses this. */
+export async function getCookieUser() {
   const token = await getSessionToken();
-
-  if (!token) {
-    return null;
-  }
-
+  if (!token) return null;
   const result = await validateSession(token);
   return result?.user ?? null;
+}
+
+/**
+ * Current user: the hosted MCP server's agent (request-scoped), else the cookie session (priority), else a personal
+ * API key (`Authorization: Bearer kmd_...`). Keys are refused on key management, admin and account/auth routes;
+ * revoked/unknown keys resolve to no user. Over the per-key limits it throws a 429 (AdsHttpError).
+ */
+export async function getCurrentUser() {
+  const { currentAgent } = await import("@/lib/agent-keys/context");
+  const agent = currentAgent();
+  if (agent) return agent.user;
+  const cookieUser = await getCookieUser();
+  if (cookieUser) return cookieUser;
+  return bearerUser();
+}
+
+async function bearerUser() {
+  const { headers } = await import("next/headers");
+  const h = await headers();
+  const keys = await import("@/lib/agent-keys/keys");
+  const raw = keys.parseBearer(h.get("authorization"));
+  if (!raw) return null;
+  // Set by middleware for every bearer request (client values are overwritten there).
+  const route = h.get(keys.ROUTE_HEADER);
+  const path = route?.split(" ")[1];
+  if (!route || !path || keys.isRefusedForApiKey(path)) return null;
+  const { resolveApiKey, RATE_LIMIT_MESSAGE, JOB_LIMIT_MESSAGE } = await import("@/lib/agent-keys/resolve");
+  const result = await resolveApiKey(raw, { via: keys.viaFrom(h.get(keys.CLIENT_HEADER)), job: keys.isJobCreatingRoute(route) });
+  if (result.ok) return result.user;
+  if (result.reason === "invalid") return null;
+  const { AdsHttpError } = await import("@/lib/ads/workspace");
+  throw new AdsHttpError(429, result.reason, result.reason === "rate_limited" ? RATE_LIMIT_MESSAGE : JOB_LIMIT_MESSAGE, { upgrade_url: keys.UPGRADE_URL });
 }

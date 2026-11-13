@@ -10,11 +10,11 @@
 // $66-133, Scale $121-246); credits are the most that keep the 70% floor.
 // Hormozi money model: attraction = free trial (10 static + 1 motion); continuity = monthly plans with Scale
 // as the anchor; downsell = one-time credit packs, priced per credit above every plan, no subscription;
-// guarantee = 30-day money-back on the first month (refund from admin).
+// guarantee = 30-day one-click refund of the first payment (self-serve, src/lib/ads/self-refund.ts).
 // Price IDs come from env (created by scripts/ads-stripe-setup.ts); a missing ID = not purchasable.
 // Pure module: safe to import from client components (reads only env strings).
 
-export type AdsPlanKey = "starter" | "growth" | "scale" | "agency";
+export type AdsPlanKey = "starter" | "ad_department" | "growth" | "scale" | "agency";
 export type BillingInterval = "month" | "year";
 export type AdsTopupKey = "topup_10" | "topup_30" | "unlock_pack";
 
@@ -29,7 +29,49 @@ export interface AdsPlanTier {
   /** Gift packs (3 free ads for another business) per calendar month while subscribed. */
   giftsPerMonth: number;
   highlights: string[];
+  /** Hidden from every new-purchase surface (still works for existing subscribers: webhook, renewals, billing page). */
+  hiddenForNewBuyers?: boolean;
+  /** The plan the pricing pages recommend. */
+  recommended?: boolean;
+  /** Weekly Drop: 5 static + 1 animated ad every Monday, not charged to credits (engine: worker B). */
+  weeklyDrop?: boolean;
+  /** Unlimited plans: how many of the member's own businesses (website domains) the unlimited Ad Packs cover. */
+  unlimitedBrands?: number;
+  /** Unlimited plans: ad runs / Studio turns that may be in progress at once (fair use). Default 1. */
+  concurrent?: number;
+  /** Ad Packs and Ozzy Studio cost 0 credits (fair use: 1 run + 1 Studio turn in progress at a time). */
+  unlimited?: boolean;
 }
+
+// Ozzy Ad Department, Founding Unlimited (owner decision 2026-11-11): the hero plan sold after the free pack.
+// Single price constant: changing the price is this one line (+ a new Stripe price, see scripts/ads-stripe-setup.ts).
+export const AD_DEPARTMENT_PRICE_CENTS = 19700;
+/** Unlimited: Ad Packs + Ozzy Studio cost 0 credits on ad_department (fair use: one run + one Studio turn at a time). */
+export const AD_DEPARTMENT_UNLIMITED = true;
+/** Founding offer: Growth and Scale are hidden from new buyers while it runs. */
+export const FOUNDING_OFFER_ACTIVE = true;
+export const FOUNDING_FAIR_USE = "Unlimited ads and Studio videos, made one at a time.";
+export const FOUNDING_TERMS =
+  "Founding offer for the first 100 members or until we end it. Unlimited is guaranteed for your first 3 months; after that we'd give you 30 days' notice before any change. Cancel anytime in one click.";
+export const FOUNDING_PRICE_LOCK = "Founding members keep their price for as long as they stay subscribed.";
+
+/** The Hormozi value stack shown next to the hero plan (values are stated monthly worth, in dollars). */
+export const AD_DEPARTMENT_STACK: readonly { label: string; detail: string; valueUsd: number; bonus?: boolean }[] = [
+  { label: "Unlimited ads + Ozzy Studio videos", detail: "Make as many Ad Packs and videos as you like, one at a time", valueUsd: 500 },
+  { label: "Weekly Drop", detail: "6 new ads every Monday (5 static + 1 animated), made for you", valueUsd: 300 },
+  { label: "Ozzy Ad Coach", detail: "Show him your Ads Manager results; he says what to keep, what to kill, and makes more winners", valueUsd: 200 },
+  { label: "Website check-up", detail: "Ozzy checks the page your ads send people to", valueUsd: 300, bonus: true },
+  { label: "30-day ad plan", detail: "What to post, when, and what to test, day by day", valueUsd: 250, bonus: true },
+  { label: "Hook & caption library", detail: "Proven openers and captions written for your brand", valueUsd: 150, bonus: true },
+];
+
+export function stackTotalUsd(): number {
+  return AD_DEPARTMENT_STACK.reduce((n, i) => n + i.valueUsd, 0);
+}
+/** Weekly Drop cost basis: 5 static (1 credit each) + 1 animated (5 credits) = 10 credits/week = ~43 a month. */
+export const WEEKLY_DROP_CREDIT_EQUIVALENTS_PER_MONTH = 43;
+/** The 72h first-month discount on the hero plan: $100 off once ($197 -> $97). */
+export const LAUNCH_FIRST_MONTH_OFF_CENTS = 10000;
 
 export interface AdsTopupPack {
   key: AdsTopupKey;
@@ -51,6 +93,22 @@ export const ADS_PLANS: readonly AdsPlanTier[] = [
     highlights: ["20 Ozzy credits / month for Ad Packs and Ozzy Studio", "About 4 Studio videos or 20 static ads, mix as you like", "All sizes (4:5, 1:1, 9:16) · animated ads", "Buy one, give one: 1 gift pack a month for a friend"],
   },
   {
+    key: "ad_department",
+    name: "Ozzy Ad Department",
+    priceCents: AD_DEPARTMENT_PRICE_CENTS,
+    // Unlimited replaces credits: the grant stays (0) so the ledger code paths are unchanged.
+    monthlyCredits: 0,
+    priceEnv: "STRIPE_ADS_AD_DEPARTMENT_PRICE_ID",
+    annualPriceEnv: "STRIPE_ADS_AD_DEPARTMENT_ANNUAL_PRICE_ID",
+    giftsPerMonth: 1,
+    recommended: true,
+    weeklyDrop: true,
+    unlimited: AD_DEPARTMENT_UNLIMITED,
+    unlimitedBrands: 1,
+    concurrent: 1,
+    highlights: ["Unlimited ads and Studio videos for your business, made one at a time", "Fresh ads every Monday: 5 static + 1 animated, made for you", "Ozzy Ad Coach: show him your results, he says what to keep and kill", "Bonuses: website check-up, 30-day ad plan, hook & caption library", "Post Ozzy's ads for 30 days. Not happy? One click, full refund."],
+  },
+  {
     key: "growth",
     name: "Growth",
     priceCents: 11900,
@@ -58,6 +116,8 @@ export const ADS_PLANS: readonly AdsPlanTier[] = [
     priceEnv: "STRIPE_ADS_GROWTH_PRICE_ID",
     annualPriceEnv: "STRIPE_ADS_GROWTH_ANNUAL_PRICE_ID",
     giftsPerMonth: 1,
+    // Hidden from new buyers during the founding offer (2026-11-11); existing subscribers keep it at their price.
+    hiddenForNewBuyers: FOUNDING_OFFER_ACTIVE,
     highlights: ["55 Ozzy credits / month for Ad Packs and Ozzy Studio", "About 11 Studio videos or 55 static ads", "Edit your own footage: up to 90s, 500 MB uploads", "Everything in Starter, lower price per credit"],
   },
   {
@@ -68,21 +128,81 @@ export const ADS_PLANS: readonly AdsPlanTier[] = [
     priceEnv: "STRIPE_ADS_SCALE_PRICE_ID",
     annualPriceEnv: "STRIPE_ADS_SCALE_ANNUAL_PRICE_ID",
     giftsPerMonth: 1,
+    hiddenForNewBuyers: FOUNDING_OFFER_ACTIVE,
     highlights: ["115 Ozzy credits / month for Ad Packs and Ozzy Studio", "1 AI testimonial video / month (a real review, on camera)", "About 23 Studio videos or 115 static ads", "Everything in Growth, priority generation"],
   },
   {
-    // Agency (2026-11-09): many client brands in one workspace. 255 credits = the most that keeps the 70% floor
-    // at p90 API cost ($1.96/credit, lowest of any plan). Brands per workspace are not limited on any plan.
+    // Agency (owner decision 2026-11-11): Ad Department, unlimited, for up to 10 client brands, 3 in progress at a time,
+    // plus 3 testimonial videos and 4 gift packs a month. No Agency subscribers existed when it went unlimited.
     key: "agency",
     name: "Agency",
-    priceCents: 49900,
-    monthlyCredits: 255,
+    priceCents: 49700,
+    monthlyCredits: 0,
     priceEnv: "STRIPE_ADS_AGENCY_PRICE_ID",
     annualPriceEnv: "STRIPE_ADS_AGENCY_ANNUAL_PRICE_ID",
     giftsPerMonth: 4,
-    highlights: ["255 Ozzy credits / month for Ad Packs and Ozzy Studio", "3 AI testimonial videos / month", "All your client brands in one workspace, lowest price per credit", "4 gift packs a month to pitch new clients · priority generation"],
+    weeklyDrop: true,
+    unlimited: true,
+    unlimitedBrands: 10,
+    concurrent: 3,
+    highlights: ["Everything in Ozzy Ad Department, for up to 10 client brands", "Unlimited ads and Studio videos, 3 at a time", "3 AI testimonial videos / month (real reviews, on camera)", "4 gift packs a month to pitch new clients"],
   },
 ];
+
+/** Plans shown to new buyers, in menu order: Starter (fallback), Ozzy Ad Department (hero), Agency (multi-brand). */
+export const PLANS_FOR_SALE: readonly AdsPlanTier[] = ADS_PLANS.filter((p) => !p.hiddenForNewBuyers);
+
+/** Can a new subscription be started on this plan? (Growth: no; existing Growth subscribers are unaffected.) */
+export function isPlanForSale(key: string): boolean {
+  return PLANS_FOR_SALE.some((p) => p.key === key);
+}
+
+
+export interface PlanCheckWorkspace {
+  adsPlan: string;
+  subscriptionStatus: string;
+  suspendedAt?: Date | null;
+}
+
+const ACTIVE_SUB_STATUSES = new Set(["active", "trialing", "past_due"]);
+
+function activeOn(ws: PlanCheckWorkspace): boolean {
+  return ACTIVE_SUB_STATUSES.has(ws.subscriptionStatus) && !ws.suspendedAt;
+}
+
+/** Workspace has Ozzy Ad Department features (Ad Department or Agency) with a live subscription (Weekly Drop, Ad Coach, bonuses). */
+export function hasAdDepartment(ws: PlanCheckWorkspace): boolean {
+  return (ws.adsPlan === "ad_department" || ws.adsPlan === "agency") && activeOn(ws);
+}
+
+/** Unlimited plans: how many runs / Studio turns may be in progress at once (1 unless the plan says more). */
+export function concurrentLimit(ws: PlanCheckWorkspace): number {
+  return getPlan(ws.adsPlan)?.concurrent ?? 1;
+}
+
+/** Unlimited plans: how many of the member's own businesses the unlimited Ad Packs cover (null = no cap). */
+export function unlimitedBrandLimit(ws: PlanCheckWorkspace): number | null {
+  return isUnlimitedPlan(ws) ? (getPlan(ws.adsPlan)?.unlimitedBrands ?? null) : null;
+}
+
+/** Pure: may an unlimited workspace start ads for `domain`, given the businesses it already uses? */
+export function brandAllowed(domain: string, ownDomains: readonly string[], limit: number | null): boolean {
+  if (limit === null || ownDomains.includes(domain)) return true;
+  return new Set(ownDomains).size < limit;
+}
+
+export const BRAND_LIMIT_MESSAGE = (limit: number) =>
+  limit === 1
+    ? "Your plan covers one business. To make ads for more brands, Agency covers up to 10."
+    : `Your plan covers up to ${limit} brands. Reply to any Ozzy email and we'll sort out more.`;
+
+/** Ad Packs and Ozzy Studio are free (0 credits) for this workspace: an active plan with `unlimited`. */
+export function isUnlimitedPlan(ws: PlanCheckWorkspace): boolean {
+  return Boolean(getPlan(ws.adsPlan)?.unlimited) && activeOn(ws);
+}
+
+/** Fair-use message when an unlimited workspace already has something in progress (plain words, no jargon). */
+export const UNLIMITED_BUSY_MESSAGE = "Ozzy is still on your last one. Give him a minute to finish, then start the next.";
 
 /** Annual prepay: pay for 10 months, get 12 (credits for all 12 months land on payment, valid for the year). */
 export const ANNUAL_MONTHS_PAID = 10;
@@ -128,8 +248,10 @@ export function unlockPackCouponId(env: Record<string, string | undefined> = pro
   return env[UNLOCK_PACK_COUPON_ENV] || null;
 }
 
-/** Hormozi-style risk reversal shown next to plans; refunds are issued from the admin refunds page. */
-export const ADS_GUARANTEE = "30-day money-back guarantee on your first month. Not happy with the ads? Ask and we refund it.";
+/** Hormozi-style risk reversal shown next to plans; self-serve refund on the billing page (src/lib/ads/self-refund.ts). */
+export const ADS_GUARANTEE = "Post Ozzy's ads for 30 days. Not happy? One click, full refund.";
+/** Self-serve refund window after the first paid invoice of a workspace's first subscription. */
+export const GUARANTEE_DAYS = 30;
 
 export function getPlan(key: string): AdsPlanTier | undefined {
   return ADS_PLANS.find((p) => p.key === key);
@@ -154,7 +276,7 @@ export function planMonthlyCents(planKey: string): number {
 
 // Post-trial money model (goal folder komendly-ad-rdy/MONEY_MODEL.md): menu upsell on the trial run page
 // (Scale anchor -> Launch Quarter recommended -> Growth), downsell on checkout cancel (Starter, then topup_10).
-export type AdsOfferKey = "launch_quarter";
+export type AdsOfferKey = "launch_department" | "launch_quarter";
 
 export interface AdsLaunchOffer {
   key: AdsOfferKey;
@@ -170,9 +292,42 @@ export interface AdsLaunchOffer {
   /** Hours after the trial run's ads are ready that the offer can be bought (server-enforced). */
   windowHours: number;
   priceEnv: string;
+  /** Coupon offers ride on the plan's own price (renewals are plain plan invoices); the coupon discounts invoice 1. */
+  couponEnv?: string;
+  /** What the first invoice costs (coupon offers); else priceCents. */
+  firstPaymentCents?: number;
 }
 
+/**
+ * The 72h post-trial launch offer (2026-11-11): the first month of Ozzy Ad Department for $97 (a once coupon of
+ * $100 off the $197 monthly price). Renewals are plain ad_department invoices. The export keeps its old name so
+ * every surface picks up the new offer.
+ */
 export const LAUNCH_QUARTER: AdsLaunchOffer = {
+  key: "launch_department",
+  name: "Founding first month",
+  priceCents: AD_DEPARTMENT_PRICE_CENTS,
+  intervalMonths: 1,
+  creditsPerPeriod: 0,
+  firstPeriodBonus: 0,
+  plan: "ad_department",
+  windowHours: 72,
+  priceEnv: "STRIPE_ADS_AD_DEPARTMENT_PRICE_ID",
+  couponEnv: "STRIPE_ADS_LAUNCH_FIRST_MONTH_COUPON_ID",
+  firstPaymentCents: AD_DEPARTMENT_PRICE_CENTS - LAUNCH_FIRST_MONTH_OFF_CENTS,
+};
+
+export function offerCouponId(offer: AdsLaunchOffer, env: Record<string, string | undefined> = process.env): string | null {
+  return offer.couponEnv ? env[offer.couponEnv] || null : null;
+}
+
+/** What the buyer pays today for the offer. */
+export function offerFirstPaymentCents(offer: AdsLaunchOffer): number {
+  return offer.firstPaymentCents ?? offer.priceCents;
+}
+
+/** Legacy $129 / 3 months of Starter: no longer sold, but existing subscribers must keep renewing on it. */
+export const LAUNCH_QUARTER_LEGACY: AdsLaunchOffer = {
   key: "launch_quarter",
   name: "Launch Quarter",
   priceCents: 12900,
@@ -184,15 +339,18 @@ export const LAUNCH_QUARTER: AdsLaunchOffer = {
   priceEnv: "STRIPE_ADS_LAUNCH_QUARTER_PRICE_ID",
 };
 
-export const LAUNCH_QUARTER_GUARANTEE =
-  "30-day money-back guarantee on your first payment. Not happy with the ads? Ask and we refund it.";
+const ALL_OFFERS: readonly AdsLaunchOffer[] = [LAUNCH_QUARTER, LAUNCH_QUARTER_LEGACY];
 
+export const LAUNCH_QUARTER_GUARANTEE = "Post Ozzy's ads for 30 days. Not happy? One click, full refund.";
+
+/** Any known offer, legacy included (webhook metadata fallback). New checkouts only sell LAUNCH_QUARTER. */
 export function getOffer(key: string): AdsLaunchOffer | undefined {
-  return key === LAUNCH_QUARTER.key ? LAUNCH_QUARTER : undefined;
+  return ALL_OFFERS.find((o) => o.key === key);
 }
 
+/** Offers with their own Stripe price (legacy Launch Quarter). Coupon offers use the plan price: never matched here. */
 export function offerFromPriceId(priceId: string, env: Record<string, string | undefined> = process.env): AdsLaunchOffer | undefined {
-  return priceIdFor(LAUNCH_QUARTER, env) === priceId ? LAUNCH_QUARTER : undefined;
+  return ALL_OFFERS.find((o) => !o.couponEnv && priceIdFor(o, env) === priceId);
 }
 
 /** Ready (non-bonus) trial ads that open the Launch Quarter window, before the run finishes. */
@@ -226,5 +384,13 @@ export function offerCreditsFor(offer: AdsLaunchOffer, firstInvoice: boolean): n
 
 /** Saving vs paying the plan monthly for the same months, in cents. */
 export function offerSavingsCents(offer: AdsLaunchOffer): number {
-  return (getPlan(offer.plan)?.priceCents ?? 0) * offer.intervalMonths - offer.priceCents;
+  return (getPlan(offer.plan)?.priceCents ?? 0) * offer.intervalMonths - offerFirstPaymentCents(offer);
+}
+
+/** One plain line describing what "unlimited" covers on a plan (null for credit plans). */
+export function unlimitedLine(p: Pick<AdsPlanTier, "unlimited" | "unlimitedBrands" | "concurrent">): string | null {
+  if (!p.unlimited) return null;
+  const brands = p.unlimitedBrands ?? 1;
+  const atOnce = p.concurrent ?? 1;
+  return `Unlimited ads and Studio videos ${brands === 1 ? "for your business" : `for up to ${brands} brands`}, ${atOnce === 1 ? "made one at a time" : `${atOnce} at a time`}`;
 }

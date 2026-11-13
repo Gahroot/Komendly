@@ -5,6 +5,7 @@ import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Too
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
 import type { VanWestendorpResult } from "@/lib/price-survey";
+import { AdminEmpty } from "../_components/admin-empty";
 
 type Data = VanWestendorpResult & { subject: string; total: number };
 type Segment = "all" | "visitors" | "customers";
@@ -96,7 +97,7 @@ export default function PriceSurveyAdminPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <p className="py-12 text-center text-sm text-muted-foreground">No responses yet.</p>
+            <div className="py-6"><AdminEmpty>No survey responses yet. Check back soon.</AdminEmpty></div>
           )}
           <ul className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
             {CURVES.map((c) => (

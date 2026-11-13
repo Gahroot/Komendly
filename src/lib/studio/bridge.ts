@@ -78,4 +78,4 @@ export function pickBridgeAsset<T extends { ratio: string; mime: string }>(kind:
   return imgs.find((a) => a.ratio === "9:16") ?? imgs.find((a) => a.ratio === "4:5") ?? imgs[0] ?? null;
 }
 
-export const LQ_STUDIO_LINE = "Ozzy Studio included: chat to make videos and edit your footage (credits shared)";
+export const LQ_STUDIO_LINE = "Ozzy Studio included: chat with Ozzy to make videos and edit your own footage";

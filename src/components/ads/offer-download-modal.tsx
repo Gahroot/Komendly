@@ -40,7 +40,7 @@ export function OfferDownloadModal({ runId, bonus, offerOpen, remainingMs }: { r
       <DialogContent className="max-h-[95dvh] overflow-y-auto rounded-3xl sm:max-w-md">
         <DialogTitle>Downloaded. Want a fresh batch every month?</DialogTitle>
         <DialogDescription>
-          Ads wear out. The {bonus?.locked ? "Launch Quarter unlocks your bonus ads now and" : "Launch Quarter"} keeps new ones coming, in every size including Stories/Reels.
+          Ads wear out. The {bonus?.locked ? "Founding Unlimited plan unlocks your bonus ads now and" : "Founding Unlimited plan"} keeps new ones coming, in every size including Stories/Reels.
         </DialogDescription>
         <LaunchQuarterCard placement="post_download" bonus={bonus} remainingMs={remainingMs} runId={runId} />
         <button type="button" onClick={() => onOpenChange(false)} className="text-sm text-muted-foreground underline-offset-4 hover:underline">Not now</button>

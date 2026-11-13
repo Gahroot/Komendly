@@ -2,7 +2,7 @@
 import { Check, Loader2, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ADS_PLANS, ADS_TOPUPS, getPlan, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE } from "@/lib/ads/billing-config";
+import { ADS_TOPUPS, FOUNDING_FAIR_USE, getPlan, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE, offerFirstPaymentCents, PLANS_FOR_SALE, unlimitedLine } from "@/lib/ads/billing-config";
 import { LQ_STUDIO_LINE } from "@/lib/studio/bridge";
 import { STUDIO_LAUNCH_OFFER } from "@/lib/hub/money-model";
 import type { StudioAccountView } from "@/lib/studio/thread";
@@ -48,18 +48,19 @@ function CheckoutButton({ body, label, primary }: { body: Record<string, unknown
 export function LaunchQuarterStudioCard({ endsAt, placement }: { endsAt: string | null; placement: string }) {
   const left = useCountdown(endsAt);
   const plan = getPlan(LAUNCH_QUARTER.plan);
+  const today = `$${(offerFirstPaymentCents(LAUNCH_QUARTER) / 100).toFixed(0)}`;
   const lines = [
-    LQ_STUDIO_LINE,
-    `${LAUNCH_QUARTER.creditsPerPeriod} credits every ${LAUNCH_QUARTER.intervalMonths} months (+${LAUNCH_QUARTER.firstPeriodBonus} bonus on your first payment), for ads and videos`,
-    "Edit your own footage up to 90 seconds",
+    `Unlimited Studio videos and Ad Packs. ${FOUNDING_FAIR_USE}`,
+    "6 fresh ads every Monday, made for you",
+    "Ozzy Ad Coach: he tells you what's working",
     LAUNCH_QUARTER_GUARANTEE,
   ];
   return (
     <section className="studio-rise pixel-frame relative overflow-hidden bg-[linear-gradient(160deg,oklch(0.3_0.12_295),oklch(0.22_0.09_300)_60%,oklch(0.3_0.1_40))] p-5" aria-label={LAUNCH_QUARTER.name}>
-      <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--studio-gold)]">{LAUNCH_QUARTER.name}{left ? <> · launch price ends in <span className="tabular-nums">{left}</span></> : null}</p>
-      <h3 className="mt-2 font-display text-2xl text-[oklch(0.97_0.03_80)]">Your trial offer includes Ozzy Studio</h3>
+      <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--studio-gold)]">{plan?.name ?? LAUNCH_QUARTER.name}{left ? <> · launch price ends in <span className="tabular-nums">{left}</span></> : null}</p>
+      <h3 className="mt-2 font-display text-2xl text-[oklch(0.97_0.03_80)]">Your AI ad department, Studio included</h3>
       <p className="mt-1 text-sm text-[oklch(0.86_0.03_80)]">
-        ${(LAUNCH_QUARTER.priceCents / 100).toFixed(0)} every 3 months · {plan?.name ?? "Starter"} features · cancel anytime
+        First month {today}, then ${(LAUNCH_QUARTER.priceCents / 100).toFixed(0)}/month · cancel anytime in one click
       </p>
       <ul className="mt-3 space-y-1.5 text-sm text-[oklch(0.93_0.03_80)]">
         {lines.map((s) => (
@@ -67,7 +68,7 @@ export function LaunchQuarterStudioCard({ endsAt, placement }: { endsAt: string 
         ))}
       </ul>
       <div className="mt-4 max-w-xs">
-        <CheckoutButton primary label="Get the Launch Quarter" body={{ kind: "offer", key: LAUNCH_QUARTER.key, placement }} />
+        <CheckoutButton primary label={`Start for ${today}`} body={{ kind: "offer", key: LAUNCH_QUARTER.key, placement }} />
       </div>
     </section>
   );
@@ -76,7 +77,7 @@ export function LaunchQuarterStudioCard({ endsAt, placement }: { endsAt: string 
 /** Ozzy's 72h Studio launch offer (server-truth window from AdsWorkspace.studioOfferReadyAt). */
 export function LaunchOfferCard({ account, placement }: { account: StudioAccountView; placement: string }) {
   const left = useCountdown(account.offer.endsAt);
-  const growth = ADS_PLANS.find((p) => p.key === STUDIO_LAUNCH_OFFER.plan);
+  const growth = getPlan(STUDIO_LAUNCH_OFFER.plan);
   if (account.launchQuarter?.open) return <LaunchQuarterStudioCard endsAt={account.launchQuarter.endsAt} placement={placement} />;
   if (!account.offer.open || !growth) return null;
   return (
@@ -84,7 +85,7 @@ export function LaunchOfferCard({ account, placement }: { account: StudioAccount
       <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--studio-gold)]">{STUDIO_LAUNCH_OFFER.name} · ends in <span className="tabular-nums">{left}</span></p>
       <h3 className="mt-2 font-display text-2xl text-[oklch(0.97_0.03_80)]">{STUDIO_LAUNCH_OFFER.headline}</h3>
       <p className="mt-1 text-sm text-[oklch(0.86_0.03_80)]">
-        {growth.name} · ${(growth.priceCents / 100).toFixed(0)}/month · +{STUDIO_LAUNCH_OFFER.bonusCredits} bonus credits now
+        {growth.name} · first month ${(offerFirstPaymentCents(LAUNCH_QUARTER) / 100).toFixed(0)}, then ${(growth.priceCents / 100).toFixed(0)}/month
       </p>
       <ul className="mt-3 space-y-1.5 text-sm text-[oklch(0.93_0.03_80)]">
         {STUDIO_LAUNCH_OFFER.stack.map((s) => (
@@ -98,7 +99,7 @@ export function LaunchOfferCard({ account, placement }: { account: StudioAccount
   );
 }
 
-/** 402 paywall: the launch offer if its window is open, else plans (Scale anchor, Growth recommended, Starter) + a top-up. */
+/** 402 paywall: the launch offer if its window is open, else plans for sale (Starter, Ozzy Ad Department recommended) + a top-up. */
 export function PaywallCard({ account, neededCredits, onClose }: { account: StudioAccountView; neededCredits: number; onClose: () => void }) {
   if (account.offer.open || account.launchQuarter?.open) {
     return (
@@ -108,8 +109,7 @@ export function PaywallCard({ account, neededCredits, onClose }: { account: Stud
       </div>
     );
   }
-  const order = ["scale", "growth", "starter"] as const;
-  const plans = order.map((k) => ADS_PLANS.find((p) => p.key === k)).filter((p): p is (typeof ADS_PLANS)[number] => Boolean(p));
+  const plans = PLANS_FOR_SALE.filter((p) => p.key !== "agency");
   const topup = ADS_TOPUPS.find((t) => t.key === "topup_10");
   return (
     <section className="studio-rise rounded-2xl border border-white/12 bg-[oklch(0.18_0.07_295/0.92)] p-4 sm:p-5" aria-label="Get credits">
@@ -122,15 +122,15 @@ export function PaywallCard({ account, neededCredits, onClose }: { account: Stud
         </div>
         <button type="button" onClick={onClose} className="text-xs text-[oklch(0.8_0.03_290)] underline underline-offset-4">Close</button>
       </div>
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {plans.map((p) => {
-          const rec = p.key === "growth";
+          const rec = Boolean(p.recommended);
           return (
             <div key={p.key} className={`relative flex flex-col rounded-xl border p-3 ${rec ? "border-[var(--studio-gold)] bg-[oklch(0.25_0.09_295/0.9)]" : "border-white/10 bg-black/20"}`}>
               {rec && <span className="absolute -top-2.5 left-3 inline-flex items-center gap-1 rounded-full bg-[var(--studio-gold)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#2a0f10]"><Sparkles className="size-3" />Recommended</span>}
               <p className="text-sm font-semibold text-[oklch(0.97_0.03_80)]">{p.name}</p>
               <p className="font-display text-2xl text-[oklch(0.97_0.03_80)]">${(p.priceCents / 100).toFixed(0)}<span className="text-sm text-[oklch(0.8_0.03_290)]">/mo</span></p>
-              <p className="mb-3 text-xs text-[oklch(0.84_0.03_80)]">{p.monthlyCredits} credits · about {Math.floor(p.monthlyCredits / 5)} videos · own footage up to 90s</p>
+              <p className="mb-3 text-xs text-[oklch(0.84_0.03_80)]">{p.unlimited ? `${unlimitedLine(p)} · 6 fresh ads every Monday` : `${p.monthlyCredits} credits · about ${Math.floor(p.monthlyCredits / 5)} videos · own footage up to 90s`}</p>
               <div className="mt-auto"><CheckoutButton primary={rec} label={`Choose ${p.name}`} body={{ kind: "plan", key: p.key, placement: "studio_paywall" }} /></div>
             </div>
           );

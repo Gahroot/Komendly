@@ -14,12 +14,13 @@ import { enqueueJob } from "./jobs";
 import { normalizeUrl, PRIORITY } from "./run";
 import { isWebmailDomain } from "./referrals";
 import { AdsHttpError } from "./workspace";
+import { ENCORE_STATIC, encoreState, ON_CLICK_STATIC } from "@/lib/kly/encore";
 
 export const GIFT_STATIC_COUNT = 3;
 export const PARTNER_DEMO_DEFAULT = 3;
 const GIFTS_PER_HOUR = 5;
 
-export type GiftSource = "trial_ready" | "paid_monthly" | "partner_demo" | "admin_outreach";
+export type GiftSource = "trial_ready" | "paid_monthly" | "partner_demo" | "admin_outreach" | "outbound";
 export type GiftStatus = "pending" | "generating" | "ready" | "failed";
 
 export const CreateGiftSchema = z.object({
@@ -195,6 +196,8 @@ export interface GiftView {
   ads: GiftAdView[];
   expected: number;
   source: string;
+  /** Outbound only: the 2 extra ads Ozzy draws live once a real person opens the page. */
+  encore: "none" | "drawing" | "done" | "failed";
 }
 
 /** Cold-outbound hook gifts carry one ad; every other gift pack has 3. */
@@ -217,15 +220,33 @@ export async function giftView(gift: GiftRow): Promise<GiftView> {
         select: {
           status: true,
           extraction: true,
+          staticCount: true,
           ads: { where: { kind: "static", status: "ready" }, orderBy: { index: "asc" }, include: { assets: { where: { mime: { startsWith: "image/" } } } } },
         },
       })
     : null;
   const domain = new URL(gift.recipientUrl).hostname.replace(/^www\./, "");
+  // Kly on-click gift: no run until a real person opens the page, then one 3-ad run (no encore).
+  const onClick = gift.source === "outbound" && (!gift.runId || (run?.staticCount ?? 0) >= ON_CLICK_STATIC);
   const ads: GiftAdView[] = (run?.ads ?? []).flatMap((ad) => {
     const asset = ad.assets.find((a) => a.ratio === "1:1") ?? ad.assets.find((a) => a.ratio !== "preview") ?? ad.assets[0];
     return asset ? [{ id: ad.id, headline: ad.headline, imageUrl: `/api/ads/gift-public/${gift.token}/img/${asset.id}`, width: asset.width, height: asset.height }] : [];
-  }).slice(0, giftExpected(gift.source));
+  }).slice(0, onClick ? ON_CLICK_STATIC : giftExpected(gift.source));
+  // Outbound encore: up to 2 more ads from a second gift run, appended after the hook ad.
+  const extra = gift.source === "outbound" && gift.extraRunId
+    ? await prisma.adRun.findUnique({
+        where: { id: gift.extraRunId },
+        select: { status: true, ads: { where: { kind: "static", status: "ready" }, orderBy: { index: "asc" }, include: { assets: { where: { mime: { startsWith: "image/" } } } } } },
+      })
+    : null;
+  const encore = onClick ? "done" : gift.source === "outbound" ? encoreState(extra, gift.extraRunId) : "none";
+  const extraAds: GiftAdView[] = (extra?.ads ?? []).flatMap((ad) => {
+    const asset = ad.assets.find((a) => a.ratio === "1:1") ?? ad.assets.find((a) => a.ratio !== "preview") ?? ad.assets[0];
+    return asset ? [{ id: ad.id, headline: ad.headline, imageUrl: `/api/ads/gift-public/${gift.token}/img/${asset.id}`, width: asset.width, height: asset.height }] : [];
+  }).slice(0, ENCORE_STATIC);
+  const allAds = [...ads, ...extraAds];
+  const runOver = gift.status === "ready" || gift.status === "failed" || (run && ["completed", "partial", "failed", "canceled"].includes(run.status));
+  const expected = onClick ? (runOver ? allAds.length : ON_CLICK_STATIC) : gift.source !== "outbound" ? giftExpected(gift.source) : encore === "done" || encore === "failed" ? allAds.length : 1 + ENCORE_STATIC;
   const runDone = run && ["completed", "partial"].includes(run.status);
   const runFailed = run && ["failed", "canceled"].includes(run.status);
   // Engine owns AdsGift.status; fall back to the run's state if it hasn't written it yet.
@@ -245,9 +266,10 @@ export async function giftView(gift: GiftRow): Promise<GiftView> {
     viewedAt: gift.viewedAt?.toISOString() ?? null,
     claimedAt: gift.claimedAt?.toISOString() ?? null,
     createdAt: gift.createdAt.toISOString(),
-    ads,
-    expected: giftExpected(gift.source),
+    ads: allAds,
+    expected,
     source: gift.source,
+    encore,
   };
 }
 

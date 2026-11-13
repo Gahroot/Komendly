@@ -30,6 +30,7 @@ const nextConfig: NextConfig = {
     "/twitter-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
     "/blog/[slug]/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
     "/gift/[token]/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
+    "/api/ads/gift-public/[token]/preview": ["./src/lib/og/fonts/**", "./public/brand/**"],
     "/s/[token]/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
     "/ozzy-studio/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
   },
@@ -55,7 +56,7 @@ const nextConfig: NextConfig = {
       },
       {
         // Public marketing pages only: never cache API, account or admin responses
-        source: "/((?!api|ads|admin|dashboard|checkout|login|register|ozzy-lab|verify-email|test-video|r/|gift/|partners/apply|studio|s/|_next).+)",
+        source: "/((?!api|ads|admin|dashboard|checkout|login|register|ozzy-lab|verify-email|test-video|r/|g/|u/|gift/|partners/apply|studio|s/|_next).+)",
         headers: [
           {
             key: "Cache-Control",
@@ -117,11 +118,11 @@ const nextConfig: NextConfig = {
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
-        source: "/ads/:area(app|billing|brands|runs|start|login|signup|refer|gifts|partner)/:path*",
+        source: "/ads/:area(app|billing|brands|runs|start|login|signup|refer|gifts|partner|coach)/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
-        source: "/ads/:area(app|billing|brands|runs|start|login|signup|refer|gifts|partner)",
+        source: "/ads/:area(app|billing|brands|runs|start|login|signup|refer|gifts|partner|coach)",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {

@@ -1,6 +1,6 @@
 // Lifecycle email copy: facts the AI may use, the strict prompt, a validator, and fixed fallbacks.
 // Pure; shared by engine (writes/sends) and tests.
-import { ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE, offerSavingsCents, UNLOCK_PACK } from "../billing-config";
+import { ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS, FOUNDING_FAIR_USE, getPlan, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE, offerFirstPaymentCents, offerSavingsCents, UNLOCK_PACK } from "../billing-config";
 import { REFERRAL_FACTS } from "./facts";
 import { isFreshKind, isStartKind, type LifecycleKind } from "./select";
 
@@ -57,7 +57,7 @@ function brandFit(name: string | null, room: number): string | null {
 }
 
 export const PRICE_FACTS = {
-  launchQuarter: `${LAUNCH_QUARTER.name}: ${usd(LAUNCH_QUARTER.priceCents)} for 3 months (${LAUNCH_QUARTER.creditsPerPeriod} credits per quarter, +${LAUNCH_QUARTER.firstPeriodBonus} bonus on the first one), only within ${LAUNCH_QUARTER.windowHours} hours after the free ads were ready, saves ${usd(offerSavingsCents(LAUNCH_QUARTER))} vs monthly`,
+  launchQuarter: `Launch offer: the first month of Ozzy Ad Department for ${usd(offerFirstPaymentCents(LAUNCH_QUARTER))} instead of ${usd(LAUNCH_QUARTER.priceCents)} (then ${usd(LAUNCH_QUARTER.priceCents)}/month, cancel anytime), only within ${LAUNCH_QUARTER.windowHours} hours after the free ads were ready. Ozzy Ad Department = their AI ad department: 6 fresh ads every Monday (5 static + 1 animated), unlimited Ad Packs and Ozzy Studio videos (${FOUNDING_FAIR_USE.toLowerCase()}), and Ozzy Ad Coach (upload Ads Manager results, Ozzy says what to keep or kill and makes more like the winners)`,
   starter: starter ? `${starter.name}: ${usd(starter.priceCents)}/month, ${starter.monthlyCredits} credits/month, cancel anytime` : "",
   topup: topup ? `One-time pack: ${topup.name} for ${usd(topup.priceCents)}, no subscription` : "",
   guarantee: LAUNCH_QUARTER_GUARANTEE,
@@ -80,7 +80,7 @@ export const PRICE_FACTS = {
 
 /** Dollar amounts the copy may mention (anything else = invented price). */
 export const ALLOWED_PRICES = new Set(
-  [usd(UNLOCK_PACK.priceCents), usd(LAUNCH_QUARTER.priceCents), usd(offerSavingsCents(LAUNCH_QUARTER)), ...ADS_PLANS.map((p) => usd(p.priceCents)), ...ADS_TOPUPS.map((t) => usd(t.priceCents))],
+  [usd(UNLOCK_PACK.priceCents), usd(LAUNCH_QUARTER.priceCents), usd(offerFirstPaymentCents(LAUNCH_QUARTER)), usd(offerSavingsCents(LAUNCH_QUARTER)), ...ADS_PLANS.map((p) => usd(p.priceCents)), ...ADS_TOPUPS.map((t) => usd(t.priceCents))],
 );
 
 function hoursLeft(ctx: CopyContext, now: Date): number | null {
@@ -93,11 +93,11 @@ const STAGE: Record<LifecycleKind, string> = {
   start_nudge_1h: "Confirmed their email about an hour ago but has not pasted their website yet, so their free ads have not started. Goal: get them to paste their website now. It takes a few minutes and Ozzy does the work. No prices.",
   start_nudge_1d: "Confirmed their email a day ago and still has not started their free ads. Goal: remove friction: they only need their website address (homepage is fine, no logo or photos needed); Ozzy reads the site and makes the ads in their brand. No prices.",
   start_nudge_3d: "Confirmed their email 3 days ago, never started their free ads. Last friendly reminder: the free pack is still waiting. Short. Say this is the last reminder. No prices.",
-  ads_ready: "Their free trial ads just finished; their best ad is shown as a big image above your text, with 3 more under it. Goal: get them to open their ads. Subject like \"Your N ads for <brand> are ready\". One short line on the Launch Quarter being open for 72 hours.",
-  how_to_run: "Their best ad is shown as a big image above your text. Their free ads were ready ~24 hours ago and they have not bought. Goal: one concrete, practical tip on how to test these ads on Meta for THEIR brand (e.g. run 3-5 ads in one ad set with a small daily budget, kill losers after a few days), then what a paid plan unlocks for them. Mention the Launch Quarter is still open. The button opens a step-by-step launch guide on their results page; their ZIP download includes the text to paste for each ad.",
-  offer_24h: "Their best ad is shown as a big image above your text. The Launch Quarter offer closes in about 24 hours. Goal: a clear, calm reminder: more ads like this one for <brand>, the real price and the guarantee. No hype. Subject names the brand.",
-  last_chance: "Their best ad is shown as a big image above your text. The Launch Quarter offer closes in about 2 hours (real deadline). Goal: last reminder; also mention the Starter monthly plan as the smaller option that stays available after. Subject names the brand.",
-  day7_downsell: "Their best ad is shown as a big image above your text. A week since their free ads; the Launch Quarter has ended. Goal: one small, low-pressure offer from FACTS (the one-time pack), nothing else. Do NOT mention the Launch Quarter or monthly plans. Subject names the brand.",
+  ads_ready: "Their free trial ads just finished; their best ad is shown as a big image above your text, with 3 more under it. Goal: get them to open their ads. Subject like \"Your N ads for <brand> are ready\". One short line on the launch offer being open for 72 hours.",
+  how_to_run: "Their best ad is shown as a big image above your text. Their free ads were ready ~24 hours ago and they have not bought. Goal: one concrete, practical tip on how to test these ads on Meta for THEIR brand (e.g. run 3-5 ads in one ad set with a small daily budget, kill losers after a few days), then what a paid plan unlocks for them. Mention the launch offer is still open. The button opens a step-by-step launch guide on their results page; their ZIP download includes the text to paste for each ad.",
+  offer_24h: "Their best ad is shown as a big image above your text. The launch offer closes in about 24 hours. Goal: a clear, calm reminder: more ads like this one for <brand>, the real price and the guarantee. No hype. Subject names the brand.",
+  last_chance: "Their best ad is shown as a big image above your text. The launch offer closes in about 2 hours (real deadline). Goal: last reminder; also mention the Starter monthly plan as the smaller option that stays available after. Subject names the brand.",
+  day7_downsell: "Their best ad is shown as a big image above your text. A week since their free ads; the launch offer has ended. Goal: one small, low-pressure offer from FACTS (the one-time pack), nothing else. Do NOT mention the launch offer or monthly plans. Subject names the brand.",
   day10_free_ads: "10 days since their free ads; they have not bought. Goal: tell them how to earn more free ads without paying: Give 10, get 10 with their own invite link, and Gift a pack. Friendly, no pressure, no prices.",
   day14_tip: "Two weeks since their free ads. Goal: one practical, specific tip for running ads for THEIR brand (e.g. which of their ad headlines to test first and why, or matching the ad to the landing page), then a soft mention of the Starter plan or a one-time credit pack.",
   day21_examples: "Three weeks since their free ads. Goal: invite them to see real ads other small businesses made with Komendly (the Ad examples gallery and Ad of the week) and to feature their own ad. No invented stats or testimonials.",
@@ -141,7 +141,7 @@ export function buildCopyPrompt(ctx: CopyContext, now: Date = new Date()): strin
     ...(ctx.kind === "day30_checkin" ? [PRICE_FACTS.yearly, PRICE_FACTS.starter, ctx.agencyLike ? `Their site looks like an agency or freelancer. ${PRICE_FACTS.agency}` : `${PRICE_FACTS.partner} ${PRICE_FACTS.linksBelow}`] : []),
     ...(isStartKind(ctx.kind) ? [PRICE_FACTS.freeTrial] : []),
     ...(isFreshKind(ctx.kind) ? [ctx.freshAd ? PRICE_FACTS.freshLocked : PRICE_FACTS.freshNone, PRICE_FACTS.starter, PRICE_FACTS.topup] : []),
-    ...(left !== null && LQ_KINDS.has(ctx.kind) ? [`Launch Quarter closes in about ${left} hours.`] : []),
+    ...(left !== null && LQ_KINDS.has(ctx.kind) ? [`The launch offer closes in about ${left} hours.`] : []),
     ctx.readyAdCount ? `They have ${ctx.readyAdCount} ready free ads.` : "",
     ctx.lockedLabel ? `Separately, ${ctx.lockedLabel} are ready but locked (unlock with a paid plan); never add them to the free ad count.` : "",
   ].filter(Boolean);
@@ -172,7 +172,7 @@ export function checkCopy(c: EmailCopy, ctx: CopyContext): string | null {
   const pct = ctx.kind === "free_ads_ways" || ctx.kind === "day30_checkin" ? all.replace(/\b30%/g, "") : all;
   if (/%/.test(pct) || /\bcoupon\b|\bpromo code\b|\bdiscount code\b/i.test(all)) return "invented discount";
   for (const m of all.match(/\$\d[\d,]*(\.\d\d)?/g) ?? []) if (!ALLOWED_PRICES.has(m.replace(/,/g, ""))) return `unknown price ${m}`;
-  if (!LQ_KINDS.has(ctx.kind) && ctx.kind !== "refreshed_pack" && ctx.kind !== "verify_nudge" && /launch quarter/i.test(all)) return "mentions closed offer";
+  if (!LQ_KINDS.has(ctx.kind) && ctx.kind !== "refreshed_pack" && ctx.kind !== "verify_nudge" && /launch quarter|launch offer/i.test(all)) return "mentions closed offer";
   if (isFreshKind(ctx.kind) && !ctx.freshAd && /\bnew ad\b|made you|made (a|one) (new )?ad/i.test(all)) return "claims a fresh ad that wasn't made";
   if (/\b\d{2,}\s*(\+\s*)?(businesses|customers|brands|users|companies)\b/i.test(all)) return "invented social proof";
   if (ctx.kind === "verify_nudge" && ctx.code && !all.includes(ctx.code)) {
@@ -185,7 +185,7 @@ export function checkCopy(c: EmailCopy, ctx: CopyContext): string | null {
 export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCopy {
   const hi = `Hi ${ctx.firstName ?? "there"},`;
   const brand = ctx.brandName ?? "your brand";
-  const lq = `${LAUNCH_QUARTER.name} (${usd(LAUNCH_QUARTER.priceCents)} for 3 months)`;
+  const lq = `launch offer (your first month of ${getPlan(LAUNCH_QUARTER.plan)?.name ?? "Ozzy Ad Department"} for ${usd(offerFirstPaymentCents(LAUNCH_QUARTER))})`;
   const st = starter ? `${starter.name} at ${usd(starter.priceCents)}/month` : "the Starter plan";
   const left = hoursLeft(ctx, now);
   /** Subject around the brand (cut to fit MAX_SUBJECT), or `plain` when there is no brand. */
@@ -250,7 +250,7 @@ export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCop
       return {
         subject: sub((x) => `Your ${n} ads for ${x} are ready`, `Your ${n} free ads are ready`),
         preheader: `Made from your website${ctx.lockedLabel ? `, plus ${ctx.lockedLabel} you can unlock` : ""}.`,
-        paragraphs: [hi, `Here's my favourite of the ${n} ads I made for ${brand}${ctx.lockedLabel ? `, plus ${ctx.lockedLabel} you can unlock` : ""}. The rest are waiting for you.`, `Want more? The ${lq} is open for ${LAUNCH_QUARTER.windowHours} hours.`],
+        paragraphs: [hi, `Here's my favourite of the ${n} ads I made for ${brand}${ctx.lockedLabel ? `, plus ${ctx.lockedLabel} you can unlock` : ""}. The rest are waiting for you.`, `Want fresh ads every Monday? The ${lq} is open for ${LAUNCH_QUARTER.windowHours} hours.`],
         ctaLabel: "See all my ads",
       };
     }
@@ -265,7 +265,7 @@ export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCop
       return {
         subject: sub((x) => `${x}: launch offer ends tomorrow`, "Your launch offer ends tomorrow"),
         preheader: `${lq} closes in about ${left ?? 24} hours.`,
-        paragraphs: [hi, `Want more ads like this one for ${brand}? The ${lq} closes in about ${left ?? 24} hours.`, `${LAUNCH_QUARTER.creditsPerPeriod} credits a quarter, plus ${LAUNCH_QUARTER.firstPeriodBonus} bonus on the first. ${LAUNCH_QUARTER_GUARANTEE}`],
+        paragraphs: [hi, `Want more ads like this one for ${brand}? The ${lq} closes in about ${left ?? 24} hours.`, `6 fresh ads every Monday, unlimited ads and Studio videos, and a coach that tells you what's working. ${LAUNCH_QUARTER_GUARANTEE}`],
         ctaLabel: "Get the launch offer",
       };
     case "last_chance":

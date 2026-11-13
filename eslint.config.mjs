@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     // Separate packages with their own tooling.
     "engine/**",
     "blog-engine/**",
+    "packages/**",
   ]),
   {
     rules: {

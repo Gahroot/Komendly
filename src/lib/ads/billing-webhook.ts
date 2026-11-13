@@ -147,7 +147,7 @@ async function onInvoicePaid(inv: Stripe.Invoice) {
 async function grantInvoiceExtras(inv: Stripe.Invoice, ws: { id: string; ownerId: string }, planKey: Parameters<typeof planTestimonialsFor>[0], offer: AdsLaunchOffer | undefined) {
   if (!inv.id || inv.amount_paid <= 0) return; // $0 (free-month trial start) invoices earn nothing extra
   const meta = inv.parent?.subscription_details?.metadata;
-  if (inv.billing_reason === "subscription_create" && meta?.offer === STUDIO_LAUNCH_OFFER.key) {
+  if (inv.billing_reason === "subscription_create" && meta?.offer === STUDIO_LAUNCH_OFFER.key && STUDIO_LAUNCH_OFFER.bonusCredits > 0) {
     await applyCreditMutation({ workspaceId: ws.id, reason: "offer_bonus", delta: STUDIO_LAUNCH_OFFER.bonusCredits, stripeRef: `offer_bonus:${inv.id}`, note: `${STUDIO_LAUNCH_OFFER.name} bonus` });
   }
   const periodic = inv.billing_reason === "subscription_create" || inv.billing_reason === "subscription_cycle" || inv.billing_reason === "subscription_update";

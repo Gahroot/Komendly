@@ -7,7 +7,7 @@ const CELL = 8;
 const RIDGE = ridgeHeights(200, 29, 5, 3);
 
 const COLS: { title: string; links: { href: string; label: string }[] }[] = [
-  { title: "Make", links: [{ href: "/#studio-url", label: "Start free" }, { href: "/ozzy-studio", label: "Ozzy Studio" }, { href: "/#examples", label: "Examples" }, { href: "/pricing", label: "Pricing" }, { href: "/login", label: "Sign in" }] },
+  { title: "Make", links: [{ href: "/#studio-url", label: "Start free" }, { href: "/ozzy-studio", label: "Ozzy Studio" }, { href: "/examples", label: "Examples" }, { href: "/agents", label: "For AI agents" }, { href: "/pricing", label: "Pricing" }, { href: "/login", label: "Sign in" }] },
   { title: "Read", links: [{ href: "/blog", label: "The Journal" }, { href: "/ad-of-the-week", label: "Ad of the week" }, { href: "/ad-examples", label: "Ad examples" }, { href: "/testimonials", label: "Video testimonials" }, { href: "/partners", label: "Partner program" }] },
   { title: "Legal", links: [{ href: "/privacy", label: "Privacy" }, { href: "/terms", label: "Terms" }, { href: "/terms#refunds", label: "Refunds" }] },
 ];

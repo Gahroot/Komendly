@@ -11,6 +11,11 @@ import { awarenessMixFor, creditCost, domainOf, normalizeUrl, PRIORITY, sha256 }
 import { TRIAL_REASON_MESSAGES } from "./run-labels";
 import { markGiftClaimed, trialStaticCountFor } from "./referrals";
 import { AdsHttpError, isPaidWorkspace } from "./workspace";
+import { RunSeedSchema } from "./coach/contracts";
+import { BRAND_LIMIT_MESSAGE, brandAllowed, concurrentLimit, isUnlimitedPlan, unlimitedBrandLimit, UNLIMITED_BUSY_MESSAGE } from "./billing-config";
+
+/** Unlimited fair use: an Ad Pack still being made (Weekly Drop and gift runs are not counted). */
+const IN_PROGRESS_RUN = ["extracting", "awaiting_confirm", "queued", "generating"] as const;
 
 const CONFIRMED_STATUSES: readonly string[] = ["queued", "generating", "completed", "partial"];
 
@@ -25,6 +30,8 @@ export const StartRunSchema = z.object({
   brandProfileId: z.string().max(64).optional(),
   /** Force a fresh crawl even when a brand profile exists for this domain. */
   reextract: z.boolean().optional(),
+  /** Planning seed ("Make 5 more like the winner", Ozzy Ad Coach). Optional: older clients never send it. */
+  seed: RunSeedSchema.optional(),
 });
 export type StartRunInput = z.infer<typeof StartRunSchema>;
 
@@ -108,7 +115,22 @@ export async function startRun(input: StartRunInput, ctx: { user: User; workspac
   const ratios = input.ratios ?? ["4:5"];
   const levels = input.awareness ?? ["problem_aware", "solution_aware"];
   const motionCount = input.motion ? 1 : 0;
-  const cost = creditCost({ staticCount, ratios, motionCount });
+  // Unlimited plan: Ad Packs cost 0 credits; fair use = one standard run in progress at a time.
+  const unlimited = isUnlimitedPlan(workspace);
+  const inProgress = { workspaceId: workspace.id, isTrial: false, kind: "standard", status: { in: [...IN_PROGRESS_RUN] } };
+  const maxAtOnce = concurrentLimit(workspace);
+  if (unlimited && (await prisma.adRun.count({ where: inProgress })) >= maxAtOnce) throw new AdsHttpError(409, "busy", UNLIMITED_BUSY_MESSAGE);
+  // Unlimited covers the member's own business(es): Ad Department 1, Agency 10. Gift packs (other people's sites) don't count.
+  const brandLimit = unlimitedBrandLimit(workspace);
+  if (brandLimit !== null) {
+    // Brand domains are stored after redirects; the URLs people typed are matched too (same business either way).
+    const brands = await prisma.brandProfile.findMany({ where: { workspaceId: workspace.id, runs: { some: { kind: { notIn: ["gift"] } } } }, select: { domain: true, runs: { where: { kind: { notIn: ["gift"] } }, select: { url: true }, take: 20 } } });
+    const typed = brands.flatMap((b) => b.runs.map((r) => { try { return domainOf(r.url); } catch { return b.domain; } }));
+    // One business = one brand profile; a typed alias of it is allowed but doesn't count as another business.
+    const allowed = new Set([...brands.map((b) => b.domain), ...typed]).has(domain) || brandAllowed(domain, brands.map((b) => b.domain), brandLimit);
+    if (!allowed) throw new AdsHttpError(402, "brand_limit", BRAND_LIMIT_MESSAGE(brandLimit), { upgradeUrl: "/ads/pricing" });
+  }
+  const cost = unlimited ? 0 : creditCost({ staticCount, ratios, motionCount });
   // Reuse the saved brand (explicit "Generate more" or same domain) unless a re-crawl was asked for.
   const reused = brand && !input.reextract ? await reusedExtraction(brand, url, goal) : null;
   const skipExtraction = reused !== null;
@@ -131,6 +153,14 @@ export async function startRun(input: StartRunInput, ctx: { user: User; workspac
       ...fpHashes,
     },
   });
+  if (unlimited) {
+    // Double-click race: the older run wins, this one is dropped.
+    const firsts = await prisma.adRun.findMany({ where: inProgress, orderBy: { createdAt: "asc" }, select: { id: true }, take: maxAtOnce });
+    if (!firsts.some((r) => r.id === run.id)) {
+      await prisma.adRun.delete({ where: { id: run.id } });
+      throw new AdsHttpError(409, "busy", UNLIMITED_BUSY_MESSAGE);
+    }
+  }
   try {
     await reserveCredits(workspace.id, run.id, cost);
   } catch (error) {
@@ -148,7 +178,7 @@ export async function startRun(input: StartRunInput, ctx: { user: User; workspac
     runId: run.id,
     workspaceId: workspace.id,
     priority: PRIORITY.paid,
-    payload: { url },
+    payload: { url, ...(input.seed ? { seed: input.seed } : {}) },
   });
   return { runId: run.id, resumed: false };
 }

@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/page-header";
+import { AdminEmpty } from "../_components/admin-empty";
 
 interface User {
   id: string;
@@ -115,7 +116,7 @@ export default function UsersPage() {
       case "starter":
         return "bg-success/20 text-success border-success/30";
       default:
-        return "bg-zinc-500/20 text-muted-foreground border-zinc-500/30";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
@@ -130,13 +131,13 @@ export default function UsersPage() {
       case "canceled":
         return "bg-destructive/20 text-destructive border-destructive/30";
       default:
-        return "bg-zinc-500/20 text-muted-foreground border-zinc-500/30";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow="Admin" title="Users" description="Manage platform users" />
+      <PageHeader eyebrow="Ozzy HQ" title="Users" description="Everyone with an account, across Ad Packs, Ozzy Studio and Testimonials." />
 
       {/* Search */}
       <Card >
@@ -206,8 +207,8 @@ export default function UsersPage() {
                   ))
                 ) : data?.users.length === 0 ? (
                   <TableRow className="border-border">
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                      No users found
+                    <TableCell colSpan={7}>
+                      <AdminEmpty>No users match that. Try another search.</AdminEmpty>
                     </TableCell>
                   </TableRow>
                 ) : (

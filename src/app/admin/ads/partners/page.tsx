@@ -10,6 +10,7 @@ import { AdminAdsShell } from "../_components/admin-ads-shell";
 import { InputActionForm } from "../_components/input-action-form";
 import { PostActionButton } from "../_components/post-action-button";
 import { StatCard } from "../_components/stat-card";
+import { AdminEmpty } from "../../_components/admin-empty";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +60,7 @@ export default async function AdminPartnersPage() {
               </div>
             );
           })}
-          {applied.length === 0 && <p className="text-sm text-muted-foreground">No applications waiting.</p>}
+          {applied.length === 0 && <AdminEmpty>No applications waiting. Ozzy will shout when one lands.</AdminEmpty>}
         </CardContent>
       </Card>
 
@@ -91,7 +92,7 @@ export default async function AdminPartnersPage() {
                   </TableRow>
                 );
               })}
-              {active.length === 0 && <TableRow><TableCell colSpan={8} className="text-muted-foreground">No partners yet.</TableCell></TableRow>}
+              {active.length === 0 && <TableRow><TableCell colSpan={8}><AdminEmpty>No partners yet.</AdminEmpty></TableCell></TableRow>}
             </TableBody>
           </Table>
         </CardContent>
@@ -121,7 +122,7 @@ export default async function AdminPartnersPage() {
                   </TableRow>
                 );
               })}
-              {commissions.length === 0 && <TableRow><TableCell colSpan={7} className="text-muted-foreground">No commissions yet.</TableCell></TableRow>}
+              {commissions.length === 0 && <TableRow><TableCell colSpan={7}><AdminEmpty>No commissions yet.</AdminEmpty></TableCell></TableRow>}
             </TableBody>
           </Table>
         </CardContent>

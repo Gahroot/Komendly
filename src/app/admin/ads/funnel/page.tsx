@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCents } from "@/lib/ads/billing-format";
 import type { FunnelRow } from "@/lib/ads/funnel";
-import { loadSourceFunnel, loadStudioFunnel, parseFunnelQuery } from "@/lib/ads/funnel-queries";
+import { loadPricingDropoff, loadSourceFunnel, loadStudioFunnel, parseFunnelQuery } from "@/lib/ads/funnel-queries";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
 
 export const dynamic = "force-dynamic";
@@ -15,8 +15,48 @@ export default async function AdminAdsFunnelPage({ searchParams }: { searchParam
   return (
     <AdminAdsShell title="Funnel by source" description="Landed → signed up → trial finished → paid → still paying, by first-touch source. Sign-ups and landings in range; later steps counted up to today.">
       <Funnel from={q.from} to={q.to} by={q.by} campaign={sp.campaign} />
+      <div className="mt-6"><PricingDropoffCard from={q.from} to={q.to} /></div>
       <div className="mt-6"><StudioFunnelCard /></div>
     </AdminAdsShell>
+  );
+}
+
+/** Pricing & offer drop-off in the chosen window (internal accounts excluded). */
+async function PricingDropoffCard({ from, to }: { from: Date; to: Date }) {
+  const d = await loadPricingDropoff(from, to);
+  const yes = (b: boolean) => (b ? "yes" : "no");
+  return (
+    <Card>
+      <CardHeader><CardTitle>Pricing &amp; offer drop-off</CardTitle></CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">Unique people in the window (each step counted on its own, not nested). % = vs previous step. Pricing views tracked in our DB since Nov 2026 (/pricing, /ads/pricing, /ads/billing, /dashboard/billing).{d.botViews > 0 ? ` Excluded ${d.botViews} Meta-review views.` : ""}</p>
+        <Table>
+          <TableHeader><TableRow><TableHead>Step</TableHead><TableHead>People</TableHead><TableHead>vs previous</TableHead></TableRow></TableHeader>
+          <TableBody>
+            {d.steps.map((s) => (
+              <TableRow key={s.key}>
+                <TableCell className="font-medium">{s.label}</TableCell>
+                <TableCell>{s.count}{s.key === "viewed" && <span className="text-muted-foreground"> ({d.viewedSignedIn} signed in · {d.viewedSignedOut} signed out)</span>}</TableCell>
+                <TableCell>{pct(s.fromPrev)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <Table>
+          <TableHeader><TableRow><TableHead>Last viewed</TableHead><TableHead>Page</TableHead><TableHead>Signed in</TableHead><TableHead>Had free pack</TableHead><TableHead>Clicked</TableHead><TableHead>Checkout</TableHead><TableHead>Paid</TableHead></TableRow></TableHeader>
+          <TableBody>
+            {d.recent.map((r) => (
+              <TableRow key={r.person}>
+                <TableCell>{r.lastViewAt.toISOString().slice(0, 16).replace("T", " ")}</TableCell>
+                <TableCell>{r.page}</TableCell><TableCell>{yes(r.signedIn)}</TableCell><TableCell>{yes(r.hadFreePack)}</TableCell>
+                <TableCell>{r.clicked.join(", ") || "—"}</TableCell><TableCell>{yes(r.checkedOut)}</TableCell><TableCell>{yes(r.paid)}</TableCell>
+              </TableRow>
+            ))}
+            {d.recent.length === 0 && <TableRow><TableCell colSpan={7} className="text-muted-foreground">No pricing views in this range.</TableCell></TableRow>}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
   );
 }
 

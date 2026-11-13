@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { trackAdsEvent } from "@/lib/ads/events";
+import { BOT_UA } from "@/lib/ads/pricing-funnel";
 import { clientIpFromHeaders, coarseIpNet, isMetaIp } from "@/lib/ads/meta-ip";
 import { ANON_ID_COOKIE, EXP_COOKIE, parseAssignments } from "@/lib/analytics/experiments";
 import { FBC_COOKIE, FIRST_TOUCH_COOKIE, LAST_TOUCH_COOKIE, parseFirstTouch } from "@/lib/analytics/first-touch";
 
 const LANDED_COOKIE = "kmd_ld";
 const ENGAGED_COOKIE = "kmd_eg";
-const BOT_UA = /bot|crawl|spider|slurp|preview|headless|lighthouse|facebookexternalhit/i;
 
 /**
  * Funnel step 0: one `visit_landed` AdsEvent per anonymous visitor per UTC day, with its attribution.

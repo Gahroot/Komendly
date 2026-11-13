@@ -78,6 +78,8 @@ export interface RunSummary {
   createdAt: string;
   readyCount: number;
   totalCount: number;
+  /** Set for Weekly Drop runs: "Weekly Drop · Nov 17". */
+  title?: string;
 }
 
 export interface WorkspaceView {

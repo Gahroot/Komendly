@@ -8,7 +8,8 @@ const LINK = "hidden rounded-lg px-3 py-2 text-muted-foreground transition-color
 export function StudioNav({ signedIn }: { signedIn: boolean }) {
   const links = [
     { href: "/ozzy-studio", label: "Ozzy Studio (new)" },
-    { href: "/#examples", label: "Examples" },
+    { href: "/examples", label: "Examples" },
+    { href: "/agents", label: "For AI agents" },
     { href: "/pricing", label: "Pricing" },
     { href: "/blog", label: "Blog" },
   ];
@@ -24,7 +25,8 @@ export function StudioNav({ signedIn }: { signedIn: boolean }) {
             Ozzy Studio
             <span className="rounded-full bg-[var(--studio-gold)] px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase leading-none tracking-wider text-[#2a0f10]">New</span>
           </Link>
-          <Link href="/#examples" className={`${LINK} md:inline-block`}>Examples</Link>
+          <Link href="/examples" className={`${LINK} md:inline-block`}>Examples</Link>
+          <Link href="/agents" className={`${LINK} lg:inline-block`}>Agents</Link>
           <Link href="/pricing" className={`${LINK} sm:inline-block`}>Pricing</Link>
           <Link href="/blog" className={`${LINK} md:inline-block`}>Blog</Link>
           {signedIn ? (

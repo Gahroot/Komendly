@@ -2,6 +2,7 @@
 // server; per-user parts (grandfathered plan notice, Launch Kit claim after registration) are client components.
 import { Suspense } from "react";
 import { ShieldCheck } from "lucide-react";
+import { PricingBeacon } from "@/components/analytics/pricing-beacon";
 import { OzzyPricing } from "@/components/billing/ozzy-pricing";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -14,6 +15,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
   return (
     <div className="min-h-screen text-foreground">
       <SiteHeader />
+      <PricingBeacon page="/pricing" />
       <OzzyPricing
         yearly={yearly}
         basePath="/pricing"

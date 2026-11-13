@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/ads/billing-format";
 import { prisma } from "@/lib/prisma";
 import { WORKER_HOST_LABEL, workerHost } from "@/lib/ads/worker-host";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
+import { AdminEmpty } from "../../_components/admin-empty";
 
 export const dynamic = "force-dynamic";
 const STALE_MS = 2 * 60 * 1000;
@@ -69,7 +70,7 @@ async function Engine() {
                     </TableRow>
                   );
                 })}
-                {beats.length === 0 && <TableRow><TableCell colSpan={5} className="text-muted-foreground">No heartbeats yet.</TableCell></TableRow>}
+                {beats.length === 0 && <TableRow><TableCell colSpan={5}><AdminEmpty>No heartbeats yet.</AdminEmpty></TableCell></TableRow>}
               </TableBody>
             </Table>
           </CardContent>

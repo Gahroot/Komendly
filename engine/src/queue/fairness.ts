@@ -36,3 +36,28 @@ export function startLaneLimits(concurrency: number, reserved: number, activeSta
   const otherCap = Math.max(0, concurrency - r - activeOther);
   return { start: free, other: Math.min(free, otherCap) };
 }
+
+/**
+ * Per-type caps (e.g. render_motion: each one runs its own Chrome + ffmpeg; too many at once exhausts the box's
+ * processes/threads, so every render crawls and some fail). Pure: which types may be claimed now, and which of a
+ * claimed batch must go back to the queue because the batch overshot a cap.
+ */
+export function cappedTypes(types: readonly string[], active: readonly string[], caps: Readonly<Record<string, number>>): string[] {
+  return types.filter((t) => {
+    const cap = caps[t];
+    return cap === undefined || active.filter((a) => a === t).length < cap;
+  });
+}
+
+export function overCap<T extends { type: string }>(claimed: readonly T[], active: readonly string[], caps: Readonly<Record<string, number>>): T[] {
+  const left: Record<string, number> = {};
+  for (const [t, cap] of Object.entries(caps)) left[t] = Math.max(0, cap - active.filter((a) => a === t).length);
+  const extra: T[] = [];
+  for (const j of claimed) {
+    const n = left[j.type];
+    if (n === undefined) continue;
+    if (n > 0) left[j.type] = n - 1;
+    else extra.push(j);
+  }
+  return extra;
+}

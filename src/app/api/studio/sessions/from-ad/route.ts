@@ -14,6 +14,7 @@ import { AdsHttpError, adsErrorResponse, isPaidWorkspace, requireWorkspaceMember
 import { claimStudioFreeVideo, revokeStudioFreeVideos } from "@/lib/studio/abuse";
 import { BRIDGE_PLACEMENTS, BRIDGE_STARTERS, bridgePrompt, bridgeTitle, domainOf, pickBridgeAsset, type BridgeStarter } from "@/lib/studio/bridge";
 import { copyObject, studioBridgeEnabled } from "@/lib/studio/bridge-server";
+import { concurrentLimit, isUnlimitedPlan, UNLIMITED_BUSY_MESSAGE } from "@/lib/ads/billing-config";
 import { canStartStudioTurn, STUDIO_TURN_JOB_TYPE, studioKeys, type StudioTurnPayload } from "@/lib/studio/contracts";
 
 const Body = z
@@ -94,7 +95,10 @@ export async function POST(request: NextRequest) {
       await trackAdsEvent("studio_free_blocked", { workspaceId, userId: user.id, props: { reason: guard.reason } });
     }
     const fresh = await prisma.adsWorkspace.findUniqueOrThrow({ where: { id: workspaceId } });
-    const gate = canStartStudioTurn({ priorRenders: 0, sessionFree: freeVideo, freeVideosLeft: fresh.studioFreeVideos, balance: await getBalance(workspaceId), isPaidWorkspace: paid });
+    // Unlimited plan: 0 credits, fair use = one Studio turn in progress per workspace.
+    const unlimited = isUnlimitedPlan(fresh);
+    if (unlimited && (await prisma.studioSession.count({ where: { workspaceId, status: { in: ["queued", "working"] } } })) >= concurrentLimit(fresh)) throw new AdsHttpError(409, "busy", UNLIMITED_BUSY_MESSAGE);
+    const gate = canStartStudioTurn({ priorRenders: 0, sessionFree: freeVideo, freeVideosLeft: fresh.studioFreeVideos, balance: await getBalance(workspaceId), isPaidWorkspace: paid, unlimited });
     if (!gate.ok) {
       // No free video and no credits: open Studio home with the prompt prefilled; sending it shows the paywall.
       const prompt = parsed.data.prompt ?? bridgePrompt({ starter: seed.starter, headline: seed.headline, url: seed.url, hasLogo: false });

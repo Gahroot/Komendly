@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PricingBeacon } from "@/components/analytics/pricing-beacon";
 import { AdsNav } from "@/components/ads/ads-nav";
 import { OzzyPricing, TestimonialPackLinks } from "@/components/billing/ozzy-pricing";
 import { StudioFooter } from "@/components/studio/studio-footer";
@@ -18,6 +19,7 @@ export default async function AdsPricingPage({ searchParams }: { searchParams: P
   return (
     <div className="min-h-screen">
       <AdsNav signedIn={signedIn} />
+      <PricingBeacon page="/ads/pricing" />
       <OzzyPricing
         yearly={yearly}
         basePath="/ads/pricing"

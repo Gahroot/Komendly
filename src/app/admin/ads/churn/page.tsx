@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatDate } from "@/lib/ads/billing-format";
 import { prisma } from "@/lib/prisma";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
+import { AdminEmpty } from "../../_components/admin-empty";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +55,7 @@ async function Churn() {
                 <TableCell className="text-muted-foreground">{reasons.get(r.id) ?? "—"}</TableCell>
               </TableRow>
             ))}
-            {rows.length === 0 && <TableRow><TableCell colSpan={6} className="text-muted-foreground">No churned or past-due workspaces.</TableCell></TableRow>}
+            {rows.length === 0 && <TableRow><TableCell colSpan={6}><AdminEmpty>Nobody&apos;s churned or past due. Good stuff.</AdminEmpty></TableCell></TableRow>}
           </TableBody>
         </Table>
       </CardContent>

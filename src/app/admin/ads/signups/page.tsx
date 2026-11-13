@@ -7,6 +7,7 @@ import { parseFunnelQuery } from "@/lib/ads/funnel-queries";
 import { SIGNUP_STAGES, STAGE_LABEL, parseSignupFilter, type SignupStage } from "@/lib/ads/signups";
 import { loadSignups } from "@/lib/ads/signups-queries";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
+import { AdminEmpty } from "../../_components/admin-empty";
 
 export const dynamic = "force-dynamic";
 
@@ -90,7 +91,7 @@ async function Signups({ sp }: { sp: Search }) {
                   <TableCell className="text-xs">{r.plan}<div className="text-muted-foreground">{r.subscriptionStatus}</div></TableCell>
                 </TableRow>
               ))}
-              {rows.length === 0 && <TableRow><TableCell colSpan={16} className="text-muted-foreground">No sign-ups in this range.</TableCell></TableRow>}
+              {rows.length === 0 && <TableRow><TableCell colSpan={16}><AdminEmpty>No sign-ups in this range. Try a wider one.</AdminEmpty></TableCell></TableRow>}
             </TableBody>
           </Table>
         </CardContent>

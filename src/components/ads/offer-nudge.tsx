@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CalendarClock, Film, ShieldCheck, Smartphone, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BillingActionButton } from "@/app/ads/billing/_components/billing-action-button";
-import { getPlan, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE } from "@/lib/ads/billing-config";
+import { getPlan, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE, offerFirstPaymentCents } from "@/lib/ads/billing-config";
 import type { BonusSummary } from "@/lib/ads/bonus-access";
 import { postOfferEvent } from "@/lib/ads/offer-client";
 import { firstInSession } from "@/lib/ads/offer-session";
@@ -23,9 +23,9 @@ export function OfferNudge({ runId, ready, bonus, remainingMs, onDismiss, valueL
     trackOfferView("early_offer", { ready });
     postOfferEvent("offer_nudge_shown", { placement: "early_offer", runId, ready, offer: LAUNCH_QUARTER.key });
   }, [runId, ready]);
-  const starter = getPlan(LAUNCH_QUARTER.plan);
-  if (!starter) return null;
-  const perMonth = Math.round(LAUNCH_QUARTER.creditsPerPeriod / LAUNCH_QUARTER.intervalMonths);
+  const hero = getPlan(LAUNCH_QUARTER.plan);
+  if (!hero) return null;
+  const today = usd(offerFirstPaymentCents(LAUNCH_QUARTER));
 
   function dismiss() {
     postOfferEvent("offer_dismissed", { placement: "early_offer", runId });
@@ -41,14 +41,17 @@ export function OfferNudge({ runId, ready, bonus, remainingMs, onDismiss, valueL
       </Button>
       <div className="space-y-4 pr-8">
         <div className="space-y-1">
-          <p className="flex items-center gap-2 text-lg font-semibold tracking-tight"><Sparkles className="size-5 text-primary" aria-hidden /> Keep these coming: {perMonth} ads like these every month</p>
+          <p className="flex items-center gap-2 text-lg font-semibold tracking-tight"><Sparkles className="size-5 text-primary" aria-hidden /> Keep these coming: your AI ad department</p>
           <p className="text-sm text-muted-foreground">
-            You just got {ready} {ready === 1 ? "ad" : "ads"} from your site, and Ozzy is still making the rest. The {LAUNCH_QUARTER.name} keeps fresh ones landing: {usd(LAUNCH_QUARTER.priceCents)} for 3 months of {starter.name}, +{LAUNCH_QUARTER.firstPeriodBonus} bonus ads on day one.
+            You just got {ready} {ready === 1 ? "ad" : "ads"} from your site, and Ozzy is still making the rest. {hero.name} keeps fresh ones landing: 6 new ads every Monday, unlimited Ad Packs and Studio videos, and a coach that tells you what&apos;s working. First month {today}, then {usd(hero.priceCents)}/month.
           </p>
         </div>
+        <p className="rounded-lg bg-primary/10 px-3 py-2 text-sm">
+          A freelancer charges about $35 an ad. An agency charges $2,000+ a month. Ozzy makes unlimited ads for {usd(hero.priceCents)}/month{today !== usd(hero.priceCents) ? ` (your first month ${today})` : ""}.
+        </p>
         <ul className="grid gap-2 text-sm sm:grid-cols-3">
-          <li className="flex items-start gap-2"><CalendarClock className="mt-0.5 size-4 shrink-0 text-primary" />{LAUNCH_QUARTER.creditsPerPeriod} new ads every 3 months</li>
-          <li className="flex items-start gap-2"><Smartphone className="mt-0.5 size-4 shrink-0 text-primary" />Stories/Reels 9:16 versions</li>
+          <li className="flex items-start gap-2"><CalendarClock className="mt-0.5 size-4 shrink-0 text-primary" />6 fresh ads every Monday</li>
+          <li className="flex items-start gap-2"><Smartphone className="mt-0.5 size-4 shrink-0 text-primary" />Unlimited ads, one at a time</li>
           <li className="flex items-start gap-2"><Film className="mt-0.5 size-4 shrink-0 text-primary" />{bonus?.locked ? "Unlocks your bonus ads too" : "Animated ads included"}</li>
         </ul>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -57,7 +60,7 @@ export function OfferNudge({ runId, ready, bonus, remainingMs, onDismiss, valueL
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="size-3.5 shrink-0 text-primary" aria-hidden />{LAUNCH_QUARTER_GUARANTEE}</p>
           </div>
           <div className="w-full shrink-0 sm:w-64" onClickCapture={() => postOfferEvent("offer_clicked", { placement: "early_offer", offer: LAUNCH_QUARTER.key, runId })}>
-            <BillingActionButton endpoint="/api/ads-billing/checkout" body={{ kind: "offer", key: LAUNCH_QUARTER.key, placement: "early_offer" }} label={`Get the ${LAUNCH_QUARTER.name} for ${usd(LAUNCH_QUARTER.priceCents)}`} />
+            <BillingActionButton endpoint="/api/ads-billing/checkout" body={{ kind: "offer", key: LAUNCH_QUARTER.key, placement: "early_offer" }} label={`Start for ${today}`} />
           </div>
         </div>
         <p className="text-xs text-muted-foreground">

@@ -8,9 +8,10 @@ export interface ExampleVideo {
 }
 
 export const EXAMPLE_VIDEOS: ExampleVideo[] = [
-  { slug: "dental-priya", presenter: "Priya", business: "Brightside Dental", industry: "Dental" },
+  { slug: "dental-priya-single", presenter: "Priya", business: "Brightside Dental", industry: "Dental" },
 ];
 
+// One coherent take (seconds 1.1-5.4 of the old 32s dental-priya.mp4, which stitched several takes).
 export const HERO_EXAMPLE = EXAMPLE_VIDEOS[0];
 
 export const exampleSrc = (slug: string) => `/examples/${slug}.mp4`;

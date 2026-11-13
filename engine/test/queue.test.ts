@@ -65,6 +65,19 @@ describe.skipIf(!hasDb)("queue (dev DB)", async () => {
     const stuck = await db.adJob.create({ data: { type: t, status: "running", attempts: 1, lockedBy: "gone", lockedAt: new Date(Date.now() - 3_600_000) } });
     expect(await q.recoverStaleJobs(db, 60_000, { types: [t] })).toBe(1);
     expect((await db.adJob.findUniqueOrThrow({ where: { id: stuck.id } })).status).toBe("queued");
+    // the interrupted attempt is given back and counted as a restart
+    const rec = await db.adJob.findUniqueOrThrow({ where: { id: stuck.id } });
+    expect(rec.attempts).toBe(0);
+    expect((rec.payload as { restarts?: number }).restarts).toBe(1);
+    // a job already at maxAttempts is NOT killed by a restart (it was the restart's fault)
+    const full = await db.adJob.create({ data: { type: t, status: "running", attempts: 3, maxAttempts: 3, lockedBy: "gone", lockedAt: new Date(Date.now() - 3_600_000) } });
+    expect(await q.recoverStaleJobs(db, 60_000, { types: [t] })).toBe(1);
+    expect((await db.adJob.findUniqueOrThrow({ where: { id: full.id } })).status).toBe("queued");
+    // ...but a job that took its worker down MAX_RESTARTS times is dead
+    const poison = await db.adJob.create({ data: { type: t, status: "running", attempts: 1, payload: { restarts: q.MAX_RESTARTS - 1 }, lockedBy: "gone", lockedAt: new Date(Date.now() - 3_600_000) } });
+    expect(await q.recoverStaleJobs(db, 60_000, { types: [t] })).toBe(1);
+    expect((await db.adJob.findUniqueOrThrow({ where: { id: poison.id } })).status).toBe("dead");
+    await db.adJob.deleteMany({ where: { id: { in: [full.id, poison.id] } } });
 
     // releaseJob gives the attempt back
     const [c3] = await q.claimJobs(db, "w", [t], 5);

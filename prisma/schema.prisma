@@ -38,6 +38,7 @@ model User {
 
   sessions           Session[]
   apiKeys            ApiKey[]
+  agentApiKeys       AgentApiKey[]
   reviews            Review[]
   generatedVideos    GeneratedVideo[]
   actorPresets       ActorPreset[]
@@ -101,6 +102,24 @@ model Session {
   @@index([userId])
   @@index([token])
   @@index([expiresAt])
+}
+
+/// Personal API keys for agents (Claude Code, Cursor, the komendly CLI, hosted MCP). Only the sha256 is stored.
+/// (The older `ApiKey` model below is a legacy, unused vendor-key table.)
+model AgentApiKey {
+  id          String    @id @default(cuid())
+  userId      String
+  workspaceId String
+  name        String
+  prefix      String // first 12 chars ("kmd_" + 8), for display
+  keyHash     String    @unique // sha256 hex of the full key
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model ApiKey {
@@ -860,6 +879,9 @@ model AdsGift {
   claimedAt           DateTime?
   claimedWorkspaceId  String?
   costMicros          BigInt    @default(0)
+  /// Kly "encore": 2 more ads Ozzy draws live when a real person opens an outbound gift (a second AdRun kind=gift).
+  extraRunId          String?   @unique
+  extraCostMicros     BigInt    @default(0) // part of the encore run's cost already credited to the Kly lead
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -1076,7 +1098,17 @@ model OutboundMailbox {
   smtpUser        String
   imapHost        String    @default("imap.gmail.com")
   imapPort        Int       @default(993)
-  secretRef       String    @default("env:OUTBOUND_MAILBOXES") // where the app password lives (never in the DB)
+  secretRef       String    @default("env:OUTBOUND_MAILBOXES") // "env:OUTBOUND_MAILBOXES" (password in env) or "db" (secretEnc)
+  /// AES-256-GCM sealed password (ADS_TOKEN_KEY, crypto.ts format) for DB-stored mailboxes; null = env mailbox.
+  secretEnc       String?
+  provider        String    @default("gmail") // gmail | maildoso | smtp
+  /// Sending domain (lowercased part after @); rotation + per-domain caps + domain health.
+  domain          String?
+  /// No cold sends before this (Maildoso: created + 14 days of vendor warm-up). Null = ready now.
+  readyAt         DateTime?
+  /// Vendor's own id (Maildoso account id) + status, for idempotent syncs.
+  vendorId        String?
+  vendorStatus    String?
   dailyCap        Int       @default(40)
   warmupStartedAt DateTime  @default(now())
   paused          Boolean   @default(false)
@@ -1088,10 +1120,40 @@ model OutboundMailbox {
   bouncedTotal    Int       @default(0)
   complainedTotal Int       @default(0)
   repliedTotal    Int       @default(0)
+  /// Kly peer warm-up (kly/src/warmup.ts): per-mailbox opt-out, first warm-up send, last IMAP engagement pass,
+  /// first cold send (drives the 5 -> 10 -> 15 cold ramp).
+  warmupEnabled   Boolean   @default(true)
+  warmupSince     DateTime?
+  warmupPolledAt  DateTime?
+  coldStartedAt   DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   sends OutboundSend[]
+
+  @@index([domain])
+}
+
+/// One sending domain of the outbound mailboxes: per-domain daily cap + DNS / blocklist health (Kly checks it periodically
+/// and pauses every mailbox on it while it is listed or its DNS is broken).
+model OutboundDomain {
+  domain       String    @id
+  dailyCap     Int       @default(45)
+  capAuto      Boolean   @default(true) // Kly raises/cuts dailyCap once a day on health; false = admin-fixed
+  capCheckedAt DateTime?
+  paused       Boolean   @default(false)
+  pausedReason String? // "auto: ..." lifts itself on a clean check; anything else is an admin pause
+  dkimSelector String?
+  mxOk         Boolean?
+  spfOk        Boolean?
+  dkimOk       Boolean?
+  dmarcOk      Boolean?
+  listedOn     String[]  @default([])
+  failStreak   Int       @default(0)
+  checkNote    String?
+  checkedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 /// One lead-finding request (admin page / CLI / engine): niche + cities + count. The engine claims pending rows.
@@ -1111,39 +1173,70 @@ model OutboundRun {
 }
 
 model OutboundLead {
-  id           String    @id @default(cuid())
-  runId        String?
-  businessName String
-  website      String
-  domain       String    @unique // registrable domain: dedupe key
-  niche        String
-  city         String
-  region       String?
-  timezone     String    @default("America/New_York")
-  email        String // public business address found on the business's own site
-  emailFoundOn String // page URL it was found on
-  source       String    @default("osm") // osm | manual
+  id            String    @id @default(cuid())
+  runId         String?
+  businessName  String
+  website       String
+  domain        String    @unique // registrable domain: dedupe key
+  niche         String
+  city          String
+  region        String?
+  timezone      String    @default("America/New_York")
+  email         String // public business address found on the business's own site
+  emailFoundOn  String // page URL it was found on
+  source        String    @default("osm") // osm | search | codex_search | manual
   /// found -> ad_made -> queued -> sent -> opened -> clicked -> replied -> signed_up -> paid | bounced | unsubscribed | complained | failed
-  status       String    @default("found")
-  giftId       String?   @unique
-  giftToken    String?   @unique
-  adId         String?
-  claimToken   String    @unique
-  unsubToken   String    @unique
-  mailboxId    String?
-  step         Int       @default(0) // emails sent (max 2: first + one follow-up)
-  nextSendAt   DateTime?
-  lastSentAt   DateTime?
-  clickedAt    DateTime?
-  repliedAt    DateTime?
-  error        String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  status        String    @default("found")
+  giftId        String?   @unique
+  giftToken     String?   @unique
+  adId          String?
+  claimToken    String    @unique
+  unsubToken    String    @unique
+  mailboxId     String?
+  step          Int       @default(0) // emails sent (max 2: first + one follow-up)
+  nextSendAt    DateTime?
+  lastSentAt    DateTime?
+  clickedAt     DateTime?
+  repliedAt     DateTime?
+  error         String?
+  // Kly (acquisition service) fields
+  score         Int? // 0-100 fit score from qualification
+  qualification Json? // { isLocalSmb, sellsToConsumers, chain, reasons[] } from the qualifier
+  qualityScore  Int? // 0-10 judge score of the hook ad (Kly's auto review)
+  qualityNotes  String?
+  giftAttempts  Int       @default(0) // hook-ad generations tried (regenerate once on a weak ad)
+  armIds        String[]  @default([]) // KlyArm ids this lead was assigned (subject, body, angle, ...)
+  replyIntent   String? // interested | question | not_now | not_interested | unsubscribe | auto_reply | other
+  userId        String? // Komendly user that signed up from this lead
+  workspaceId   String?
+  signedUpAt    DateTime?
+  paidAt        DateTime?
+  revenueCents  Int       @default(0) // lifetime paid revenue from the converted workspace
+  costMicros    BigInt    @default(0) // AI + generation cost attributed to this lead
+  purgedAt      DateTime? // PII removed by retention (row kept for stats)
+  // Voice bridge (Kly -> The Tribunal AI calls)
+  phone         String? // US E.164 business phone (+1XXXXXXXXXX)
+  phoneSource   String? // osm | site | codex_search (third-party listing, used only when the own site has none) | reply
+  /// queued | rejected | called | gift_yes | info_requested | not_interested | opt_out | callback_requested | no_answer | failed ...
+  voiceStatus   String?
+  voiceReason   String? // Tribunal reject reason / last event detail
+  voiceSyncedAt DateTime? // suppression pushed to Tribunal (null while one is pending)
+  calledAt      DateTime?
+  voicePushedAt DateTime? // handed to The Tribunal (daily call cap counts these)
+  voiceDelivery     String? // v1.1: delivery asked for on the call ("sms" | "email")
+  voiceSmsPhone     String? // v1.1: number to text the gift to
+  voiceDeliveredAt  DateTime? // gift link delivered after the call (exactly once)
+  voiceDeliveredVia String? // sms | email
+  voiceSmsFailedAt  DateTime? // first failed SMS attempt (retried for 24 h when no email fallback)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   sends OutboundSend[]
 
   @@index([status, nextSendAt])
   @@index([runId])
+  @@index([workspaceId])
+  @@index([niche, city])
 }
 
 model OutboundSend {
@@ -1164,6 +1257,8 @@ model OutboundSend {
   complained   Boolean         @default(false)
   replied      Boolean         @default(false)
   replySnippet String?
+  kind         String          @default("sequence") // sequence | reply (Kly's answer to a prospect's reply)
+  armIds       String[]        @default([])
 
   @@index([mailboxId, sentAt])
   @@index([leadId])
@@ -1176,4 +1271,249 @@ model OutboundSuppression {
   kind      String // email | domain
   reason    String // bounce | unsubscribe | complaint | reply_stop | existing_user | manual
   createdAt DateTime @default(now())
+}
+
+/// Kly experiment arm: one variant of one dimension (subject, body, opener_style, ad_angle, followup, segment).
+/// Kly assigns arms to leads (Thompson sampling), credits outcomes back, retires losers and breeds new arms with AI.
+model KlyArm {
+  id              String    @id @default(cuid())
+  dimension       String // subject | body | opener_style | ad_angle | followup | segment
+  key             String // short human label
+  content         Json // the variant itself (template text, angle brief, {niche, city} ...)
+  status          String    @default("active") // active | champion | retired
+  origin          String    @default("seed") // seed | ai | manual
+  parentId        String?
+  rationale       String? // why Kly created it
+  assigned        Int       @default(0)
+  sends           Int       @default(0)
+  clicks          Int       @default(0)
+  replies         Int       @default(0)
+  positiveReplies Int       @default(0)
+  signups         Int       @default(0)
+  paid            Int       @default(0)
+  revenueCents    Int       @default(0)
+  costMicros      BigInt    @default(0)
+  retiredAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([dimension, key])
+  @@index([dimension, status])
+}
+
+/// Kly safeguards and knobs (single row id = "kly"). Edited in /admin/ads/outbound; read every tick.
+model KlySettings {
+  id                 String   @id @default("kly")
+  enabled            Boolean  @default(true) // master switch (sending also needs mailboxes + OUTBOUND_ENABLED=1)
+  autoScale          Boolean  @default(true)
+  dailySendCeiling   Int      @default(80) // across all mailboxes, after warm-up limits
+  dailyGiftCap       Int      @default(40) // hook ads started per day
+  monthlyBudgetCents Int      @default(30000) // AI + generation spend cap per calendar month
+  maxCodexWeeklyPct  Int      @default(60) // stop starting gifts above this share of the Codex weekly window
+  minLeadScore       Int      @default(55)
+  minQualityScore    Int      @default(7)
+  followUpDays       Int      @default(4)
+  maxSteps           Int      @default(2)
+  autoReply          Boolean  @default(true)
+  explorationPct     Int      @default(20)
+  targetCountries    String[] @default(["US"])
+  voiceEnabled       Boolean  @default(false) // hand leads to The Tribunal for AI voice calls
+  dailyCallCap       Int      @default(1000) // leads pushed to The Tribunal per day
+  hourlyCallCap      Int      @default(100) // Tribunal call rate; Kly keeps at most ~1.5x this queued ahead
+  voiceCursor        Int      @default(0) // last processed Tribunal bridge event id
+  sources            String[] @default(["osm", "search", "codex_search"]) // lead sources discovery may use (osm | search | codex_search)
+  discoveryPerTick   Int      @default(40) // max new leads per discovery tick when voice calling is on (email-only: 10)
+  codexSearchPerTick Int      @default(1) // Codex web-search calls per discovery tick (also stopped by budget / maxCodexWeeklyPct)
+  sourceStats        Json     @default("{}") // { blocks: { ddg|bing|codex: { until, reason, strikes } } } (yields: KlySourceYield)
+  warmupEnabled      Boolean  @default(true) // peer warm-up between the rented mailboxes (kly/src/warmup.ts)
+  warmupPerDay       Int      @default(40) // warm-up emails per mailbox per day (incl. replies; max 80)
+  warmupGmailCap     Int      @default(25) // max warm-up emails each Gmail box receives per day (0 = none); Gmail never sends warm-up
+  warmupReplyPct     Int      @default(35) // share of received warm-up mail answered in-thread
+  warmupMinDays      Int      @default(14) // warm-up days before a mailbox may send cold
+  warmupReadySpamPct Int      @default(10) // 7-day warm-up spam placement must be under this to send cold
+  warmupPauseSpamPct Int      @default(25) // above this, cold sending is auto-paused (warm-up continues)
+  notes              String?
+  updatedBy          String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+/// One peer warm-up email between two Kly mailboxes (kly/src/warmup.ts). The receiver's IMAP pass records where it
+/// landed (inbox | spam | missing), rescues it from spam, reads/stars it, files it into "Warmup" and maybe replies.
+model KlyWarmupMessage {
+  id              String    @id @default(cuid())
+  messageId       String    @unique
+  threadId        String // root Message-ID of the thread
+  depth           Int       @default(1) // 1 = thread start, 2+ = replies
+  maxDepth        Int       @default(1) // thread length chosen at start (1-3)
+  senderId        String
+  recipientId     String
+  senderDomain    String
+  recipientDomain String
+  subject         String
+  sentAt          DateTime  @default(now())
+  placement       String? // inbox | spam | missing
+  seenAt          DateTime?
+  rescuedAt       DateTime?
+  flaggedAt       DateTime?
+  filedAt         DateTime?
+  replyWanted     Boolean   @default(false)
+  repliedAt       DateTime?
+
+  @@index([senderId, sentAt])
+  @@index([recipientId, sentAt])
+  @@index([recipientId, replyWanted, repliedAt])
+  @@index([sentAt])
+}
+
+/// Kly's journal: every autonomous change it makes and why (scale up/down, new/retired arms, pauses, insights).
+model KlyDecision {
+  id        String   @id @default(cuid())
+  kind      String // scale | arm_new | arm_retire | champion | segment | pause | resume | insight | budget | error
+  summary   String
+  data      Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([kind, createdAt])
+  @@index([createdAt])
+}
+
+/// Per-day rollup written by Kly (dashboard charts; idempotent upsert per day).
+model KlyDaily {
+  day           DateTime @id @db.Date
+  found         Int      @default(0)
+  qualified     Int      @default(0)
+  giftsMade     Int      @default(0)
+  giftsRejected Int      @default(0)
+  sent          Int      @default(0)
+  clicks        Int      @default(0)
+  replies       Int      @default(0)
+  positive      Int      @default(0)
+  signups       Int      @default(0)
+  paid          Int      @default(0)
+  revenueCents  Int      @default(0)
+  costMicros    BigInt   @default(0)
+  bounces       Int      @default(0)
+  complaints    Int      @default(0)
+  calls         Int      @default(0)
+  giftYes       Int      @default(0)
+  voiceOptOuts  Int      @default(0)
+  updatedAt     DateTime @updatedAt
+}
+
+/// Kly's own US business list: Overture Maps Places with a website, mapped to Kly niches (kly/scripts/import-places.ts).
+/// Source "overture" hands out unused rows per niche + city and stamps usedAt. Data: CDLA-Permissive-2.0 / Apache-2.0.
+model KlyPlace {
+  id         String    @id // Overture GERS id
+  niche      String
+  category   String // Overture taxonomy.primary
+  name       String
+  website    String
+  domain     String
+  phone      String?
+  city       String
+  cityKey    String // lower-cased locality
+  state      String
+  postcode   String?
+  lon        Float?
+  lat        Float?
+  confidence Float     @default(0)
+  release    String // Overture release it came from (fsq: "fsq-<dt>")
+  source     String    @default("overture") // overture | fsq
+  email      String? // listed business email (fsq), lets the finder skip the site crawl
+  usedAt     DateTime? // handed to the finder
+  createdAt  DateTime  @default(now())
+
+  @@index([niche, cityKey, state, usedAt])
+  @@index([domain])
+}
+
+/// Kly lead-source yield per source|niche|city (finder picks sources by yield, skips exhausted segments).
+model KlySourceYield {
+  key        String   @id // "<source>|<niche>|<city>"
+  source     String // osm | search | codex_search
+  niche      String
+  city       String
+  runs       Int      @default(0)
+  candidates Int      @default(0) // returned by the source
+  fresh      Int      @default(0) // not already a lead / suppressed / customer
+  leads      Int      @default(0) // qualified leads created
+  dry        Int      @default(0) // consecutive runs with 0 fresh candidates
+  lastRunAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([niche])
+}
+
+/// Komendly-side audit trail of Tribunal voice-bridge events (tribunalEventId unique = idempotent ingestion).
+model OutboundVoiceEvent {
+  id              String   @id @default(cuid())
+  leadId          String? // null for workspace-level events (e.g. paused)
+  tribunalEventId Int      @unique
+  type            String
+  email           String?
+  detail          String?
+  callId          String?
+  delivery        String? // v1.1: "sms" | "email" | null (gift_yes / info_requested)
+  smsPhone        String? // v1.1: E.164 number the recipient asked to be texted at
+  at              DateTime
+  createdAt       DateTime @default(now())
+
+  @@index([leadId])
+  @@index([type, at])
+}
+
+/// Shared ChatGPT (Codex) OAuth tokens for the engine and Kly (id = "codex"). Refresh tokens rotate, so both
+/// services must refresh through this row under a Postgres advisory lock. Tokens are AES-GCM encrypted with ADS_TOKEN_KEY.
+model CodexCredential {
+  id           String   @id @default("codex")
+  accessToken  String // encrypted
+  refreshToken String // encrypted
+  expiresAt    BigInt // epoch ms
+  accountId    String?
+  refreshedBy  String?
+  updatedAt    DateTime @updatedAt
+}
+
+/// Ozzy Ad Coach check-up: the user uploads Meta Ads Manager screenshots or a CSV/XLSX export, the engine
+/// (AdJob coach_review) writes a plain-words verdict. moreRunId = the "Make 5 more like the winner" run (seeded from verdict.winner).
+model AdCoachReview {
+  id          String    @id @default(cuid())
+  workspaceId String
+  userId      String
+  status      String    @default("uploading") // uploading | queued | working | ready | failed
+  kind        String // table | screenshots
+  files       Json      @default("[]") // [{key, mime, bytes, name}]
+  note        String?
+  verdict     Json? // CoachVerdictSchema (src/lib/ads/coach/contracts.ts)
+  error       String?
+  free        Boolean   @default(false) // the one free review of a non-Ad-Department paid plan
+  moreRunId   String?   @unique
+  costMicros  BigInt    @default(0)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId, createdAt])
+}
+
+/// Ozzy Ad Department bonuses (one row per workspace + kind, latest version): website_checkup | ad_plan | hook_library.
+/// Generated by the engine (job bonus_generate); data is the zod-validated output in src/lib/ads/bonuses/contracts.ts.
+model AdsBonus {
+  id             String    @id @default(cuid())
+  workspaceId    String
+  kind           String // website_checkup | ad_plan | hook_library
+  status         String    @default("pending") // pending | generating | ready | failed (data keeps the last good version)
+  data           Json?
+  brandProfileId String?
+  reason         String? // initial | monthly | new_ads | rerun | retry | stuck
+  error          String?
+  version        Int       @default(0)
+  costMicros     BigInt    @default(0)
+  generatedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([workspaceId, kind])
+  @@index([kind, status])
 }

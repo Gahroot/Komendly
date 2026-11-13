@@ -1,5 +1,5 @@
-// Launch Quarter value stack: every line is computed from billing-config, nothing invented. Pure.
-import { type AdsLaunchOffer, getPlan, LAUNCH_QUARTER, offerSavingsCents } from "./billing-config";
+// Launch offer value stack: every line is computed from billing-config, nothing invented. Pure.
+import { AD_DEPARTMENT_STACK, type AdsLaunchOffer, getPlan, LAUNCH_QUARTER, offerFirstPaymentCents, offerSavingsCents, stackTotalUsd } from "./billing-config";
 import { bonusLabel, type BonusSummary } from "./bonus-access";
 
 const usd = (cents: number) => `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
@@ -8,13 +8,21 @@ const usd = (cents: number) => `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 :
 export function offerPerAdCents(offer: AdsLaunchOffer = LAUNCH_QUARTER): { offer: number; plan: number } {
   const plan = getPlan(offer.plan);
   return {
-    offer: Math.round(offer.priceCents / offer.creditsPerPeriod),
-    plan: plan ? Math.round(plan.priceCents / plan.monthlyCredits) : 0,
+    offer: offer.creditsPerPeriod > 0 ? Math.round(offer.priceCents / offer.creditsPerPeriod) : 0,
+    plan: plan && plan.monthlyCredits > 0 ? Math.round(plan.priceCents / plan.monthlyCredits) : 0,
   };
 }
 
 export function launchQuarterValueStack(bonus: BonusSummary | null, offer: AdsLaunchOffer = LAUNCH_QUARTER): string[] {
   const plan = getPlan(offer.plan);
+  if (plan?.unlimited) {
+    // Hormozi stack: stated value per line, then the price today.
+    const lines = AD_DEPARTMENT_STACK.map((i) => `${i.bonus ? "Bonus: " : ""}${i.label}: ${i.detail} (worth $${i.valueUsd}/month)`);
+    if (bonus?.locked) lines.push(`Unlocks your ${bonusLabel(bonus)} right away`);
+    lines.push(`Total value $${stackTotalUsd().toLocaleString("en-US")}/month. Your first month: ${usd(offerFirstPaymentCents(offer))} (save ${usd(offerSavingsCents(offer))}), then ${usd(plan.priceCents)}/month`);
+    lines.push("Post Ozzy's ads for 30 days. Not happy? One click, full refund.");
+    return lines;
+  }
   const per = offerPerAdCents(offer);
   const lines = [
     `${offer.creditsPerPeriod} new ads every ${offer.intervalMonths} months (1 credit = 1 ad)`,

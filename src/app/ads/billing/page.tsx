@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getCurrentUser } from "@/lib/auth";
-import { ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS, ANNUAL_MONTHS, ANNUAL_MONTHS_PAID, annualCredits, annualPriceCents, annualPriceIdFor, getPlan, priceIdFor, UNLOCK_PACK, unlockPackCouponId } from "@/lib/ads/billing-config";
+import { AD_DEPARTMENT_STACK, ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS, FOUNDING_FAIR_USE, FOUNDING_PRICE_LOCK, FOUNDING_TERMS, LAUNCH_QUARTER, offerCouponId, offerFirstPaymentCents, stackTotalUsd, ANNUAL_MONTHS, ANNUAL_MONTHS_PAID, annualCredits, annualPriceCents, annualPriceIdFor, getPlan, priceIdFor, UNLOCK_PACK, unlockPackCouponId, unlimitedLine } from "@/lib/ads/billing-config";
 import { isBonusUnlocked } from "@/lib/ads/bonus-unlock";
 import { UnlockPackNext } from "@/components/ads/unlock-pack-offer";
 import Link from "next/link";
@@ -21,10 +21,14 @@ import { prisma } from "@/lib/prisma";
 import { expiringCredits } from "@/lib/ads/referrals";
 import { BillingActionButton } from "./_components/billing-action-button";
 import { CheckoutDownsell } from "@/components/ads/checkout-downsell";
+import { PricingBeacon } from "@/components/analytics/pricing-beacon";
 import { CheckoutReturnTracker } from "@/components/analytics/checkout-return-tracker";
 import { loadCheckoutPixel } from "@/lib/ads/checkout-pixel";
 import { isStudioLaunchOfferOpen, STUDIO_LAUNCH_OFFER } from "@/lib/hub/money-model";
 import { trackAdsEvent } from "@/lib/ads/events";
+import { getSelfRefundEligibility } from "@/lib/ads/self-refund";
+import { LaunchGuideCard } from "@/components/ads/launch-guide-card";
+import { SelfRefundButton } from "./_components/self-refund-button";
 
 export const metadata: Metadata = { title: "Plan & billing", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -60,6 +64,11 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
   const launchEndsAt = ws.studioOfferReadyAt ? new Date(ws.studioOfferReadyAt.getTime() + STUDIO_LAUNCH_OFFER.windowHours * 3_600_000) : null;
   const leftMin = launchEndsAt ? Math.max(0, Math.floor((launchEndsAt.getTime() - now.getTime()) / 60_000)) : 0;
   const growth = getPlan(STUDIO_LAUNCH_OFFER.plan);
+  // New buyers see only plans for sale (Growth/Scale hidden during the founding offer); a subscriber on a hidden
+  // plan still sees their own plan card.
+  const shownPlans = ADS_PLANS.filter((p) => !p.hiddenForNewBuyers || (paid && ws.adsPlan === p.key));
+  const onDepartment = paid && Boolean(plan?.weeklyDrop);
+  const refund = paid ? await getSelfRefundEligibility(ws, user, now) : null;
   // $9 "Unlock this pack" replaces the 10-credit pack in the cancel downsell while the user has locked bonus ads.
   const downsellUnlock = checkout === "canceled" && Boolean(declined) && !paid && !ws.suspendedAt && Boolean(priceIdFor(UNLOCK_PACK))
     && !(await isBonusUnlocked(ws))
@@ -69,6 +78,7 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
   return (
     <div className="min-h-screen bg-background text-foreground">
       <AdsNav signedIn />
+      <PricingBeacon page="/ads/billing" />
       <main className="mx-auto max-w-6xl space-y-8 px-4 py-10">
         <div className="space-y-1">
           <h1 className="text-3xl font-semibold tracking-tight">Plan & billing</h1>
@@ -89,13 +99,13 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
           <Card className="glow-primary border-2 border-primary">
             <CardHeader>
               <CardDescription>{STUDIO_LAUNCH_OFFER.name} · <span className="font-medium text-foreground tabular-nums">{Math.floor(leftMin / 60)}h {leftMin % 60}m left</span> · ends {launchEndsAt ? formatDate(launchEndsAt) : ""}</CardDescription>
-              <CardTitle className="font-display text-2xl">{STUDIO_LAUNCH_OFFER.headline}: {growth.name} at {formatCents(growth.priceCents)}/month</CardTitle>
+              <CardTitle className="font-display text-2xl">{STUDIO_LAUNCH_OFFER.headline}: {growth.name}, first month {formatCents(offerFirstPaymentCents(LAUNCH_QUARTER))} (then {formatCents(growth.priceCents)}/month)</CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-sm">{STUDIO_LAUNCH_OFFER.stack.map((h) => <li key={h} className="flex items-center gap-2"><Check className="size-4 shrink-0 text-primary" />{h}</li>)}</ul>
             </CardContent>
             <CardFooter>
-              <BillingActionButton endpoint="/api/ads-billing/checkout" body={{ kind: "plan", key: growth.key, offer: STUDIO_LAUNCH_OFFER.key, placement: "studio_launch" }} label={`Claim ${growth.name} + ${STUDIO_LAUNCH_OFFER.bonusCredits} bonus credits`} disabled={!configured || !priceIdFor(growth)} />
+              <BillingActionButton endpoint="/api/ads-billing/checkout" body={{ kind: "plan", key: growth.key, offer: STUDIO_LAUNCH_OFFER.key, placement: "studio_launch" }} label={`Start for ${formatCents(offerFirstPaymentCents(LAUNCH_QUARTER))}`} disabled={!configured || !priceIdFor(growth) || !offerCouponId(LAUNCH_QUARTER)} />
             </CardFooter>
           </Card>
         )}
@@ -112,6 +122,11 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
             <CardContent className="text-sm text-muted-foreground">
               {paid && ws.currentPeriodEnd ? `Renews ${formatDate(ws.currentPeriodEnd).slice(0, 10)}` : "Pick a plan for all ratios, all awareness levels and animated video ads."}
             </CardContent>
+            {refund?.ok && (
+              <CardFooter className="block">
+                <SelfRefundButton amountLabel={formatCents(refund.amountCents)} endsLabel={formatDate(refund.endsAt).slice(0, 10)} />
+              </CardFooter>
+            )}
           </Card>
           <Card>
             <CardHeader>
@@ -134,6 +149,20 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
           </Card>
         </div>
 
+        {onDepartment && plan && (
+          <Card className="border-2 border-primary">
+            <CardHeader>
+              <CardDescription>{plan.key === "agency" ? "Your Ozzy Agency plan · unlimited for up to 10 brands" : `Your Ozzy Ad Department${plan.unlimited ? " · Founding Unlimited" : ""}`}</CardDescription>
+              <CardTitle className="font-display text-2xl">Fresh ads every Monday, a coach that tells you what&apos;s working</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <ul className="space-y-2">{AD_DEPARTMENT_STACK.map((i) => <li key={i.label} className="flex items-start gap-2"><Check className="mt-0.5 size-4 shrink-0 text-primary" /><span><span className="font-medium">{i.bonus ? "Bonus: " : ""}{i.label}</span> · {i.detail}</span></li>)}</ul>
+              {plan.unlimited && <p className="text-muted-foreground">{FOUNDING_FAIR_USE} {FOUNDING_TERMS} {FOUNDING_PRICE_LOCK}</p>}
+            </CardContent>
+          </Card>
+        )}
+        {onDepartment && <LaunchGuideCard defaultOpen={false} />}
+
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-xl font-semibold">{yearly ? "Yearly plans" : "Monthly plans"}</h2>
@@ -141,19 +170,19 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
           </div>
           {yearly && <p className="text-sm text-muted-foreground">Pay for {ANNUAL_MONTHS_PAID} months, get {ANNUAL_MONTHS}. All {ANNUAL_MONTHS} months of credits land in your account the day you pay and stay valid for the year.</p>}
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {ADS_PLANS.map((p) => {
+            {shownPlans.map((p) => {
               const current = paid && ws.adsPlan === p.key;
               return (
-                <Card key={p.key} className={current || (!paid && p.key === "growth") ? "glow-primary border-2 border-primary md:-my-2" : undefined}>
+                <Card key={p.key} className={current || (!paid && p.recommended) ? "glow-primary border-2 border-primary md:-my-2" : undefined}>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">{p.name}{current ? <Badge>current</Badge> : !paid && p.key === "growth" && <Badge>Most popular</Badge>}</CardTitle>
+                    <CardTitle className="flex items-center gap-2">{p.name}{current ? <Badge>current</Badge> : !paid && p.recommended && <Badge>{p.unlimited ? "Founding · Unlimited" : "Recommended"}</Badge>}</CardTitle>
                     <CardDescription>
                       {yearly ? (
                         <><span className="text-3xl font-semibold text-foreground">{formatCents(annualPriceCents(p))}</span> / year
-                          <span className="mt-1 block text-xs">{annualCredits(p)} credits up front · {perCredit(annualPriceCents(p), annualCredits(p))} · save {formatCents(p.priceCents * (ANNUAL_MONTHS - ANNUAL_MONTHS_PAID))}</span></>
+                          <span className="mt-1 block text-xs">{p.unlimited ? "Unlimited ads + Studio" : `${annualCredits(p)} credits up front · ${perCredit(annualPriceCents(p), annualCredits(p))}`} · save {formatCents(p.priceCents * (ANNUAL_MONTHS - ANNUAL_MONTHS_PAID))}</span></>
                       ) : (
                         <><span className="text-3xl font-semibold text-foreground">{formatCents(p.priceCents)}</span> / month
-                          <span className="mt-1 block text-xs">{perCredit(p.priceCents, p.monthlyCredits)}</span></>
+                          <span className="mt-1 block text-xs">{p.unlimited ? (p.key === "agency" ? unlimitedLine(p) : `Unlimited ads + Studio · stacked value $${stackTotalUsd().toLocaleString("en-US")}/month`) : perCredit(p.priceCents, p.monthlyCredits)}</span></>
                       )}
                     </CardDescription>
                   </CardHeader>

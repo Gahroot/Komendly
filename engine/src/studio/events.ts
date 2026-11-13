@@ -174,3 +174,32 @@ export class StudioEventMapper {
     return scrub(s);
   }
 }
+
+// Ozzy talks to business owners: no machinery in replies (servers, capacity, processes, files...). Sentences that
+// describe the machinery are dropped from the final reply; creative sentences stay.
+const TECH_SENTENCE = /\b((earlier|stopped|previous|background|stalled) (task|attempt|run|job|step)s?|tasks?\b.{0,40}\b(resolved|stopped|cancell?ed|killed|finished)|capacity|stalled|setup attempts?|preview (servers?|sessions?)|servers?|process(es)?|install(ing|ed|s)?|permissions?|stderr|stdout|exit code|headless|chrom(e|ium)|ffmpeg|hyperframes|snapshots?|index\.html|node_modules|npm|background (tasks?|jobs?)|visual checks?|blocked by|timed? ?out|timeouts?|crash(ed|es)?|sandbox|terminal|tool (call|error)s?|error codes?|stack trace|disk|memory|ports?|cache|(scene|transition|key|frame|preview) stills?|stills? (were |are )?checked|for the studio to finish|ready for (the )?(studio|render(er|ing)?)|render(ed|ing|er)?|compositions?|checked (key )?(frames|stills))\b/i;
+
+/** Drops technical sentences from a reply shown to the user; keeps paragraph breaks. */
+export function userFacingText(text: string): string {
+  return text
+    .split(/\n/)
+    .map((line) => {
+      const parts = line.match(/[^.!?]+(?:[.!?]+|$)\s*/g) ?? [line];
+      return parts.filter((p) => !TECH_SENTENCE.test(p)).join("").trimEnd();
+    })
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/** Said when a turn ends with no video and no question: never claim a video that isn't there. */
+export const NO_VIDEO_REPLY = "I couldn't finish a video this time, and nothing was charged. Tell me what you'd like (or just say \"try again\") and I'll make it now.";
+const CLAIMS_VIDEO = /\b(is ready|are ready|ready to (watch|go|post)|here'?s your|here is your|your (new |\d+-second |short )?(video|ad|animation|clip) is|i (made|built|finished|rendered|created)|finished|all done)\b/i;
+
+/** Final reply for a turn: technical sentences out; without a video, any "it's ready" claim becomes an honest line. */
+export function finalReply(text: string, o: { delivered: boolean; asked: boolean }): string {
+  const clean = userFacingText(text);
+  if (o.delivered || o.asked) return clean || (o.delivered ? "Here's your video." : clean);
+  if (!clean || CLAIMS_VIDEO.test(clean)) return NO_VIDEO_REPLY;
+  return clean;
+}

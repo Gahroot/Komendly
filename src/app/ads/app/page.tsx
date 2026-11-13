@@ -13,6 +13,10 @@ import { AdsRecentRuns } from "@/components/ads/ads-recent-runs";
 import { AdsUrlForm } from "@/components/ads/ads-url-form";
 import { StudioOzzySlot } from "@/components/studio/studio-ozzy-slot";
 import { DeviceCookie } from "@/components/ads/device-cookie";
+import { AdDepartmentSection } from "@/components/ads/ad-department/ad-department-section";
+import { loadAdDepartment } from "@/lib/ads/bonuses/server";
+import { CoachCard } from "@/components/ads/coach/coach-card";
+import { WeeklyDropCard } from "@/components/ads/weekly-drop-card";
 
 export const metadata = { title: "Home", robots: { index: false, follow: false } };
 
@@ -20,7 +24,7 @@ export default async function AdsAppPage() {
   const user = await getCurrentUser();
   if (!user) redirect(`/ads/login?next=${encodeURIComponent("/ads/app")}`);
   const ws = await getOrCreateWorkspace(user);
-  const bridge = await bridgeForWorkspace(ws.id, ws.studioFreeVideos);
+  const [bridge, department] = await Promise.all([bridgeForWorkspace(ws.id, ws.studioFreeVideos), loadAdDepartment(ws)]);
   return (
     <div className="min-h-screen bg-background text-foreground">
       <DeviceCookie />
@@ -40,11 +44,14 @@ export default async function AdsAppPage() {
               </CardHeader>
               <CardContent><AdsUrlForm signedIn /></CardContent>
             </Card>
+            <WeeklyDropCard workspace={ws} />
             <AdsRecentRuns />
+            <div id="your-ad-department" className="scroll-mt-20"><AdDepartmentSection view={department} /></div>
             {bridge && <StudioBridgeCard placement="app_home" data={bridge} />}
           </div>
           <div className="space-y-6">
             <AdsAccountCard />
+            <CoachCard />
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between text-base font-semibold">

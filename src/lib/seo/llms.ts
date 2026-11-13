@@ -1,4 +1,4 @@
-import { ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS } from '@/lib/ads/billing-config'
+import { ADS_GUARANTEE, ADS_TOPUPS, FOUNDING_TERMS, PLANS_FOR_SALE, unlimitedLine } from '@/lib/ads/billing-config'
 import { CATEGORIES, type BlogPostMeta } from '@/lib/blog'
 import { stripFootnotes } from '@/lib/blog-content'
 import { SITE_URL } from '@/lib/site'
@@ -13,7 +13,8 @@ export function productFacts(): string[] {
     'Free trial: 10 static ads + 1 animated ad, no credit card required (one trial per website, device and network; email verification required).',
     'Ad sizes: 4:5, 1:1 and 9:16. Ads cover all 5 awareness stages.',
     '1 credit = 1 static ad in one size; an animated ad costs 5 credits.',
-    `Monthly plans: ${ADS_PLANS.map((p) => `${p.name} ${usd(p.priceCents)}/month (${p.monthlyCredits} credits)`).join(', ')}.`,
+    `Monthly plans: ${PLANS_FOR_SALE.map((p) => `${p.name} ${usd(p.priceCents)}/month (${p.unlimited ? `${unlimitedLine(p)}; 6 fresh ads every Monday; Ozzy Ad Coach${p.key === 'agency' ? '; 3 testimonial videos a month' : ''}` : `${p.monthlyCredits} credits`})`).join(', ')}.`,
+    `${FOUNDING_TERMS}`,
     `One-time credit top-ups: ${ADS_TOPUPS.map((t) => `${t.credits} credits ${usd(t.priceCents)}`).join(', ')}.`,
     ADS_GUARANTEE,
     `Ozzy Studio (${SITE_URL}/ozzy-studio): chat with Ozzy to make video ads, motion graphics and animations, or edit your own footage with captions. 1 free video (no watermark), no card. A new video costs ${STUDIO_PRICE.newShort} credits (${STUDIO_PRICE.newLong} over ${STUDIO_PRICE.longOverSeconds}s); ${STUDIO_PRICE.includedRevisions} revisions included, then ${STUDIO_PRICE.revision} credit each. Videos up to ${STUDIO_MAX_SECONDS.free}s free, ${STUDIO_MAX_SECONDS.paid}s on paid plans. Credits are shared with ad packs.`,
@@ -65,6 +66,8 @@ export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryL
     `- [Ads pricing](${SITE_URL}/ads/pricing): plans, credits and the free trial`,
     `- [Partner program](${SITE_URL}/partners): web designers, freelancers and agencies earn 30% of what referred clients pay for 12 months`,
     `- [Ad of the week](${SITE_URL}/ad-of-the-week): real customer ads made with Komendly, featured weekly`,
+    `- [Examples](${SITE_URL}/examples): Ozzy Studio animated ads, Ad Pack static ads and a video testimonial, all made with Komendly`,
+    `- [Ozzy for AI agents](${SITE_URL}/agents): let Claude, Cursor, ChatGPT or scripts make Studio videos and ad packs via the Komendly MCP server (https://www.komendly.com/api/mcp) or the \`komendly\` CLI, using a personal API key on the same plan and credits`,
     `- [Facebook ad examples by industry](${SITE_URL}/ad-examples): real customer ads made with Komendly, shared with permission`,
     `- [AI video testimonials](${SITE_URL}/testimonials): turn text reviews into AI-avatar videos`,
     `- [Blog](${SITE_URL}/blog): ad creative, Meta ads and small business marketing`,

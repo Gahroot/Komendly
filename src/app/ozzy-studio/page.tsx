@@ -11,6 +11,7 @@ import "@/components/studio/studio.css";
 import { ADS_GUARANTEE, ADS_PLANS } from "@/lib/ads/billing-config";
 import { faqJsonLd, graph, jsonLdString, studioApplicationJsonLd } from "@/lib/seo/jsonld";
 import { SITE_URL } from "@/lib/site";
+import { STUDIO_EXAMPLES, studioExamplePoster, studioExampleSrc } from "@/lib/studio/examples";
 import { STUDIO_INVITE, STUDIO_MAX_SECONDS, STUDIO_PRICE, STUDIO_UPLOAD_LIMITS } from "@/lib/studio/contracts";
 import { ChatDemo } from "./chat-demo";
 import { StudioPrompt } from "./studio-prompt";
@@ -25,19 +26,6 @@ export const metadata: Metadata = {
 
 const MB = (b: number) => Math.round(b / (1024 * 1024));
 const cheapest = ADS_PLANS.reduce((a, b) => (b.priceCents < a.priceCents ? b : a));
-
-const EXAMPLES = [
-  { id: "ozzy-v07", label: "Ozzy Studio: “Their ad moves”", start: 0 },
-  { id: "dessert", label: "Dessert shop: “Cookies AND ice cream”" },
-  { id: "ad08", label: "Komendly: “What do I even say?”", start: 0 },
-  { id: "plumber", label: "Plumber: “Leaking again?”" },
-  { id: "landscaper", label: "Landscaper: “More than mowing”" },
-  { id: "ad43", label: "Komendly: “Hours on one ad”", start: 5 },
-  { id: "roofer", label: "Roofer: “My roof’s leaking”" },
-  { id: "ozzy-v10", label: "Ozzy Studio: “Can’t edit video?”", start: 7 },
-  { id: "dentist", label: "Dentist: “I keep putting it off”" },
-  { id: "ad53", label: "Komendly: “That’s why we built this”", start: 9 },
-] as const;
 
 const MAKES = [
   { icon: Zap, title: "Promos", body: "A 15-second promo for your business, from a sentence and your website." },
@@ -119,9 +107,9 @@ export default function OzzyStudioPage() {
             <h2 id="examples-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-4xl">Made with Ozzy’s motion engine</h2>
             <p className="mt-3 max-w-2xl text-muted-foreground">Real 9:16 hype ads for local businesses, for Komendly and for Ozzy Studio itself, rendered by the same engine that powers Ozzy Studio. Each one started from a website and the prompt “make hype video ads that are super fast cuts and energetic”.</p>
             <ul className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-5">
-              {EXAMPLES.map((v) => (
+              {STUDIO_EXAMPLES.map((v) => (
                 <li key={v.id} className="space-y-2">
-                  <video className="aspect-[9/16] w-full rounded-2xl border border-border bg-[#0c0820] object-cover" src={`/studio-examples/${v.id}.mp4${"start" in v && v.start ? `#t=${v.start}` : ""}`} poster={`/studio-examples/${v.id}.jpg`} muted autoPlay loop playsInline preload="metadata" aria-label={v.label} />
+                  <video className="aspect-[9/16] w-full rounded-2xl border border-border bg-[#0c0820] object-cover" src={studioExampleSrc(v)} poster={studioExamplePoster(v)} muted autoPlay loop playsInline preload="metadata" aria-label={v.label} />
                   <p className="text-xs text-muted-foreground">{v.label}</p>
                 </li>
               ))}

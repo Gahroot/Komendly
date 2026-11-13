@@ -1,0 +1,35 @@
+{
+  "name": "komendly-kly",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "dev": "tsx watch src/main.ts",
+    "dry-run": "tsx scripts/dry-run.ts",
+    "prisma:generate": "node scripts/prisma-generate.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "postinstall": "node scripts/prisma-generate.mjs"
+  },
+  "dependencies": {
+    "@duckdb/node-api": "^1.4.5-r.1",
+    "@prestyj/ai": "^5.32.2",
+    "@prisma/client": "^5.22.0",
+    "imapflow": "^2.11.0",
+    "nodemailer": "^6.10.1",
+    "prisma": "^5.22.0",
+    "sharp": "^0.35.5",
+    "tsx": "^4.23.15",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/nodemailer": "^6.4.24",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

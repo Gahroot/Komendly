@@ -1,4 +1,4 @@
-import { ADS_GUARANTEE, ADS_PLANS } from '@/lib/ads/billing-config'
+import { ADS_GUARANTEE, PLANS_FOR_SALE, unlimitedLine } from '@/lib/ads/billing-config'
 import { authorUrl, type Author } from '@/lib/authors'
 import type { BlogPostMeta, FaqItem } from '@/lib/blog'
 import { stripFootnotes } from '@/lib/blog-content'
@@ -69,12 +69,12 @@ export function softwareApplicationJsonLd(): JsonLd {
         description: '10 static ads + 1 animated ad. No card required.',
         url: SITE_URL,
       },
-      ...ADS_PLANS.map((p) => ({
+      ...PLANS_FOR_SALE.map((p) => ({
         '@type': 'Offer',
         name: `${p.name} plan`,
         price: dollars(p.priceCents),
         priceCurrency: 'USD',
-        description: `${p.monthlyCredits} credits per month. ${ADS_GUARANTEE}`,
+        description: `${p.unlimited ? `${unlimitedLine(p)}, 6 fresh ads every Monday and Ozzy Ad Coach` : `${p.monthlyCredits} credits per month`}. ${ADS_GUARANTEE}`,
         url: `${SITE_URL}/ads/pricing`,
         priceSpecification: {
           '@type': 'UnitPriceSpecification',
@@ -113,12 +113,12 @@ export function studioApplicationJsonLd(): JsonLd {
         description: '1 free Ozzy Studio video, no watermark. No card required.',
         url,
       },
-      ...ADS_PLANS.map((p) => ({
+      ...PLANS_FOR_SALE.map((p) => ({
         '@type': 'Offer',
         name: `${p.name} plan`,
         price: dollars(p.priceCents),
         priceCurrency: 'USD',
-        description: `${p.monthlyCredits} Ozzy credits per month, shared by Ozzy Studio and Ad Packs. ${ADS_GUARANTEE}`,
+        description: `${p.unlimited ? `${unlimitedLine(p)}, 6 fresh ads every Monday and Ozzy Ad Coach` : `${p.monthlyCredits} Ozzy credits per month, shared by Ozzy Studio and Ad Packs`}. ${ADS_GUARANTEE}`,
         url: `${SITE_URL}/pricing`,
         priceSpecification: {
           '@type': 'UnitPriceSpecification',

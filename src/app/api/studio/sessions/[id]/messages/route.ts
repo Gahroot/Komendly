@@ -8,6 +8,7 @@ import { AdsHttpError, adsErrorResponse, isPaidWorkspace } from "@/lib/ads/works
 import { canStartStudioTurn, STUDIO_TURN_JOB_TYPE, STUDIO_UPLOAD_LIMITS, type StudioTurnPayload } from "@/lib/studio/contracts";
 import { messageView, requireStudioSession, sessionSummary } from "@/lib/studio/server";
 import { trackAdsEvent } from "@/lib/ads/events";
+import { concurrentLimit, isUnlimitedPlan, UNLIMITED_BUSY_MESSAGE } from "@/lib/ads/billing-config";
 import { forwardStudioFirstRender } from "@/lib/studio/analytics";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -37,8 +38,12 @@ export async function POST(request: NextRequest, { params }: Ctx) {
     }
 
     const paid = isPaidWorkspace(workspace);
+    // Unlimited plan: Studio costs 0 credits; fair use = one Studio turn in progress per workspace.
+    const unlimited = isUnlimitedPlan(workspace);
+    const busyElsewhere = { workspaceId: workspace.id, id: { not: session.id }, status: { in: ["queued", "working"] } };
+    if (unlimited && (await prisma.studioSession.count({ where: busyElsewhere })) >= concurrentLimit(workspace)) throw new AdsHttpError(409, "busy", UNLIMITED_BUSY_MESSAGE);
     const [balance, priorRenders] = await Promise.all([getBalance(workspace.id), prisma.studioRender.count({ where: { sessionId: session.id } })]);
-    const gate = canStartStudioTurn({ priorRenders, sessionFree: session.freeVideo, freeVideosLeft: workspace.studioFreeVideos, balance, isPaidWorkspace: paid });
+    const gate = canStartStudioTurn({ priorRenders, sessionFree: session.freeVideo, freeVideosLeft: workspace.studioFreeVideos, balance, isPaidWorkspace: paid, unlimited });
     if (!gate.ok) {
       await trackAdsEvent("studio_paywall_shown", { workspaceId: workspace.id, userId: user.id, props: { code: gate.code, sessionId: session.id, neededCredits: gate.neededCredits } });
       return NextResponse.json({ error: "You need credits for this one.", code: gate.code, neededCredits: gate.neededCredits }, { status: 402 });
@@ -51,6 +56,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
         data: { status: "queued", lastActivityAt: new Date() },
       });
       if (claimed.count !== 1) throw new AdsHttpError(409, "busy", "Ozzy is still working on the last message.");
+      if (unlimited && (await tx.studioSession.count({ where: busyElsewhere })) >= concurrentLimit(workspace)) throw new AdsHttpError(409, "busy", UNLIMITED_BUSY_MESSAGE);
       const userMessage = await tx.studioMessage.create({
         data: { sessionId: session.id, role: "user", content: parsed.data.content, attachments: uploadIds.map((uploadId) => ({ uploadId })), status: "done" },
       });
