@@ -11,7 +11,7 @@ import "@/components/studio/studio.css";
 
 // Static, session-independent marketing page (cached publicly via next.config.ts headers()).
 const DESCRIPTION =
-  "Let Claude, Cursor, ChatGPT or any AI agent make videos and ad packs with Ozzy. Connect the Komendly MCP server or the komendly CLI with a personal API key, on your normal plan and credits.";
+  "Let Claude, Cursor, ChatGPT or any AI agent make videos and ad packs with Ozzy. Add the Ozzy MCP server and sign in, or use the komendly CLI, on your normal plan and credits.";
 
 export const metadata: Metadata = {
   title: "Ozzy for your AI agent",
@@ -27,14 +27,14 @@ const CAN_DO = [
   { title: "Status and downloads", line: "The agent checks progress, waits for renders and downloads the finished MP4s, PNGs or the whole pack as a ZIP." },
 ];
 
+const MCP_URL = "https://www.komendly.com/api/mcp";
+
 const SNIPPETS = [
-  { label: "Claude Code", code: 'claude mcp add --transport http ozzy https://www.komendly.com/api/mcp \\\n  --header "Authorization: Bearer kmd_your_key"' },
-  {
-    label: "Claude Desktop or Cursor (mcp.json)",
-    code: '{\n  "mcpServers": {\n    "ozzy": {\n      "command": "npx",\n      "args": ["-y", "komendly", "mcp"],\n      "env": { "KOMENDLY_API_KEY": "kmd_your_key" }\n    }\n  }\n}',
-  },
-  { label: "ChatGPT (custom connector URL)", code: "https://www.komendly.com/api/mcp/k/kmd_your_key" },
-  { label: "Any agent or script (CLI)", code: 'export KOMENDLY_API_KEY=kmd_your_key\nnpx komendly video "15s launch teaser for my coffee app" --wait --out ./videos' },
+  { label: "Claude (claude.ai and Claude Desktop)", hint: "Settings > Connectors > Add custom connector, paste the URL, then sign in.", code: MCP_URL },
+  { label: "ChatGPT", hint: "Settings > Apps & Connectors > Create (developer mode), paste the URL, choose OAuth, then sign in.", code: MCP_URL },
+  { label: "Cursor (mcp.json)", hint: "Add this, then click Connect next to ozzy and sign in.", code: '{\n  "mcpServers": {\n    "ozzy": { "url": "https://www.komendly.com/api/mcp" }\n  }\n}' },
+  { label: "Claude Code", hint: "Run this, then type /mcp and pick ozzy to sign in.", code: `claude mcp add --transport http ozzy ${MCP_URL}` },
+  { label: "Any agent or script (CLI)", hint: "Uses a personal API key from Dashboard > API.", code: 'npx komendly login\nnpx komendly video "15s launch teaser for my coffee app" --wait --out ./videos' },
 ];
 
 const PROMPTS = [
@@ -50,7 +50,7 @@ const FAQ = [
   { q: "Do the free video and free ad pack work from an agent?", a: "Yes. A new account gets the same free Ozzy Studio video and free ad pack whether you start them in the browser or from Claude, Cursor, ChatGPT or the CLI." },
   { q: "Is it unlimited on the Ad Department and Agency plans?", a: "Yes. On Ad Department and Agency, Studio videos and ad packs are unlimited from an agent too, with the same fair-use rule as the app: one job at a time on Ad Department (one business), three at a time on Agency (up to 10 brands)." },
   { q: "What happens when I run out of credits?", a: "Ozzy tells your agent in plain words and includes a link to the pricing page, so the agent can pass it on to you. Nothing is charged without you." },
-  { q: "Is my API key safe?", a: "Keys are shown once and stored only as a hash. You can see when each key was last used and revoke it any time at Dashboard > API." },
+  { q: "Is it safe to connect?", a: "You sign in on komendly.com and approve each app yourself; the app never sees your password. You can see every connected app and CLI key at Dashboard > API and disconnect any of them at once." },
 ];
 
 const jsonLd = graph(faqJsonLd(FAQ, `${SITE_URL}/agents`));
@@ -63,12 +63,12 @@ export default function AgentsPage() {
       <main>
         <section className="mx-auto max-w-3xl px-4 pt-8 text-center sm:px-6 sm:pt-14">
           <div className="flex justify-center"><StudioPose form="developer" expression="happy" size={96} /></div>
-          <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">MCP server · CLI · API keys</p>
+          <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">MCP server · CLI</p>
           <h1 className="font-display mt-3 text-balance text-[2.3rem] font-medium leading-[1.05] tracking-[-0.025em] sm:text-6xl">Ozzy for your AI agent</h1>
           <p className="mx-auto mt-5 max-w-2xl text-pretty text-base text-muted-foreground sm:text-lg">
             Let Claude, Cursor, ChatGPT or your own scripts make videos and ad packs with Ozzy. Same account, same plan, same credits: your agent just does the clicking.
           </p>
-          <div className="mt-8 flex justify-center"><CtaButton href="/register">Get your API key</CtaButton></div>
+          <div className="mt-8 flex justify-center"><CtaButton href="/register">Create your free account</CtaButton></div>
         </section>
 
         <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20" aria-labelledby="can-title">
@@ -87,16 +87,17 @@ export default function AgentsPage() {
           <h2 id="setup-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-5xl">Set up in 3 steps</h2>
           <ol className="mt-8 space-y-8">
             <li>
-              <h3 className="font-medium"><span className="text-[var(--studio-gold)]">1.</span> Get a key</h3>
-              <p className="mt-2 text-sm text-muted-foreground">Sign in and create a personal API key at <a href="/dashboard/api" className="text-[var(--studio-gold)] underline-offset-4 hover:underline">Dashboard → API</a>. It starts with <code className="font-mono">kmd_</code> and is shown once.</p>
+              <h3 className="font-medium"><span className="text-[var(--studio-gold)]">1.</span> Add Ozzy to your app</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Add a custom connector (or MCP server) with this URL: <code className="font-mono text-foreground">{MCP_URL}</code></p>
             </li>
             <li>
-              <h3 className="font-medium"><span className="text-[var(--studio-gold)]">2.</span> Connect your agent</h3>
-              <p className="mt-2 text-sm text-muted-foreground">Add the Ozzy MCP server, or use the CLI with <code className="font-mono">npx komendly</code>.</p>
+              <h3 className="font-medium"><span className="text-[var(--studio-gold)]">2.</span> Sign in and click Allow</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Your app opens Komendly. Sign in (or create a free account) and allow access. No key to copy. For scripts, use the CLI with a key from <a href="/dashboard/api" className="text-[var(--studio-gold)] underline-offset-4 hover:underline">Dashboard → API</a>.</p>
               <div className="mt-4 grid gap-4 lg:grid-cols-2">
                 {SNIPPETS.map((s) => (
                   <div key={s.label} className="studio-frame rounded-xl p-4">
                     <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">{s.label}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">{s.hint}</p>
                     <pre className="mt-3 overflow-x-auto whitespace-pre rounded-md bg-black/40 p-3 font-mono text-xs text-foreground"><code>{s.code}</code></pre>
                   </div>
                 ))}

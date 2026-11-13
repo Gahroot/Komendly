@@ -31,6 +31,8 @@ export function viaFrom(header: string | null | undefined): ApiVia {
 
 const REFUSED_PREFIXES = [
   "/api/account/api-keys", // key management is cookie-session only
+  "/api/account/connections", // connected apps (OAuth) management too
+  "/api/oauth/",
   "/api/admin",
   "/api/auth/", // login/logout/register, profile + email changes, email verification
   "/api/ads/auth/",

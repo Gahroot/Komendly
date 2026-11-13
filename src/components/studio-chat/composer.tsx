@@ -2,9 +2,7 @@
 import { ArrowUp, FileAudio, Loader2, Paperclip, Square, X } from "lucide-react";
 import { useCallback, useEffect, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent, type RefObject } from "react";
 import { STUDIO_UPLOAD_LIMITS } from "@/lib/studio/contracts";
-import type { OzzyVoice } from "./use-ozzy-voice";
 import type { Chip } from "./use-uploads";
-import { MicButton, VoiceBar } from "./voice-bar";
 
 interface Props {
   value: string;
@@ -20,8 +18,6 @@ interface Props {
   placeholder?: string;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
   hero?: boolean;
-  /** Talk to Ozzy (hidden when the browser can't do voice). */
-  voice?: OzzyVoice;
 }
 
 const MAX_HEIGHT = 220;
@@ -119,7 +115,6 @@ export function Composer(p: Props) {
           ))}
         </ul>
       )}
-      {p.voice && <div className="px-2 pt-2 empty:hidden"><VoiceBar voice={p.voice} /></div>}
       <div className="flex items-end gap-2 p-2 pl-3">
         <label className="mb-0.5 grid size-10 shrink-0 cursor-pointer place-items-center rounded-full text-[oklch(0.85_0.04_75)] transition-colors hover:bg-white/8 hover:text-white focus-within:ring-2 focus-within:ring-[var(--studio-gold)]" title="Attach files">
           <Paperclip className="size-5" aria-hidden />
@@ -148,7 +143,6 @@ export function Composer(p: Props) {
           className={`max-h-[220px] min-h-10 flex-1 resize-none bg-transparent py-2.5 text-[15px] leading-6 text-[oklch(0.96_0.03_75)] outline-none placeholder:text-[oklch(0.75_0.04_290)] ${p.hero ? "sm:text-base" : ""}`}
           enterKeyHint="send"
         />
-        {p.voice && <MicButton voice={p.voice} disabled={p.disabled} />}
         {p.streaming ? (
           <button type="button" onClick={p.onStop} className="mb-0.5 grid size-10 shrink-0 place-items-center rounded-full bg-[oklch(0.96_0.03_75)] text-[#1a0f2e] transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--studio-gold)]" aria-label="Stop Ozzy">
             <Square className="size-3.5 fill-current" />

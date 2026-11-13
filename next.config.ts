@@ -56,7 +56,7 @@ const nextConfig: NextConfig = {
       },
       {
         // Public marketing pages only: never cache API, account or admin responses
-        source: "/((?!api|ads|admin|dashboard|checkout|login|register|ozzy-lab|verify-email|test-video|r/|g/|u/|gift/|partners/apply|studio|s/|_next).+)",
+        source: "/((?!api|ads|admin|dashboard|checkout|oauth|\\.well-known|login|register|ozzy-lab|verify-email|test-video|r/|g/|u/|gift/|partners/apply|studio|s/|_next).+)",
         headers: [
           {
             key: "Cache-Control",
@@ -70,7 +70,7 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
       {
-        source: "/:area(api|ads|admin|dashboard|checkout|studio)/:path*",
+        source: "/:area(api|ads|admin|dashboard|checkout|studio|oauth|.well-known)/:path*",
         headers: [
           {
             key: "Cache-Control",

@@ -68,7 +68,7 @@ export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryL
     `- [Partner program](${SITE_URL}/partners): web designers, freelancers and agencies earn 30% of what referred clients pay for 12 months`,
     `- [Ad of the week](${SITE_URL}/ad-of-the-week): real customer ads made with Komendly, featured weekly`,
     `- [Examples](${SITE_URL}/examples): Ozzy Studio animated ads, Ad Pack static ads and a video testimonial, all made with Komendly`,
-    `- [Ozzy for AI agents](${SITE_URL}/agents): let Claude, Cursor, ChatGPT or scripts make Studio videos and ad packs via the Komendly MCP server (https://www.komendly.com/api/mcp) or the \`komendly\` CLI, using a personal API key on the same plan and credits`,
+    `- [Ozzy for AI agents](${SITE_URL}/agents): let Claude, Cursor, ChatGPT or scripts make Studio videos and ad packs via the Komendly MCP server (https://www.komendly.com/api/mcp; add it as a connector and sign in) or the \`komendly\` CLI (personal API key), on the same plan and credits`,
     `- [Facebook ad examples by industry](${SITE_URL}/ad-examples): real customer ads made with Komendly, shared with permission`,
     `- [AI video testimonials](${SITE_URL}/testimonials): turn text reviews into AI-avatar videos`,
     `- [Blog](${SITE_URL}/blog): ad creative, Meta ads and small business marketing`,

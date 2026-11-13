@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AlertCircle, Check, Copy, KeyRound, Loader2, Trash2 } from "lucide-react";
+import { AlertCircle, Check, Copy, KeyRound, Link2, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,18 +18,25 @@ interface KeyRow {
   revokedAt: string | null;
 }
 
+interface ConnectionRow {
+  id: string;
+  name: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+}
+
 const MCP_URL = "https://www.komendly.com/api/mcp";
 const KEY_PLACEHOLDER = "<your-key>";
 
+const CONNECT_STEPS = [
+  { id: "c-claude", title: "Claude (claude.ai and Claude Desktop)", hint: "Settings > Connectors > Add custom connector. Paste this URL, then sign in to Komendly and click Allow.", code: MCP_URL },
+  { id: "c-chatgpt", title: "ChatGPT", hint: "Settings > Apps & Connectors > Create (developer mode). Paste this URL, choose OAuth, then sign in and click Allow.", code: MCP_URL },
+  { id: "c-cursor", title: "Cursor (mcp.json)", hint: "Add this, then click Connect next to ozzy in Cursor's MCP settings and sign in.", code: JSON.stringify({ mcpServers: { ozzy: { url: MCP_URL } } }, null, 2) },
+  { id: "c-claude-code", title: "Claude Code", hint: "Run this, then type /mcp in Claude Code and pick ozzy to sign in.", code: `claude mcp add --transport http ozzy ${MCP_URL}` },
+];
+
 function snippets(key: string) {
   return [
-    { id: "claude-code", title: "Claude Code", hint: "Run in your terminal.", code: `claude mcp add --transport http ozzy ${MCP_URL} --header "Authorization: Bearer ${key}"` },
-    {
-      id: "mcp-json",
-      title: "Claude Desktop / Cursor (mcp.json)",
-      hint: "Add to your MCP config file, then restart the app.",
-      code: JSON.stringify({ mcpServers: { ozzy: { url: MCP_URL, headers: { Authorization: `Bearer ${key}` } } } }, null, 2),
-    },
     {
       id: "cli",
       title: "Komendly CLI",
@@ -69,6 +76,7 @@ export function ApiKeysPanel() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [secret, setSecret] = useState<string | null>(null);
+  const [connections, setConnections] = useState<ConnectionRow[] | null>(null);
   const { copied, copy } = useCopy();
 
   const load = useCallback(async () => {
@@ -76,6 +84,9 @@ export function ApiKeysPanel() {
     const data = (await res.json().catch(() => ({}))) as { keys?: KeyRow[]; error?: string };
     if (!res.ok) setError(data.error ?? "Couldn't load your keys.");
     setKeys(data.keys ?? []);
+    const cres = await fetch("/api/account/connections", { cache: "no-store" });
+    const cdata = (await cres.json().catch(() => ({}))) as { connections?: ConnectionRow[] };
+    setConnections(cdata.connections ?? []);
   }, []);
 
   useEffect(() => {
@@ -108,6 +119,14 @@ export function ApiKeysPanel() {
     await load();
   }
 
+  async function disconnect(c: ConnectionRow) {
+    if (!window.confirm(`Disconnect "${c.name}"? It stops working right away; you can connect it again later.`)) return;
+    setError(null);
+    const res = await fetch(`/api/account/connections/${c.id}`, { method: "DELETE" });
+    if (!res.ok) setError("Couldn't disconnect the app. Try again.");
+    await load();
+  }
+
   const active = (keys ?? []).filter((k) => !k.revokedAt);
 
   return (
@@ -115,7 +134,7 @@ export function ApiKeysPanel() {
       <PageHeader
         eyebrow="Ozzy for agents"
         title="Let your AI agent use Ozzy"
-        description="Claude, Cursor, ChatGPT or your own scripts can make Ozzy videos and Ad Packs for you, on your plan and credits. Create a key, then paste one of the setups below."
+        description="Claude, ChatGPT, Cursor or your own scripts can make Ozzy videos and Ad Packs for you, on your plan and credits. Add Ozzy to your app with the link below and sign in. API keys are for the CLI and scripts."
       />
 
       {error && (
@@ -128,10 +147,53 @@ export function ApiKeysPanel() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-foreground">
+            <Link2 aria-hidden className="size-5 text-[var(--studio-gold)]" />
+            Connected apps
+          </CardTitle>
+          <CardDescription>Apps you signed in to Ozzy with. Disconnect one to stop it right away.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {connections === null ? (
+            <div className="flex justify-center py-6"><Loader2 aria-hidden className="size-6 animate-spin text-[var(--studio-gold)]" /></div>
+          ) : connections.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No connected apps yet. Add Ozzy to Claude, ChatGPT or Cursor below.</p>
+          ) : (
+            <ul className="divide-y divide-border rounded-xl border border-border">
+              {connections.map((c) => (
+                <li key={c.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-foreground">{c.name}</p>
+                    <p className="text-xs text-muted-foreground">connected {fmt(c.createdAt)} · last used {fmt(c.lastUsedAt)}</p>
+                  </div>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => void disconnect(c)} className="h-9 gap-1.5 text-muted-foreground hover:text-foreground">
+                    <Trash2 aria-hidden className="size-4" /> Disconnect
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-foreground">Connect Ozzy to your app</CardTitle>
+          <CardDescription>Paste the server link, then sign in to Komendly and click Allow. No key needed. Then ask, for example: “Use Ozzy to make a 15 second promo video for my bakery.”</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {CONNECT_STEPS.map((s) => (
+            <SnippetBlock key={s.id} id={s.id} title={s.title} hint={s.hint} code={s.code} copied={copied} copy={copy} />
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <KeyRound aria-hidden className="size-5 text-[var(--studio-gold)]" />
             API keys
           </CardTitle>
-          <CardDescription>A key acts as you. Keep it secret; revoke it if it leaks.</CardDescription>
+          <CardDescription>For the komendly CLI and your own scripts. A key acts as you. Keep it secret; revoke it if it leaks.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <form onSubmit={create} className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -174,18 +236,15 @@ export function ApiKeysPanel() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-foreground">Set up your agent</CardTitle>
+          <CardTitle className="text-foreground">Use a key with the CLI</CardTitle>
           <CardDescription>
-            Replace <code>{KEY_PLACEHOLDER}</code> with your key{active.length ? "" : " (create one above)"}. Then ask, for example: “Use Ozzy to make a 15 second promo video for my bakery.”
+            Replace <code>{KEY_PLACEHOLDER}</code> with your key{active.length ? "" : " (create one above)"}.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           {snippets(KEY_PLACEHOLDER).map((s) => (
             <SnippetBlock key={s.id} id={s.id} title={s.title} hint={s.hint} code={s.code} copied={copied} copy={copy} />
           ))}
-          <p className="text-xs text-muted-foreground">
-            Apps that can&apos;t send headers can use <code>{MCP_URL}/k/{KEY_PLACEHOLDER}</code> as the server URL. Treat that URL like a password.
-          </p>
         </CardContent>
       </Card>
 
@@ -201,7 +260,7 @@ export function ApiKeysPanel() {
                 <code className="min-w-0 flex-1 break-all text-sm text-foreground">{secret}</code>
                 <CopyButton id="secret" text={secret} copied={copied} copy={copy} />
               </div>
-              <SnippetBlock id="secret-claude" title="Claude Code" hint="Ready to paste, with your key filled in." code={snippets(secret)[0]?.code ?? ""} copied={copied} copy={copy} />
+              <SnippetBlock id="secret-cli" title="Komendly CLI" hint="Ready to paste, with your key filled in." code={snippets(secret)[0]?.code ?? ""} copied={copied} copy={copy} />
             </div>
           )}
           <DialogFooter>

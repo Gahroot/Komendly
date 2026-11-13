@@ -60,7 +60,11 @@ const publicPrefixes = [
   "/api/studio/live/",     // Live preview files for the sandboxed player (per-version capability token; the entry needs a session)
   "/studio/invite/",       // Ozzy Studio invite landing ("2 free videos")
   "/api/studio/invite/",   // Invite accept: sets the invite cookie, redirects to sign-up
-  "/api/mcp",              // Hosted Ozzy MCP server: authenticates its own API key (header or /api/mcp/k/<key>)
+  "/api/mcp",              // Hosted Ozzy MCP server: authenticates its own OAuth token or API key
+  "/.well-known/oauth-",   // OAuth discovery metadata (RFC 9728 / RFC 8414) for MCP clients
+  "/.well-known/openid-configuration",
+  "/api/oauth/",           // OAuth register/token/revoke (client-authenticated) + consent POST (session + signed form)
+  "/oauth/",               // Consent page (sends signed-out visitors to /login itself)
   "/api/testimonials/price-survey", // Van Westendorp survey: anonymous /pricing visitors answer too (rate-limited)
 ];
 

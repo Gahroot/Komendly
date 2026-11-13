@@ -51,15 +51,16 @@ komendly download <render_id|asset_id|run_id> --out ./downloads
 
 ### MCP (recommended)
 
-The hosted Ozzy MCP server lives at `https://www.komendly.com/api/mcp`.
+The hosted Ozzy MCP server lives at `https://www.komendly.com/api/mcp`. Add it as a custom connector / MCP server in
+Claude, ChatGPT or Cursor, then sign in to Komendly and click Allow (no key needed).
 
 Claude Code:
 
 ```bash
-claude mcp add --transport http ozzy https://www.komendly.com/api/mcp --header "Authorization: Bearer kmd_your_key"
+claude mcp add --transport http ozzy https://www.komendly.com/api/mcp   # then /mcp to sign in
 ```
 
-Claude Desktop, Cursor and other stdio-only clients (`mcp.json` / `claude_desktop_config.json`):
+Stdio-only clients (`mcp.json` / `claude_desktop_config.json`):
 
 ```json
 {
@@ -75,9 +76,6 @@ Claude Desktop, Cursor and other stdio-only clients (`mcp.json` / `claude_deskto
 
 `komendly mcp` is a thin stdio bridge: each newline-delimited JSON-RPC message on stdin is POSTed to `/api/mcp` with
 your key, and the JSON or SSE response is written back to stdout, one message per line.
-
-ChatGPT and clients that can't set headers: use the URL `https://www.komendly.com/api/mcp/k/kmd_your_key` (treat it
-like a password).
 
 ### CLI in an agent's shell
 

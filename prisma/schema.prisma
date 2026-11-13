@@ -39,6 +39,7 @@ model User {
   sessions           Session[]
   apiKeys            ApiKey[]
   agentApiKeys       AgentApiKey[]
+  oauthGrants        OAuthGrant[]
   reviews            Review[]
   generatedVideos    GeneratedVideo[]
   actorPresets       ActorPreset[]
@@ -120,6 +121,71 @@ model AgentApiKey {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+// OAuth 2.1 for the hosted Ozzy MCP server (src/lib/oauth). Codes and tokens are stored as sha256 hashes only.
+model OAuthClient {
+  id                      String    @id // client_id ("kmc_" + 32 base62)
+  name                    String
+  redirectUris            String[]
+  tokenEndpointAuthMethod String    @default("none") // none | client_secret_post | client_secret_basic
+  secretHash              String? // sha256 hex of client_secret (confidential clients only)
+  createdAt               DateTime  @default(now())
+
+  grants OAuthGrant[]
+}
+
+/// One connected app per user + client ("Connected apps" in /dashboard/api). Its id is the agent keyId for limits/analytics.
+model OAuthGrant {
+  id          String    @id @default(cuid())
+  userId      String
+  workspaceId String
+  clientId    String
+  clientName  String
+  scope       String    @default("ozzy")
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client OAuthClient  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  tokens OAuthToken[]
+
+  @@index([userId, createdAt])
+  @@index([clientId])
+}
+
+model OAuthAuthCode {
+  id            String    @id @default(cuid())
+  codeHash      String    @unique
+  clientId      String
+  userId        String
+  workspaceId   String
+  redirectUri   String
+  codeChallenge String
+  resource      String
+  scope         String
+  expiresAt     DateTime
+  usedAt        DateTime?
+  grantId       String? // set on exchange; a replayed code revokes this grant
+  createdAt     DateTime  @default(now())
+
+  @@index([expiresAt])
+}
+
+model OAuthToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  kind      String // access | refresh
+  grantId   String
+  expiresAt DateTime
+  usedAt    DateTime? // refresh tokens: rotated (a second use revokes the grant)
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  grant OAuthGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@index([grantId])
 }
 
 model ApiKey {
@@ -1204,6 +1270,8 @@ model OutboundLead {
   timezone      String    @default("America/New_York")
   email         String // public business address found on the business's own site
   emailFoundOn  String // page URL it was found on
+  emailCheck     String? // kly/src/verify.ts: valid | catch_all | unknown | invalid | retry (null = not checked yet)
+  emailCheckedAt DateTime?
   source        String    @default("osm") // osm | search | codex_search | manual
   /// found -> ad_made -> queued -> sent -> opened -> clicked -> replied -> signed_up -> paid | bounced | unsubscribed | complained | failed
   status        String    @default("found")

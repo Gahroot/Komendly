@@ -27,7 +27,6 @@
 .studio-live-dot { width: 7px; height: 7px; border-radius: 999px; background: #ff5a5f; box-shadow: 0 0 0 0 #ff5a5f99; animation: studio-live-dot 1.6s ease-out infinite; }
 @keyframes studio-live-dot { to { box-shadow: 0 0 0 7px #ff5a5f00; } }
 .studio-scrub { accent-color: var(--studio-gold); }
-.studio-voice-bar { width: 3px; border-radius: 3px; background: var(--studio-gold); transition: height 90ms linear; }
 .studio-mic-on { animation: studio-mic 1.4s ease-out infinite; }
 @keyframes studio-mic { 0% { box-shadow: 0 0 0 0 #ffcf4a88; } 100% { box-shadow: 0 0 0 12px #ffcf4a00; } }
 .studio-scroll { scrollbar-width: thin; scrollbar-color: oklch(1 0 0 / 15%) transparent; }
