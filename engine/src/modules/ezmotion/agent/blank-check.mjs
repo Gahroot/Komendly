@@ -110,8 +110,9 @@ export async function findLayoutProblems(projectDir, { sinceMs = 0 } = {}) {
 }
 
 /** One combined fix prompt for everything the QA found (one extra agent round at most). */
-export function qaFixPrompt({ blank = [], sparse = [], layout = [], music = false, missing = [], prices = [] }) {
+export function qaFixPrompt({ blank = [], sparse = [], empty = [], layout = [], music = false, missing = [], prices = [] }) {
   const parts = [];
+  if (empty.length) parts.push(`- Nothing readable on screen at ${empty.map((t) => `${t}s`).join(", ")}: just background (maybe a speck or a line). The main content (words, logo, product, pictures) never shows or is far too small/faint. Make it big, bright and on screen for most of the video.`);
   if (prices.length) parts.push(`- The offer is wrong: the user's price${prices.length > 1 ? "s" : ""} ${prices.join(", ")} ${prices.length > 1 ? "don't" : "doesn't"} appear in the video (a shell command probably ate the dollar sign and digits). Fix the text so it shows exactly ${prices.join(", ")}, and write files with your file tool, never with echo or an unquoted heredoc.`);
   if (missing.length) parts.push(`- These files are used in index.html but don't exist, so they show as empty spaces: ${missing.join(", ")}. Point each one at a file that exists (check with ls: kit/illustrations, kit/icons, brand/photos, brand/site, uploads) or remove it and fill the space.`);
   if (sparse.length) parts.push(`- Large empty areas: at ${sparse.map((t) => `${t}s`).join(", ")} half the frame or more is one flat colour with nothing in it. Fill the frame: make the hero image, footage or website piece much bigger (or full-bleed with a scrim), scale the type up, or centre the content block vertically. Nothing should sit in one half with the other half empty.`);
@@ -196,6 +197,31 @@ export function flatBandShare(bytes, w, bands = 4) {
   return flat / bands;
 }
 
+/** Pure: fine detail (mean |pixel - average of its 4 neighbours|) of 8-bit grey pixels `w` wide. Text, shapes and
+ * photos score > 1; a plain background or soft vignette with a speck on it scores ~0.5. */
+export function detailScore(bytes, w) {
+  const h = Math.floor(bytes.length / w);
+  if (w < 3 || h < 3) return 0;
+  let sum = 0, n = 0;
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+    const i = y * w + x;
+    sum += Math.abs(bytes[i] - (bytes[i - 1] + bytes[i + 1] + bytes[i - w] + bytes[i + w]) / 4);
+    n++;
+  }
+  return sum / n;
+}
+export const EMPTY_DETAIL = 0.6;
+
+/** Pure: is one whole half (top two or bottom two of 4 bands) flat while the other half has content?
+ * Centred designs (big words in the middle, empty top and bottom) are fine; content stuck in one half is not. */
+export function lopsided(bytes, w) {
+  const h = Math.floor(bytes.length / w);
+  if (!w || h < 4) return false;
+  const band = (b) => isBlankSpread(lumaSpread(bytes.subarray(Math.floor((b * h) / 4) * w, Math.floor(((b + 1) * h) / 4) * w)));
+  const f = [0, 1, 2, 3].map(band);
+  return (f[2] && f[3] && !(f[0] && f[1])) || (f[0] && f[1] && !(f[2] && f[3]));
+}
+
 /** Blank frames AND mostly-empty frames (half or more of the frame is one flat colour), from the same stills. */
 export async function findFrameIssues(projectDir, opts = {}) {
   const r = await frameStats(projectDir, opts);
@@ -207,7 +233,7 @@ export async function findBlankFrames(projectDir, opts = {}) {
 }
 
 async function frameStats(projectDir, { sinceMs = 0, ffmpeg = "ffmpeg" } = {}) {
-  const none = { blank: [], sparse: [] };
+  const none = { blank: [], sparse: [], empty: [] };
   const comp = await newestComposition(projectDir);
   if (!comp || comp.m < sinceMs) return none;
   const { readFile } = await import("node:fs/promises");
@@ -232,17 +258,20 @@ async function frameStats(projectDir, { sinceMs = 0, ffmpeg = "ffmpeg" } = {}) {
     if (snap.code !== 0) return none;
     const files = (await readdir(outDir)).filter((f) => f.endsWith(".png")).sort();
     if (files.length < shots.length) return none;
-    const flat = [], half = [];
+    const flat = [], half = [], bare = [];
     for (const f of files.slice(0, shots.length)) {
-      const g = await run(ffmpeg, ["-v", "error", "-i", join(outDir, f), "-vf", "scale=64:-1,format=gray", "-f", "rawvideo", "-"], { timeoutMs: 20_000 });
+      const g = await run(ffmpeg, ["-v", "error", "-i", join(outDir, f), "-vf", "scale=160:-1,format=gray", "-f", "rawvideo", "-"], { timeoutMs: 20_000 });
       const ok = g.code === 0 && g.stdout.length > 0;
       flat.push(ok && isBlankSpread(lumaSpread(g.stdout)));
-      half.push(ok && flatBandShare(g.stdout, 64, 4) >= 0.5);
+      half.push(ok && lopsided(g.stdout, 160));
+      bare.push(ok && detailScore(g.stdout, 160) < EMPTY_DETAIL);
     }
     const blank = times.filter((_, i) => flat[2 * i] && flat[2 * i + 1]);
     // Mostly empty: half the frame flat in both stills, and that's true for 3+ of the 10 check times.
     const sparseTimes = times.filter((t, i) => !blank.includes(t) && half[2 * i] && half[2 * i + 1]);
-    return { blank, sparse: sparseTimes.length >= 3 ? sparseTimes : [] };
+    // Nothing on screen (a plain or vignetted background, maybe a speck): flag when 4+ of the 10 check times are bare.
+    const emptyTimes = times.filter((t, i) => !blank.includes(t) && bare[2 * i] && bare[2 * i + 1]);
+    return { blank, sparse: sparseTimes.length >= 3 ? sparseTimes : [], empty: emptyTimes.length >= 4 ? emptyTimes : [] };
   } finally {
     await rm(outDir, { recursive: true, force: true }).catch(() => undefined);
   }

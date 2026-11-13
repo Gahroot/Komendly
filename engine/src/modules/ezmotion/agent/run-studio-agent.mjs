@@ -94,16 +94,16 @@ try {
       const since = promptStart - 1000;
       const [missing, frames, layout, html] = await Promise.all([
         findMissingAssets(dir, { sinceMs: since }).catch(() => []),
-        process.env.STUDIO_BLANK_CHECK === "0" ? { blank: [], sparse: [] } : findFrameIssues(dir, { sinceMs: since }).catch(() => ({ blank: [], sparse: [] })),
+        process.env.STUDIO_BLANK_CHECK === "0" ? { blank: [], sparse: [], empty: [] } : findFrameIssues(dir, { sinceMs: since }).catch(() => ({ blank: [], sparse: [], empty: [] })),
         process.env.STUDIO_LAYOUT_CHECK === "0" ? [] : findLayoutProblems(dir, { sinceMs: since }).catch(() => []),
         newestCompositionHtml(dir, since).catch(() => null),
       ]);
-      const { blank, sparse } = frames;
+      const { blank, sparse, empty } = frames;
       const music = process.env.STUDIO_MUSIC_CHECK !== "0" && !wantsSilence(prompt) && html !== null && !hasAudio(html);
       const prices = html !== null ? missingPrices(prompt, html) : [];
-      const fix = blank.length > 0 || sparse.length > 0 || layout.length > 0 || music || missing.length > 0 || prices.length > 0;
-      out({ type: "qa", checked: html !== null, blank, sparse, layout: layout.length, musicMissing: music, missing: missing.length, prices: prices.length, fix });
-      if (fix) await session.prompt(qaFixPrompt({ blank, sparse, layout, music, missing, prices }));
+      const fix = blank.length > 0 || sparse.length > 0 || empty.length > 0 || layout.length > 0 || music || missing.length > 0 || prices.length > 0;
+      out({ type: "qa", checked: html !== null, blank, sparse, empty, layout: layout.length, musicMissing: music, missing: missing.length, prices: prices.length, fix });
+      if (fix) await session.prompt(qaFixPrompt({ blank, sparse, empty, layout, music, missing, prices }));
     }
   } finally {
     clearInterval(keepAlive);

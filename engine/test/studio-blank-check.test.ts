@@ -95,3 +95,28 @@ describe("price check", () => {
     expect(missingPrices("no price here", "<p>x</p>")).toEqual([]);
   });
 });
+
+// @ts-expect-error plain .mjs helper
+import { detailScore, EMPTY_DETAIL } from "../src/modules/ezmotion/agent/blank-check.mjs";
+describe("empty screen check", () => {
+  it("vignette with a speck is empty, text-like content is not", () => {
+    const w = 160, h = 90;
+    const vignette = Uint8Array.from({ length: w * h }, (_, i) => { const x = i % w, y = Math.floor(i / w); return Math.round(40 - Math.hypot(x - 80, y - 45) / 4); });
+    vignette[45 * w + 80] = 200;
+    expect(detailScore(vignette, w)).toBeLessThan(EMPTY_DETAIL);
+    const text = Uint8Array.from({ length: w * h }, (_, i) => ((i % w) % 6 < 3 && Math.floor(i / w) % 10 < 6 ? 230 : 20));
+    expect(detailScore(text, w)).toBeGreaterThan(5);
+  });
+});
+
+// @ts-expect-error plain .mjs helper
+import { lopsided } from "../src/modules/ezmotion/agent/blank-check.mjs";
+describe("lopsided frames", () => {
+  const w = 64, h = 64, busy = (i: number) => (i % 7) * 30;
+  it("content stuck in the top half is lopsided", () => {
+    expect(lopsided(Uint8Array.from({ length: w * h }, (_, i) => (i < (w * h) / 2 ? busy(i) : 230)), w)).toBe(true);
+  });
+  it("centred content with empty top and bottom is fine", () => {
+    expect(lopsided(Uint8Array.from({ length: w * h }, (_, i) => { const y = Math.floor(i / w); return y >= 16 && y < 48 ? busy(i) : 10; }), w)).toBe(false);
+  });
+});
