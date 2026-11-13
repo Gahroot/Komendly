@@ -20,12 +20,13 @@ import { JobAbortedError } from "../jobs/abort";
 import { PermanentJobError, type JobContext, type JobHandler } from "../jobs/context";
 import { errMsg, log } from "../log";
 import { agentUsage } from "../modules/ezmotion/agent";
-import { type RenderProgress, ffmpegPath, renderComposition } from "../modules/ezmotion/runtime";
+import { type RenderProgress, ffmpegPath, probe, renderComposition } from "../modules/ezmotion/runtime";
 import { Limiter } from "../providers/limiter";
 import { pickStudioModel } from "./model-choice";
 import { installStudioKit } from "./kit-install";
 import { installBrandPhotos } from "./brand-photos";
 import { installSiteComponents } from "./site-components";
+import { ensureMusic } from "./music-fallback";
 import { guardRoute } from "../jobs/extract/crawl";
 import { assertPublicUrl } from "../net/ssrf";
 import { chooseStudioBrain, codexWeeklyPctSeen, isCodexLimitError, mimoAtPct, mimoAuth, MIMO_DEFAULT_MODEL, type StudioBrain } from "./brain";
@@ -402,7 +403,16 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
           rr = await renderComposition(comp, out, { fps: 30, signal: turnAbort.signal, timeoutMs: 10 * 60_000, onProgress: (p) => prog.emit(p, p.pct === 0) });
         }
         log("info", "studio render", { ms: rr.ms, code: rr.code });
-        if (rr.code === 0 && (await stat(out).catch(() => null))?.size) { source = out; prog.emit({ pct: 100, stage: "done" }, true); }
+        if (rr.code === 0 && (await stat(out).catch(() => null))?.size) {
+          source = out;
+          // Safety net: no sound in the finished video (and silence wasn't asked for) -> original music fitted to the request.
+          if (process.env.STUDIO_MUSIC_FALLBACK !== "0") {
+            const info = await probe(out, turnAbort.signal).catch(() => null);
+            const withMusic = info ? await ensureMusic({ video: out, workDir: root, userText: userMsg.content, durationSec: info.durationSec, salt: sessionId, signal: turnAbort.signal }).catch((e) => { log("warn", "studio music fallback failed", { error: errMsg(e) }); return null; }) : null;
+            if (withMusic) { source = withMusic.file; log("info", "studio music fallback", { sessionId, style: withMusic.style }); }
+          }
+          prog.emit({ pct: 100, stage: "done" }, true);
+        }
         else log("warn", "studio render failed", { error: (rr.stderr || rr.stdout).slice(-300) });
         if (!source && agentRel) { deliveredRel = agentRel; source = join(project, agentRel); }
       }
