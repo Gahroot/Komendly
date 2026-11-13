@@ -23,6 +23,7 @@ import { agentUsage } from "../modules/ezmotion/agent";
 import { type RenderProgress, ffmpegPath, renderComposition } from "../modules/ezmotion/runtime";
 import { Limiter } from "../providers/limiter";
 import { pickStudioModel } from "./model-choice";
+import { installStudioKit } from "./kit-install";
 import { chooseStudioBrain, codexWeeklyPctSeen, isCodexLimitError, mimoAtPct, mimoAuth, MIMO_DEFAULT_MODEL, type StudioBrain } from "./brain";
 import { type BriefUpload, cleanUploadNames, launchBrief, studioBrief, turnPrompt } from "./brief";
 import { chargeAndRecord, decideCharge, isPaidStudioWorkspace } from "./charge";
@@ -201,6 +202,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       fonts: (Array.isArray(bp.fonts) ? bp.fonts : []).flatMap((f) => (f && typeof f === "object" && typeof (f as { family?: unknown }).family === "string" ? [{ family: (f as { family: string }).family, role: (f as { role?: string }).role }] : [])).slice(0, 3),
       logoFile,
     } : null;
+    await installStudioKit(project).catch((e) => log("warn", "studio kit install failed", { error: errMsg(e) }));
     await writeFile(join(project, "studio.md"), studioBrief({ brand, uploads: briefUploads, paid }));
     // Launch video: real recorded footage + the launch structure (./launch.md stays in the project for revisions).
     const launch = parsed.data.launch;

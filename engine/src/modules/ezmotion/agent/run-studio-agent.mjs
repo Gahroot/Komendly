@@ -25,6 +25,7 @@ const load = (p) => import(pathToFileURL(join(cliDist, p)).href);
 const { createMotionAgentSession } = await load("motion-agent/motion-agent.js");
 const { createAskUserTool } = await load("tools/ask-user.js");
 const { decideAsk } = await import(new URL("./ask-filter.mjs", import.meta.url).href);
+const { findBlankFrames, blankFixPrompt } = await import(new URL("./blank-check.mjs", import.meta.url).href);
 
 const ac = new AbortController();
 process.on("SIGTERM", () => ac.abort());
@@ -84,7 +85,17 @@ try {
   const keepAlive = setInterval(() => undefined, 1000);
   try {
     await session.initialize();
+    const promptStart = Date.now();
     await session.prompt(prompt);
+    // Quality gate: if the finished composition shows blank frames, give the agent one fix round (STUDIO_BLANK_CHECK=0 turns it off).
+    if (!asked && !ac.signal.aborted && process.env.STUDIO_BLANK_CHECK !== "0") {
+      const blank = await findBlankFrames(resolve(projectDir), { sinceMs: promptStart - 1000 }).catch(() => []);
+      process.stderr.write(`${JSON.stringify({ blankCheck: blank })}\n`);
+      if (blank.length) {
+        out({ type: "qa", blank });
+        await session.prompt(blankFixPrompt(blank));
+      }
+    }
   } finally {
     clearInterval(keepAlive);
   }

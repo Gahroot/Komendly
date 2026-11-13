@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" data-kit="house">
+  <!-- home services / real estate. Roof + door: CSS var kit-brand -->
+  <defs><linearGradient id="hs-wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffaf2"/><stop offset="1" stop-color="#e8dccb"/></linearGradient>
+  <linearGradient id="hs-glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe7a8"/><stop offset="1" stop-color="#f2b54a"/></linearGradient></defs>
+  <ellipse cx="300" cy="520" rx="260" ry="22" fill="#000" opacity=".14"/>
+  <rect x="380" y="120" width="44" height="100" fill="#8d6b55"/>
+  <rect x="120" y="270" width="360" height="250" fill="url(#hs-wall)"/>
+  <path d="M90 290L300 110l210 180z" style="fill:var(--kit-brand,#c4553a)"/>
+  <path d="M90 290L300 110l210 180" fill="none" stroke="#000" stroke-opacity=".15" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M300 130L130 276" stroke="#fff" stroke-opacity=".35" stroke-width="10" stroke-linecap="round"/>
+  <rect x="120" y="290" width="360" height="16" fill="#000" opacity=".08"/>
+  <rect x="260" y="380" width="80" height="140" rx="8" style="fill:var(--kit-brand,#c4553a)"/>
+  <rect x="260" y="380" width="80" height="140" rx="8" fill="#000" opacity=".15"/>
+  <circle cx="324" cy="452" r="6" fill="#f2c45a"/>
+  <g id="hs-windows"><rect x="160" y="340" width="70" height="70" rx="6" fill="url(#hs-glass)"/><rect x="370" y="340" width="70" height="70" rx="6" fill="url(#hs-glass)"/>
+  <path d="M195 340v70M160 375h70M405 340v70M370 375h70" stroke="#fffaf2" stroke-width="6"/></g>
+  <circle cx="270" cy="220" r="26" fill="url(#hs-glass)" stroke="#fffaf2" stroke-width="6"/>
+  <g><circle cx="120" cy="500" r="30" fill="#5f9e57"/><circle cx="150" cy="490" r="26" fill="#6fb064"/><circle cx="470" cy="500" r="28" fill="#5f9e57"/></g>
+</svg>

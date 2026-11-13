@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" data-kit="beauty-bottle">
+  <!-- serum bottle + jar for salons/skincare. Liquid colour: CSS var kit-brand -->
+  <defs>
+    <linearGradient id="bb-glass" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".3" stop-color="#fff" stop-opacity=".1"/><stop offset="1" stop-color="#fff" stop-opacity=".35"/></linearGradient>
+    <linearGradient id="bb-gold" x1="0" x2="1"><stop offset="0" stop-color="#b8893a"/><stop offset=".45" stop-color="#f6dc9a"/><stop offset="1" stop-color="#9c7230"/></linearGradient>
+    <linearGradient id="bb-jar" x1="0" x2="1"><stop offset="0" stop-color="#f3dcd4"/><stop offset=".5" stop-color="#fff5f1"/><stop offset="1" stop-color="#dcbcb0"/></linearGradient>
+  </defs>
+  <ellipse cx="300" cy="520" rx="230" ry="22" fill="#000" opacity=".14"/>
+  <rect x="160" y="250" width="160" height="270" rx="34" style="fill:var(--kit-brand,#e58f84)"/>
+  <rect x="160" y="250" width="160" height="270" rx="34" fill="url(#bb-glass)"/>
+  <rect x="186" y="340" width="108" height="110" rx="10" fill="#fff" opacity=".9"/>
+  <rect x="206" y="368" width="68" height="10" rx="5" fill="#5a3a35" opacity=".7"/><rect x="214" y="392" width="52" height="8" rx="4" fill="#5a3a35" opacity=".35"/>
+  <rect x="204" y="206" width="72" height="50" rx="8" fill="url(#bb-gold)"/>
+  <path d="M218 206v-50c0-26 44-26 44 0v50z" fill="#2b2523"/>
+  <rect x="178" y="270" width="14" height="220" rx="7" fill="#fff" opacity=".55"/>
+  <g id="bb-jar-g">
+    <rect x="320" y="400" width="190" height="120" rx="26" fill="url(#bb-jar)"/>
+    <rect x="312" y="360" width="206" height="54" rx="14" fill="url(#bb-gold)"/>
+    <rect x="336" y="430" width="10" height="70" rx="5" fill="#fff" opacity=".7"/>
+  </g>
+</svg>

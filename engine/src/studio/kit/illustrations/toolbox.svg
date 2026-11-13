@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" data-kit="toolbox">
+  <!-- box colour: CSS var kit-brand. Wrench is a separate group (tb-wrench) you can animate -->
+  <defs>
+    <linearGradient id="tb-box" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".25"/><stop offset="1" stop-color="#000" stop-opacity=".2"/></linearGradient>
+    <linearGradient id="tb-steel" x1="0" x2="1"><stop offset="0" stop-color="#e9edf2"/><stop offset=".5" stop-color="#b9c1cc"/><stop offset="1" stop-color="#8b95a3"/></linearGradient>
+  </defs>
+  <ellipse cx="300" cy="520" rx="230" ry="24" fill="#000" opacity=".16"/>
+  <path d="M220 250v-46c0-14 10-24 24-24h112c14 0 24 10 24 24v46h-26v-40H246v40z" fill="#3a3f4a"/>
+  <g id="tb-wrench" transform="rotate(-28 380 230)">
+    <path d="M360 120h36v220h-36z" fill="url(#tb-steel)"/>
+    <path d="M378 60c-34 0-58 24-58 54 0 22 14 40 32 50h52c18-10 32-28 32-50 0-30-24-54-58-54zm-16 20h32v40h-32z" fill="url(#tb-steel)"/>
+    <path d="M366 132h8v200h-8z" fill="#fff" opacity=".6"/>
+  </g>
+  <g transform="rotate(14 230 240)"><rect x="210" y="130" width="34" height="150" rx="8" fill="#f2b632"/><rect x="220" y="96" width="14" height="44" rx="4" fill="url(#tb-steel)"/><rect x="216" y="140" width="6" height="130" rx="3" fill="#fff" opacity=".5"/></g>
+  <rect x="100" y="250" width="400" height="250" rx="22" style="fill:var(--kit-brand,#d9442f)"/>
+  <rect x="100" y="250" width="400" height="250" rx="22" fill="url(#tb-box)"/>
+  <rect x="100" y="250" width="400" height="70" rx="22" style="fill:var(--kit-brand,#d9442f)"/>
+  <rect x="100" y="306" width="400" height="14" fill="#000" opacity=".18"/>
+  <rect x="270" y="296" width="60" height="40" rx="8" fill="url(#tb-steel)"/>
+  <path d="M120 270c40-8 120-10 200-10" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".45" fill="none"/>
+</svg>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" data-kit="storefront">
+  <!-- recolour: CSS vars kit-brand (awning, sign) and kit-brand-2 (stripes), see kit/README.md -->
+  <defs>
+    <linearGradient id="sf-wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf4ea"/><stop offset="1" stop-color="#eadbc6"/></linearGradient>
+    <linearGradient id="sf-glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#bfe0ea"/><stop offset="1" stop-color="#7fb2c4"/></linearGradient>
+  </defs>
+  <ellipse cx="300" cy="530" rx="260" ry="22" fill="#000" opacity=".14"/>
+  <rect x="80" y="150" width="440" height="380" rx="10" fill="url(#sf-wall)"/>
+  <rect x="80" y="500" width="440" height="30" fill="#d7c3a6"/>
+  <rect x="150" y="96" width="300" height="62" rx="12" style="fill:var(--kit-brand,#b5482f)"/>
+  <rect x="190" y="118" width="220" height="18" rx="9" fill="#fff" opacity=".9"/>
+  <g id="sf-awning">
+    <path d="M70 180h460l-20 70H90z" style="fill:var(--kit-brand,#b5482f)"/>
+    <path d="M128 180h56l-6 70h-46zM240 180h56v70h-56zM352 180h56l4 70h-56zM464 180h56l-8 70h-46z" style="fill:var(--kit-brand-2,#fff3e3)"/>
+    <path d="M90 250c18 22 46 22 64 0 18 22 46 22 64 0 18 22 46 22 64 0 18 22 46 22 64 0 18 22 46 22 64 0 18 22 46 22 64 0 18 22 46 22 52 0z" style="fill:var(--kit-brand,#b5482f)"/>
+  </g>
+  <rect x="110" y="300" width="230" height="170" rx="8" fill="#5b4636"/>
+  <rect x="122" y="312" width="206" height="146" rx="4" fill="url(#sf-glass)"/>
+  <path d="M140 450l70-130h40l-70 130z" fill="#fff" opacity=".35"/>
+  <g fill="#7a5235"><rect x="140" y="420" width="40" height="30" rx="6"/><rect x="190" y="410" width="50" height="40" rx="8"/><circle cx="280" cy="432" r="18"/></g>
+  <rect x="370" y="300" width="120" height="200" rx="8" fill="#5b4636"/>
+  <rect x="384" y="314" width="92" height="186" rx="4" fill="#7a5c45"/>
+  <rect x="396" y="326" width="68" height="80" rx="4" fill="url(#sf-glass)"/>
+  <circle cx="462" cy="420" r="6" fill="#f2c45a"/>
+  <g id="sf-plant"><rect x="96" y="470" width="44" height="36" rx="6" fill="#c46a3e"/><circle cx="108" cy="460" r="18" fill="#4f8a4b"/><circle cx="130" cy="452" r="20" fill="#5f9e57"/></g>
+</svg>

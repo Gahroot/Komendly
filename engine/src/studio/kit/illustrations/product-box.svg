@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" data-kit="product-box">
+  <!-- generic product / delivery box. Box colour: CSS var kit-brand; put a logo over the front face (x150-330 y260-470) -->
+  <defs><linearGradient id="pb-top" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity=".1"/></linearGradient></defs>
+  <ellipse cx="320" cy="520" rx="230" ry="24" fill="#000" opacity=".16"/>
+  <path d="M130 230l200 40v240l-200-50z" style="fill:var(--kit-brand,#d9a066)"/>
+  <path d="M330 270l150-60v240l-150 60z" style="fill:var(--kit-brand,#d9a066)"/>
+  <path d="M330 270l150-60v240l-150 60z" fill="#000" opacity=".2"/>
+  <path d="M130 230l150-60 200 40-150 60z" style="fill:var(--kit-brand,#d9a066)"/>
+  <path d="M130 230l150-60 200 40-150 60z" fill="url(#pb-top)"/>
+  <path d="M200 202l200 40v60l-40 14v-58L162 216z" fill="#fff" opacity=".55"/>
+  <path d="M130 230l200 40 150-60" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width="4" stroke-linejoin="round"/>
+  <rect x="170" y="400" width="80" height="34" rx="4" fill="#fff" opacity=".85" transform="skewY(11) translate(0 -42)"/>
+</svg>

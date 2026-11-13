@@ -1,0 +1,179 @@
+<!doctype html>
+<!--
+  Ozzy kit starter: a finished 4-scene promo (hook, offer, proof, end card).
+  Copy it to ./index.html, then change ONLY: the size (3 places marked SIZE), the palette block,
+  the copy, which kit illustrations each scene shows, and SCENES timing. Layout, type scale,
+  safe zones and motion already work for 9:16, 1:1 and 16:9.
+  Sizes: 9:16 = 1080x1920, 1:1 = 1080x1080, 16:9 = 1920x1080.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" /><!-- SIZE 1/3 -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+  @font-face { font-family: "Fraunces"; src: url("kit/fonts/fraunces-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; }
+  @font-face { font-family: "Fraunces"; src: url("kit/fonts/fraunces-italic.woff2") format("woff2"); font-weight: 100 900; font-style: italic; }
+  @font-face { font-family: "Bricolage Grotesque"; src: url("kit/fonts/bricolage-grotesque-normal.woff2") format("woff2"); font-weight: 200 800; }
+  @font-face { font-family: "Host Grotesk"; src: url("kit/fonts/host-grotesk-normal.woff2") format("woff2"); font-weight: 300 800; }
+
+  /* PALETTE: set from the brand colours in ./studio.md (or pick a fitting palette by hand).
+     bg1..bg4 = one field colour per scene; ink = text on light fields; paper = text on dark fields. */
+  :root {
+    --bg1: #f3e7d6; --bg2: #b5482f; --bg3: #ecc979; --bg4: #2b1a12;
+    --ink: #2b1a12; --paper: #fff6ea; --accent: #b5482f; --accent-2: #f2b632; --muted: #7a5c45;
+    --display: "Bricolage Grotesque", sans-serif; --serif: "Fraunces", serif; --text: "Host Grotesk", sans-serif;
+  }
+  html, body { margin: 0; width: 100%; height: 100%; background: var(--bg1); }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; font-family: var(--text); color: var(--ink); }
+  /* Units: 1vmin = 1% of the short side, so the same CSS fits every aspect. */
+  .scene { position: absolute; inset: 0; visibility: hidden; }
+  .scene.dark { color: var(--paper); }
+  .bg { position: absolute; inset: 0; }
+  .s1 .bg { background: var(--bg1); } .s2 .bg { background: var(--bg2); } .s3 .bg { background: var(--bg3); } .s4 .bg { background: var(--bg4); }
+  /* soft checker floor + vignette give depth (Sol-style); keep them subtle */
+  .floor { position: absolute; left: 0; right: 0; bottom: 0; height: 22%; opacity: .14;
+    background: repeating-conic-gradient(currentColor 0 25%, transparent 0 50%) 0 0 / 9vmin 9vmin;
+    -webkit-mask-image: linear-gradient(transparent, #000 80%); mask-image: linear-gradient(transparent, #000 80%); }
+  .vignette { position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 40%, transparent 55%, rgba(0,0,0,.18)); }
+  /* SAFE ZONE: text never leaves .safe. 9:16 keeps clear of feed UI (top 7%, bottom 22%, right 17%). */
+  .safe { position: absolute; left: 7.4%; right: 7.4%; top: 7.2%; bottom: 22%; display: flex; flex-direction: column; }
+  .copy { display: flex; flex-direction: column; }
+  .topbar { display: flex; justify-content: space-between; font: 700 2.2vmin/1 var(--text); letter-spacing: .14em; text-transform: uppercase; opacity: .85; }
+  /* TYPE: three levels only. eyebrow (small caps) > headline (huge) > sub (medium). */
+  .eyebrow { font: 700 2.6vmin/1.2 var(--text); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-top: 6vmin; }
+  .dark .eyebrow, .s2 .eyebrow { color: var(--accent-2); }
+  .headline { font: 800 13vmin/.92 var(--display); letter-spacing: -.035em; margin: 2vmin 0 0; }
+  .headline .line { display: block; overflow: hidden; padding-bottom: .06em; }
+  .headline .line > span { display: inline-block; }
+  .headline em { font: italic 500 1em/1 var(--serif); letter-spacing: -.02em; }
+  .sub { font: 500 4vmin/1.25 var(--text); margin-top: 3vmin; max-width: 26ch; opacity: .9; }
+  .pill { align-self: flex-start; margin-top: 3vmin; padding: 1.6vmin 3.4vmin; border-radius: 99px; background: var(--ink); color: var(--paper); font: 800 3.2vmin/1 var(--text); letter-spacing: .04em; text-transform: uppercase; }
+  .dark .pill, .s2 .pill { background: var(--paper); color: var(--ink); }
+  /* ART: the illustration sits on a soft plate, centred in the space under the text. */
+  .art { position: relative; flex: 1; min-height: 0; display: grid; place-items: center; }
+  .plate { position: absolute; width: min(78vmin, 100%); aspect-ratio: 1; border-radius: 50%; background: rgba(255,255,255,.22); box-shadow: inset 0 -2vmin 6vmin rgba(0,0,0,.06); }
+  .dark .plate { background: rgba(255,255,255,.07); }
+  .art .hero { position: relative; width: min(64vmin, 92%); max-height: 100%; }
+  .art .hero img, .art .hero svg { width: 100%; height: auto; display: block; }
+  .art .pair { position: relative; display: flex; align-items: flex-end; justify-content: center; width: min(80vmin, 100%); }
+  .art .pair > * { width: 55%; } .art .pair > * + * { margin-left: -12%; }
+  .accent-bit { position: absolute; width: 7vmin; }
+  .sticker { position: absolute; width: 26vmin; right: 6%; top: 4%; display: grid; place-items: center; transform: rotate(-8deg); }
+  .sticker img { width: 100%; } .sticker b { position: absolute; color: #fff; font: 900 5vmin/0.95 var(--display); text-align: center; text-transform: uppercase; }
+  .brandname { font: 800 15vmin/.9 var(--serif); letter-spacing: -.03em; margin: 4vmin 0 0; }
+  .brandname .dot { color: var(--accent-2); }
+  /* No CSS transform here: GSAP owns it (a CSS translate + yPercent would stack and cover the scene). */
+  .wipe { position: absolute; inset: 0; z-index: 50; }
+  /* LANDSCAPE (16:9): text left, art right. */
+  @media (min-aspect-ratio: 5/4) {
+    .safe { left: 6%; right: 6%; top: 9%; bottom: 9%; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto 1fr; column-gap: 4%; }
+    .topbar { grid-column: 1 / 3; }
+    .copy { grid-column: 1; align-self: center; }
+    .art { grid-column: 2; grid-row: 2; }
+    .headline { font-size: 12vmin; } .sub { font-size: 3.6vmin; }
+    .floor { height: 18%; }
+  }
+  /* SQUARE: smaller headline, art shares the space. */
+  @media (min-aspect-ratio: 9/10) and (max-aspect-ratio: 5/4) { .headline { font-size: 10.5vmin; } .eyebrow { margin-top: 3vmin; } .plate { width: 58vmin; } .art .hero { width: 50vmin; } }
+</style>
+</head>
+<body>
+<!-- SIZE 2/3: data-width / data-height. data-duration = sum of SCENES. -->
+<div id="root" data-composition-id="main" data-start="0" data-width="1080" data-height="1920" data-duration="15">
+
+  <!-- SCENE 1 HOOK (stop the scroll in 1 s: 2-5 words, one hero object) -->
+  <section class="scene s1">
+    <div class="bg"></div><div class="floor"></div><div class="vignette"></div>
+    <div class="safe">
+      <div class="topbar"><span>Brand name</span><span>City, ST</span></div>
+      <div class="copy">
+        <div class="eyebrow">Your morning, upgraded</div>
+        <h1 class="headline"><span class="line"><span>Hello,</span></span><span class="line"><span><em>cozy.</em></span></span></h1>
+        <div class="sub">One short line that says what this is.</div>
+      </div>
+      <div class="art"><div class="plate"></div><div class="hero"><img src="kit/illustrations/latte-cup.svg" alt=""></div>
+        <img class="accent-bit" src="kit/illustrations/coffee-bean.svg" style="left:6%;top:12%" alt=""><img class="accent-bit" src="kit/illustrations/sparkle.svg" style="right:8%;top:6%" alt=""></div>
+    </div>
+  </section>
+
+  <!-- SCENE 2 OFFER part 1 (what you get) -->
+  <section class="scene s2 dark">
+    <div class="bg"></div><div class="floor"></div><div class="vignette"></div><div class="wipe" style="background:var(--bg2)"></div>
+    <div class="safe">
+      <div class="topbar"><span>A perfect pair</span><span>Brand name</span></div>
+      <div class="copy">
+        <div class="eyebrow">This week only</div>
+        <h1 class="headline"><span class="line"><span>Any latte.</span></span></h1>
+        <div class="sub"><em style="font-family:var(--serif)">A little extra, on us.</em></div>
+      </div>
+      <div class="art"><div class="plate"></div><div class="pair"><img src="kit/illustrations/latte-cup.svg" alt=""><img src="kit/illustrations/croissant.svg" alt=""></div></div>
+    </div>
+  </section>
+
+  <!-- SCENE 3 OFFER part 2 (the deal, said exactly as the user said it) -->
+  <section class="scene s3">
+    <div class="bg"></div><div class="floor"></div><div class="vignette"></div><div class="wipe" style="background:var(--bg3)"></div>
+    <div class="safe">
+      <div class="topbar"><span>The deal</span><span></span></div>
+      <div class="copy">
+        <h1 class="headline"><span class="line"><span>FREE</span></span><span class="line"><span>PASTRY</span></span></h1>
+        <div class="sub">with any latte</div>
+        <div class="pill">This week</div>
+      </div>
+      <div class="art"><div class="plate"></div><div class="hero"><img src="kit/illustrations/croissant.svg" alt=""></div>
+        <div class="sticker"><img src="kit/illustrations/burst-badge.svg" alt=""><b>Free</b></div></div>
+    </div>
+  </section>
+
+  <!-- SCENE 4 END CARD (name, place, the offer once more, call to action) -->
+  <section class="scene s4 dark">
+    <div class="bg"></div><div class="floor"></div><div class="vignette"></div><div class="wipe" style="background:var(--bg4)"></div>
+    <div class="safe">
+      <div class="topbar"><span>Come get cozy</span><span></span></div>
+      <div class="copy">
+        <h1 class="brandname"><span class="line"><span>Brand</span></span><span class="line"><span>Name<span class="dot">.</span></span></span></h1>
+        <div class="sub">Brand Name, City</div>
+        <div class="pill">Free pastry with any latte</div>
+      </div>
+      <div class="art"><div class="plate"></div><div class="pair"><img src="kit/illustrations/latte-cup.svg" alt=""><img src="kit/illustrations/croissant.svg" alt=""></div></div>
+    </div>
+  </section>
+</div>
+<script>
+  // SCENES: seconds per scene, in order. Each text must stay readable >= 1.2 s after it lands.
+  const SCENES = [3.4, 3.6, 4.0, 4.0];
+  const T = 0.5; // transition length (colour wipe)
+  const tl = gsap.timeline({ paused: true });
+  const scenes = gsap.utils.toArray(".scene");
+  let at = 0;
+  scenes.forEach((s, i) => {
+    const d = SCENES[i];
+    const start = at;
+    // show: scene i appears as the wipe of the previous one covers the frame
+    tl.set(s, { visibility: "visible", zIndex: i + 1 }, start);
+    const wipe = s.querySelector(".wipe");
+    if (wipe && i > 0) tl.fromTo(wipe, { yPercent: 101 }, { yPercent: -101, duration: T * 2, ease: "power3.inOut" }, start - T);
+    if (i > 0) tl.set(scenes[i - 1], { visibility: "hidden" }, start + T * 0.1);
+    const b = start + (i > 0 ? T * 0.6 : 0.15); // when this scene's content starts building
+    // entrances: eyebrow -> headline lines (masked rise) -> sub -> pill; art springs in under them
+    tl.from(s.querySelectorAll(".topbar"), { opacity: 0, y: -20, duration: 0.4, ease: "power2.out" }, b);
+    tl.from(s.querySelectorAll(".eyebrow"), { opacity: 0, y: 24, duration: 0.45, ease: "power3.out" }, b + 0.05);
+    tl.from(s.querySelectorAll(".line > span"), { yPercent: 110, duration: 0.7, ease: "expo.out", stagger: 0.09 }, b + 0.1);
+    tl.from(s.querySelectorAll(".sub"), { opacity: 0, y: 30, duration: 0.5, ease: "power3.out" }, b + 0.4);
+    tl.from(s.querySelectorAll(".pill"), { scale: 0.6, opacity: 0, duration: 0.5, ease: "back.out(2.2)", transformOrigin: "left center" }, b + 0.55);
+    tl.from(s.querySelectorAll(".plate"), { scale: 0.7, opacity: 0, duration: 0.8, ease: "expo.out" }, b + 0.1);
+    tl.from(s.querySelectorAll(".hero, .pair > *"), { y: 120, scale: 0.85, opacity: 0, duration: 0.9, ease: "back.out(1.4)", stagger: 0.12 }, b + 0.2);
+    tl.from(s.querySelectorAll(".sticker"), { scale: 0, rotation: -40, duration: 0.6, ease: "back.out(2.5)" }, b + 0.8);
+    tl.from(s.querySelectorAll(".accent-bit"), { scale: 0, rotation: 90, opacity: 0, duration: 0.5, ease: "back.out(2)", stagger: 0.1 }, b + 0.6);
+    // life while holding: slow push-in on the art + gentle float (finite, seek-safe)
+    tl.fromTo(s.querySelectorAll(".art"), { scale: 1 }, { scale: 1.06, duration: d, ease: "none" }, start);
+    tl.to(s.querySelectorAll(".hero, .pair"), { y: -14, duration: d / 2, ease: "sine.inOut", yoyo: true, repeat: 1 }, b + 1.1);
+    at += d;
+  });
+  tl.to({}, { duration: 0.01 }, at - 0.01);
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

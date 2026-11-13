@@ -77,9 +77,26 @@ export function studioBrief(o: { brand: BriefBrand | null; uploads: BriefUpload[
     "- Before you finish, check every scene change: look at stills just before and just after each cut (`hf snapshot --at` around the cut times) and make sure scene changes are clean and there are no stutters (no blank or half-built frame, no jump back, no element popping in late or twice).",
     "- Their footage is theirs to use; don't ask about rights for it. Files marked REFERENCE AD are someone else's ad: never use their footage, frames, images, audio or logos.",
   );
+  lines.push("", ...CRAFT_RULES);
   if (o.uploads.some((u) => u.reference)) lines.push("", ...REMIX_RULES);
   return lines.join("\n") + "\n";
 }
+
+/** The ./kit building blocks + craft rules: lets cheaper models compose polished parts instead of drawing from scratch. */
+export const CRAFT_RULES = [
+  "## Building blocks (./kit) - use them",
+  "- ./kit/starter.html is a finished, tested 4-scene promo (hook, offer, deal, end card) with a 3-level type scale, safe zones for 9:16, 1:1 and 16:9, colour-wipe transitions, staggered entrances and depth (plate, floor, vignette). For a new video with no footage, START from it: copy it to ./index.html, then change the size (3 places marked SIZE), the palette block, the copy, the illustrations per scene and the SCENES timings. Add or remove scenes by copying a <section>. Keep its layout, type scale and motion unless the user asks for a different style.",
+  "- ./kit/illustrations/*.svg are polished, layered illustrations (latte-cup, croissant, burger, storefront, house, van, toolbox, faucet, phone, laptop-dashboard, beauty-bottle, dumbbell, product-box, and accents: sparkle, burst-badge, star-rating, check-badge, map-pin, calendar, coffee-bean, confetti, review-card). Use them as <img src=\"kit/illustrations/<name>.svg\">. Prefer them over drawing your own; if you need a new object, match their style (gradients, a highlight, a soft contact shadow, one light direction) and keep every part attached.",
+  "- Fonts in ./kit/fonts (Fraunces, Bricolage Grotesque, Host Grotesk) are already wired in the starter. Their brand fonts win when given.",
+  "",
+  "## Craft rules",
+  "- Plan first: write ./plan.md with 3-6 scenes (seconds, the exact on-screen words, which illustration or footage), then build. Total must match the length asked.",
+  "- Make it theirs, not the template: pick a palette from their brand (or one that fits the business, not the starter's coffee colours), use a different hero illustration in each scene (never the same one more than twice), and vary at least one layout (e.g. a full-bleed type scene, a big price or number, a split screen).",
+  "- One idea per scene: 2-6 big words, at most one short sub line. Type: eyebrow (small caps) > headline (huge) > sub. Every text stays readable at least 1.2 s after it lands.",
+  "- Depth and polish: hero object on a soft plate or shadow, a few accents (sparkle, beans, confetti), gentle push-in or float while holding. Never a flat empty frame; never text touching the edges (stay inside the safe zone).",
+  "- Copy: say the offer exactly as the user said it. Never invent prices, dates, discounts, claims or reviews.",
+  "- Self-check before you finish (one contact sheet of the whole video, then fix and check once more): no cut-off or overlapping text, no detached or broken parts of an object, no blank or half-built frames, enough contrast on every frame, the brand name and offer readable, the end card holds at least 2 s.",
+];
 
 /** What the agent receives this turn: the user's words plus a short note about new files. */
 export const STUDIO_NO_RENDER_NOTE = "Do NOT run hf render, motion-blur.mjs or reveal.mjs: build the composition, check stills, and stop; the studio renders the final video itself.";

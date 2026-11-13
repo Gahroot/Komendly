@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" data-kit="faucet">
+  <!-- plumbing: chrome faucet over a sink with a water drop (group fc-drop) and splash rings (fc-ripple) -->
+  <defs>
+    <linearGradient id="fc-chrome" x1="0" x2="1"><stop offset="0" stop-color="#8d98a8"/><stop offset=".35" stop-color="#f4f7fa"/><stop offset=".6" stop-color="#c3cbd6"/><stop offset="1" stop-color="#7d8898"/></linearGradient>
+    <linearGradient id="fc-chrome-v" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f7fa"/><stop offset="1" stop-color="#8d98a8"/></linearGradient>
+    <linearGradient id="fc-drop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9fe0ff"/><stop offset="1" stop-color="#2d8fd6"/></linearGradient>
+    <linearGradient id="fc-sink" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d9e1ea"/></linearGradient>
+  </defs>
+  <ellipse cx="300" cy="540" rx="250" ry="20" fill="#000" opacity=".14"/>
+  <path d="M60 400h480l-40 120H100z" fill="url(#fc-sink)"/>
+  <ellipse cx="300" cy="400" rx="240" ry="34" fill="#eef3f8"/>
+  <ellipse cx="300" cy="404" rx="200" ry="22" fill="#c9d4e0"/>
+  <g id="fc-ripple" fill="none" stroke="#5fb4ea" stroke-width="4" opacity=".7"><ellipse cx="380" cy="404" rx="40" ry="8"/><ellipse cx="380" cy="404" rx="70" ry="13" opacity=".5"/></g>
+  <rect x="150" y="330" width="90" height="56" rx="10" fill="url(#fc-chrome)"/>
+  <rect x="176" y="150" width="40" height="190" rx="12" fill="url(#fc-chrome)"/>
+  <path d="M196 150c0-60 40-90 100-90h40c40 0 64 30 64 70v40h-40v-36c0-18-10-30-28-30h-36c-38 0-60 16-60 46z" fill="url(#fc-chrome-v)"/>
+  <rect x="352" y="168" width="56" height="22" rx="6" fill="url(#fc-chrome)"/>
+  <rect x="120" y="230" width="152" height="26" rx="13" fill="url(#fc-chrome)"/>
+  <rect x="184" y="160" width="8" height="170" rx="4" fill="#fff" opacity=".7"/>
+  <g id="fc-drop"><path d="M380 210c-18 26-30 44-30 60a30 30 0 0 0 60 0c0-16-12-34-30-60z" fill="url(#fc-drop)"/><ellipse cx="368" cy="262" rx="7" ry="11" fill="#fff" opacity=".7"/></g>
+</svg>

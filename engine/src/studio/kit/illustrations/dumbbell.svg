@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" data-kit="dumbbell">
+  <!-- plates colour: CSS var kit-brand -->
+  <defs>
+    <linearGradient id="db-steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1f4f7"/><stop offset=".5" stop-color="#a9b2bf"/><stop offset="1" stop-color="#6d7684"/></linearGradient>
+    <linearGradient id="db-shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".3"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></linearGradient>
+  </defs>
+  <ellipse cx="300" cy="420" rx="250" ry="22" fill="#000" opacity=".16"/>
+  <rect x="150" y="285" width="300" height="30" rx="10" fill="url(#db-steel)"/>
+  <g style="fill:var(--kit-brand,#2b2f38)">
+    <rect x="70" y="210" width="50" height="180" rx="14"/><rect x="118" y="180" width="50" height="240" rx="14"/>
+    <rect x="432" y="180" width="50" height="240" rx="14"/><rect x="480" y="210" width="50" height="180" rx="14"/>
+  </g>
+  <g fill="url(#db-shade)"><rect x="70" y="210" width="50" height="180" rx="14"/><rect x="118" y="180" width="50" height="240" rx="14"/><rect x="432" y="180" width="50" height="240" rx="14"/><rect x="480" y="210" width="50" height="180" rx="14"/></g>
+  <g fill="#fff" opacity=".4"><rect x="128" y="196" width="8" height="200" rx="4"/><rect x="442" y="196" width="8" height="200" rx="4"/></g>
+  <g stroke="#6d7684" stroke-width="3" opacity=".6"><path d="M230 286v28M250 286v28M270 286v28M330 286v28M350 286v28M370 286v28"/></g>
+</svg>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" data-kit="phone">
+  <!-- screen colour: CSS var kit-brand. Put your own UI/text over the screen area x190-410 y80-500 (in a 600 box) -->
+  <defs>
+    <linearGradient id="ph-body" x1="0" x2="1"><stop offset="0" stop-color="#3a3f4a"/><stop offset=".5" stop-color="#1d2028"/><stop offset="1" stop-color="#2e333d"/></linearGradient>
+    <linearGradient id="ph-glare" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  </defs>
+  <ellipse cx="300" cy="555" rx="150" ry="18" fill="#000" opacity=".18"/>
+  <rect x="172" y="50" width="256" height="490" rx="44" fill="url(#ph-body)"/>
+  <rect x="178" y="56" width="244" height="478" rx="40" fill="none" stroke="#5a606c" stroke-width="3"/>
+  <rect x="190" y="70" width="220" height="450" rx="30" style="fill:var(--kit-brand,#2f6df6)"/>
+  <g id="ph-ui">
+    <rect x="212" y="140" width="176" height="110" rx="16" fill="#fff" opacity=".95"/>
+    <rect x="228" y="160" width="100" height="14" rx="7" fill="#1d2028" opacity=".8"/>
+    <rect x="228" y="186" width="140" height="10" rx="5" fill="#1d2028" opacity=".3"/>
+    <rect x="228" y="206" width="120" height="10" rx="5" fill="#1d2028" opacity=".3"/>
+    <rect x="212" y="268" width="84" height="84" rx="16" fill="#fff" opacity=".85"/>
+    <rect x="304" y="268" width="84" height="84" rx="16" fill="#fff" opacity=".6"/>
+    <rect x="212" y="440" width="176" height="48" rx="24" fill="#fff"/>
+    <rect x="262" y="458" width="76" height="12" rx="6" style="fill:var(--kit-brand,#2f6df6)"/>
+  </g>
+  <rect x="262" y="82" width="76" height="20" rx="10" fill="#0e1015"/>
+  <path d="M190 100a30 30 0 0 1 30-30h120L190 330z" fill="url(#ph-glare)"/>
+  <rect x="166" y="160" width="6" height="50" rx="3" fill="#2a2e37"/><rect x="428" y="180" width="6" height="70" rx="3" fill="#2a2e37"/>
+</svg>

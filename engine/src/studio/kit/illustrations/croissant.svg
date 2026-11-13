@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" data-kit="croissant">
+  <defs>
+    <linearGradient id="cr-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6c069"/><stop offset=".6" stop-color="#d98a32"/><stop offset="1" stop-color="#a95a1c"/></linearGradient>
+    <linearGradient id="cr-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbd38a"/><stop offset=".55" stop-color="#e49a40"/><stop offset="1" stop-color="#b8651f"/></linearGradient>
+  </defs>
+  <ellipse cx="300" cy="440" rx="230" ry="30" fill="#3b2314" opacity=".18"/>
+  <!-- back to front: tips, outer lobes, inner lobes, center lobe. Every lobe overlaps its neighbour. -->
+  <path d="M70 380c-10-40 20-80 70-90l40 90c-40 20-90 30-110 0z" fill="url(#cr-a)"/>
+  <path d="M530 380c10-40-20-80-70-90l-40 90c40 20 90 30 110 0z" fill="url(#cr-a)"/>
+  <path d="M120 300c30-50 90-70 130-60l10 170c-60 10-130 0-150-40-6-24 0-50 10-70z" fill="url(#cr-b)"/>
+  <path d="M480 300c-30-50-90-70-130-60l-10 170c60 10 130 0 150-40 6-24 0-50-10-70z" fill="url(#cr-b)"/>
+  <path d="M220 220c40-40 120-40 160 0 20 60 10 150-20 200-40 10-80 10-120 0-30-50-40-140-20-200z" fill="url(#cr-a)"/>
+  <g fill="none" stroke="#8e4714" stroke-width="6" stroke-linecap="round" opacity=".45">
+    <path d="M250 240c-10 50-8 120 10 175"/><path d="M350 240c10 50 8 120-10 175"/>
+    <path d="M160 300c-10 30-8 70 10 100"/><path d="M440 300c10 30 8 70-10 100"/>
+  </g>
+  <g fill="none" stroke="#fff3d6" stroke-width="12" stroke-linecap="round" opacity=".75">
+    <path d="M262 236c20-12 56-12 76 0"/><path d="M150 300c14-18 36-30 60-34"/><path d="M390 266c24 4 46 16 60 34"/>
+  </g>
+  <g fill="#fff3d6" opacity=".9"><circle cx="300" cy="262" r="5"/><circle cx="276" cy="300" r="3"/><circle cx="330" cy="320" r="4"/></g>
+</svg>

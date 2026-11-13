@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" data-kit="confetti">
+  <!-- a burst of confetti pieces (each <g class="bit">): scatter them from the centre with a stagger, then let them fall 40-80px and rotate. Colours: kit-accent, kit-accent-2 -->
+  <g class="bit"><rect x="80" y="60" width="26" height="12" rx="4" transform="rotate(30 93 66)" style="fill:var(--kit-accent,#e2442f)"/></g>
+  <g class="bit"><circle cx="170" cy="140" r="9" style="fill:var(--kit-accent-2,#f2b632)"/></g>
+  <g class="bit"><rect x="250" y="40" width="22" height="10" rx="4" transform="rotate(-20 261 45)" fill="#4f9de0"/></g>
+  <g class="bit"><path d="M340 110l12 20-24 0z" style="fill:var(--kit-accent,#e2442f)"/></g>
+  <g class="bit"><rect x="420" y="70" width="26" height="12" rx="4" transform="rotate(60 433 76)" style="fill:var(--kit-accent-2,#f2b632)"/></g>
+  <g class="bit"><circle cx="510" cy="160" r="8" fill="#5fae45"/></g>
+  <g class="bit"><rect x="120" y="250" width="22" height="10" rx="4" transform="rotate(-40 131 255)" fill="#5fae45"/></g>
+  <g class="bit"><circle cx="230" cy="320" r="10" style="fill:var(--kit-accent,#e2442f)"/></g>
+  <g class="bit"><rect x="380" y="290" width="26" height="12" rx="4" transform="rotate(15 393 296)" fill="#4f9de0"/></g>
+  <g class="bit"><path d="M480 280l12 20-24 0z" style="fill:var(--kit-accent-2,#f2b632)"/></g>
+  <g class="bit"><circle cx="300" cy="200" r="7" fill="#b06ad8"/></g>
+  <g class="bit"><rect x="40" y="190" width="20" height="9" rx="4" transform="rotate(70 50 194)" style="fill:var(--kit-accent-2,#f2b632)"/></g>
+</svg>

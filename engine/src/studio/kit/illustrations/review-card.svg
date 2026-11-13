@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 300" data-kit="review-card">
+  <!-- card base for a customer quote. Put the quote and name in HTML on top (text area x150-600 y60-250); never invent a real quote, use the user's words or a generic line -->
+  <rect x="14" y="22" width="612" height="268" rx="30" fill="#000" opacity=".12"/>
+  <rect x="10" y="10" width="612" height="268" rx="30" fill="#fff"/>
+  <circle cx="84" cy="92" r="46" style="fill:var(--kit-accent,#f2b632)"/>
+  <circle cx="84" cy="80" r="16" fill="#fff" opacity=".9"/><path d="M56 120a28 24 0 0 1 56 0z" fill="#fff" opacity=".9"/>
+  <path d="M560 40c-24 4-36 20-36 46h30v34h-46V90c0-40 18-60 52-64zM620 40c-24 4-36 20-36 46" fill="#000" opacity=".06"/>
+</svg>

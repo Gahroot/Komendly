@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" data-kit="latte-cup">
+  <defs>
+    <linearGradient id="lc-cup" x1="0" x2="1"><stop offset="0" stop-color="#fffaf1"/><stop offset=".55" stop-color="#f6ead6"/><stop offset="1" stop-color="#dcc6a6"/></linearGradient>
+    <radialGradient id="lc-coffee" cx=".5" cy=".45" r=".6"><stop offset="0" stop-color="#b0723f"/><stop offset=".7" stop-color="#8a4f26"/><stop offset="1" stop-color="#5e3216"/></radialGradient>
+    <linearGradient id="lc-saucer" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fffaf2"/><stop offset="1" stop-color="#e2cfb2"/></linearGradient>
+  </defs>
+  <ellipse cx="300" cy="500" rx="210" ry="34" fill="#3b2314" opacity=".18"/>
+  <g id="lc-saucer-g">
+    <ellipse cx="300" cy="470" rx="200" ry="46" fill="#cdb593"/>
+    <ellipse cx="300" cy="462" rx="200" ry="44" fill="url(#lc-saucer)"/>
+    <ellipse cx="300" cy="458" rx="120" ry="24" fill="#e6d4b8"/>
+  </g>
+  <g id="lc-cup-g">
+    <!-- handle drawn as one closed ring that overlaps the body so it can never float -->
+    <path d="M410 300c58-12 96 18 92 62-4 46-52 70-108 62l4-30c38 6 70-8 72-34 2-24-22-38-62-30z" fill="#e9d8bd"/>
+    <path d="M414 312c44-8 70 12 68 46" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".7"/>
+    <path d="M150 250h300c0 120-30 200-150 200S150 370 150 250z" fill="url(#lc-cup)"/>
+    <path d="M190 280c6 70 30 130 80 150" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round" opacity=".75"/>
+    <path d="M430 270c-4 80-24 140-80 166" fill="none" stroke="#b99a72" stroke-width="10" stroke-linecap="round" opacity=".35"/>
+  </g>
+  <ellipse cx="300" cy="250" rx="150" ry="40" fill="#efe0c7"/>
+  <ellipse cx="300" cy="254" rx="134" ry="32" fill="url(#lc-coffee)"/>
+  <g id="lc-art" fill="#fff4e2">
+    <path d="M300 280c-30-6-62-18-62-34 0-12 16-18 30-10 10 6 22 16 32 26 10-10 22-20 32-26 14-8 30-2 30 10 0 16-32 28-62 34z"/>
+    <path d="M300 280v-34" stroke="#c88a54" stroke-width="3" fill="none"/>
+    <ellipse cx="300" cy="238" rx="20" ry="6" opacity=".9"/>
+  </g>
+  <g id="lc-steam" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" opacity=".85">
+    <path d="M250 200c-20-26 18-40 0-70s16-44 0-70"/>
+    <path d="M300 190c-20-26 18-40 0-70s16-44 0-70"/>
+    <path d="M350 200c-20-26 18-40 0-70s16-44 0-70"/>
+  </g>
+</svg>

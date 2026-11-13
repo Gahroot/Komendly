@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" data-kit="calendar">
+  <!-- "this week" / booking. Header: CSS var kit-accent. Overlay a day number or "THIS WEEK" in HTML over the white page (y 110-260) -->
+  <rect x="34" y="52" width="232" height="220" rx="26" fill="#000" opacity=".12"/>
+  <rect x="30" y="44" width="240" height="220" rx="26" fill="#fff"/>
+  <path d="M30 70a26 26 0 0 1 26-26h188a26 26 0 0 1 26 26v34H30z" style="fill:var(--kit-accent,#e2442f)"/>
+  <g fill="#2b2f38"><rect x="82" y="24" width="18" height="50" rx="9"/><rect x="200" y="24" width="18" height="50" rx="9"/></g>
+  <g fill="#e6e9ee"><rect x="58" y="128" width="40" height="30" rx="6"/><rect x="110" y="128" width="40" height="30" rx="6"/><rect x="162" y="128" width="40" height="30" rx="6"/><rect x="214" y="128" width="30" height="30" rx="6"/><rect x="58" y="172" width="40" height="30" rx="6"/><rect x="162" y="172" width="40" height="30" rx="6"/><rect x="214" y="172" width="30" height="30" rx="6"/><rect x="58" y="216" width="40" height="30" rx="6"/><rect x="110" y="216" width="40" height="30" rx="6"/></g>
+  <rect x="110" y="172" width="40" height="30" rx="6" style="fill:var(--kit-accent,#e2442f)"/>
+</svg>

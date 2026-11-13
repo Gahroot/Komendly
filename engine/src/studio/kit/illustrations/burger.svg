@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" data-kit="burger">
+  <defs>
+    <linearGradient id="bg-bun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7b955"/><stop offset="1" stop-color="#c9741f"/></linearGradient>
+    <linearGradient id="bg-patty" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a3d1e"/><stop offset="1" stop-color="#4a2210"/></linearGradient>
+  </defs>
+  <ellipse cx="300" cy="510" rx="220" ry="26" fill="#000" opacity=".16"/>
+  <path d="M110 420h380c0 40-30 70-70 70H180c-40 0-70-30-70-70z" fill="url(#bg-bun)"/>
+  <path d="M100 360c40 30 80-10 120 20s80-10 120 20 80-10 120 20l40-20v30H100z" fill="#5fae45"/>
+  <rect x="104" y="350" width="392" height="70" rx="34" fill="url(#bg-patty)"/>
+  <path d="M130 372c60-10 260-10 340 0" stroke="#a8603a" stroke-width="6" stroke-linecap="round" fill="none" opacity=".6"/>
+  <path d="M96 330h408l-30 34-24 30-30-30-40 40-30-40-40 36-30-36-40 40-30-40-40 30-30-30-30 26z" fill="#ffc531"/>
+  <g fill="#e2442f"><rect x="110" y="300" width="180" height="34" rx="17"/><rect x="310" y="300" width="180" height="34" rx="17"/></g>
+  <path d="M100 300c0-110 90-170 200-170s200 60 200 170z" fill="url(#bg-bun)"/>
+  <path d="M150 230c30-50 80-76 140-80" stroke="#ffe0a6" stroke-width="14" stroke-linecap="round" fill="none" opacity=".75"/>
+  <g fill="#fff3d6"><ellipse cx="250" cy="190" rx="8" ry="4" transform="rotate(-20 250 190)"/><ellipse cx="310" cy="170" rx="8" ry="4" transform="rotate(10 310 170)"/><ellipse cx="370" cy="200" rx="8" ry="4" transform="rotate(30 370 200)"/><ellipse cx="200" cy="240" rx="8" ry="4"/><ellipse cx="330" cy="240" rx="8" ry="4" transform="rotate(-30 330 240)"/><ellipse cx="420" cy="250" rx="8" ry="4" transform="rotate(20 420 250)"/></g>
+</svg>

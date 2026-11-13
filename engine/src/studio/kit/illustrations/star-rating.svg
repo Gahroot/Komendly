@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 110" data-kit="star-rating">
+  <!-- five stars, each its own <g class="star"> so they can pop in one by one (stagger 0.08s) -->
+  <defs><linearGradient id="sr-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd76a"/><stop offset="1" stop-color="#f2a516"/></linearGradient></defs>
+  <g class="star"><path d="M55 8l14 30 33 4-24 22 6 33-29-16-29 16 6-33L8 42l33-4z" fill="url(#sr-g)"/></g>
+  <g class="star" transform="translate(112 0)"><path d="M55 8l14 30 33 4-24 22 6 33-29-16-29 16 6-33L8 42l33-4z" fill="url(#sr-g)"/></g>
+  <g class="star" transform="translate(224 0)"><path d="M55 8l14 30 33 4-24 22 6 33-29-16-29 16 6-33L8 42l33-4z" fill="url(#sr-g)"/></g>
+  <g class="star" transform="translate(336 0)"><path d="M55 8l14 30 33 4-24 22 6 33-29-16-29 16 6-33L8 42l33-4z" fill="url(#sr-g)"/></g>
+  <g class="star" transform="translate(448 0)"><path d="M55 8l14 30 33 4-24 22 6 33-29-16-29 16 6-33L8 42l33-4z" fill="url(#sr-g)"/></g>
+</svg>

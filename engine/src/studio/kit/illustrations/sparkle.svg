@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" data-kit="sparkle">
+  <!-- 4-point sparkle; colour: CSS var kit-accent. Animate scale 0 to 1 plus rotate 45deg -->
+  <path d="M100 10c8 50 40 82 90 90-50 8-82 40-90 90-8-50-40-82-90-90 50-8 82-40 90-90z" style="fill:var(--kit-accent,#f2b632)"/>
+  <path d="M100 52c4 24 20 40 44 48-24 4-40 20-44 44" fill="#fff" opacity=".45"/>
+</svg>
