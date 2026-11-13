@@ -55,13 +55,14 @@ try {
   for (let i = 0; i < 2 && turns.at(-1)?.result.asked; i++) turns.push(await turn("Your call: go with what you recommend and make it now."));
   const firstCount = turns.length;
   if (editText) turns.push(await turn(editText));
-  out.perTurn = turns.map((t, i) => ({ kind: i < firstCount ? "first" : "edit", ms: t.ms, status: t.status, input: t.usage.reduce((a, u) => a + (u.inputTokens ?? 0), 0), output: t.usage.reduce((a, u) => a + (u.outputTokens ?? 0), 0), reply: t.reply.slice(0, 300) }));
+  out.perTurn = turns.map((t, i) => ({ kind: i < firstCount ? "first" : "edit", ms: t.ms, timing: (t.result as { timing?: unknown }).timing, status: t.status, input: t.usage.reduce((a, u) => a + (u.inputTokens ?? 0), 0), output: t.usage.reduce((a, u) => a + (u.outputTokens ?? 0), 0), reply: t.reply.slice(0, 300) }));
   out.totalMs = turns.reduce((a, t) => a + t.ms, 0);
   out.inputTokens = turns.flatMap((t) => t.usage).reduce((a, u) => a + (u.inputTokens ?? 0), 0);
   out.outputTokens = turns.flatMap((t) => t.usage).reduce((a, u) => a + (u.outputTokens ?? 0), 0);
   const renders = await db.studioRender.findMany({ where: { sessionId: session.id }, orderBy: { version: "asc" } });
   out.renders = renders.map((r) => ({ version: r.version, seconds: r.seconds, ratio: r.ratio }));
   out.render = renders.at(-1) ? { seconds: renders.at(-1)!.seconds, ratio: renders.at(-1)!.ratio, width: renders.at(-1)!.width, height: renders.at(-1)!.height } : undefined;
+  await writeFile(join(outDir, "events.json"), JSON.stringify(await db.studioEvent.findMany({ where: { sessionId: session.id }, orderBy: { createdAt: "asc" } }), (_k, v) => (typeof v === "bigint" ? String(v) : v), 1));
   const ff = await ffmpegPath();
   for (const r of renders) {
     const file = join(outDir, `v${r.version}.mp4`);

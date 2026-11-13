@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractOgMedia, fetchReference, isPlatformUrl, mediaTypeOf, ytDlpPath } from "../src/studio/ingest";
+import { extractOgMedia, fetchReference, isPlatformUrl, mediaTypeOf, ytDlpEnvArgs, ytDlpPath, youTubeId, youTubeThumbnails } from "../src/studio/ingest";
 import { describeUpload, studioBrief, turnPrompt } from "../src/studio/brief";
 import { normalizeRemixUrl, remixMessage, isReferenceAttachment } from "../../src/lib/studio/contracts";
 
@@ -53,5 +53,24 @@ describe("remix contract + brief", () => {
     expect(studioBrief({ brand: null, uploads: [{ ...ref, reference: undefined }], paid: false })).not.toContain("## Remixing a reference ad");
     expect(turnPrompt({ userText: "Remix this ad for my brand: https://a.io", firstTurn: true, attached: [ref] })).toContain("This is a remix");
     expect(turnPrompt({ userText: "hi", firstTurn: true, attached: [] })).not.toContain("remix");
+  });
+});
+
+describe("youtube fallback", () => {
+  it("reads ids from every link shape", () => {
+    expect(youTubeId("https://www.youtube.com/shorts/WiJb9Oo1QdU")).toBe("WiJb9Oo1QdU");
+    expect(youTubeId("https://youtu.be/WiJb9Oo1QdU?si=x")).toBe("WiJb9Oo1QdU");
+    expect(youTubeId("https://m.youtube.com/watch?v=WiJb9Oo1QdU&t=3")).toBe("WiJb9Oo1QdU");
+    expect(youTubeId("https://www.youtube.com/embed/WiJb9Oo1QdU")).toBe("WiJb9Oo1QdU");
+    expect(youTubeId("https://www.tiktok.com/@a/video/1")).toBeNull();
+  });
+  it("prefers the vertical thumbnail for Shorts", () => {
+    expect(youTubeThumbnails("https://www.youtube.com/shorts/WiJb9Oo1QdU")[0]).toBe("https://i.ytimg.com/vi/WiJb9Oo1QdU/oardefault.jpg");
+    expect(youTubeThumbnails("https://www.youtube.com/watch?v=WiJb9Oo1QdU")[0]).toContain("maxresdefault");
+    expect(youTubeThumbnails("https://example.com/ad.mp4")).toEqual([]);
+  });
+  it("passes cookies/proxy to yt-dlp only when set", () => {
+    expect(ytDlpEnvArgs({})).toEqual([]);
+    expect(ytDlpEnvArgs({ YTDLP_COOKIES: "/secrets/yt.txt", YTDLP_PROXY: "http://p:1" })).toEqual(["--cookies", "/secrets/yt.txt", "--proxy", "http://p:1"]);
   });
 });

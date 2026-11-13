@@ -30,6 +30,7 @@ import { type StudioEventRow, StudioEventMapper, finalReply, parseChildLine, use
 import { finalizeDelivery, posterFrame, probeMedia, ratioOf } from "./media";
 import { changedComposition, packProject, pickDelivered, unpackProject, videoFiles } from "./project";
 import { livePublisher } from "./live";
+import { type TurnTimer, turnTimer } from "./timing";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const RUNNER = join(HERE, "..", "modules", "ezmotion", "agent", "run-studio-agent.mjs");
@@ -117,6 +118,8 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
   if (asstMsg.status === "cancelled" || asstMsg.status === "done") return { skipped: asstMsg.status };
   const ws = await db.adsWorkspace.findUniqueOrThrow({ where: { id: session.workspaceId } });
   const started = Date.now();
+  const tm = turnTimer(Date.now);
+  tm.phase("setup");
   const ev = eventWriter(db, sessionId, assistantMessageId);
   const mapper = new StudioEventMapper(ev.write, Date.now);
   await db.studioMessage.update({ where: { id: assistantMessageId }, data: { status: "streaming", jobId: ctx.job.id } });
@@ -152,6 +155,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
   let liveTimer: ReturnType<typeof setInterval> | undefined;
   try {
     // 1. Restore the project and the agent session.
+    tm.phase("restore");
     const firstTurn = !session.agentStateKey;
     if (session.projectKey) {
       const tgz = join(root, "project.tar.gz");
@@ -164,6 +168,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       resume = join(motionSessions, buf[0] === 0x1f && buf[1] === 0x8b ? `${sessionId}.jsonl.gz` : `${sessionId}.jsonl`);
       await writeFile(resume, buf);
     }
+    tm.phase("brief");
     // 2. Uploads (this message's attachments + every earlier one in the session) and the brand.
     const msgs = await db.studioMessage.findMany({ where: { sessionId, role: "user", createdAt: { lte: userMsg.createdAt } }, select: { attachments: true } });
     const ids = [...new Set(msgs.flatMap((m) => attachmentIds(m.attachments)))];
@@ -212,6 +217,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     if (attached.some((a) => a.reference)) mapper.setPhase("looking", "Studying the ad");
     else if (attached.some((a) => a.kind === "video")) mapper.setPhase("looking", "Watching your footage");
 
+    tm.phase("login");
     // 3. Login for the child (leased; a refreshed pair is adopted back after the run).
     const env: NodeJS.ProcessEnv = { ...process.env, HOME: home, USERPROFILE: home, EZCODER_NO_UPDATE_CHECK: "1", HYPERFRAMES_NO_TELEMETRY: "1", HYPERFRAMES_NO_UPDATE_CHECK: "1" };
     delete env.DATABASE_URL; delete env.POSTGRES_URL_NON_POOLING; delete env.S3_SECRET_ACCESS_KEY; delete env.STRIPE_SECRET_KEY; delete env.CODEX_AUTH_FILE;
@@ -305,7 +311,8 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
         else if (line.type === "done") done = { ...done, ok: line.ok, error: line.error, asked: (line as { asked?: boolean }).asked === true };
         else {
           if (line.type === "tool_end" && (lastTool.name === "screenshot" || /contact-sheet/.test(lastTool.arg))) void scanPreviews().catch(() => undefined);
-          if (line.type === "tool") lastTool = { name: line.name, arg: line.arg };
+          if (line.type === "tool") { lastTool = { name: line.name, arg: line.arg }; tm.toolStart(line.name, line.arg); }
+          else if (line.type === "tool_end") tm.toolEnd();
           mapper.handle(line);
         }
       });
@@ -319,6 +326,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
         setTimeout(() => resolve(done), 50);
       });
     });
+    tm.phase("agent");
     let result = await runAgent();
     // Codex hit its plan limit mid-turn: put the session back as it was and run the same turn once on MiMo.
     if (!result.ok && !result.asked && brain === "codex" && mimo && !turnAbort.signal.aborted && isCodexLimitError(result.error)) {
@@ -328,6 +336,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       await useMimo();
       result = await runAgent();
     }
+    tm.phase("agent_after");
     mapper.flush();
     clearInterval(liveTimer);
     // The latest edit plays in the chat while the final video is made.
@@ -359,6 +368,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
         deliveredRel = agentRel;
         source = join(project, agentRel);
       } else if (comp) {
+        tm.phase("render");
         mapper.setPhase("rendering", "Rendering your video");
         const out = join(root, "engine-render.mp4");
         const prog = progressThrottle(ev.write, "Rendering your video", Date.now);
@@ -384,10 +394,11 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       }
       renderFailed = !source && Boolean(comp);
       if (source) {
-        delivered = await deliver(ctx, { sessionId, assistantMessageId, workspaceId: session.workspaceId, source, root, costMicros: usage.costMicros, signal: turnAbort.signal, ev: ev.write, mapper });
+        delivered = await deliver(ctx, { sessionId, assistantMessageId, workspaceId: session.workspaceId, source, root, costMicros: usage.costMicros, signal: turnAbort.signal, ev: ev.write, mapper, tm });
         if (delivered) attachments.push({ renderId: delivered.renderId });
       }
     }
+    tm.phase("pack");
     // 6. Persist the session (project tar + agent session file).
     const tgz = join(root, "out.tar.gz");
     const packed = await packProject(project, tgz, new Set(deliveredRel ? [deliveredRel] : []));
@@ -402,6 +413,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     }
     // Never end a "your video is ready" turn without a video: say so (nothing is charged); the project is saved above.
     if (renderFailed && !reason) throw Object.assign(new Error(RENDER_FAILED), { studioCode: "render" });
+    tm.phase("finish");
     // 7. Finish the message.
     if (reason) {
       const code = reason === "cancelled" ? "cancelled" : "timeout";
@@ -422,7 +434,9 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     if (session.title === "New video") await nameSession(ctx, sessionId, userMsg.content, content).catch((e) => log("warn", "studio title failed", { error: errMsg(e) }));
     ev.write([{ type: "done", data: { messageId: assistantMessageId } }]);
     await ev.drain();
-    return { ok: true, asked, renderId: delivered?.renderId ?? null, version: delivered?.version ?? null, ms: Date.now() - started, costMicros: usage.costMicros };
+    const timing = tm.summary();
+    log("info", "studio turn timing", { sessionId, model, ...timing });
+    return { ok: true, asked, timing, renderId: delivered?.renderId ?? null, version: delivered?.version ?? null, ms: Date.now() - started, costMicros: usage.costMicros };
   } catch (e) {
     if (e instanceof JobAbortedError) throw e;
     const code = (e as { studioCode?: string }).studioCode ?? "failed";
@@ -446,11 +460,12 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
 }
 
 /** Probe, watermark/cap, upload, then charge + record in one transaction. Null when nothing deliverable. */
-async function deliver(ctx: JobContext, o: { sessionId: string; assistantMessageId: string; workspaceId: string; source: string; root: string; costMicros: number; signal: AbortSignal; ev: (rows: StudioEventRow[]) => void; mapper: StudioEventMapper }): Promise<{ renderId: string; version: number } | null> {
+async function deliver(ctx: JobContext, o: { sessionId: string; assistantMessageId: string; workspaceId: string; source: string; root: string; costMicros: number; signal: AbortSignal; ev: (rows: StudioEventRow[]) => void; mapper: StudioEventMapper; tm?: TurnTimer }): Promise<{ renderId: string; version: number } | null> {
   const { db, storage } = ctx;
   const info = await probeMedia(o.source, o.signal);
   if (!info?.hasVideo || !info.width || !info.height) throw Object.assign(new Error("delivered file is not a video"), { studioCode: "delivery" });
   o.mapper.setPhase("reviewing", "Finishing your video");
+  o.tm?.phase("finalize");
   const ws = await db.adsWorkspace.findUniqueOrThrow({ where: { id: o.workspaceId } });
   const session = await db.studioSession.findUniqueOrThrow({ where: { id: o.sessionId }, select: { freeVideo: true, autopilotWeek: true } });
   const priorRenders = await db.studioRender.count({ where: { sessionId: o.sessionId } });
@@ -460,9 +475,10 @@ async function deliver(ctx: JobContext, o: { sessionId: string; assistantMessage
   for (let attempt = 0; attempt < 2; attempt++) {
     const out = join(o.root, `deliver-${attempt}.mp4`);
     o.ev([{ type: "progress", data: { pct: 0, label: "Finishing your video" } }]);
-    const fin = await finalizeDelivery({ input: o.source, output: out, maxSeconds, watermark, width: info.width, height: info.height, hasAudio: info.hasAudio, pngPath: join(o.root, "wm.png"), signal: o.signal });
+    const fin = await finalizeDelivery({ input: o.source, output: out, maxSeconds, watermark, width: info.width, height: info.height, hasAudio: info.hasAudio, pngPath: join(o.root, "wm.png"), signal: o.signal, info });
     if (!fin.ok) throw Object.assign(new Error(`finalize failed: ${fin.error}`), { studioCode: "delivery" });
     o.ev([{ type: "progress", data: { pct: 100, label: "Finishing your video" } }]);
+    o.tm?.phase("upload");
     const final = await probeMedia(out, o.signal);
     const version = priorRenders + 1 + attempt;
     const key = studioKeys.render(o.workspaceId, o.sessionId, version);
@@ -471,6 +487,7 @@ async function deliver(ctx: JobContext, o: { sessionId: string; assistantMessage
     const jpg = join(o.root, `poster-${attempt}.jpg`);
     const hasPoster = await posterFrame(out, jpg, final?.durationSec ?? seconds, o.signal);
     if (hasPoster) await storage.put(posterKey, await readFile(jpg), "image/jpeg");
+    o.tm?.phase("charge");
     const r = await chargeAndRecord(db, {
       sessionId: o.sessionId, messageId: o.assistantMessageId, workspaceId: o.workspaceId,
       key: () => key, posterKey: () => (hasPoster ? posterKey : null),

@@ -73,3 +73,24 @@ describe("brief", () => {
     expect(turnPrompt({ userText: "make it yellow", firstTurn: false, attached: [] })).toMatch(/^make it yellow\n\n\[Studio note: Do NOT run hf render/);
   });
 });
+
+import { canCopyVideo } from "../src/studio/media";
+describe("delivery remux", () => {
+  const h264 = { vcodec: "h264", pixFmt: "yuv420p", durationSec: 20 };
+  it("copies an H.264 yuv420p render with no watermark within the cap", () => {
+    expect(canCopyVideo(h264, { watermark: false, maxSeconds: 60 })).toBe(true);
+  });
+  it("re-encodes for a watermark, a length cut or another codec", () => {
+    expect(canCopyVideo(h264, { watermark: true, maxSeconds: 60 })).toBe(false);
+    expect(canCopyVideo(h264, { watermark: false, maxSeconds: 15 })).toBe(false);
+    expect(canCopyVideo({ ...h264, vcodec: "hevc" }, { watermark: false, maxSeconds: 60 })).toBe(false);
+    expect(canCopyVideo({ ...h264, pixFmt: "yuv444p" }, { watermark: false, maxSeconds: 60 })).toBe(false);
+  });
+  it("remux args stream-copy video and keep faststart", () => {
+    const a = finalArgs({ input: "i", output: "o", maxSeconds: 60, hasAudio: true, copy: { video: true, audio: true } });
+    expect(a.join(" ")).toContain("-c:v copy");
+    expect(a.join(" ")).toContain("-c:a copy");
+    expect(a).toContain("+faststart");
+    expect(a).not.toContain("libx264");
+  });
+});

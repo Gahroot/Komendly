@@ -53,7 +53,7 @@ describe("hosted MCP server", () => {
     const res = await handleMcp(rpc({ jsonrpc: "2.0", id: 2, method: "tools/list" }), null);
     const body = (await res.json()) as { result: { tools: { name: string }[] } };
     expect(body.result.tools.map((t) => t.name).sort()).toEqual(expect.arrayContaining(
-      ["ads_create_pack", "ads_get_run", "ads_list_runs", "autopilot_get", "autopilot_set", "get_account", "get_download_url", "studio_create_video", "studio_get_session", "studio_launch_video", "studio_list_sessions", "studio_remix", "studio_send_message", "upload_media"],
+      ["ads_create_pack", "ads_get_run", "ads_list_runs", "autopilot_get", "autopilot_set", "get_account", "get_download_url", "studio_create_video", "studio_get_session", "studio_launch_video", "studio_list_sessions", "studio_remix", "studio_send_message", "upload_media", "studio_ad_copy", "campaign_kit"],
     ));
   });
 
@@ -69,5 +69,45 @@ describe("hosted MCP server", () => {
     const body = (await res.json()) as { result: { isError?: boolean; content: { text: string }[] } };
     expect(body.result.isError).toBe(true);
     expect(body.result.content[0]?.text).toMatch(/^Not found/);
+  });
+
+  it("ads_get_run, studio_ad_copy and campaign_kit return Meta-ready creatives with 7-day links", async () => {
+    await prisma.user.update({ where: { id: userId }, data: { emailVerifiedAt: new Date() } });
+    const run = await prisma.adRun.create({ data: { workspaceId, userId, url: "https://shop.example.com/", status: "completed", staticCount: 1, motionCount: 0 } });
+    const ad = await prisma.ad.create({ data: { runId: run.id, workspaceId, index: 0, awareness: "problem_aware", angle: "Fit matters", hook: "My knees hurt after 5k", headline: "Shoes fitted to your stride", body: "Get a free gait check in store.", cta: "Shop now", status: "ready" } });
+    await prisma.adAsset.createMany({ data: [
+      { adId: ad.id, ratio: "4:5", storageKey: `ws/${workspaceId}/a/4x5.png`, mime: "image/png", width: 1080, height: 1350, bytes: 10 },
+      { adId: ad.id, ratio: "4:5", storageKey: `ws/${workspaceId}/a/4x5.jpg`, mime: "image/jpeg", width: 1080, height: 1350, bytes: 8 },
+    ] });
+    const session = await prisma.studioSession.create({ data: { workspaceId, userId, title: "Launch video · cal.com", starterId: "launch", status: "idle" } });
+    await prisma.studioMessage.create({ data: { sessionId: session.id, role: "user", content: "Make a launch video for what we just shipped: https://cal.com\n\nWhat we shipped: Routing forms for every lead.", status: "done" } });
+    await prisma.studioRender.create({ data: { sessionId: session.id, workspaceId, version: 1, key: `studio/${workspaceId}/${session.id}/v1.mp4`, ratio: "9:16", seconds: 24.04, width: 1080, height: 1920 } });
+
+    const call = async (name: string, args: Record<string, unknown>) => {
+      const res = await handleMcp(rpc({ jsonrpc: "2.0", id: 9, method: "tools/call", params: { name, arguments: args } }), null);
+      return ((await res.json()) as { result: { isError?: boolean; structuredContent: Record<string, unknown> } }).result;
+    };
+
+    const got = await call("ads_get_run", { run_id: run.id });
+    expect(got.isError).toBeFalsy();
+    expect(got.structuredContent.landing_url).toBe("https://shop.example.com/");
+    const ads = got.structuredContent.ads as Record<string, unknown>[];
+    expect(ads[0]).toMatchObject({ headline: "Shoes fitted to your stride", primary_text: "Get a free gait check in store.", cta: "Shop now", cta_type: "SHOP_NOW", hook: "My knees hurt after 5k", angle: "Fit matters", awareness: "problem_aware" });
+    const assets = ads[0]?.assets as { url: string; width: number; mime: string; filename: string }[];
+    expect(assets[0]?.url).toContain("X-Amz-Expires=604800");
+    expect(assets.map((a) => a.filename).sort()).toEqual(["ad-01-problem-aware-4x5.jpg", "ad-01-problem-aware-4x5.png"]);
+
+    const copy = await call("studio_ad_copy", { session_id: session.id });
+    expect(copy.structuredContent).toMatchObject({ landing_url: "https://cal.com", cta_type: "SIGN_UP" });
+
+    const kit = await call("campaign_kit", { run_id: run.id, session_ids: [session.id] });
+    expect(kit.isError).toBeFalsy();
+    const items = kit.structuredContent.items as Record<string, unknown>[];
+    expect(items).toHaveLength(2);
+    expect(items[0]).toMatchObject({ source: "ad_pack", type: "image", mime: "image/jpeg", ratio: "4:5", placements: ["feed"], landing_url: "https://shop.example.com/" });
+    expect(items[1]).toMatchObject({ source: "studio", type: "video", mime: "video/mp4", width: 1080, height: 1920, ratio: "9:16", duration_seconds: 24, placements: ["stories", "reels"], landing_url: "https://cal.com" });
+    expect(String(items[1]?.url)).toMatch(/v1\.mp4\?.*X-Amz-Expires=604800/);
+
+    expect((await call("campaign_kit", {})).isError).toBe(true);
   });
 });

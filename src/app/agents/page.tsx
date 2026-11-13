@@ -130,6 +130,26 @@ export default function AgentsPage() {
           </div>
         </section>
 
+        <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6" aria-labelledby="campaign-title">
+          <h2 id="campaign-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-5xl">Run a whole campaign from ChatGPT or Claude</h2>
+          <p className="mt-4 max-w-2xl text-muted-foreground">Ozzy makes the creatives; your Meta Ads MCP puts them live. Ozzy hands over every video and ad with its link, headline, text, button and placement, so nothing gets copied by hand. You still approve the budget.</p>
+          <ol className="mt-8 grid gap-4 lg:grid-cols-3">
+            <li className="studio-frame rounded-xl p-4">
+              <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">1. Connect Ozzy</p>
+              <p className="mt-2 text-sm text-muted-foreground">Add a connector with this URL and sign in:</p>
+              <pre className="mt-3 overflow-x-auto whitespace-pre rounded-md bg-black/40 p-3 font-mono text-xs text-foreground"><code>{MCP_URL}</code></pre>
+            </li>
+            <li className="studio-frame rounded-xl p-4">
+              <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">2. Connect your Meta Ads MCP</p>
+              <p className="mt-2 text-sm text-muted-foreground">Add your Meta Ads MCP in the same app and sign in to your ad account.</p>
+            </li>
+            <li className="studio-frame rounded-xl p-4">
+              <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">3. Ask for the campaign</p>
+              <p className="mt-3 rounded-md bg-black/40 p-3 text-sm text-foreground">“Remix this competitor ad for us: [link]. Make a launch video of [your site]. Make an ad pack from our website and turn on Ozzy Autopilot. Then put everything in a paused Meta campaign with my Meta Ads tool so I can check it.”</p>
+            </li>
+          </ol>
+        </section>
+
         <section className="mx-auto max-w-3xl px-4 py-14 sm:px-6" aria-labelledby="faq-title">
           <h2 id="faq-title" className="font-display text-3xl font-medium tracking-[-0.02em]">Questions</h2>
           <div className="mt-6 divide-y divide-border rounded-2xl border border-border bg-[oklch(0.2_0.07_295/0.5)]">

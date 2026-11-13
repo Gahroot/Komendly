@@ -34,6 +34,16 @@ export async function presignGet(key: string, opts: { seconds?: number; download
   return getSignedUrl(client(), command, { expiresIn: seconds });
 }
 
+/** SigV4 maximum (7 days). Only for links handed to the user's own agent/tools (MCP outputs), never for page loads. */
+export const MAX_SHARE_PRESIGN_SECONDS = 7 * 24 * 60 * 60;
+
+/** Long-lived GET URL an external service (e.g. a Meta Ads tool) can fetch later. Served inline with its real type. */
+export async function presignShareable(key: string, opts: { seconds?: number; contentType?: string } = {}): Promise<string> {
+  const seconds = Math.min(opts.seconds ?? MAX_SHARE_PRESIGN_SECONDS, MAX_SHARE_PRESIGN_SECONDS);
+  const command = new GetObjectCommand({ Bucket: env("S3_BUCKET"), Key: key, ResponseContentType: opts.contentType });
+  return getSignedUrl(client(), command, { expiresIn: seconds });
+}
+
 export async function getObjectStream(key: string, signal?: AbortSignal): Promise<ReadableStream<Uint8Array>> {
   const out = await client().send(new GetObjectCommand({ Bucket: env("S3_BUCKET"), Key: key }), { abortSignal: signal });
   if (!out.Body) throw new Error(`Empty object ${key}`);

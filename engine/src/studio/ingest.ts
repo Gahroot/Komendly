@@ -81,7 +81,42 @@ export async function ytDlpPath(env: NodeJS.ProcessEnv = process.env): Promise<s
   return null;
 }
 
-interface Fetched { file: string; mime: string; via: "yt-dlp" | "direct" | "page" }
+interface Fetched { file: string; mime: string; via: "yt-dlp" | "direct" | "page" | "thumbnail" }
+
+/** Optional yt-dlp auth/network flags: YTDLP_COOKIES (Netscape cookies file) and YTDLP_PROXY. YouTube often blocks
+ *  datacenter IPs ("confirm you're not a bot"); either one gets around it. */
+export function ytDlpEnvArgs(env: NodeJS.ProcessEnv = process.env): string[] {
+  const out: string[] = [];
+  const cookies = env.YTDLP_COOKIES?.trim();
+  const proxy = env.YTDLP_PROXY?.trim();
+  if (cookies) out.push("--cookies", cookies);
+  if (proxy) out.push("--proxy", proxy);
+  return out;
+}
+
+/** YouTube video id from watch / shorts / embed / youtu.be links. */
+export function youTubeId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^(www|m|music)\./, "");
+    if (host === "youtu.be") return /^[\w-]{11}$/.exec(u.pathname.slice(1, 12))?.[0] ?? null;
+    if (host !== "youtube.com") return null;
+    const v = u.searchParams.get("v");
+    if (v && /^[\w-]{11}$/.test(v)) return v;
+    return /^\/(?:shorts|embed|live|v)\/([\w-]{11})/.exec(u.pathname)?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Public thumbnail candidates (no auth, not bot-gated): vertical first for Shorts. */
+export function youTubeThumbnails(url: string): string[] {
+  const id = youTubeId(url);
+  if (!id) return [];
+  const shorts = /\/shorts\//.test(url);
+  const names = shorts ? ["oardefault", "maxresdefault", "hqdefault"] : ["maxresdefault", "sddefault", "hqdefault"];
+  return names.map((n) => `https://i.ytimg.com/vi/${id}/${n}.jpg`);
+}
 
 async function viaYtDlp(bin: string, url: string, dir: string, signal: AbortSignal): Promise<Fetched | null> {
   const mb = Math.floor(STUDIO_INGEST_LIMITS.maxBytes / (1024 * 1024));
@@ -91,6 +126,7 @@ async function viaYtDlp(bin: string, url: string, dir: string, signal: AbortSign
     "-f", "b[ext=mp4][height<=1920]/bv*[ext=mp4][height<=1920]+ba[ext=m4a]/bv*[height<=1920]+ba/b",
     "--merge-output-format", "mp4",
     ...((await ffmpegPath()) ? ["--ffmpeg-location", (await ffmpegPath()) as string] : []),
+    ...ytDlpEnvArgs(),
     "-o", join(dir, "yt.%(ext)s"), url,
   ], { signal, timeoutMs: STUDIO_INGEST_LIMITS.timeoutMs });
   const files = (await readdir(dir)).filter((f) => f.startsWith("yt.") && !/\.(part|ytdl|temp)$/.test(f));
@@ -130,7 +166,15 @@ export async function fetchReference(url: string, dir: string, signal: AbortSign
       if (got) return got;
     }
   }
-  return directMedia(url, dir, signal);
+  const direct = await directMedia(url, dir, signal);
+  if (direct) return direct;
+  // YouTube blocks server downloads without cookies: fall back to the video's public thumbnail (a still of the ad),
+  // so the remix still gets its look, layout and text instead of failing outright.
+  for (const thumb of youTubeThumbnails(url)) {
+    const got = await directMedia(thumb, dir, signal).catch(() => null);
+    if (got) return { ...got, via: "thumbnail" };
+  }
+  return null;
 }
 
 /** Probe + cap a fetched file. Video longer than the cap keeps its first maxSeconds. */
@@ -198,7 +242,8 @@ export async function studioIngestJob(ctx: JobContext): Promise<unknown> {
         log("warn", "studio ingest fetch failed", { url, error: errMsg(e) });
       }
       if (!prepared) return await failIngest(ctx, p.data);
-      const filename = `reference.${prepared.ext}`;
+      // The name tells Ozzy when he only has a still of a video ad.
+      const filename = via === "thumbnail" ? `reference-video-thumbnail.${prepared.ext}` : `reference.${prepared.ext}`;
       const key = studioKeys.upload(ws.id, uploadId, filename);
       await storage.put(key, await readFile(prepared.file), prepared.mime);
       let posterKey: string | null = null;

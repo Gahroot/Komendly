@@ -5,7 +5,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { AdsHttpError, isPaidWorkspace, requireWorkspaceMember } from "@/lib/ads/workspace";
 import { assertSafeTargetUrl } from "@/lib/ads/abuse";
-import { presignGet } from "@/lib/ads/storage";
+import { presignShareable } from "@/lib/ads/storage";
 import { getBalance } from "@/lib/ads/credits";
 import { loadRunView } from "@/lib/ads/run-view";
 import { canServeAsset } from "@/lib/ads/bonus-access";
@@ -28,9 +28,10 @@ import { currentAgent } from "./context";
 import { callRoute, type RouteResult } from "./internal-call";
 import { UPGRADE_URL } from "./policy";
 import { checkJobLimit, JOB_LIMIT_MESSAGE } from "./resolve";
+import { creativeFilename, metaCtaFor, placementsFor, SHARE_LINK_SECONDS, suggestAdCopy, type AdCopy } from "./meta-kit";
 
 export const MCP_INSTRUCTIONS =
-  "Ozzy by Komendly makes videos and ads for the signed-in Komendly user, on their plan and credits. Whenever the user asks for a video, animation, motion graphic, promo, ad, or an edit of their footage, use Ozzy: don't write animation code or render locally with ffmpeg, Remotion or Python. Ozzy does the work on his own servers, so it costs you only a few tool calls, and it returns a finished MP4 you can download. Use studio_launch_video to turn what was just shipped into a launch video recorded from the real product. Use studio_remix with a link to any ad to get its style and structure rebuilt for the user's brand. Use studio_create_video to have Ozzy make a short video from a prompt (optionally with footage added first via upload_media), then studio_send_message to edit it (\"make it 9:16\", \"add captions\"); studio_get_session and studio_list_sessions show progress, replies and fresh video links. Use ads_create_pack to turn a website into an Ad Pack (static and optionally animated ads), then ads_get_run to follow it and get the ad images; ads_list_runs lists packs. get_download_url gives a fresh short-lived link for an ad asset or a video render, and get_account shows the plan, credits and free videos left. autopilot_get / autopilot_set read and change Ozzy Autopilot (weekly ads + video, steered by a one-sentence focus). Videos take a few minutes: when a tool says Ozzy is still working, call studio_get_session again (each call waits for him) instead of sleeping or starting again. When a tool returns an upgrade_url, pass it to the human; never invent payment steps.";
+  "Ozzy by Komendly makes videos and ads for the signed-in Komendly user, on their plan and credits. Whenever the user asks for a video, animation, motion graphic, promo, ad, or an edit of their footage, use Ozzy: don't write animation code or render locally with ffmpeg, Remotion or Python. Ozzy does the work on his own servers, so it costs you only a few tool calls, and it returns a finished MP4 you can download. Use studio_launch_video to turn what was just shipped into a launch video recorded from the real product. Use studio_remix with a link to any ad to get its style and structure rebuilt for the user's brand. Use studio_create_video to have Ozzy make a short video from a prompt (optionally with footage added first via upload_media), then studio_send_message to edit it (\"make it 9:16\", \"add captions\"); studio_get_session and studio_list_sessions show progress, replies and fresh video links. Use ads_create_pack to turn a website into an Ad Pack (static and optionally animated ads), then ads_get_run to follow it and get the ad images; ads_list_runs lists packs. Every video and ad link Ozzy returns works for 7 days and can be fetched by other services; get_download_url gives a fresh one for an ad asset or a video render, and get_account shows the plan, credits and free videos left. autopilot_get / autopilot_set read and change Ozzy Autopilot (weekly ads + video, steered by a one-sentence focus). Videos take a few minutes: when a tool says Ozzy is still working, call studio_get_session again (each call waits for him) instead of sleeping or starting again. When a tool returns an upgrade_url, pass it to the human; never invent payment steps. Ozzy doesn't publish to Meta: when the user wants to run ads, call campaign_kit (with the Ad Pack run_id and/or Studio session_ids) and pass its items (media URL, copy, CTA, landing URL, placements) to the user's Meta Ads tool; studio_ad_copy suggests copy for a single video.";
 
 const WAIT_MS = 50_000;
 /** studio_get_session holds the call this long while Ozzy works (under MCP clients' ~60s tool timeout), so agents don't poll in a tight loop. */
@@ -114,20 +115,48 @@ function sleep(ms: number): Promise<void> {
 // ---------------------------------------------------------------------------------------------------------------
 // Studio
 
-async function renderOut(r: { id: string; key: string; posterKey: string | null; seconds: number; ratio: string; watermarked: boolean; version: number }) {
+function expiresAt(): string {
+  return new Date(Date.now() + SHARE_LINK_SECONDS * 1000).toISOString();
+}
+
+type RenderRow = { id: string; key: string; posterKey: string | null; seconds: number; ratio: string; width: number; height: number; watermarked: boolean; version: number };
+
+async function renderOut(r: RenderRow) {
   return {
     render_id: r.id,
     version: r.version,
-    url: await presignGet(r.key, { seconds: 600, downloadName: `ozzy-v${r.version}-${r.ratio.replace(":", "x")}.mp4` }),
-    poster_url: r.posterKey ? await presignGet(r.posterKey, { seconds: 600 }) : null,
-    seconds: r.seconds,
+    url: await presignShareable(r.key, { contentType: "video/mp4" }),
+    poster_url: r.posterKey ? await presignShareable(r.posterKey, { contentType: "image/jpeg" }) : null,
+    filename: creativeFilename(`ozzy-v${r.version}`, r.ratio, "video/mp4"),
+    mime: "video/mp4",
+    width: r.width,
+    height: r.height,
     ratio: r.ratio,
+    seconds: Math.round(r.seconds * 10) / 10,
+    placements: placementsFor(r.ratio),
     watermarked: r.watermarked,
+    expires_at: expiresAt(),
   };
 }
 
+const LINK_FAILED_HINT =
+  "Some sites block server downloads (YouTube often does). Ask the user for the video file or a direct .mp4 link, add it with upload_media, then call studio_remix with that upload_id. Or try a TikTok, Instagram or Meta Ad Library link to the same ad.";
+
 function viewUrl(info: McpRequestInfo, path: string): string {
   return new URL(path, info.origin).toString();
+}
+
+/** Autopilot view with absolute links (agents can't follow "/ads/runs/..."), plus the run_id for ads_get_run / campaign_kit. */
+function absoluteAutopilot<T extends { lastDrop?: unknown }>(info: McpRequestInfo, v: T): T {
+  const drop = v.lastDrop as { url?: string; ads?: { thumbnailUrl?: string }[]; video?: unknown } | null | undefined;
+  if (!drop || typeof drop !== "object") return v;
+  const abs = (u: unknown) => (typeof u === "string" && u.startsWith("/") ? viewUrl(info, u) : u);
+  const fix = (o: unknown): unknown => {
+    if (Array.isArray(o)) return o.map(fix);
+    if (!o || typeof o !== "object") return o;
+    return Object.fromEntries(Object.entries(o).map(([k, val]) => [k, /url$/i.test(k) ? abs(val) : fix(val)]));
+  };
+  return { ...v, lastDrop: fix(drop) };
 }
 
 /** Wait (up to ~50s) for the session to leave queued/working. */
@@ -149,18 +178,27 @@ async function turnResult(info: McpRequestInfo, sessionId: string, assistantMess
     ? await prisma.studioRender.findFirst({ where: { sessionId, messageId: msg.id }, orderBy: { version: "desc" } })
     : null;
   const working = session.status === "queued" || session.status === "working";
+  const linkFailed = msg?.error === "link_failed";
   const data: Structured = {
     session_id: session.id,
     status: working ? "working" : msg?.status === "error" ? "error" : session.status,
     ...(msg && !working && msg.content ? { reply: msg.content } : {}),
-    ...(msg?.error ? { error: "Ozzy hit a problem with this one. Try rephrasing, or send the message again." } : {}),
+    ...(msg?.error
+      ? { error: linkFailed ? LINK_FAILED_HINT : "Ozzy hit a problem with this one. Send the message again (studio_send_message), or rephrase it." }
+      : {}),
     ...(render ? { video: await renderOut(render) } : {}),
     view_url: viewUrl(info, `/studio/${session.id}`),
   };
+  const turnStart = (await prisma.studioMessage.findFirst({ where: { sessionId, role: "user" }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }))?.createdAt ?? session.lastActivityAt;
+  const mins = Math.round((Date.now() - turnStart.getTime()) / 60_000);
   const text = working
-    ? `Ozzy is still working on it (started ${Math.max(1, Math.round((Date.now() - session.lastActivityAt.getTime()) / 60_000))} min ago; a video usually takes 4 to 8 minutes). Call studio_get_session: each call waits up to 45 seconds for the video, so just call it again until it's ready (no sleeping needed).`
-    : render
-      ? `Ozzy made a ${render.seconds.toFixed(0)}s ${render.ratio} video.`
+    ? `Ozzy is still working on it (started ${mins < 1 ? "under a minute" : `${mins} min`} ago; a video usually takes 4 to 8 minutes). Call studio_get_session: each call waits up to 45 seconds for the video, so just call it again until it's ready (no sleeping needed).`
+    : msg?.error
+      ? linkFailed
+        ? `Ozzy couldn't download that link. ${LINK_FAILED_HINT}`
+        : "Ozzy couldn't finish this one."
+      : render
+      ? `Ozzy made a ${render.seconds.toFixed(0)}s ${render.ratio} video. The link works for 7 days; for ad copy to go with it, call studio_ad_copy or campaign_kit.`
       : session.status === "awaiting_user"
         ? "Ozzy has a question: answer it with studio_send_message."
         : "Ozzy replied.";
@@ -253,48 +291,205 @@ async function uploadBytes(info: McpRequestInfo, file: { bytes: Uint8Array<Array
 // ---------------------------------------------------------------------------------------------------------------
 // Ads
 
-async function runOut(info: McpRequestInfo, runId: string) {
+type CreativeAsset = { asset_id: string; ratio: string; mime: string; width: number; height: number; url: string | null; filename: string; placements: string[] };
+
+/** Ads of a run with Meta-ready fields and long-lived links (null url = not downloadable: gated, locked or not ready). */
+async function packAds(runId: string) {
   const { user, workspace } = await requireWorkspaceMember({ runId });
-  let view = await loadRunView(runId);
+  const view = await loadRunView(runId);
   if (!view) throw new ToolFailure("Not found. Check the run id.");
-  if (view.status === "awaiting_confirm") {
-    // Agents accept the extracted brand as-is (the human can still review it on the run page before the deadline).
-    const confirmed = await callRoute(confirmRunRoute, { ...route(info), method: "POST", path: `/api/ads/runs/${runId}/confirm`, body: { corrections: {} }, params: { id: runId } });
-    if (confirmed.status >= 400) throw routeFailure(confirmed);
-    view = (await loadRunView(runId)) ?? view;
-  }
   const gated = downloadNeedsVerifiedEmail({ isTrial: view.isTrial, isPaid: isPaidWorkspace(workspace), emailVerified: Boolean(user.emailVerifiedAt) });
   const unlocked = await isBonusUnlocked(workspace);
   const assetIds = view.ads.flatMap((a) => a.assets.map((x) => x.id));
-  const rows = assetIds.length
-    ? await prisma.adAsset.findMany({ where: { id: { in: assetIds } }, select: { id: true, storageKey: true, ratio: true, ad: { select: { visualBrief: true } } } })
-    : [];
+  const [rows, adRows, runRow] = await Promise.all([
+    assetIds.length ? prisma.adAsset.findMany({ where: { id: { in: assetIds } }, select: { id: true, storageKey: true, ratio: true, ad: { select: { visualBrief: true } } } }) : [],
+    prisma.ad.findMany({ where: { runId }, select: { id: true, hook: true } }),
+    prisma.adRun.findUnique({ where: { id: runId }, select: { url: true, brandProfile: { select: { landingPage: true, url: true } } } }),
+  ]);
   const byId = new Map(rows.map((r) => [r.id, r]));
+  const hooks = new Map(adRows.map((r) => [r.id, r.hook]));
+  const landingUrl = runRow?.brandProfile?.landingPage || runRow?.brandProfile?.url || runRow?.url || view.url;
   const ads = [];
   for (const ad of view.ads) {
-    const assets = [];
+    const assets: CreativeAsset[] = [];
     for (const a of ad.assets) {
       const row = byId.get(a.id);
       const servable = row && !gated && ad.status === "ready" && canServeAsset({ visualBrief: row.ad.visualBrief, assetRatio: row.ratio, unlocked, use: "download" });
-      assets.push({ asset_id: a.id, ratio: a.ratio, url: servable && row ? await presignGet(row.storageKey, { seconds: 600 }) : null });
+      assets.push({
+        asset_id: a.id,
+        ratio: a.ratio,
+        mime: a.mime,
+        width: a.width,
+        height: a.height,
+        url: servable && row ? await presignShareable(row.storageKey, { contentType: a.mime }) : null,
+        filename: creativeFilename(`ad-${String(ad.index + 1).padStart(2, "0")}-${ad.awareness}`, a.ratio, a.mime),
+        placements: placementsFor(a.ratio),
+      });
     }
-    ads.push({ ad_id: ad.id, kind: ad.kind, headline: ad.headline, status: ad.status, ...(ad.locked ? { locked: true } : {}), assets });
+    ads.push({
+      ad_id: ad.id,
+      kind: ad.kind,
+      status: ad.status,
+      headline: ad.headline,
+      primary_text: ad.body,
+      cta: ad.cta,
+      cta_type: metaCtaFor(ad.cta),
+      hook: hooks.get(ad.id) ?? null,
+      angle: ad.angle,
+      awareness: ad.awareness,
+      landing_url: landingUrl,
+      ...(ad.locked ? { locked: true } : {}),
+      assets,
+    });
   }
+  return { view, gated, landingUrl, ads };
+}
+
+async function runOut(info: McpRequestInfo, runId: string) {
+  await requireWorkspaceMember({ runId });
+  const first = await loadRunView(runId);
+  if (!first) throw new ToolFailure("Not found. Check the run id.");
+  if (first.status === "awaiting_confirm") {
+    // Agents accept the extracted brand as-is (the human can still review it on the run page before the deadline).
+    const confirmed = await callRoute(confirmRunRoute, { ...route(info), method: "POST", path: `/api/ads/runs/${runId}/confirm`, body: { corrections: {} }, params: { id: runId } });
+    if (confirmed.status >= 400) throw routeFailure(confirmed);
+  }
+  const { view, gated, landingUrl, ads } = await packAds(runId);
   const ready = view.ads.filter((a) => a.status === "ready").length;
+  const failed = view.ads.filter((a) => a.status === "failed" || a.status === "failed_qc").length;
   const total = view.staticCount + view.motionCount;
   const settled = ["completed", "partial", "failed", "canceled"].includes(view.status);
   const data: Structured = {
     run_id: view.id,
     website: view.url,
+    landing_url: landingUrl,
     status: view.status,
-    progress: { ready, total },
+    progress: { ready, total, ...(failed ? { failed } : {}) },
     ...(view.error ? { error: "This pack ran into a problem. Open it on Komendly to retry." } : {}),
     ...(gated && ready > 0 ? { download_note: DOWNLOAD_GATE_MESSAGE } : {}),
     ...(view.ads.some((a) => a.locked) ? { upgrade_url: UPGRADE_URL } : {}),
+    links_expire_at: expiresAt(),
     ads,
     view_url: viewUrl(info, `/ads/runs/${view.id}`),
   };
-  const text = settled ? `Ad Pack ${view.status}: ${ready} of ${total} ads ready.` : `Ad Pack is ${view.status}: ${ready} of ${total} ads ready so far. Check again in a minute.`;
+  const failedNote = failed ? ` ${failed} didn't pass Ozzy's quality check and have no file (skip them).` : "";
+  const text = settled
+    ? `Ad Pack ${view.status}: ${ready} of ${total} ads ready.${failedNote}${ready ? " Links work for 7 days. To hand them to a Meta Ads tool, call campaign_kit with this run_id." : ""}`
+    : `Ad Pack is ${view.status}: ${ready} of ${total} ads ready so far. Check again in a minute.`;
+  return ok(text, data);
+}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Ad copy + campaign kit (hand-off to the user's Meta Ads tool; Ozzy never publishes)
+
+async function studioCopy(sessionId: string): Promise<AdCopy> {
+  const { session } = await requireStudioSession(sessionId);
+  const [firstUser, brand] = await Promise.all([
+    prisma.studioMessage.findFirst({ where: { sessionId, role: "user" }, orderBy: { createdAt: "asc" }, select: { content: true } }),
+    prisma.brandProfile.findFirst({ where: { workspaceId: session.workspaceId }, orderBy: { updatedAt: "desc" }, select: { name: true, mainOffer: true, audience: true, landingPage: true, url: true } }),
+  ]);
+  const ask = firstUser?.content ?? null;
+  const kind = session.starterId === "launch" ? "launch" : session.starterId === "remix" ? "remix" : "video";
+  const launchUrl = kind === "launch" ? (/https?:\/\/\S+/.exec(ask ?? "")?.[0] ?? null) : null;
+  const sameBrand = Boolean(launchUrl && brand && hostOf(launchUrl) === hostOf(brand.landingPage || brand.url));
+  return suggestAdCopy({
+    kind,
+    brandName: kind === "launch" && !sameBrand ? null : brand?.name ?? null,
+    mainOffer: kind === "launch" ? null : brand?.mainOffer ?? null,
+    audience: kind === "launch" ? null : brand?.audience ?? null,
+    ask,
+    landingUrl: launchUrl ?? (brand ? brand.landingPage || brand.url : null),
+  });
+}
+
+function hostOf(u: string | null | undefined): string | null {
+  try {
+    return u ? new URL(u).hostname.replace(/^www\./, "") : null;
+  } catch {
+    return null;
+  }
+}
+
+async function campaignKit(info: McpRequestInfo, runId: string | undefined, sessionIds: string[]) {
+  const items: Structured[] = [];
+  const pending: Structured[] = [];
+  const skipped: Structured[] = [];
+  if (runId) {
+    const { view, ads } = await packAds(runId);
+    if (!["completed", "partial", "failed", "canceled"].includes(view.status)) pending.push({ run_id: runId, status: view.status, note: "Ad Pack still generating: ready ads are included; call campaign_kit again later for the rest." });
+    for (const ad of ads) {
+      if (ad.status !== "ready") continue;
+      // One file per shape; JPEG over PNG when both exist (smaller, Meta takes either).
+      const perRatio = new Map<string, CreativeAsset>();
+      for (const a of ad.assets) {
+        if (!a.url) continue;
+        const prev = perRatio.get(a.ratio);
+        if (!prev || (a.mime === "image/jpeg" && prev.mime !== "image/jpeg") || a.mime === "video/mp4") perRatio.set(a.ratio, a);
+      }
+      if (perRatio.size === 0) {
+        skipped.push({ ad_id: ad.ad_id, reason: ad.locked ? "locked (upgrade to unlock)" : "no downloadable file" });
+        continue;
+      }
+      for (const a of perRatio.values()) {
+        items.push({
+          creative_id: a.asset_id,
+          source: "ad_pack",
+          ad_id: ad.ad_id,
+          type: a.mime.startsWith("video/") ? "video" : "image",
+          url: a.url,
+          filename: a.filename,
+          mime: a.mime,
+          width: a.width,
+          height: a.height,
+          ratio: a.ratio,
+          placements: a.placements,
+          copy: { headline: ad.headline, primary_text: ad.primary_text, cta: ad.cta, cta_type: ad.cta_type ?? "LEARN_MORE", hook: ad.hook, angle: ad.angle, awareness: ad.awareness },
+          landing_url: ad.landing_url,
+        });
+      }
+    }
+  }
+  for (const sessionId of sessionIds) {
+    const { session } = await requireStudioSession(sessionId);
+    const render = await prisma.studioRender.findFirst({ where: { sessionId }, orderBy: { version: "desc" } });
+    if (!render) {
+      const working = session.status === "queued" || session.status === "working";
+      (working ? pending : skipped).push({ session_id: sessionId, ...(working ? { status: "working", note: "Video not ready yet: call studio_get_session, then campaign_kit again." } : { reason: "no video in this chat" }) });
+      continue;
+    }
+    const video = await renderOut(render);
+    const copy = await studioCopy(sessionId);
+    items.push({
+      creative_id: render.id,
+      source: "studio",
+      session_id: sessionId,
+      type: "video",
+      url: video.url,
+      thumbnail_url: video.poster_url,
+      filename: video.filename,
+      mime: video.mime,
+      width: video.width,
+      height: video.height,
+      ratio: video.ratio,
+      duration_seconds: video.seconds,
+      placements: video.placements,
+      ...(render.watermarked ? { watermarked: true } : {}),
+      copy: { headline: copy.headline, primary_text: copy.primary_text, cta: copy.cta, cta_type: copy.cta_type, copy_source: "suggested" },
+      landing_url: copy.landing_url,
+    });
+  }
+  const data: Structured = {
+    items,
+    ...(pending.length ? { pending } : {}),
+    ...(skipped.length ? { skipped } : {}),
+    links_expire_at: expiresAt(),
+    handoff: "Ozzy doesn't publish to Meta. Pass each item to the user's Meta Ads tool: upload `url` as the image/video (it is a direct public file link, valid 7 days), use copy.headline / copy.primary_text / copy.cta_type and landing_url, and pick placements from `placements`. Let the user review and approve budget before anything goes live.",
+  };
+  const text = items.length
+    ? `Campaign kit: ${items.length} creative(s) ready to hand to a Meta Ads tool${pending.length ? `, ${pending.length} still in progress` : ""}.`
+    : pending.length
+      ? "Nothing is ready yet: the work is still in progress. Try again in a minute."
+      : "No ready creatives found for those ids.";
   return ok(text, data);
 }
 
@@ -322,7 +517,7 @@ export function buildOzzyServer(info: McpRequestInfo): McpServer {
   server.registerTool("autopilot_get", { title: "Ozzy Autopilot", description: "Ozzy Autopilot: whether it's on, this week's focus, the next drop time and last week's ads and video.", inputSchema: {}, annotations: { readOnlyHint: true } }, () =>
     run(async () => {
       const { workspace } = await studioAccess();
-      const v = await loadAutopilot(workspace);
+      const v = absoluteAutopilot(info, await loadAutopilot(workspace));
       if (!v.eligible) return ok("Ozzy Autopilot is included with Ozzy Ad Department.", { ...v, upgrade_url: "https://www.komendly.com/pricing?utm_source=autopilot" });
       return ok(`Autopilot is ${v.enabled ? "ON" : "OFF"}. ${v.nextDrop}. Focus: ${v.focus ?? "none (Ozzy picks)"}.`, { ...v });
     }),
@@ -339,7 +534,8 @@ export function buildOzzyServer(info: McpRequestInfo): McpServer {
         if (!parsed.ok) throw new ToolFailure(parsed.error);
         const r = await saveAutopilot(workspace, parsed.patch, agent.user.id);
         if (!r.ok) throw new ToolFailure(r.message, { code: r.code, upgrade_url: "https://www.komendly.com/pricing?utm_source=autopilot" });
-        return ok(`Saved. Autopilot is ${r.view.enabled ? "ON" : "OFF"}. ${r.view.nextDrop}. Focus: ${r.view.focus ?? "none (Ozzy picks)"}.`, { ...r.view });
+        const view = absoluteAutopilot(info, r.view);
+        return ok(`Saved. Autopilot is ${view.enabled ? "ON" : "OFF"}. ${view.nextDrop}. Focus: ${view.focus ?? "none (Ozzy picks)"}.`, { ...view });
       }),
   );
 
@@ -371,16 +567,18 @@ export function buildOzzyServer(info: McpRequestInfo): McpServer {
       title: "Remix an ad with Ozzy",
       description: "Show Ozzy any ad (a YouTube/Shorts, TikTok, Instagram, Facebook Ad Library or X link, a direct video/image link, or a page with the ad) and Ozzy rebuilds its structure and style (hook, pacing, text, transitions) for the user's own brand. Never copies the original's footage, logos or words. Counts like any Ozzy video (free first video, credits after).",
       inputSchema: {
-        url: z.string().min(4).max(2000).describe("Link to the ad to remix."),
+        url: z.string().min(4).max(2000).optional().describe("Link to the ad to remix."),
+        upload_id: z.string().min(1).max(64).optional().describe("Instead of a link: an upload_id from upload_media (a video or screenshot of the ad)."),
         notes: z.string().max(2000).optional().describe("Anything to change, e.g. the offer to feature."),
         aspect: z.enum(["9:16", "1:1", "4:5", "16:9"]).optional().describe("Output shape; defaults to the reference's."),
         wait: waitArg,
       },
     },
-    ({ url, notes, aspect, wait }) =>
+    ({ url, upload_id, notes, aspect, wait }) =>
       run(async () => {
+        if (!url && !upload_id) throw new ToolFailure("Give the ad's link (url) or an upload_id from upload_media.");
         await requireJobSlot();
-        const started = await callRoute(remixRoute, { ...route(info), method: "POST", path: "/api/studio/remix", body: { url, notes, aspect } });
+        const started = await callRoute(remixRoute, { ...route(info), method: "POST", path: "/api/studio/remix", body: { url, uploadId: upload_id, notes, aspect } });
         if (started.status >= 400) throw routeFailure(started);
         const sessionId = String((started.json.session as { id: string }).id);
         const assistant = started.json.assistantMessage as { id?: string } | undefined;
@@ -422,9 +620,35 @@ export function buildOzzyServer(info: McpRequestInfo): McpServer {
         if (wait ?? true) await waitForSession(session_id, Date.now() + GET_WAIT_MS);
         const base = await turnResult(info, session_id, null);
         const renders = await prisma.studioRender.findMany({ where: { sessionId: session_id }, orderBy: { version: "asc" } });
-        const data = { ...base.structuredContent, renders: await Promise.all(renders.map(renderOut)) };
-        delete (data as Structured).video;
+        const data: Structured = { ...base.structuredContent, renders: await Promise.all(renders.map(renderOut)) };
+        delete data.video;
+        if (renders.length && data.status !== "working") data.suggested_ad_copy = await studioCopy(session_id);
         return ok(base.content[0]?.text.split("\n\n")[0] ?? "", data);
+      }),
+  );
+
+  server.registerTool(
+    "studio_ad_copy",
+    { title: "Ad copy for a video", description: "Suggested Meta ad copy for an Ozzy Studio video: headline (≤40 chars), primary_text (≤125 chars), cta with a Meta call_to_action type (e.g. LEARN_MORE, SHOP_NOW, SIGN_UP), and the landing URL. Instant and free; derived from the brand and what the user asked for, so let the user tweak it.", inputSchema: { session_id: z.string().min(1).max(64) }, annotations: { readOnlyHint: true } },
+    ({ session_id }) =>
+      run(async () => {
+        const copy = await studioCopy(session_id);
+        return ok(`Suggested copy: "${copy.headline}" / ${copy.cta_type}.`, { session_id, ...copy });
+      }),
+  );
+
+  server.registerTool(
+    "campaign_kit",
+    {
+      title: "Campaign kit for Meta",
+      description: "One call that returns every ready creative from an Ad Pack (run_id) and/or Ozzy videos (session_ids) as a hand-off list for the user's Meta Ads tool: direct media URL (valid 7 days), type, mime, width/height, ratio, duration, placement hints (feed/stories/reels), headline, primary_text, Meta CTA type and landing URL. Ozzy doesn't publish to Meta himself.",
+      inputSchema: { run_id: z.string().min(1).max(64).optional(), session_ids: z.array(z.string().min(1).max(64)).max(10).optional() },
+      annotations: { readOnlyHint: true },
+    },
+    ({ run_id, session_ids }) =>
+      run(async () => {
+        if (!run_id && !session_ids?.length) throw new ToolFailure("Give an Ad Pack run_id and/or Ozzy session_ids (see ads_list_runs / studio_list_sessions).");
+        return campaignKit(info, run_id, [...new Set(session_ids ?? [])]);
       }),
   );
 
@@ -496,19 +720,23 @@ export function buildOzzyServer(info: McpRequestInfo): McpServer {
 
   server.registerTool(
     "get_download_url",
-    { title: "Download link", description: "A fresh short-lived download link for an ad asset (asset_id) or an Ozzy video (render_id).", inputSchema: { asset_id: z.string().min(1).max(64).optional(), render_id: z.string().min(1).max(64).optional() } },
+    { title: "Download link", description: "A fresh download link (valid 7 days, fetchable by other services) for an ad asset (asset_id) or an Ozzy video (render_id).", inputSchema: { asset_id: z.string().min(1).max(64).optional(), render_id: z.string().min(1).max(64).optional() } },
     ({ asset_id, render_id }) =>
       run(async () => {
         if (asset_id) {
           const r = await callRoute(assetDownloadRoute, { ...route(info), method: "GET", path: `/api/ads/assets/${asset_id}/download`, params: { id: asset_id } });
           if (r.status >= 400 || !r.location) throw routeFailure(r);
-          return ok("Download link (valid for a few minutes).", { url: r.location, expires_in_seconds: 300 });
+          // The route above enforced access (owner, email gate, locked bonus); hand out a long-lived link to the same file.
+          const a = await prisma.adAsset.findUnique({ where: { id: asset_id }, select: { storageKey: true, mime: true, width: true, height: true, ratio: true } });
+          if (!a) throw new ToolFailure("Not found. Check the asset id.");
+          return ok("Download link (valid for 7 days).", { url: await presignShareable(a.storageKey, { contentType: a.mime }), mime: a.mime, width: a.width, height: a.height, ratio: a.ratio, expires_in_seconds: SHARE_LINK_SECONDS, expires_at: expiresAt() });
         }
         if (render_id) {
           const agent = agentOrThrow();
           const r = await prisma.studioRender.findUnique({ where: { id: render_id } });
           if (!r || !(await workspaceOwnsKey(agent.user.id, r.key))) throw new ToolFailure("Not found. Check the render id.");
-          return ok("Download link (valid for 10 minutes).", { url: (await renderOut(r)).url, expires_in_seconds: 600 });
+          const v = await renderOut(r);
+          return ok("Download link (valid for 7 days).", { url: v.url, mime: v.mime, width: v.width, height: v.height, ratio: v.ratio, seconds: v.seconds, expires_in_seconds: SHARE_LINK_SECONDS, expires_at: v.expires_at });
         }
         throw new ToolFailure("Give an asset_id (ad image/video) or a render_id (Ozzy video).");
       }),

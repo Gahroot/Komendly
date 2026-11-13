@@ -10,17 +10,22 @@ export interface MediaInfo {
   height: number | null;
   hasVideo: boolean;
   hasAudio: boolean;
+  /** Codec / pixel format of the first video stream, codec of the first audio stream (when present). */
+  vcodec?: string | null;
+  pixFmt?: string | null;
+  acodec?: string | null;
 }
 
 export async function probeMedia(file: string, signal?: AbortSignal): Promise<MediaInfo | null> {
   const fp = await ffprobePath();
   if (!fp) return null;
-  const r = await run(fp, ["-v", "error", "-show_entries", "stream=codec_type,width,height:format=duration", "-of", "json", file], { signal });
+  const r = await run(fp, ["-v", "error", "-show_entries", "stream=codec_type,codec_name,pix_fmt,width,height:format=duration", "-of", "json", file], { signal });
   if (r.code !== 0) return null;
-  const j = JSON.parse(r.stdout) as { streams?: Array<{ codec_type?: string; width?: number; height?: number }>; format?: { duration?: string } };
+  const j = JSON.parse(r.stdout) as { streams?: Array<{ codec_type?: string; codec_name?: string; pix_fmt?: string; width?: number; height?: number }>; format?: { duration?: string } };
   const v = j.streams?.find((s) => s.codec_type === "video");
+  const a = j.streams?.find((s) => s.codec_type === "audio");
   const d = Number(j.format?.duration);
-  return { durationSec: Number.isFinite(d) && d > 0 ? d : null, width: v?.width ?? null, height: v?.height ?? null, hasVideo: !!v, hasAudio: !!j.streams?.some((s) => s.codec_type === "audio") };
+  return { durationSec: Number.isFinite(d) && d > 0 ? d : null, width: v?.width ?? null, height: v?.height ?? null, hasVideo: !!v, hasAudio: !!a, vcodec: v?.codec_name ?? null, pixFmt: v?.pix_fmt ?? null, acodec: a?.codec_name ?? null };
 }
 
 /** Nearest delivery ratio label for a frame size. */
@@ -73,9 +78,23 @@ export async function watermarkPng(g: WatermarkGeometry, out: string, text = STU
   await writeFile(out, await sharp(Buffer.from(svg)).png().toBuffer());
 }
 
-/** ffmpeg args: overlay the watermark PNG bottom-right, cap the length, H.264/AAC faststart. */
-export function finalArgs(o: { input: string; output: string; maxSeconds: number; watermark?: { png: string; g: WatermarkGeometry }; hasAudio: boolean }): string[] {
+/**
+ * The engine's own render is already H.264 yuv420p at CRF 18: with no watermark and no length cut, re-encoding it
+ * only costs time and a generation of quality, so the delivery remuxes it (faststart) instead.
+ */
+export function canCopyVideo(info: Pick<MediaInfo, "vcodec" | "pixFmt" | "durationSec">, o: { watermark: boolean; maxSeconds: number }): boolean {
+  return !o.watermark && info.vcodec === "h264" && info.pixFmt === "yuv420p" && info.durationSec !== null && info.durationSec !== undefined && info.durationSec <= o.maxSeconds;
+}
+
+/** ffmpeg args: overlay the watermark PNG bottom-right, cap the length, H.264/AAC faststart (or a plain remux). */
+export function finalArgs(o: { input: string; output: string; maxSeconds: number; watermark?: { png: string; g: WatermarkGeometry }; hasAudio: boolean; copy?: { video: boolean; audio: boolean } }): string[] {
   const args = ["-y", "-v", "error", "-i", o.input];
+  if (o.copy?.video && !o.watermark) {
+    args.push("-t", String(o.maxSeconds), "-map", "0:v:0", "-c:v", "copy");
+    if (o.hasAudio) args.push("-map", "0:a:0?", ...(o.copy.audio ? ["-c:a", "copy"] : ["-c:a", "aac", "-b:a", "160k"]));
+    args.push("-movflags", "+faststart", o.output);
+    return args;
+  }
   if (o.watermark) args.push("-i", o.watermark.png);
   args.push("-t", String(o.maxSeconds));
   if (o.watermark) {
@@ -89,7 +108,7 @@ export function finalArgs(o: { input: string; output: string; maxSeconds: number
 }
 
 /** Re-encode the delivered video (watermark + length cap). */
-export async function finalizeDelivery(o: { input: string; output: string; maxSeconds: number; watermark: boolean; width: number; height: number; hasAudio: boolean; pngPath: string; signal?: AbortSignal }): Promise<{ ok: boolean; error?: string }> {
+export async function finalizeDelivery(o: { input: string; output: string; maxSeconds: number; watermark: boolean; width: number; height: number; hasAudio: boolean; pngPath: string; signal?: AbortSignal; info?: Pick<MediaInfo, "vcodec" | "pixFmt" | "durationSec" | "acodec"> }): Promise<{ ok: boolean; error?: string; copied?: boolean }> {
   const ff = await ffmpegPath();
   if (!ff) return { ok: false, error: "ffmpeg missing" };
   let wm: { png: string; g: WatermarkGeometry } | undefined;
@@ -98,6 +117,8 @@ export async function finalizeDelivery(o: { input: string; output: string; maxSe
     await watermarkPng(g, o.pngPath);
     wm = { png: o.pngPath, g };
   }
-  const r = await run(ff, finalArgs({ input: o.input, output: o.output, maxSeconds: o.maxSeconds, watermark: wm, hasAudio: o.hasAudio }), { signal: o.signal, timeoutMs: 10 * 60_000 });
-  return r.code === 0 ? { ok: true } : { ok: false, error: r.stderr.slice(-400) };
+  const copied = !wm && Boolean(o.info) && canCopyVideo(o.info as MediaInfo, { watermark: o.watermark, maxSeconds: o.maxSeconds });
+  const copy = copied ? { video: true, audio: o.info?.acodec === "aac" } : undefined;
+  const r = await run(ff, finalArgs({ input: o.input, output: o.output, maxSeconds: o.maxSeconds, watermark: wm, hasAudio: o.hasAudio, copy }), { signal: o.signal, timeoutMs: 10 * 60_000 });
+  return r.code === 0 ? { ok: true, copied } : { ok: false, error: r.stderr.slice(-400) };
 }
