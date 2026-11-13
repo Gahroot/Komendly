@@ -175,8 +175,13 @@ export function hasAdDepartment(ws: PlanCheckWorkspace): boolean {
   return (ws.adsPlan === "ad_department" || ws.adsPlan === "agency") && activeOn(ws);
 }
 
+/** Parallel Studio chats / runs an admin may have in progress at once. */
+export const ADMIN_CONCURRENT = 20;
+
 /** Unlimited plans: how many runs / Studio turns may be in progress at once (1 unless the plan says more). */
-export function concurrentLimit(ws: PlanCheckWorkspace): number {
+export function concurrentLimit(ws: PlanCheckWorkspace, user?: { isAdmin?: boolean | null } | null): number {
+  // Admins (owner decision 2026-11-13): many parallel Studio chats / runs, ahead of a paid "parallel chats" add-on.
+  if (user?.isAdmin) return ADMIN_CONCURRENT;
   return getPlan(ws.adsPlan)?.concurrent ?? 1;
 }
 

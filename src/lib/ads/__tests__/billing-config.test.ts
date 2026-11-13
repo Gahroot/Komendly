@@ -137,3 +137,13 @@ describe("unlimited plans: Ad Department (1 business) vs Agency (10 brands, 3 at
     expect(FOUNDING_TERMS).not.toMatch(/6 months/);
   });
 });
+
+describe("admin parallel Studio chats", () => {
+  it("admins get many at once, everyone else keeps the plan limit", async () => {
+    const { concurrentLimit, ADMIN_CONCURRENT } = await import("../billing-config");
+    const w = { adsPlan: "ad_department" } as Parameters<typeof concurrentLimit>[0];
+    expect(concurrentLimit(w, { isAdmin: true })).toBe(ADMIN_CONCURRENT);
+    expect(concurrentLimit(w, { isAdmin: false })).toBe(1);
+    expect(concurrentLimit(w, null)).toBe(1);
+  });
+});

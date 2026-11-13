@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     const fresh = await prisma.adsWorkspace.findUniqueOrThrow({ where: { id: workspaceId } });
     // Unlimited plan: 0 credits, fair use = one Studio turn in progress per workspace.
     const unlimited = isUnlimitedPlan(fresh);
-    if (unlimited && (await prisma.studioSession.count({ where: { workspaceId, status: { in: ["queued", "working"] } } })) >= concurrentLimit(fresh)) throw new AdsHttpError(409, "busy", UNLIMITED_BUSY_MESSAGE);
+    if (unlimited && (await prisma.studioSession.count({ where: { workspaceId, status: { in: ["queued", "working"] } } })) >= concurrentLimit(fresh, user)) throw new AdsHttpError(409, "busy", UNLIMITED_BUSY_MESSAGE);
     const gate = canStartStudioTurn({ priorRenders: 0, sessionFree: freeVideo, freeVideosLeft: fresh.studioFreeVideos, balance: await getBalance(workspaceId), isPaidWorkspace: paid, unlimited });
     if (!gate.ok) {
       // No free video and no credits: open Studio home with the prompt prefilled; sending it shows the paywall.

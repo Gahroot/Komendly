@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     }
     const fresh = await prisma.adsWorkspace.findUniqueOrThrow({ where: { id: workspace.id } });
     const unlimited = isUnlimitedPlan(fresh);
-    if (unlimited && (await prisma.studioSession.count({ where: { workspaceId: fresh.id, status: { in: ["queued", "working"] } } })) >= concurrentLimit(fresh)) throw new AdsHttpError(409, "busy", UNLIMITED_BUSY_MESSAGE);
+    if (unlimited && (await prisma.studioSession.count({ where: { workspaceId: fresh.id, status: { in: ["queued", "working"] } } })) >= concurrentLimit(fresh, user)) throw new AdsHttpError(409, "busy", UNLIMITED_BUSY_MESSAGE);
     const gate = canStartStudioTurn({ priorRenders: 0, sessionFree: freeVideo, freeVideosLeft: fresh.studioFreeVideos, balance: await getBalance(fresh.id), isPaidWorkspace: paid, unlimited });
     if (!gate.ok) {
       await trackAdsEvent("studio_paywall_shown", { workspaceId: fresh.id, userId: user.id, props: { code: gate.code, neededCredits: gate.neededCredits, launch: true } });

@@ -42,7 +42,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
     const unlimited = isUnlimitedPlan(workspace);
     // Autopilot's weekly video runs on spare capacity and never makes the member wait.
     const busyElsewhere = { workspaceId: workspace.id, id: { not: session.id }, status: { in: ["queued", "working"] }, autopilotWeek: null };
-    if (unlimited && (await prisma.studioSession.count({ where: busyElsewhere })) >= concurrentLimit(workspace)) throw new AdsHttpError(409, "busy", UNLIMITED_BUSY_MESSAGE);
+    if (unlimited && (await prisma.studioSession.count({ where: busyElsewhere })) >= concurrentLimit(workspace, user)) throw new AdsHttpError(409, "busy", UNLIMITED_BUSY_MESSAGE);
     const [balance, priorRenders] = await Promise.all([getBalance(workspace.id), prisma.studioRender.count({ where: { sessionId: session.id } })]);
     const gate = canStartStudioTurn({ priorRenders, sessionFree: session.freeVideo, freeVideosLeft: workspace.studioFreeVideos, balance, isPaidWorkspace: paid, unlimited });
     if (!gate.ok) {
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest, { params }: Ctx) {
         data: { status: "queued", lastActivityAt: new Date() },
       });
       if (claimed.count !== 1) throw new AdsHttpError(409, "busy", "Ozzy is still working on the last message.");
-      if (unlimited && (await tx.studioSession.count({ where: busyElsewhere })) >= concurrentLimit(workspace)) throw new AdsHttpError(409, "busy", UNLIMITED_BUSY_MESSAGE);
+      if (unlimited && (await tx.studioSession.count({ where: busyElsewhere })) >= concurrentLimit(workspace, user)) throw new AdsHttpError(409, "busy", UNLIMITED_BUSY_MESSAGE);
       const userMessage = await tx.studioMessage.create({
         data: { sessionId: session.id, role: "user", content: parsed.data.content, attachments: uploadIds.map((uploadId) => ({ uploadId })), status: "done" },
       });
