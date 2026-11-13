@@ -131,9 +131,10 @@ export async function loadKlyDashboard(now: Date = new Date()) {
   }).sort((a, b) => Number(b.paused) - Number(a.paused) || a.domain.localeCompare(b.domain));
 
   // Peer warm-up (kly/src/warmup.ts): sent today per domain + 7-day placement per mailbox.
-  const [wToday, wPlace] = await Promise.all([
-    prisma.klyWarmupMessage.groupBy({ by: ["senderDomain"], where: { sentAt: { gte: sendDayStart(now) } }, _count: { _all: true } }),
-    prisma.klyWarmupMessage.groupBy({ by: ["senderId", "placement"], where: { sentAt: { gte: weekAgo } }, _count: { _all: true } }),
+  const [wToday, wPlace, probeG] = await Promise.all([
+    prisma.klyWarmupMessage.groupBy({ by: ["senderDomain"], where: { kind: "warmup", sentAt: { gte: sendDayStart(now) } }, _count: { _all: true } }),
+    prisma.klyWarmupMessage.groupBy({ by: ["senderId", "placement"], where: { kind: "warmup", sentAt: { gte: weekAgo } }, _count: { _all: true } }),
+    prisma.klyWarmupMessage.groupBy({ by: ["format", "placement"], where: { kind: "probe", sentAt: { gte: weekAgo } }, _count: { _all: true } }),
   ]);
   const wPlaceBy = new Map<string, { inbox: number; spam: number; missing: number }>();
   for (const g of wPlace) {
@@ -141,7 +142,14 @@ export async function loadKlyDashboard(now: Date = new Date()) {
     if (g.placement === "inbox" || g.placement === "spam" || g.placement === "missing") c[g.placement] += g._count._all;
     wPlaceBy.set(g.senderId, c);
   }
+  // Cold spam check (kly/src/probe.ts): where copies of real cold emails landed in our own inboxes, by format.
+  const probes = { html: { inbox: 0, spam: 0, missing: 0 }, plain: { inbox: 0, spam: 0, missing: 0 } };
+  for (const g of probeG) {
+    const f = g.format === "plain" ? probes.plain : probes.html;
+    if (g.placement === "inbox" || g.placement === "spam" || g.placement === "missing") f[g.placement] += g._count._all;
+  }
   const warmup = {
+    probes,
     enabled: settingsRow?.warmupEnabled ?? true,
     perDay: settingsRow?.warmupPerDay ?? 40,
     ...summarizeWarmup(mailboxes.map((m) => ({ id: m.id, domain: m.domain ?? m.address.split("@")[1] ?? "", provider: m.provider, paused: m.paused, warmupEnabled: m.warmupEnabled, warmupSince: m.warmupSince, coldStartedAt: m.coldStartedAt })), wPlaceBy, new Map(wToday.map((g) => [g.senderDomain, g._count._all])), now, { minDays: settingsRow?.warmupMinDays, readySpamRate: settingsRow ? settingsRow.warmupReadySpamPct / 100 : undefined }),

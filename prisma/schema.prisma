@@ -1359,8 +1359,11 @@ model KlyWarmupMessage {
   filedAt         DateTime?
   replyWanted     Boolean   @default(false)
   repliedAt       DateTime?
+  kind            String    @default("warmup") // warmup | probe (copy of a real cold email to our own inbox: placement check)
+  format          String? // probe: html | plain
 
   @@index([senderId, sentAt])
+  @@index([kind, sentAt])
   @@index([recipientId, sentAt])
   @@index([recipientId, replyWanted, repliedAt])
   @@index([sentAt])

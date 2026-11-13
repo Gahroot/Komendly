@@ -283,14 +283,28 @@ async function placementsBy(db: Db, field: "senderId" | "senderDomain", where: P
   return out;
 }
 
+/** Early starters (owner's call, Nov 13): the first EARLY_PER_DOMAIN mailboxes of each domain (by address) may go cold
+ * after EARLY_MIN_DAYS of warm-up instead of warmupMinDays; same spam gate and 5 -> 10 -> 15 cold ramp. */
+export const EARLY_PER_DOMAIN = 4;
+export const EARLY_MIN_DAYS = 8;
+export function earlyStarters(boxes: ReadonlyArray<{ id: string; domain: string; address: string }>): Set<string> {
+  const byDomain = new Map<string, { id: string; address: string }[]>();
+  for (const b of boxes) byDomain.set(b.domain, [...(byDomain.get(b.domain) ?? []), b]);
+  const out = new Set<string>();
+  for (const list of byDomain.values()) for (const b of [...list].sort((a, z) => a.address.localeCompare(z.address)).slice(0, EARLY_PER_DOMAIN)) out.add(b.id);
+  return out;
+}
+
 /** Warm-up gates for the cold sender (one groupBy): only rented mailboxes in warm-up while warm-up is switched on. */
 export async function warmupGates(db: Db, s: WarmupSettings, boxes: readonly StoredMailbox[], now: Date): Promise<Map<string, WarmupGate>> {
   const inWarmup = boxes.filter((b) => s.warmupEnabled && b.provider !== "gmail" && b.row.warmupEnabled);
   if (!inWarmup.length) return new Map();
   const p = await placementsBy(db, "senderId", { senderId: { in: inWarmup.map((b) => b.id) }, sentAt: { gte: new Date(now.getTime() - 7 * DAY_MS) } });
+  const early = earlyStarters(inWarmup);
   return new Map(inWarmup.map((b) => {
     const c = p.get(b.id) ?? { inbox: 0, spam: 0, missing: 0 };
-    return [b.id, { since: b.row.warmupSince, spamRate: spamPlacementRate(c.inbox, c.spam), coldStartedAt: b.row.coldStartedAt, minDays: s.warmupMinDays, maxSpamRate: s.warmupReadySpamPct / 100 }];
+    const minDays = early.has(b.id) ? Math.min(EARLY_MIN_DAYS, s.warmupMinDays) : s.warmupMinDays;
+    return [b.id, { since: b.row.warmupSince, spamRate: spamPlacementRate(c.inbox, c.spam), coldStartedAt: b.row.coldStartedAt, minDays, maxSpamRate: s.warmupReadySpamPct / 100 }];
   }));
 }
 

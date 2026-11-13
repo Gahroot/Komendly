@@ -197,11 +197,12 @@ export default async function KlyPage() {
                   <h3 className="text-sm font-medium">Warm-up {h.warmup.enabled ? "" : "(switched off)"}</h3>
                   <span className="text-xs text-muted-foreground">{h.warmup.perDay}/day per mailbox · peer-to-peer, no vendor</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
                   <Stat gold label="Warm-up today" value={String(h.warmup.sentToday)} hint={`${plural(h.warmup.mailboxes, "mailbox")} warming each other`} />
                   <Stat label="Inbox placement" value={h.warmup.inboxPct === null ? "-" : pct(h.warmup.inboxPct)} hint="last 7 days, inbox vs spam" />
                   <Stat label="Ready / warming" value={`${h.warmup.ready} / ${h.warmup.warming}`} hint="ready = 14+ days and spam under the limit" />
                   <Stat label="Paused (spam)" value={String(h.warmup.paused)} hint="cold paused, warm-up keeps running" />
+                  <Stat label="Cold spam check" value={(() => { const p = h.warmup.probes; const n = p.html.inbox + p.html.spam + p.plain.inbox + p.plain.spam; return n ? pct((p.html.inbox + p.plain.inbox) / n) : "-"; })()} hint={`real cold copies in our inboxes, 7d · styled ${h.warmup.probes.html.inbox}/${h.warmup.probes.html.inbox + h.warmup.probes.html.spam}, plain ${h.warmup.probes.plain.inbox}/${h.warmup.probes.plain.inbox + h.warmup.probes.plain.spam} inbox`} />
                 </div>
                 <ul className="mt-3 space-y-1.5">
                   {h.warmup.domains.map((x) => (

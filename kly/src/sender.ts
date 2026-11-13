@@ -17,6 +17,7 @@ import { errMsg, log } from "./log";
 import { adImageUrl, extendAssets, ON_CLICK_NOTE } from "./hook";
 import { addCost, type KlySettingsRow } from "./settings";
 import { warmupGates, type WarmupSettings } from "./warmup";
+import { maybeProbe } from "./probe";
 
 /** Voice call outcomes that end the cold email sequence (no follow-up after the phone call settled it). */
 export const VOICE_STOP_STATUSES = ["gift_yes", "info_requested", "not_interested", "opt_out"] as const;
@@ -188,6 +189,8 @@ export interface SenderDeps {
   env?: NodeJS.ProcessEnv;
   now?: () => Date;
   transport?: (m: MailboxEnv) => Transport;
+  /** Warm-up tag secret: when set, ~1 in 10 cold sends from rented mailboxes is copied to our own inbox (probe.ts). */
+  probeSecret?: string;
   rng: Rng;
   /** Effective daily volume across all mailboxes (autoscale). */
   dailyVolume: number;
@@ -248,7 +251,7 @@ export async function senderTick(deps: SenderDeps): Promise<Array<{ mailbox: str
     if (domainOf.get(b.domain)?.paused) continue;
     const last = lastSendId.get(b.id);
     const warmup = gates.get(b.id) ?? null;
-    const pace = canSendNow({ warmup, paused: b.row.paused, dailyCap: b.row.dailyCap, warmupStartedAt: b.row.warmupStartedAt, provider: b.provider, readyAt: b.row.readyAt, lastSentAt: b.row.lastSentAt, sentToday: sentBy.get(b.id) ?? 0, gapMs: last ? sendGapMs(fraction(last)) : 0 }, now);
+    const pace = canSendNow({ warmup, paused: b.row.paused, dailyCap: b.row.dailyCap, warmupStartedAt: b.row.warmupStartedAt, provider: b.provider, readyAt: warmup ? null : b.row.readyAt, lastSentAt: b.row.lastSentAt, sentToday: sentBy.get(b.id) ?? 0, gapMs: last ? sendGapMs(fraction(last)) : 0 }, now);
     if (!pace.ok) continue;
     cands.push({ id: b.id, domain: b.domain, limit: mailboxDayLimit({ ...b.row, provider: b.provider, warmup }, now), sentToday: sentBy.get(b.id) ?? 0, lastSentAt: b.row.lastSentAt });
   }
@@ -264,7 +267,7 @@ export async function senderTick(deps: SenderDeps): Promise<Array<{ mailbox: str
     const b = byId.get(c.id);
     return p && b ? [{ b, p }] : [];
   });
-  const results = await mapPool(jobs, SEND_CONCURRENCY, ({ b, p }) => sendOne(deps, cfg, b, b.id, p.lead, p.step, now));
+  const results = await mapPool(jobs, SEND_CONCURRENCY, ({ b, p }) => sendOne(deps, cfg, b, b.id, p.lead, p.step, now, boxes));
   jobs.forEach((j, i) => {
     const r = results[i];
     out.push({ mailbox: j.b.address, result: r instanceof Error ? `error: ${r.message}` : (r ?? "") });
@@ -341,7 +344,7 @@ export async function assignLeads(db: Db, mailboxIds: string[], now: Date, follo
   return out;
 }
 
-async function sendOne(deps: SenderDeps, cfg: OutboundEnv, m: MailboxEnv, mailboxId: string, lead: LeadRow, step: 1 | 2, now: Date): Promise<string> {
+async function sendOne(deps: SenderDeps, cfg: OutboundEnv, m: StoredMailbox, mailboxId: string, lead: LeadRow, step: 1 | 2, now: Date, all: readonly StoredMailbox[] = []): Promise<string> {
   const { db } = deps;
   const arms = await copyArms(db, lead, deps.rng, deps.explorationPct);
   // Claim the lead for this mailbox (sticky: the follow-up comes from the same person) and pin its arms.
@@ -371,5 +374,9 @@ async function sendOne(deps: SenderDeps, cfg: OutboundEnv, m: MailboxEnv, mailbo
     db.outboundMailbox.updateMany({ where: { id: mailboxId, coldStartedAt: null }, data: { coldStartedAt: now } }),
   ]);
   await extendAssets(db, lead.adId, now);
+  if (deps.probeSecret) {
+    const to = await maybeProbe(db, { from: m, boxes: all, mail: { subject: c.subject, text: c.text, html: c.html, headers }, format: c.html ? "html" : "plain", secret: deps.probeSecret, send: deps.transport ?? smtpTransport, rng: deps.rng, now }).catch((e: unknown) => (log("warn", "kly probe failed", { mailbox: m.address, error: errMsg(e).slice(0, 200) }), null));
+    if (to) log("info", "kly probe", { from: m.address, to });
+  }
   return `sent step ${step} to ${lead.domain}`;
 }

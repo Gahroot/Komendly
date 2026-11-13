@@ -251,7 +251,7 @@ export async function runTick(d: LoopDeps, state: LoopState): Promise<void> {
   await step(state, "encore costs", () => syncEncoreCosts(db, now));
   if (sendingLive) {
     await step(state, "sender", async () => {
-      const sent = await senderTick({ db, provider, env, rng, dailyVolume: volume, followUpDays: s.followUpDays, maxSteps: s.maxSteps, explorationPct: s.explorationPct, now: clock, mailboxes: boxes, transport: state.mail.pool.transport, warmup: s });
+      const sent = await senderTick({ db, provider, env, rng, dailyVolume: volume, followUpDays: s.followUpDays, maxSteps: s.maxSteps, explorationPct: s.explorationPct, now: clock, mailboxes: boxes, transport: state.mail.pool.transport, warmup: s, probeSecret: s.warmupEnabled ? warmupSecretOf(env) : undefined });
       if (sent.some((x) => x.result.startsWith("sent") || x.result.startsWith("auto-paused"))) log("info", "kly sender", { sent });
     });
   }
