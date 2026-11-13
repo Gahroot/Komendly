@@ -1,0 +1,201 @@
+<!doctype html>
+<!--
+  Ozzy kit starter: OFFER-PRICE. A sale/deal ad: hook on diagonal stripes, a giant counting discount number with a
+  spinning burst badge, a ticking countdown for urgency, then old price struck through, new price and a pulsing CTA.
+  Copy it to ./index.html, then change ONLY:
+    SIZE     2 places marked SIZE (meta viewport, #root data-width/data-height). 9:16=1080x1920, 1:1=1080x1080, 16:9=1920x1080.
+    PALETTE  the :root block.
+    COPY     text in each <section>. The deal number: data-to on .count (e.g. 40 for "40% OFF", 2 for "2 for 1").
+             The countdown: COUNTDOWN in the script (hours, minutes, seconds shown at the start of scene 3).
+             Never invent a discount or deadline: use exactly what the user gave, or drop that scene.
+    IMAGES   .media slot in scene 4 (marked IMAGE). Photo: <div class="media"><img src="brand/photos/x.jpg"></div>.
+             Kit illustration or icon: keep class "media illus".
+    SCENES   seconds per scene in the SCENES array at the bottom; data-duration = their sum.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" /><!-- SIZE 1/2 -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+  @font-face { font-family: "Big Shoulders"; src: url("kit/fonts/big-shoulders-normal.woff2") format("woff2"); font-weight: 100 900; }
+  @font-face { font-family: "Host Grotesk"; src: url("kit/fonts/host-grotesk-normal.woff2") format("woff2"); font-weight: 300 800; }
+  /* PALETTE: sale = the loud field, deep = the dark field, pop = the number/badge colour, paper = light text. */
+  :root {
+    --sale: #e8202a; --deep: #17122b; --pop: #ffd23f; --paper: #ffffff; --ink: #17122b; --soft: #ffe9e1;
+    --display: "Big Shoulders", "Impact", sans-serif; --text: "Host Grotesk", system-ui, sans-serif;
+  }
+  html, body { margin: 0; width: 100%; height: 100%; background: var(--deep); }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; font-family: var(--text); color: var(--paper); }
+  .scene { position: absolute; inset: 0; visibility: hidden; overflow: hidden; }
+  .red { background: var(--sale); } .dark { background: var(--deep); } .light { background: var(--soft); color: var(--ink); }
+  .stripes { position: absolute; inset: -20%; opacity: .14; background: repeating-linear-gradient(-35deg, #000 0 6vmin, transparent 6vmin 12vmin); }
+  .dark .stripes { background: repeating-linear-gradient(-35deg, var(--pop) 0 .6vmin, transparent .6vmin 9vmin); opacity: .12; }
+  .rays { position: absolute; left: 50%; top: 46%; width: 220vmax; height: 220vmax; margin: -110vmax 0 0 -110vmax; opacity: .16;
+    background: repeating-conic-gradient(from 0deg, var(--pop) 0 6deg, transparent 6deg 18deg); border-radius: 50%; }
+  .shade { position: absolute; inset: 0; background: radial-gradient(110% 80% at 50% 45%, transparent 50%, rgba(0,0,0,.35)); }
+  /* SAFE ZONE (9:16 feed UI: top 7%, bottom 22%, right 17%) */
+  .safe { position: absolute; left: 7%; right: 7%; top: 8%; bottom: 22%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; z-index: 2; }
+  /* TYPE: kicker > giant number/headline > sub */
+  .kicker { font: 800 3.2vmin/1 var(--text); letter-spacing: .22em; text-transform: uppercase; padding: 1.4vmin 2.6vmin; border: .4vmin solid currentColor; border-radius: 99px; }
+  .head { font: 900 23vmin/.86 var(--display); text-transform: uppercase; letter-spacing: -.01em; margin: 3vmin 0 0; }
+  .head .line { display: block; overflow: hidden; } .head .line > span { display: inline-block; }
+  .head .pop { color: var(--pop); }
+  .sub { font: 600 4.6vmin/1.25 var(--text); margin-top: 6vmin; max-width: 22ch; }
+  /* the big number: count + unit stacked against OFF */
+  .deal { position: relative; display: flex; align-items: center; justify-content: center; color: var(--pop); }
+  .count { font: 900 46vmin/.8 var(--display); letter-spacing: -.03em; text-shadow: 0 2vmin 0 rgba(0,0,0,.25); }
+  .unit { display: flex; flex-direction: column; align-items: flex-start; margin-left: 1.5vmin; font: 900 15vmin/.82 var(--display); text-transform: uppercase; }
+  .unit small { font-size: .62em; color: var(--paper); }
+  .burst { position: absolute; z-index: 3; width: 26vmin; height: 26vmin; right: -22vmin; bottom: -14vmin; display: grid; place-items: center; }
+  .burst img { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .burst b { position: relative; color: #fff; font: 900 5.6vmin/.9 var(--display); text-transform: uppercase; rotate: -10deg; }
+  /* countdown tiles */
+  .clock { display: flex; gap: 2vmin; margin-top: 5vmin; align-items: flex-start; }
+  .tile { min-width: 20vmin; padding: 2.6vmin 1vmin 1.6vmin; border-radius: 2.4vmin; background: var(--paper); color: var(--ink); box-shadow: 0 1.6vmin 0 rgba(0,0,0,.25); }
+  .tile b { display: block; font: 900 17vmin/.85 var(--display); font-variant-numeric: tabular-nums; }
+  .tile small { display: block; margin-top: 1vmin; font: 700 2.4vmin/1 var(--text); letter-spacing: .16em; text-transform: uppercase; color: var(--sale); }
+  .colon { font: 900 12vmin/1.1 var(--display); color: var(--pop); }
+  /* end card: product + prices + CTA */
+  .media { position: relative; width: 52vmin; height: 52vmin; border-radius: 50%; overflow: hidden; background: #fff; box-shadow: 0 2.4vmin 6vmin rgba(0,0,0,.28), 0 0 0 1.4vmin var(--paper); }
+  .media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .media.illus { background: radial-gradient(circle at 50% 45%, #fff 30%, var(--soft) 100%); }
+  .media.illus img { object-fit: contain; padding: 16%; box-sizing: border-box; }
+  .prices { display: flex; align-items: baseline; gap: 3vmin; margin-top: 4vmin; }
+  .old { position: relative; font: 700 10vmin/1 var(--display); opacity: .55; }
+  .old::after { content: ""; position: absolute; left: -6%; right: -6%; top: 52%; height: .8vmin; background: var(--sale); transform-origin: left center; transform: rotate(-8deg) scaleX(var(--strike, 1)); }
+  .new { font: 900 24vmin/.85 var(--display); color: var(--sale); }
+  .cta { margin-top: 4vmin; padding: 2.6vmin 6vmin; border-radius: 99px; background: var(--sale); color: #fff; font: 800 4.2vmin/1 var(--text); letter-spacing: .06em; text-transform: uppercase;
+    box-shadow: 0 1.4vmin 0 #8f0f16, 0 2.4vmin 4vmin rgba(0,0,0,.25); }
+  .fine { margin-top: 3.4vmin; font: 600 2.6vmin/1.2 var(--text); opacity: .7; }
+  /* No CSS transform here: GSAP owns it. */
+  .wipe { position: absolute; inset: 0; z-index: 50; }
+  @media (min-aspect-ratio: 5/4) {
+    .safe { top: 8%; bottom: 8%; }
+    .count { font-size: 50vmin; } .head { font-size: 17vmin; }
+    .s4 .safe { flex-direction: row; gap: 6vmin; text-align: left; } .s4 .info { display: flex; flex-direction: column; align-items: flex-start; }
+    .media { width: 56vmin; height: 56vmin; }
+  }
+  @media (min-aspect-ratio: 9/10) and (max-aspect-ratio: 5/4) {
+    .safe { bottom: 10%; top: 8%; } .count { font-size: 38vmin; } .head { font-size: 14vmin; } .media { width: 28vmin; height: 28vmin; } .new { font-size: 15vmin; }
+    .tile b { font-size: 12vmin; } .burst { width: 20vmin; height: 20vmin; right: -18vmin; bottom: -8vmin; }
+  }
+</style>
+</head>
+<body>
+<!-- SIZE 2/2: data-width / data-height. data-duration = sum of SCENES. -->
+<div id="root" data-composition-id="main" data-start="0" data-width="1080" data-height="1920" data-duration="14">
+
+  <!-- SCENE 1 HOOK: the occasion -->
+  <section class="scene s1 red">
+    <div class="stripes"></div><div class="shade"></div>
+    <div class="safe">
+      <div class="kicker">Brand name</div>
+      <h1 class="head"><span class="line"><span>Summer</span></span><span class="line"><span class="pop">Sale</span></span><span class="line"><span>is on</span></span></h1>
+    </div>
+  </section>
+
+  <!-- SCENE 2 THE DEAL: giant counting number + burst badge -->
+  <section class="scene s2 dark">
+    <div class="rays"></div><div class="shade"></div><div class="wipe" style="background:var(--pop)"></div>
+    <div class="safe">
+      <div class="kicker">Everything in store</div>
+      <div class="deal">
+        <span class="count" data-to="40">40</span>
+        <span class="unit"><span>%</span><small>off</small></span>
+        <div class="burst"><img src="kit/illustrations/burst-badge.svg" alt=""><b>Wow</b></div>
+      </div>
+      <div class="sub">On every item, in store and online.</div>
+    </div>
+  </section>
+
+  <!-- SCENE 3 URGENCY: ticking countdown -->
+  <section class="scene s3 red">
+    <div class="stripes"></div><div class="shade"></div><div class="wipe" style="background:var(--deep)"></div>
+    <div class="safe">
+      <div class="kicker">Hurry, ends Sunday</div>
+      <div class="clock">
+        <div class="tile"><b class="hh">02</b><small>Hrs</small></div><span class="colon">:</span>
+        <div class="tile"><b class="mm">14</b><small>Min</small></div><span class="colon">:</span>
+        <div class="tile"><b class="ss">37</b><small>Sec</small></div>
+      </div>
+      <div class="sub">When it's gone, it's gone.</div>
+    </div>
+  </section>
+
+  <!-- SCENE 4 END CARD: product, old -> new price, CTA -->
+  <section class="scene s4 light">
+    <div class="wipe" style="background:var(--sale)"></div>
+    <div class="safe">
+      <div class="media illus"><img src="kit/illustrations/product-box.svg" alt=""></div><!-- IMAGE: product photo / illustration / icon -->
+      <div class="info">
+        <div class="prices"><span class="old">$50</span><span class="new">$30</span></div>
+        <div class="cta">Shop the sale</div>
+        <div class="fine">brandname.com · ends Sunday</div>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+  // SCENES: seconds per scene, in order.
+  const SCENES = [2.8, 3.8, 3.4, 4.0];
+  // COUNTDOWN: the three tile values at the start of scene 3; the last tile ticks down once per second.
+  const COUNTDOWN = [2, 14, 37];
+  const T = 0.45; // wipe half-length
+  const tl = gsap.timeline({ paused: true });
+  const scenes = gsap.utils.toArray(".scene");
+  const pad = (n) => String(n).padStart(2, "0");
+  let at = 0;
+  scenes.forEach((s, i) => {
+    const d = SCENES[i];
+    tl.set(s, { visibility: "visible", zIndex: i + 1 }, at);
+    const wipe = s.querySelector(".wipe");
+    // diagonal-feel wipe: slides across sideways (xPercent), unlike the vertical starter wipe
+    if (wipe && i > 0) tl.fromTo(wipe, { xPercent: -101 }, { xPercent: 101, duration: T * 2, ease: "power3.inOut" }, at - T);
+    if (i > 0) tl.set(scenes[i - 1], { visibility: "hidden" }, at + 0.05);
+    const b = at + (i ? T * 0.7 : 0.15);
+    tl.fromTo(s.querySelectorAll(".stripes"), { x: 0 }, { x: 120, duration: d, ease: "none" }, at);
+    tl.fromTo(s.querySelectorAll(".rays"), { rotation: 0 }, { rotation: 40, duration: d, ease: "none" }, at);
+    tl.from(s.querySelectorAll(".kicker"), { scale: 0.4, opacity: 0, duration: 0.45, ease: "back.out(2.5)" }, b);
+    tl.from(s.querySelectorAll(".line > span"), { yPercent: 105, duration: 0.55, ease: "back.out(1.4)", stagger: 0.12 }, b + 0.1);
+    tl.from(s.querySelectorAll(".sub"), { opacity: 0, y: 30, duration: 0.45, ease: "power3.out" }, b + 0.9);
+    at += d;
+  });
+  const t2 = SCENES[0], t3 = t2 + SCENES[1], t4 = t3 + SCENES[2];
+  // scene 2: number slams in and counts up, burst spins on
+  const count = document.querySelector(".count");
+  const target = Number(count.dataset.to) || 0;
+  const n = { v: 0 };
+  tl.from(".deal", { scale: 2.2, opacity: 0, duration: 0.5, ease: "power4.in" }, t2 + 0.25);
+  tl.fromTo(n, { v: 0 }, { v: target, duration: 0.9, ease: "power2.out", immediateRender: false, onUpdate: () => { count.textContent = Math.round(n.v); } }, t2 + 0.3);
+  tl.from(".unit", { x: 60, opacity: 0, duration: 0.4, ease: "back.out(2)" }, t2 + 0.7);
+  tl.from(".burst", { scale: 0, rotation: -120, duration: 0.6, ease: "back.out(2.2)" }, t2 + 1.1);
+  tl.fromTo(".burst img", { rotation: 0 }, { rotation: 90, duration: SCENES[1], ease: "none" }, t2);
+  tl.to(".deal", { scale: 1.05, duration: 0.25, yoyo: true, repeat: 3, ease: "sine.inOut" }, t2 + 1.8);
+  // scene 3: tiles drop in, last tile ticks down every second (derived from timeline time: seek-safe)
+  tl.from(".tile", { y: -80, opacity: 0, duration: 0.5, ease: "back.out(2)", stagger: 0.1 }, t3 + 0.35);
+  tl.from(".colon", { opacity: 0, duration: 0.3 }, t3 + 0.6);
+  const hh = document.querySelector(".hh"), mm = document.querySelector(".mm"), ss = document.querySelector(".ss");
+  const clock = { t: 0 };
+  const paint = () => {
+    const left = Math.max(0, COUNTDOWN[0] * 3600 + COUNTDOWN[1] * 60 + COUNTDOWN[2] - Math.floor(clock.t));
+    hh.textContent = pad(Math.floor(left / 3600)); mm.textContent = pad(Math.floor(left / 60) % 60); ss.textContent = pad(left % 60);
+  };
+  paint();
+  tl.fromTo(clock, { t: 0 }, { t: SCENES[2], duration: SCENES[2], ease: "none", immediateRender: false, onUpdate: paint }, t3);
+  tl.to(".clock", { rotation: 1.5, duration: 0.08, yoyo: true, repeat: 5, ease: "sine.inOut" }, t3 + 1.6);
+  // scene 4: product pops, old price struck, new price slams, CTA pulses
+  tl.from(".media", { scale: 0.3, opacity: 0, rotation: -20, duration: 0.7, ease: "back.out(1.8)" }, t4 + 0.3);
+  tl.from(".old", { opacity: 0, y: 20, duration: 0.35 }, t4 + 0.6);
+  tl.fromTo(".old", { "--strike": 0 }, { "--strike": 1, duration: 0.35, ease: "power2.out", immediateRender: false }, t4 + 0.9);
+  tl.set(".old", { "--strike": 0 }, 0);
+  tl.from(".new", { scale: 2.5, opacity: 0, duration: 0.4, ease: "power4.in" }, t4 + 1.1);
+  tl.from(".cta", { y: 40, opacity: 0, duration: 0.45, ease: "back.out(2)" }, t4 + 1.4);
+  tl.from(".fine", { opacity: 0, duration: 0.4 }, t4 + 1.7);
+  tl.to(".cta", { scale: 1.07, duration: 0.35, yoyo: true, repeat: 3, ease: "sine.inOut" }, t4 + 2.1);
+  tl.to({}, { duration: 0.01 }, at - 0.01);
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

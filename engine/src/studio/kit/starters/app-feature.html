@@ -1,0 +1,176 @@
+<!doctype html>
+<!--
+  Ozzy kit starter: APP-FEATURE. A browser window with your product screenshot, a cursor that moves and taps
+  (with a highlight ring), a zoom into the part that matters, 2-3 feature beats with captions, then a CTA with the URL.
+  16:9 (1920x1080) is the primary size: copy left, browser right. 9:16 stacks copy above the browser.
+  Copy it to ./index.html, then change ONLY:
+    SIZE     2 places marked SIZE (meta viewport, #root data-width/data-height). 16:9=1920x1080, 9:16=1080x1920, 1:1=1080x1080.
+    PALETTE  the :root block.
+    COPY     the .url in the browser bar, text in each <section class="scene"> (one per beat), the .tip captions.
+    IMAGES   the .media slot in the browser (marked IMAGE): a screenshot is best.
+             Photo/screenshot: <div class="media shot"><img src="brand/photos/x.png"></div>. Kit illustration: keep "media shot illus".
+    BEATS    the BEATS array at the bottom: where the cursor taps (x/y in % of the screenshot) and how far to zoom there.
+    SCENES   seconds per scene in the SCENES array; data-duration = their sum.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" /><!-- SIZE 1/2 -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+  @font-face { font-family: "Mona Sans"; src: url("kit/fonts/mona-sans-normal.woff2") format("woff2"); font-weight: 200 900; }
+  @font-face { font-family: "Host Grotesk"; src: url("kit/fonts/host-grotesk-normal.woff2") format("woff2"); font-weight: 300 800; }
+  /* PALETTE: bg/bg-2 = backdrop, accent = cursor ring, highlights, CTA. */
+  :root {
+    --bg: #0f1424; --bg-2: #1d2747; --ink: #f4f6fb; --muted: #a3acc4; --accent: #6c8cff; --accent-2: #45e0b0; --window: #ffffff; --chrome: #eef1f6;
+    --display: "Mona Sans", sans-serif; --text: "Host Grotesk", system-ui, sans-serif;
+  }
+  html, body { margin: 0; width: 100%; height: 100%; background: var(--bg); }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; color: var(--ink); font-family: var(--text);
+    background: radial-gradient(60% 60% at 70% 55%, color-mix(in srgb, var(--accent) 35%, transparent) 0%, transparent 70%), linear-gradient(160deg, var(--bg) 0%, var(--bg-2) 100%); }
+  .grid { position: absolute; inset: 0; opacity: .12; background-image: linear-gradient(var(--muted) 1px, transparent 1px), linear-gradient(90deg, var(--muted) 1px, transparent 1px); background-size: 6vmin 6vmin;
+    mask-image: radial-gradient(70% 60% at 60% 55%, #000 0%, transparent 80%); }
+  .safe { position: absolute; left: 7%; right: 7%; top: 7%; bottom: 17%; display: flex; flex-direction: column; gap: 4vmin; }
+  .copyslot { display: grid; }
+  .copyslot > .scene { grid-area: 1 / 1; visibility: hidden; display: flex; flex-direction: column; }
+  .eyebrow { display: inline-flex; align-self: flex-start; align-items: center; gap: 1.2vmin; padding: 1vmin 2vmin; border-radius: 99px; background: rgba(255,255,255,.08);
+    font: 700 2.3vmin/1 var(--text); letter-spacing: .14em; text-transform: uppercase; color: var(--accent-2); }
+  .eyebrow b { color: var(--ink); }
+  .headline { font: 800 8.6vmin/.98 var(--display); letter-spacing: -.035em; margin: 2vmin 0 0; }
+  .headline .line { display: block; overflow: hidden; padding-bottom: .06em; }
+  .headline .line > span { display: inline-block; }
+  .sub { font: 500 3.3vmin/1.3 var(--text); color: var(--muted); margin-top: 1.6vmin; max-width: 30ch; }
+  .cta { align-self: flex-start; margin-top: 3vmin; padding: 2vmin 4vmin; border-radius: 1.8vmin; background: var(--accent); color: #fff; font: 800 3.2vmin/1 var(--text);
+    box-shadow: 0 1.4vmin 4vmin color-mix(in srgb, var(--accent) 55%, transparent); }
+  /* DEVICE: browser window sized by the free space */
+  .stagewrap { position: relative; flex: 1; min-height: 0; container-type: size; display: grid; place-items: center; }
+  .browser { position: relative; width: min(100cqw, calc(100cqh * 1.45)); aspect-ratio: 16 / 11; border-radius: 2vmin; overflow: hidden; background: var(--window);
+    box-shadow: 0 4vmin 9vmin -2vmin rgba(0,0,0,.6), 0 0 0 .3vmin rgba(255,255,255,.15); display: flex; flex-direction: column; }
+  .bar { flex: 0 0 auto; display: flex; align-items: center; gap: 1vmin; padding: 1.4vmin 1.8vmin; background: var(--chrome); border-bottom: .2vmin solid #dde2ea; }
+  .bar i { width: 1.4vmin; height: 1.4vmin; border-radius: 50%; background: #ff5f57; } .bar i:nth-child(2) { background: #febc2e; } .bar i:nth-child(3) { background: #28c840; }
+  .url { flex: 1; margin-left: 1.6vmin; padding: .9vmin 1.6vmin; border-radius: 99px; background: #fff; color: #5b6474; font: 500 1.9vmin/1 var(--text); white-space: nowrap; overflow: hidden; }
+  .screen { position: relative; flex: 1; overflow: hidden; background: #f3f5f9; }
+  .zoom { position: absolute; inset: 0; }
+  .media { position: absolute; inset: 0; }
+  .media img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+  .media.illus { background: linear-gradient(170deg, #f7f8fb, #e3e8f1); }
+  .media.illus img { object-fit: contain; object-position: center; padding: 6%; box-sizing: border-box; }
+  /* CURSOR + RING live inside .zoom so they stay on the tapped spot while zooming */
+  .ring { position: absolute; width: 9vmin; height: 9vmin; margin: -4.5vmin 0 0 -4.5vmin; border-radius: 50%; border: .5vmin solid var(--accent); background: color-mix(in srgb, var(--accent) 22%, transparent); opacity: 0; z-index: 3; }
+  .cursor { position: absolute; width: 6.4vmin; height: 6.4vmin; margin: -.4vmin 0 0 -.6vmin; z-index: 4; filter: drop-shadow(0 .6vmin .8vmin rgba(0,0,0,.35)); }
+  .cursor svg { width: 100%; height: 100%; display: block; }
+  .tip { position: absolute; z-index: 5; padding: 1.4vmin 2.2vmin; border-radius: 1.4vmin; background: #14171f; color: #fff; font: 700 2.4vmin/1.1 var(--text); white-space: nowrap;
+    box-shadow: 0 1.2vmin 3vmin rgba(0,0,0,.35); visibility: hidden; }
+  .tip b { color: var(--accent-2); margin-right: .8vmin; }
+  /* LANDSCAPE / SQUARE: copy left, browser right */
+  @media (min-aspect-ratio: 9/10) {
+    .safe { left: 5%; right: 5%; top: 8%; bottom: 8%; flex-direction: row; align-items: center; gap: 4%; }
+    .copyslot { flex: 0 0 30%; }
+    .stagewrap { align-self: stretch; }
+    .headline { font-size: 7.4vmin; } .sub { font-size: 3vmin; }
+  }
+  @media (min-aspect-ratio: 9/10) and (max-aspect-ratio: 5/4) { .copyslot { flex-basis: 40%; } .headline { font-size: 6.2vmin; } .tip { font-size: 2vmin; } }
+</style>
+</head>
+<body>
+<!-- SIZE 2/2: data-width / data-height. data-duration = sum of SCENES. -->
+<div id="root" data-composition-id="main" data-start="0" data-width="1080" data-height="1920" data-duration="15">
+  <div class="grid"></div>
+  <div class="safe">
+    <div class="copyslot">
+      <!-- SCENE 1 HOOK: the problem or promise -->
+      <section class="scene">
+        <div class="eyebrow"><b>Brand</b> app</div>
+        <h1 class="headline"><span class="line"><span>Your week,</span></span><span class="line"><span>on one screen.</span></span></h1>
+      </section>
+      <!-- SCENE 2 BEAT 1 -->
+      <section class="scene">
+        <div class="eyebrow">Feature 01</div>
+        <h1 class="headline"><span class="line"><span>See every</span></span><span class="line"><span>number live.</span></span></h1>
+        <div class="sub">Sales update the second they happen.</div>
+      </section>
+      <!-- SCENE 3 BEAT 2 -->
+      <section class="scene">
+        <div class="eyebrow">Feature 02</div>
+        <h1 class="headline"><span class="line"><span>One tap</span></span><span class="line"><span>reports.</span></span></h1>
+        <div class="sub">Share them with your team instantly.</div>
+      </section>
+      <!-- SCENE 4 CTA: the URL -->
+      <section class="scene">
+        <div class="eyebrow">Free for 14 days</div>
+        <h1 class="headline"><span class="line"><span>Try it today.</span></span></h1>
+        <div class="cta">brandname.com</div>
+      </section>
+    </div>
+    <div class="stagewrap">
+      <div class="browser">
+        <div class="bar"><i></i><i></i><i></i><span class="url">app.brandname.com/dashboard</span></div>
+        <div class="screen">
+          <div class="zoom">
+            <div class="media shot illus"><img src="kit/illustrations/laptop-dashboard.svg" alt=""></div><!-- IMAGE: product screenshot -->
+            <div class="ring"></div>
+            <div class="cursor"><svg viewBox="0 0 24 24"><path d="M4 2l16 9.5-7 1.6-3.6 6.9z" fill="#14171f" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg></div>
+          </div>
+          <!-- CAPTIONS: one per beat, shown next to the tap -->
+          <div class="tip"><b>01</b>Live revenue</div>
+          <div class="tip"><b>02</b>Export in one tap</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  // SCENES: seconds per scene, in order (hook, beat 1, beat 2, CTA).
+  const SCENES = [3.2, 4.2, 4.2, 3.4];
+  // BEATS: one per feature scene. x/y = tap point in % of the screenshot; zoom = 1.3-2.2.
+  const BEATS = [{ x: 38, y: 42, zoom: 1.8 }, { x: 70, y: 66, zoom: 1.7 }];
+  const tl = gsap.timeline({ paused: true });
+  const scenes = gsap.utils.toArray(".scene");
+  const total = SCENES.reduce((a, b) => a + b, 0);
+  const pct = (v) => v + "%";
+  // browser rises in, screenshot gently pans
+  tl.from(".browser", { y: 120, rotationX: 18, scale: 0.9, opacity: 0, transformPerspective: 1600, duration: 1.2, ease: "expo.out" }, 0.15);
+  tl.fromTo(".shot img", { yPercent: 0 }, { yPercent: -2, duration: total, ease: "none" }, 0);
+  tl.set(".cursor", { left: "86%", top: "88%", opacity: 0 }, 0);
+  tl.to(".cursor", { opacity: 1, duration: 0.4 }, 1.4);
+  tl.to(".cursor", { left: "55%", top: "30%", duration: 1.4, ease: "power2.inOut" }, 1.5);
+  let at = 0;
+  scenes.forEach((s, i) => {
+    const b = at + (i ? 0.25 : 0.2);
+    tl.set(s, { visibility: "visible" }, at);
+    if (i > 0) tl.to(scenes[i - 1], { opacity: 0, y: -30, duration: 0.3, ease: "power2.in" }, at - 0.3).set(scenes[i - 1], { visibility: "hidden" }, at);
+    tl.from(s.querySelectorAll(".eyebrow"), { opacity: 0, y: 20, duration: 0.4, ease: "power3.out" }, b);
+    tl.from(s.querySelectorAll(".line > span"), { yPercent: 110, duration: 0.7, ease: "expo.out", stagger: 0.08 }, b + 0.08);
+    tl.from(s.querySelectorAll(".sub"), { opacity: 0, y: 24, duration: 0.5, ease: "power3.out" }, b + 0.35);
+    tl.from(s.querySelectorAll(".cta"), { scale: 0.6, opacity: 0, duration: 0.5, ease: "back.out(2.2)", transformOrigin: "left center" }, b + 0.5);
+    at += SCENES[i];
+  });
+  // feature beats: cursor glides to the spot, taps (press + ring), screen zooms there, caption appears
+  const tips = gsap.utils.toArray(".tip");
+  let t = SCENES[0];
+  BEATS.forEach((bt, k) => {
+    const d = SCENES[k + 1];
+    tl.to(".cursor", { left: pct(bt.x), top: pct(bt.y), duration: 0.9, ease: "power3.inOut" }, t + 0.1);
+    tl.to(".cursor", { scale: 0.8, duration: 0.12, yoyo: true, repeat: 1, ease: "power1.inOut" }, t + 1.0);
+    tl.set(".ring", { left: pct(bt.x), top: pct(bt.y), scale: 0.3, opacity: 1 }, t + 1.05);
+    tl.to(".ring", { scale: 1.6, opacity: 0, duration: 0.8, ease: "power2.out" }, t + 1.05);
+    tl.set(".zoom", { transformOrigin: `${bt.x}% ${bt.y}%` }, t);
+    tl.to(".zoom", { scale: bt.zoom, duration: 1.2, ease: "power3.inOut" }, t + 1.2);
+    const tip = tips[k];
+    if (tip) {
+      tl.set(tip, { left: bt.x > 55 ? "auto" : "6%", right: bt.x > 55 ? "6%" : "auto", top: bt.y > 50 ? "8%" : "auto", bottom: bt.y > 50 ? "auto" : "8%", visibility: "visible" }, t + 1.6);
+      tl.from(tip, { opacity: 0, y: 20, scale: 0.9, duration: 0.45, ease: "back.out(2)" }, t + 1.6);
+      tl.to(tip, { opacity: 0, duration: 0.3 }, t + d - 0.4);
+    }
+    tl.to(".zoom", { scale: 1, duration: 0.8, ease: "power3.inOut" }, t + d - 0.6);
+    t += d;
+  });
+  // CTA: cursor moves out, browser settles back
+  tl.to(".cursor", { left: "92%", top: "94%", opacity: 0, duration: 0.8, ease: "power2.in" }, t + 0.1);
+  tl.to(".browser", { scale: 0.96, duration: 0.8, ease: "power2.inOut" }, t);
+  tl.to({}, { duration: 0.01 }, total - 0.01);
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

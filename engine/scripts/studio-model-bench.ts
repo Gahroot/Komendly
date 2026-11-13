@@ -31,6 +31,13 @@ const tag = `bench-${Date.now()}-${process.pid}`;
 const user = await db.user.create({ data: { email: `${tag}@example.org`, name: "Bench", passwordHash: "x" } as never });
 const ws = await db.adsWorkspace.create({ data: { ownerId: user.id, name: tag, adsPlan: "ad_department", subscriptionStatus: "active", creditBalance: 0, studioFreeVideos: 0 } as never });
 await db.adsWorkspaceMember.create({ data: { workspaceId: ws.id, userId: user.id, role: "owner" } as never }).catch(() => undefined);
+// --brand-from <brandProfileId>: copy a real dev BrandProfile into the throwaway workspace (deleted with it).
+const brandIdx = process.argv.indexOf("--brand-from");
+if (brandIdx >= 0) {
+  const src = await db.brandProfile.findUniqueOrThrow({ where: { id: process.argv[brandIdx + 1]! } });
+  const { id: _id, workspaceId: _ws, createdAt: _c, updatedAt: _u, ...rest } = src as Record<string, unknown>;
+  await db.brandProfile.create({ data: { ...rest, workspaceId: ws.id } as never });
+}
 const session = await db.studioSession.create({ data: { workspaceId: ws.id, userId: user.id, model, thinking: process.env.STUDIO_AGENT_THINKING ?? "high" } });
 
 async function turn(text: string) {

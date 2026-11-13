@@ -1,0 +1,185 @@
+<!doctype html>
+<!--
+  Ozzy kit starter: BOLD-TYPE. Full-bleed kinetic typography: giant words, hard cuts, no hero image needed.
+  Copy it to ./index.html, then change ONLY:
+    SIZE     2 places marked SIZE (meta viewport, #root data-width/data-height). 9:16=1080x1920, 1:1=1080x1080, 16:9=1920x1080.
+    PALETTE  the :root block (brand colours from ./studio.md).
+    COPY     the words in each <section>. Keep 1-3 words per line; lines auto-shrink to fit (class "fit").
+    IMAGES   none needed. Optional: put a logo/icon in .s5 .mark (kit illustration, ./brand/logo.*, or an icon).
+    SCENES   seconds per scene in the SCENES array at the bottom; data-duration = their sum.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" /><!-- SIZE 1/2 -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+  @font-face { font-family: "Unbounded"; src: url("kit/fonts/unbounded-normal.woff2") format("woff2"); font-weight: 200 900; }
+  @font-face { font-family: "Host Grotesk"; src: url("kit/fonts/host-grotesk-normal.woff2") format("woff2"); font-weight: 300 800; }
+  /* PALETTE: c1..c4 alternate as scene fields; hot = the colour that shouts (one per video). */
+  :root {
+    --c1: #111111; --c2: #f4ff4f; --c3: #ff4f2b; --c4: #f5f1ea;
+    --hot: #ff4f2b; --ink: #111111; --paper: #f5f1ea;
+    --display: "Unbounded", "Arial Black", sans-serif; --text: "Host Grotesk", system-ui, sans-serif;
+  }
+  html, body { margin: 0; width: 100%; height: 100%; background: var(--c1); }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; font-family: var(--text); }
+  .scene { position: absolute; inset: 0; visibility: hidden; overflow: hidden; }
+  .f1 { background: var(--c1); color: var(--paper); } .f2 { background: var(--c2); color: var(--ink); }
+  .f3 { background: var(--c3); color: var(--paper); } .f4 { background: var(--c4); color: var(--ink); }
+  /* grain + edge shade so flat fields don't look like a slide */
+  .scene::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(130% 100% at 50% 45%, transparent 50%, rgba(0,0,0,.28)); }
+  /* SAFE ZONE (9:16 feed UI: top 7%, bottom 22%, right 17%) */
+  .safe { position: absolute; left: 7%; right: 12%; top: 8%; bottom: 22%; display: flex; flex-direction: column; justify-content: center; z-index: 2; }
+  /* TYPE: giant (.big) > mid (.mid) > tag (small caps). .fit lines never overflow. */
+  .big { font: 900 24vmin/.86 var(--display); letter-spacing: -.05em; text-transform: uppercase; margin: 0; }
+  .mid { font: 800 11vmin/.95 var(--display); letter-spacing: -.04em; text-transform: uppercase; margin: 0; }
+  .fit { display: block; white-space: nowrap; width: 100%; }
+  .fit > span { display: inline-block; }
+  .line { display: block; overflow: hidden; padding: .04em 0 .06em; }
+  .line > span { display: inline-block; }
+  .tag { font: 800 3vmin/1 var(--text); letter-spacing: .2em; text-transform: uppercase; margin-bottom: 3vmin; }
+  .hot { color: var(--hot); }
+  .f3 .hot { color: var(--c2); }
+  /* outline words: stroke colour follows the field (color is transparent, so currentColor can't be used) */
+  .outline { color: transparent; -webkit-text-stroke: .5vmin var(--stroke); }
+  .f1, .f3 { --stroke: var(--paper); } .f2, .f4 { --stroke: var(--ink); }
+  /* marquee rows (scene 2) run edge to edge, outside the safe zone on purpose (decorative) */
+  .rows { position: absolute; inset: -5% -40%; display: flex; flex-direction: column; justify-content: center; gap: 1vmin; transform: rotate(-8deg); }
+  .row { font: 900 17vmin/.9 var(--display); text-transform: uppercase; white-space: nowrap; letter-spacing: -.04em; }
+  .row.solid { color: var(--ink); }
+  .stamp { position: absolute; z-index: 3; left: 50%; top: 42%; padding: 2vmin 4vmin; background: var(--ink); color: var(--c2);
+    font: 900 7vmin/1 var(--display); text-transform: uppercase; white-space: nowrap; border-radius: 1.2vmin; translate: -50% -50%; rotate: 4deg; }
+  /* flash words (scene 4): stacked in one spot, cut one after another */
+  .flash { position: relative; height: 30vmin; }
+  .flash .w { position: absolute; left: 0; right: 0; top: 0; visibility: hidden; }
+  .flash .w > .fit { transform-origin: left center; }
+  .bar { height: 2.4vmin; width: 40%; background: var(--hot); margin-top: 4vmin; transform-origin: left center; }
+  .f3 .bar { background: var(--paper); }
+  .sub { font: 600 4.2vmin/1.2 var(--text); margin-top: 3vmin; max-width: 24ch; }
+  .cta { align-self: flex-start; margin-top: 5vmin; padding: 2.2vmin 4.4vmin; border-radius: 99px; background: var(--hot); color: var(--paper);
+    font: 800 3.6vmin/1 var(--text); letter-spacing: .06em; text-transform: uppercase; box-shadow: 0 1.4vmin 4vmin rgba(0,0,0,.35); }
+  .mark { width: 14vmin; height: 14vmin; margin-bottom: 4vmin; }
+  .mark img { width: 100%; height: 100%; object-fit: contain; }
+  .flashfx { position: absolute; inset: 0; background: #fff; opacity: 0; z-index: 40; pointer-events: none; }
+  /* LANDSCAPE: more width, so type can be a bit larger relative to height */
+  @media (min-aspect-ratio: 5/4) { .safe { left: 8%; right: 8%; top: 10%; bottom: 10%; } .big { font-size: 26vmin; } .flash { height: 32vmin; } }
+  @media (min-aspect-ratio: 9/10) and (max-aspect-ratio: 5/4) { .safe { bottom: 14%; } .big { font-size: 20vmin; } }
+</style>
+</head>
+<body>
+<!-- SIZE 2/2: data-width / data-height. data-duration = sum of SCENES. -->
+<div id="root" data-composition-id="main" data-start="0" data-width="1080" data-height="1920" data-duration="13">
+
+  <!-- SCENE 1 HOOK: 3 words slam in one by one -->
+  <section class="scene f1">
+    <div class="safe">
+      <div class="tag hot">Brand name</div>
+      <h1 class="big"><span class="line fit"><span>Stop</span></span><span class="line fit"><span class="outline">settling</span></span><span class="line fit"><span class="hot">for meh.</span></span></h1>
+    </div>
+  </section>
+
+  <!-- SCENE 2 THE THING: one word repeated in moving rows + a stamp -->
+  <section class="scene f2">
+    <div class="rows">
+      <div class="row outline">Fresh daily fresh daily fresh daily</div>
+      <div class="row solid">Made fresh. Made fresh. Made fresh.</div>
+      <div class="row outline">Fresh daily fresh daily fresh daily</div>
+      <div class="row solid">Made fresh. Made fresh. Made fresh.</div>
+      <div class="row outline">Fresh daily fresh daily fresh daily</div>
+    </div>
+    <div class="stamp">Every morning</div>
+  </section>
+
+  <!-- SCENE 3 PROOF: one giant number + what it means -->
+  <section class="scene f3">
+    <div class="safe">
+      <div class="tag">Since 2015</div>
+      <h1 class="big"><span class="line fit"><span>10,000+</span></span></h1>
+      <div class="bar"></div>
+      <div class="sub">happy regulars and counting.</div>
+    </div>
+  </section>
+
+  <!-- SCENE 4 VALUES: three words cut one after another in the same spot -->
+  <section class="scene f4">
+    <div class="safe">
+      <div class="tag hot">Why us</div>
+      <div class="flash">
+        <h2 class="big w"><span class="fit"><span>Fast.</span></span></h2>
+        <h2 class="big w"><span class="fit outline"><span>Local.</span></span></h2>
+        <h2 class="big w hot"><span class="fit"><span>Yours.</span></span></h2>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCENE 5 END CARD: brand + CTA -->
+  <section class="scene f1">
+    <div class="safe">
+      <div class="mark"><img src="kit/illustrations/sparkle.svg" alt=""></div><!-- IMAGE (optional): logo or icon -->
+      <h1 class="mid"><span class="line fit"><span>Brand</span></span><span class="line fit"><span class="hot">Name.</span></span></h1>
+      <div class="sub">Open daily, 7am to 7pm.</div>
+      <div class="cta">Visit brandname.com</div>
+    </div>
+  </section>
+  <div class="flashfx"></div>
+</div>
+<script>
+  // FIT: each .fit line grows (up to 1.8x) or shrinks to fill the safe width, then the whole block
+  // shrinks if it would be taller than the safe zone. Runs again once fonts load.
+  function fitAll() {
+    document.querySelectorAll(".safe").forEach((safe) => {
+      const fits = [...safe.querySelectorAll(".fit")];
+      fits.forEach((el) => {
+        el.style.fontSize = "";
+        const base = parseFloat(getComputedStyle(el).fontSize);
+        const w = el.firstElementChild ? el.firstElementChild.offsetWidth : el.scrollWidth;
+        const k = Math.min(1.8, (safe.clientWidth / Math.max(w, 1)) * 0.97);
+        el.style.fontSize = base * k + "px";
+      });
+      const over = safe.scrollHeight / Math.max(safe.clientHeight, 1);
+      if (over > 1) fits.forEach((el) => { el.style.fontSize = parseFloat(el.style.fontSize) / over * 0.97 + "px"; });
+    });
+  }
+  fitAll(); if (document.fonts) document.fonts.ready.then(fitAll);
+
+  // SCENES: seconds per scene, in order (fast cuts: 2-2.6 s each, end card longer).
+  const SCENES = [2.6, 2.4, 2.4, 2.2, 3.4];
+  const tl = gsap.timeline({ paused: true });
+  const scenes = gsap.utils.toArray(".scene");
+  const flash = document.querySelector(".flashfx");
+  let at = 0;
+  scenes.forEach((s, i) => {
+    const d = SCENES[i];
+    const b = at + 0.05;
+    // hard cut + a 1-frame white flash
+    tl.set(s, { visibility: "visible", zIndex: i + 1 }, at);
+    if (i > 0) { tl.set(scenes[i - 1], { visibility: "hidden" }, at); tl.fromTo(flash, { opacity: 0.55 }, { opacity: 0, duration: 0.18, ease: "power1.out", immediateRender: false }, at); }
+    tl.from(s.querySelectorAll(".tag"), { opacity: 0, x: -40, duration: 0.3, ease: "power3.out" }, b);
+    // lines slam: masked rise with a little overshoot, word by word
+    tl.from(s.querySelectorAll(".line > span"), { yPercent: 115, duration: 0.42, ease: "back.out(1.6)", stagger: 0.32 }, b + 0.08);
+    tl.fromTo(s.querySelectorAll(".big, .mid"), { scale: 1.08 }, { scale: 1, duration: d, ease: "power1.out", transformOrigin: "left center" }, at);
+    // marquee rows drift in alternating directions
+    s.querySelectorAll(".row").forEach((r, k) => tl.fromTo(r, { xPercent: k % 2 ? -18 : 0 }, { xPercent: k % 2 ? 0 : -18, duration: d, ease: "none" }, at));
+    tl.from(s.querySelectorAll(".stamp"), { scale: 2.4, opacity: 0, duration: 0.35, ease: "power4.in" }, b + 0.35);
+    tl.from(s.querySelectorAll(".bar"), { scaleX: 0, duration: 0.5, ease: "expo.out" }, b + 0.4);
+    tl.from(s.querySelectorAll(".sub"), { opacity: 0, y: 30, duration: 0.4, ease: "power3.out" }, b + 0.5);
+    tl.from(s.querySelectorAll(".mark"), { scale: 0, rotation: -90, duration: 0.5, ease: "back.out(2)" }, b);
+    tl.from(s.querySelectorAll(".cta"), { scale: 0.5, opacity: 0, duration: 0.45, ease: "back.out(2.4)", transformOrigin: "left center" }, b + 0.75);
+    // flash words: each one cuts in, holds, cuts out (last one stays)
+    const ws = s.querySelectorAll(".flash .w");
+    const step = (d - 0.6) / Math.max(ws.length, 1);
+    ws.forEach((w, k) => {
+      tl.set(w, { visibility: "visible" }, b + k * step);
+      tl.from(w.firstElementChild, { scale: 1.35, duration: 0.3, ease: "expo.out", transformOrigin: "left center" }, b + k * step);
+      if (k < ws.length - 1) tl.set(w, { visibility: "hidden" }, b + (k + 1) * step);
+    });
+    at += d;
+  });
+  tl.to({}, { duration: 0.01 }, at - 0.01);
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

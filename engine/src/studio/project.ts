@@ -10,6 +10,8 @@ const VIDEO = /\.(mp4|mov|webm|mkv)$/i;
 export function includeInSnapshot(rel: string, delivered: ReadonlySet<string> = new Set()): boolean {
   const parts = rel.split("/");
   if (parts.some((p) => SKIP_DIRS.has(p))) return false;
+  // ./kit is re-copied every turn (studio/kit-install.ts), so it never goes into the snapshot.
+  if (parts[0] === "kit") return false;
   if (delivered.has(rel)) return false;
   if (VIDEO.test(rel) && parts.slice(0, -1).some((p) => p === "renders" || p === "snapshots")) return false;
   if (/\.(tmp|log)$|\.ez-session-tmp-|(^|\/)\.DS_Store$/.test(rel)) return false;

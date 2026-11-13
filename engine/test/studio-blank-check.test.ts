@@ -18,3 +18,12 @@ describe("blank-frame QA", () => {
     expect(blankFixPrompt([6, 9.5])).toContain("6s, 9.5s");
   });
 });
+
+import { includeInSnapshot } from "../src/studio/project";
+describe("snapshot leaves out the kit", () => {
+  it("skips ./kit but keeps a user folder named kit deeper down", () => {
+    expect(includeInSnapshot("kit/icons/paw-print.svg")).toBe(false);
+    expect(includeInSnapshot("index.html")).toBe(true);
+    expect(includeInSnapshot("assets/kit/logo.svg")).toBe(true);
+  });
+});

@@ -1,5 +1,6 @@
 // Ozzy Studio: the ./studio.md brief block and the per-turn prompt the agent receives.
 import { STUDIO_MAX_SECONDS } from "../../../src/lib/studio/contracts";
+import { type BriefPhoto, describePhoto } from "./brand-photos";
 
 export interface BriefBrand {
   name: string | null;
@@ -7,6 +8,8 @@ export interface BriefBrand {
   colors: Array<{ hex: string; role?: string }>;
   fonts: Array<{ family: string; role?: string }>;
   logoFile: string | null;
+  /** Their own website photos copied into ./brand/photos (best first). */
+  photos?: BriefPhoto[];
 }
 
 export interface BriefUpload {
@@ -59,6 +62,7 @@ export function studioBrief(o: { brand: BriefBrand | null; uploads: BriefUpload[
     if (o.brand.colors.length) lines.push(`- Colours: ${o.brand.colors.map((c) => `${c.hex}${c.role ? ` (${c.role})` : ""}`).join(", ")}`);
     if (o.brand.fonts.length) lines.push(`- Fonts: ${o.brand.fonts.map((f) => `${f.family}${f.role ? ` (${f.role})` : ""}`).join(", ")}`);
     if (o.brand.logoFile) lines.push(`- Logo: ./brand/${o.brand.logoFile}`);
+    if (o.brand.photos?.length) lines.push("- Photos from their own website (their real business, best first):", ...o.brand.photos.map((p) => `  - ${describePhoto(p)}`));
     lines.push("- Use the brand when it fits the request; the user's words win over it.");
   }
   lines.push(
@@ -85,14 +89,17 @@ export function studioBrief(o: { brand: BriefBrand | null; uploads: BriefUpload[
 /** The ./kit building blocks + craft rules: lets cheaper models compose polished parts instead of drawing from scratch. */
 export const CRAFT_RULES = [
   "## Building blocks (./kit) - use them",
-  "- ./kit/starter.html is a finished, tested 4-scene promo (hook, offer, deal, end card) with a 3-level type scale, safe zones for 9:16, 1:1 and 16:9, colour-wipe transitions, staggered entrances and depth (plate, floor, vignette). For a new video with no footage, START from it: copy it to ./index.html, then change the size (3 places marked SIZE), the palette block, the copy, the illustrations per scene and the SCENES timings. Add or remove scenes by copying a <section>. Keep its layout, type scale and motion unless the user asks for a different style.",
+  "- ./kit/starters/INDEX.md lists tested layout starters. Read it, pick the style that best fits the business and the request (vary it; never default to the same one), copy that file to ./index.html and adapt it: the SIZE marks, palette, copy, images and SCENES timing. ./kit/starter.html is the 'illustrated' style.",
   "- ./kit/illustrations/*.svg are polished, layered illustrations (latte-cup, croissant, burger, storefront, house, van, toolbox, faucet, phone, laptop-dashboard, beauty-bottle, dumbbell, product-box, and accents: sparkle, burst-badge, star-rating, check-badge, map-pin, calendar, coffee-bean, confetti, review-card). Use them as <img src=\"kit/illustrations/<name>.svg\">. Prefer them over drawing your own; if you need a new object, match their style (gradients, a highlight, a soft contact shadow, one light direction) and keep every part attached.",
+  "- ./kit/icons/*.svg: 2,000+ line icons for any trade (tooth, paw-print, scissors, car, wrench, ...); find names with `grep -i <word> kit/icons/INDEX.txt`. They use stroke=currentColor: inline the SVG (or use it as a CSS mask) and set color to recolour.",
+  "- Images, in this order: (1) their uploads/footage; (2) ./brand/photos (their real business): use them as hero images in rounded cards or frames with depth (shadow, plate) and slow ken-burns motion; (3) a ./kit/illustrations piece when one fits; (4) ./kit/icons for accents and callouts; (5) generate an image ONLY when none of these fit the subject (one or two max). Never show a photo of another business.",
   "- Fonts in ./kit/fonts (Fraunces, Bricolage Grotesque, Host Grotesk) are already wired in the starter. Their brand fonts win when given.",
   "",
   "## Craft rules",
   "- Plan first: write ./plan.md with 3-6 scenes (seconds, the exact on-screen words, which illustration or footage), then build. Total must match the length asked.",
   "- Make it theirs, not the template: pick a palette from their brand (or one that fits the business, not the starter's coffee colours), use a different hero illustration in each scene (never the same one more than twice), and vary at least one layout (e.g. a full-bleed type scene, a big price or number, a split screen).",
   "- One idea per scene: 2-6 big words, at most one short sub line. Type: eyebrow (small caps) > headline (huge) > sub. Every text stays readable at least 1.2 s after it lands.",
+  "- Fill the frame: no scene may leave a third or more of the frame empty (a bare white or flat band). A photo is either full-bleed (with a dark scrim behind the text) or a big card centred in the space with the text; never a photo stuck in one half with nothing in the other. Use different photos across scenes when you have several.",
   "- Depth and polish: hero object on a soft plate or shadow, a few accents (sparkle, beans, confetti), gentle push-in or float while holding. Never a flat empty frame; never text touching the edges (stay inside the safe zone).",
   "- Copy: say the offer exactly as the user said it. Never invent prices, dates, discounts, claims or reviews.",
   "- Self-check before you finish (one contact sheet of the whole video, then fix and check once more): no cut-off or overlapping text, no detached or broken parts of an object, no blank or half-built frames, enough contrast on every frame, the brand name and offer readable, the end card holds at least 2 s.",

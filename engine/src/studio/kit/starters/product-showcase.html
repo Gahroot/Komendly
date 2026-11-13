@@ -1,0 +1,172 @@
+<!doctype html>
+<!--
+  Ozzy kit starter: PRODUCT-SHOWCASE. One hero product/photo in a rounded card with depth that stays on screen
+  the whole video (slow ken-burns), feature callouts drawn with lines, a price tag, then the end card.
+  Copy it to ./index.html, then change ONLY:
+    SIZE     2 places marked SIZE (meta viewport, #root data-width/data-height). 9:16=1080x1920, 1:1=1080x1080, 16:9=1920x1080.
+    PALETTE  the :root block.
+    COPY     text in each <section class="scene"> and the callout chips (.chip, 1-3 words each).
+    IMAGES   the two .media slots in the card (marked IMAGE). Photo: <div class="media"><img src="brand/photos/x.jpg"></div>.
+             Kit illustration or icon: keep class "media illus" (it is centred on a soft spotlight).
+             Move the callout dots (style left/top, % of the card) onto the parts of YOUR product they describe.
+    SCENES   seconds per scene in the SCENES array at the bottom; data-duration = their sum.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" /><!-- SIZE 1/2 -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+  @font-face { font-family: "Bricolage Grotesque"; src: url("kit/fonts/bricolage-grotesque-normal.woff2") format("woff2"); font-weight: 200 800; }
+  @font-face { font-family: "Host Grotesk"; src: url("kit/fonts/host-grotesk-normal.woff2") format("woff2"); font-weight: 300 800; }
+  /* PALETTE: bg/bg-2 = backdrop gradient, glow = spotlight behind the card, accent = dots, lines, price. */
+  :root {
+    --bg: #eef0f4; --bg-2: #c9d0dc; --glow: #ffffff; --ink: #14171f; --muted: #5b6474; --accent: #2f5bff; --chip: #ffffff; --card: #f7f4ef;
+    --display: "Bricolage Grotesque", sans-serif; --text: "Host Grotesk", system-ui, sans-serif;
+  }
+  html, body { margin: 0; width: 100%; height: 100%; background: var(--bg); }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; font-family: var(--text); color: var(--ink);
+    background: radial-gradient(70% 55% at 50% 62%, var(--glow) 0%, transparent 70%), linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%); }
+  .grain { position: absolute; inset: 0; opacity: .5; background: radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(0,0,0,.16)); }
+  /* SAFE ZONE (9:16: top 7%, bottom 22%, right side kept clear of the feed rail) */
+  .safe { position: absolute; left: 7%; right: 7%; top: 7%; bottom: 17%; display: flex; flex-direction: column; }
+  .copyslot { display: grid; }
+  .copyslot > .scene { grid-area: 1 / 1; visibility: hidden; display: flex; flex-direction: column; }
+  /* TYPE: eyebrow > headline > sub */
+  .eyebrow { font: 700 2.6vmin/1.2 var(--text); letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
+  .headline { font: 800 11vmin/.95 var(--display); letter-spacing: -.04em; margin: 1.6vmin 0 0; }
+  .headline .line { display: block; overflow: hidden; padding-bottom: .06em; }
+  .headline .line > span { display: inline-block; }
+  .sub { font: 500 3.6vmin/1.3 var(--text); color: var(--muted); margin-top: 1.6vmin; max-width: 28ch; }
+  .cta { align-self: flex-start; margin-top: 2.6vmin; padding: 1.8vmin 3.8vmin; border-radius: 99px; background: var(--ink); color: #fff; font: 800 3vmin/1 var(--text); letter-spacing: .05em; text-transform: uppercase; box-shadow: 0 1.2vmin 3vmin rgba(0,0,0,.25); }
+  /* STAGE: the card is sized by the free space (container units), so it fits every aspect. */
+  .stagewrap { position: relative; flex: 1; min-height: 0; container-type: size; display: grid; place-items: center; margin-top: 3vmin; }
+  .cardbox { position: relative; width: min(84cqw, 78cqh, 76vmin); aspect-ratio: 4 / 5; }
+  .shadow { position: absolute; left: 8%; right: 8%; bottom: -6%; height: 12%; border-radius: 50%; background: rgba(10,15,30,.35); filter: blur(3vmin); }
+  .card { position: absolute; inset: 0; border-radius: 4.5vmin; overflow: hidden; background: var(--card);
+    box-shadow: 0 3vmin 7vmin -2vmin rgba(10,15,30,.45), 0 .6vmin 1.6vmin rgba(10,15,30,.18), inset 0 0 0 .5vmin rgba(255,255,255,.7); }
+  .card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    background: linear-gradient(155deg, rgba(255,255,255,.35) 0%, transparent 35%, transparent 70%, rgba(0,0,0,.12) 100%); }
+  .media { position: absolute; inset: 0; }
+  .media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .media.illus { background: radial-gradient(60% 50% at 50% 55%, #fff 0%, transparent 75%), linear-gradient(160deg, var(--card), var(--bg-2)); }
+  .media.illus img { object-fit: contain; padding: 14%; box-sizing: border-box; }
+  /* CALLOUTS: a dot on the product, a line drawn outwards, a chip. .r = line to the right, .l = to the left. */
+  .callout { position: absolute; width: 0; height: 0; z-index: 3; visibility: hidden; }
+  .callout .dot { position: absolute; width: 2.6vmin; height: 2.6vmin; margin: -1.3vmin 0 0 -1.3vmin; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 1.2vmin rgba(255,255,255,.75), 0 .6vmin 1.6vmin rgba(0,0,0,.3); }
+  .callout .ln { position: absolute; top: -.2vmin; height: .4vmin; width: 9vmin; background: var(--ink); }
+  .callout .chip { position: absolute; top: 0; translate: 0 -50%; white-space: nowrap; padding: 1.4vmin 2.4vmin; border-radius: 1.6vmin; background: var(--chip);
+    font: 700 2.8vmin/1 var(--text); box-shadow: 0 1.2vmin 3vmin rgba(10,15,30,.22); }
+  .callout .chip b { color: var(--accent); margin-right: .8vmin; }
+  .callout.r .ln { left: 0; transform-origin: left center; } .callout.r .chip { left: 9vmin; }
+  .callout.l .ln { right: 0; transform-origin: right center; } .callout.l .chip { right: 9vmin; }
+  .tag { position: absolute; right: -5%; top: -4%; z-index: 4; width: 22vmin; height: 22vmin; border-radius: 50%; background: var(--accent); color: #fff;
+    display: grid; place-items: center; text-align: center; box-shadow: 0 1.6vmin 4vmin rgba(10,15,30,.35); visibility: hidden; rotate: 10deg; }
+  .tag small { display: block; font: 700 2.4vmin/1 var(--text); letter-spacing: .1em; text-transform: uppercase; opacity: .85; }
+  .tag strong { display: block; font: 800 7.4vmin/1 var(--display); letter-spacing: -.04em; }
+  /* SIDE BY SIDE (1:1 and 16:9): copy left, product right */
+  @media (min-aspect-ratio: 9/10) {
+    .safe { left: 6%; right: 5%; top: 9%; bottom: 9%; flex-direction: row; align-items: center; gap: 4%; }
+    .copyslot { flex: 0 0 46%; }
+    .stagewrap { align-self: stretch; margin: 0; }
+    .headline { font-size: 9vmin; }
+  }
+  @media (min-aspect-ratio: 9/10) and (max-aspect-ratio: 5/4) { .headline { font-size: 7.4vmin; } .sub { font-size: 3.2vmin; } .callout .chip { font-size: 2.4vmin; } .callout .ln { width: 6vmin; } .callout.r .chip { left: 6vmin; } .callout.l .chip { right: 6vmin; } }
+</style>
+</head>
+<body>
+<!-- SIZE 2/2: data-width / data-height. data-duration = sum of SCENES. -->
+<div id="root" data-composition-id="main" data-start="0" data-width="1080" data-height="1920" data-duration="14">
+  <div class="grain"></div>
+  <div class="safe">
+    <div class="copyslot">
+      <!-- SCENE 1 HOOK: what it is, in 2-5 words -->
+      <section class="scene">
+        <div class="eyebrow">New from Brand name</div>
+        <h1 class="headline"><span class="line"><span>Meet your new</span></span><span class="line"><span>favourite thing.</span></span></h1>
+      </section>
+      <!-- SCENE 2 FEATURES: the callouts on the card carry this scene -->
+      <section class="scene">
+        <div class="eyebrow">Why it's different</div>
+        <h1 class="headline"><span class="line"><span>Made to last.</span></span></h1>
+        <div class="sub">Three details you'll notice on day one.</div>
+      </section>
+      <!-- SCENE 3 SECOND LOOK + PRICE (the price tag on the card) -->
+      <section class="scene">
+        <div class="eyebrow">In every colour</div>
+        <h1 class="headline"><span class="line"><span>Pick yours.</span></span></h1>
+        <div class="sub">Free shipping over $50.</div>
+      </section>
+      <!-- SCENE 4 END CARD -->
+      <section class="scene">
+        <div class="eyebrow">Brand name</div>
+        <h1 class="headline"><span class="line"><span>Get it today.</span></span></h1>
+        <div class="cta">Shop brandname.com</div>
+      </section>
+    </div>
+    <div class="stagewrap">
+      <div class="cardbox">
+        <div class="shadow"></div>
+        <div class="card">
+          <div class="media illus m1"><img src="kit/illustrations/product-box.svg" alt=""></div><!-- IMAGE 1: hero shot -->
+          <div class="media illus m2"><img src="kit/illustrations/beauty-bottle.svg" alt=""></div><!-- IMAGE 2: second angle / colour (scene 3) -->
+        </div>
+        <!-- CALLOUTS (scene 2): left/top = where the dot sits on the card, in % -->
+        <div class="callout r" style="left:62%;top:24%"><i class="dot"></i><i class="ln"></i><span class="chip"><b>01</b>Recycled</span></div>
+        <div class="callout l" style="left:36%;top:52%"><i class="dot"></i><i class="ln"></i><span class="chip"><b>02</b>Hand-finished</span></div>
+        <div class="callout r" style="left:60%;top:78%"><i class="dot"></i><i class="ln"></i><span class="chip"><b>03</b>2-year warranty</span></div>
+        <div class="tag"><div><small>Only</small><strong>$29</strong></div></div><!-- PRICE (scene 3) -->
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  // SCENES: seconds per scene, in order. Scene 2 needs ~1 s per callout.
+  const SCENES = [3.2, 4.2, 3.4, 3.2];
+  const tl = gsap.timeline({ paused: true });
+  const scenes = gsap.utils.toArray(".scene");
+  const total = SCENES.reduce((a, b) => a + b, 0);
+  const card = document.querySelector(".cardbox");
+  // the card: rises in with a tilt, then slow ken-burns on both images for the whole video
+  tl.from(card, { y: 260, rotation: -6, scale: 0.86, opacity: 0, duration: 1.1, ease: "expo.out" }, 0.15);
+  tl.fromTo(".m1 img", { scale: 1.04, xPercent: -2 }, { scale: 1.16, xPercent: 2, duration: total, ease: "none" }, 0);
+  tl.fromTo(".m2 img", { scale: 1.14, yPercent: 2 }, { scale: 1.04, yPercent: -2, duration: total, ease: "none" }, 0);
+  tl.set(".m2", { opacity: 0 }, 0);
+  let at = 0;
+  scenes.forEach((s, i) => {
+    const d = SCENES[i];
+    const b = at + (i ? 0.25 : 0.2);
+    tl.set(s, { visibility: "visible" }, at);
+    if (i > 0) tl.to(scenes[i - 1], { opacity: 0, y: -30, duration: 0.3, ease: "power2.in" }, at - 0.3).set(scenes[i - 1], { visibility: "hidden" }, at);
+    tl.from(s.querySelectorAll(".eyebrow"), { opacity: 0, y: 20, duration: 0.4, ease: "power3.out" }, b);
+    tl.from(s.querySelectorAll(".line > span"), { yPercent: 110, duration: 0.7, ease: "expo.out", stagger: 0.08 }, b + 0.08);
+    tl.from(s.querySelectorAll(".sub"), { opacity: 0, y: 24, duration: 0.5, ease: "power3.out" }, b + 0.35);
+    tl.from(s.querySelectorAll(".cta"), { scale: 0.6, opacity: 0, duration: 0.5, ease: "back.out(2.2)", transformOrigin: "left center" }, b + 0.5);
+    at += d;
+  });
+  const s2 = SCENES[0], s3 = s2 + SCENES[1], s4 = s3 + SCENES[2];
+  // scene 2: card eases back a little, callouts draw one by one (dot pops, line grows, chip slides)
+  tl.to(card, { scale: 0.94, duration: 0.8, ease: "power2.inOut" }, s2);
+  gsap.utils.toArray(".callout").forEach((c, k) => {
+    const t = s2 + 0.5 + k * 0.75;
+    tl.set(c, { visibility: "visible" }, t);
+    tl.from(c.querySelector(".dot"), { scale: 0, duration: 0.4, ease: "back.out(3)" }, t);
+    tl.from(c.querySelector(".ln"), { scaleX: 0, duration: 0.35, ease: "power3.out" }, t + 0.15);
+    tl.from(c.querySelector(".chip"), { opacity: 0, x: c.classList.contains("l") ? 30 : -30, duration: 0.4, ease: "power3.out" }, t + 0.35);
+    tl.to(c, { opacity: 0, duration: 0.3 }, s3 - 0.3);
+    tl.set(c, { visibility: "hidden" }, s3);
+  });
+  // scene 3: swap to image 2 with a turn, price tag stamps on
+  tl.to(card, { rotation: 3, scale: 1, duration: 0.9, ease: "power3.inOut" }, s3 - 0.1);
+  tl.to(".m2", { opacity: 1, duration: 0.6, ease: "power1.inOut" }, s3);
+  tl.set(".tag", { visibility: "visible" }, s3 + 0.5);
+  tl.from(".tag", { scale: 0, rotation: -60, duration: 0.6, ease: "back.out(2.4)" }, s3 + 0.5);
+  // scene 4: card settles, tag stays as the reminder
+  tl.to(card, { rotation: 0, scale: 0.96, duration: 0.8, ease: "power2.inOut" }, s4);
+  tl.to(card, { y: -10, duration: SCENES[3] - 0.8, ease: "sine.inOut" }, s4 + 0.8);
+  tl.to({}, { duration: 0.01 }, total - 0.01);
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

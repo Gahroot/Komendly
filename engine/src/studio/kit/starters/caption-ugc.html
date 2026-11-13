@@ -1,0 +1,107 @@
+<!doctype html>
+<!--
+  Ozzy kit starter: CAPTION-UGC. Phone-native: full-bleed photo/footage, big word-by-word captions (one word highlighted
+  at a time), then a quick CTA sticker. Text stays out of the Reels/TikTok UI (bottom 22%, right 15%). Built for 9:16 only.
+  Copy it to ./index.html, then change ONLY:
+    SIZE     2 places marked SIZE (meta viewport, #root data-width/data-height). 9:16 = 1080x1920.
+    PALETTE  the :root block (hl = the highlighted word's pill).
+    COPY     each <section class="scene"> holds ONE caption line (3-7 words). The .sticker is the CTA.
+    IMAGES   the .media background slots (marked IMAGE), one per caption scene or reuse the same one.
+             Photo: <div class="media"><img src="brand/photos/x.jpg"></div>.
+             Footage: <div class="media"><video src="uploads/clip.mp4" muted playsinline preload="auto"></video></div>
+             Kit illustration: keep class "media illus".
+    SCENES   seconds per caption in the SCENES array at the bottom (~0.35 s per word); data-duration = their sum.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" /><!-- SIZE 1/2 -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+  @font-face { font-family: "Archivo"; src: url("kit/fonts/archivo-normal.woff2") format("woff2"); font-weight: 100 900; font-stretch: 62% 125%; }
+  /* PALETTE */
+  :root { --bg: #1b1b1f; --ink: #ffffff; --hl: #ffe234; --hl-ink: #111111; --sticker: #ffffff; --sticker-ink: #111111; --accent: #ff3d6e;
+    --text: "Archivo", system-ui, sans-serif; }
+  html, body { margin: 0; width: 100%; height: 100%; background: var(--bg); }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; font-family: var(--text); color: var(--ink); background: var(--bg); }
+  .bgs { position: absolute; inset: 0; }
+  .media { position: absolute; inset: 0; opacity: 0; }
+  .media img, .media video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .media.illus { background: radial-gradient(70% 45% at 50% 40%, #fff6e8 0%, transparent 75%), linear-gradient(170deg, #f3d9c2, #9db6d6); }
+  .media.illus img { object-fit: contain; padding: 18% 14% 40%; box-sizing: border-box; }
+  /* scrim keeps captions readable on any photo */
+  .scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.35) 0%, transparent 22%, transparent 42%, rgba(0,0,0,.55) 78%, rgba(0,0,0,.35) 100%); }
+  /* SAFE ZONE: top 10%, bottom 22%, left 6%, right 15% (feed buttons). Captions sit at the bottom of it. */
+  .safe { position: absolute; left: 6%; right: 15%; top: 10%; bottom: 22%; display: grid; align-items: end; }
+  .safe > .scene { grid-area: 1 / 1; visibility: hidden; }
+  .cap { font: 900 9.4vmin/1.12 var(--text); font-stretch: 90%; text-transform: uppercase; letter-spacing: -.01em; margin: 0;
+    text-shadow: 0 .5vmin 0 rgba(0,0,0,.55), 0 0 3vmin rgba(0,0,0,.5); }
+  .cap .w { display: inline-block; padding: 0 .12em; border-radius: .14em; }
+  .cap .w.on { background: var(--hl); color: var(--hl-ink); text-shadow: none; box-shadow: 0 .8vmin 2vmin rgba(0,0,0,.35); }
+  .handle { position: absolute; left: 6%; top: 10%; display: flex; align-items: center; gap: 1.6vmin; font: 700 3vmin/1 var(--text); text-shadow: 0 .3vmin 1vmin rgba(0,0,0,.6); }
+  .handle i { width: 2vmin; height: 2vmin; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 .6vmin rgba(255,61,110,.35); }
+  .sticker { justify-self: start; padding: 3vmin 5vmin; border-radius: 3vmin; background: var(--sticker); color: var(--sticker-ink); rotate: -4deg;
+    box-shadow: 0 2vmin 5vmin rgba(0,0,0,.45), .8vmin .8vmin 0 var(--accent); }
+  .sticker small { display: block; font: 700 2.8vmin/1.2 var(--text); color: var(--accent); text-transform: uppercase; letter-spacing: .1em; }
+  .sticker strong { display: block; font: 900 7.4vmin/1.05 var(--text); font-stretch: 90%; text-transform: uppercase; margin-top: .8vmin; }
+  .sticker span { display: block; font: 600 3.2vmin/1.2 var(--text); margin-top: 1.2vmin; }
+</style>
+</head>
+<body>
+<!-- SIZE 2/2: data-width / data-height. data-duration = sum of SCENES. -->
+<div id="root" data-composition-id="main" data-start="0" data-width="1080" data-height="1920" data-duration="10.4">
+  <div class="bgs">
+    <div class="media illus b1"><img src="kit/illustrations/latte-cup.svg" alt=""></div><!-- IMAGE 1: background for captions 1-2 -->
+    <div class="media illus b2"><img src="kit/illustrations/storefront.svg" alt=""></div><!-- IMAGE 2: background for captions 3-4 -->
+    <!-- FOOTAGE example: <div class="media b1"><video src="uploads/clip.mp4" muted playsinline preload="auto"></video></div> -->
+  </div>
+  <div class="scrim"></div>
+  <div class="handle"><i></i>@brandname</div>
+  <div class="safe">
+    <!-- CAPTIONS: one line each, 3-7 words. data-bg = which background (1 or 2) shows. -->
+    <section class="scene" data-bg="1"><p class="cap">Okay this place is unreal</p></section>
+    <section class="scene" data-bg="1"><p class="cap">Best coffee I've had all year</p></section>
+    <section class="scene" data-bg="2"><p class="cap">And the staff actually remember you</p></section>
+    <!-- END: CTA sticker -->
+    <section class="scene" data-bg="2">
+      <div class="sticker"><small>Link in bio</small><strong>Visit today</strong><span>12 Main St &middot; open 7am</span></div>
+    </section>
+  </div>
+</div>
+<script>
+  // SCENES: seconds per caption line (~0.35 s per word), last = CTA sticker.
+  const SCENES = [2.2, 2.4, 2.8, 3.0];
+  const tl = gsap.timeline({ paused: true });
+  const scenes = gsap.utils.toArray(".scene");
+  const total = SCENES.reduce((a, b) => a + b, 0);
+  document.querySelectorAll(".cap").forEach((c) => { c.innerHTML = c.textContent.trim().split(/\s+/).map((w) => `<span class="w">${w}</span>`).join(" "); });
+  // backgrounds: slow push-in; footage plays with the timeline
+  let at = 0, bg = null;
+  scenes.forEach((s, i) => {
+    const want = ".b" + s.dataset.bg;
+    if (want !== bg) {
+      if (bg) tl.to(bg, { opacity: 0, duration: 0.3 }, at);
+      tl.to(want, { opacity: 1, duration: i ? 0.3 : 0.01 }, at);
+      tl.fromTo(want + " img, " + want + " video", { scale: 1.02 }, { scale: 1.14, duration: total - at, ease: "none" }, at);
+      bg = want;
+    }
+    tl.set(s, { visibility: "visible" }, at);
+    if (i > 0) tl.set(scenes[i - 1], { visibility: "hidden" }, at);
+    const words = s.querySelectorAll(".w");
+    const step = (SCENES[i] - 0.2) / Math.max(words.length, 1);
+    words.forEach((w, k) => {
+      const t = at + k * step;
+      tl.from(w, { opacity: 0, scale: 0.6, y: 20, duration: 0.18, ease: "back.out(3)" }, t);
+      tl.set(w, { className: "w on" }, t);
+      if (k < words.length - 1) tl.set(w, { className: "w" }, t + step);
+    });
+    tl.from(s.querySelectorAll(".sticker"), { scale: 0, rotation: -25, duration: 0.55, ease: "back.out(2.2)", transformOrigin: "left bottom" }, at);
+    tl.to(s.querySelectorAll(".sticker"), { y: -12, duration: SCENES[i] - 0.7, ease: "sine.inOut" }, at + 0.65);
+    at += SCENES[i];
+  });
+  tl.to({}, { duration: 0.01 }, total - 0.01);
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>

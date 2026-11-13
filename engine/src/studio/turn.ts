@@ -24,6 +24,7 @@ import { type RenderProgress, ffmpegPath, renderComposition } from "../modules/e
 import { Limiter } from "../providers/limiter";
 import { pickStudioModel } from "./model-choice";
 import { installStudioKit } from "./kit-install";
+import { installBrandPhotos } from "./brand-photos";
 import { chooseStudioBrain, codexWeeklyPctSeen, isCodexLimitError, mimoAtPct, mimoAuth, MIMO_DEFAULT_MODEL, type StudioBrain } from "./brain";
 import { type BriefUpload, cleanUploadNames, launchBrief, studioBrief, turnPrompt } from "./brief";
 import { chargeAndRecord, decideCharge, isPaidStudioWorkspace } from "./charge";
@@ -195,12 +196,14 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       logoFile = `logo${extname(bp.logoKey) || ".png"}`;
       await storage.get(bp.logoKey).then((b) => writeFile(join(project, "brand", logoFile as string), b)).catch(() => { logoFile = null; });
     }
+    const photos = bp ? await installBrandPhotos({ storage, project, assets: bp.assets, logoKey: bp.logoKey, onError: (error, key) => log("warn", "studio brand photo skipped", { key, error }) }) : [];
     const paid = isPaidStudioWorkspace(ws);
     const brand = bp ? {
       name: bp.name, url: bp.url,
       colors: (Array.isArray(bp.colors) ? bp.colors : []).flatMap((c) => (c && typeof c === "object" && typeof (c as { hex?: unknown }).hex === "string" ? [{ hex: (c as { hex: string }).hex, role: (c as { role?: string }).role }] : [])).slice(0, 6),
       fonts: (Array.isArray(bp.fonts) ? bp.fonts : []).flatMap((f) => (f && typeof f === "object" && typeof (f as { family?: unknown }).family === "string" ? [{ family: (f as { family: string }).family, role: (f as { role?: string }).role }] : [])).slice(0, 3),
       logoFile,
+      photos,
     } : null;
     await installStudioKit(project).catch((e) => log("warn", "studio kit install failed", { error: errMsg(e) }));
     await writeFile(join(project, "studio.md"), studioBrief({ brand, uploads: briefUploads, paid }));

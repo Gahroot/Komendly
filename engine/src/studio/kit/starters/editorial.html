@@ -1,0 +1,155 @@
+<!doctype html>
+<!--
+  Ozzy kit starter: EDITORIAL. Magazine cover look: masthead with issue number, thin rules, serif display type,
+  one framed photo that slowly drifts, a pull quote, then the end card. Slow, quiet motion. Premium brands,
+  beauty, real estate, restaurants. Works at 9:16 (stacked) and 1:1 (photo left, copy right).
+  Copy it to ./index.html, then change ONLY:
+    SIZE     2 places marked SIZE (meta viewport, #root data-width/data-height). 9:16=1080x1920, 1:1=1080x1080.
+    PALETTE  the :root block (paper, ink, accent).
+    COPY     masthead (.mast), issue label (.issue), text in each <section class="scene">, the .caption under the photo.
+    IMAGES   the two .media slots in the frame (marked IMAGE). Photo: <div class="media m1"><img src="brand/photos/x.jpg"></div>.
+             Kit illustration or icon: keep class "media illus".
+    SCENES   seconds per scene in the SCENES array at the bottom; data-duration = their sum.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" /><!-- SIZE 1/2 -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+  @font-face { font-family: "Gloock"; src: url("kit/fonts/gloock-normal.woff2") format("woff2"); font-weight: 400; }
+  @font-face { font-family: "Newsreader"; src: url("kit/fonts/newsreader-normal.woff2") format("woff2"); font-weight: 200 800; }
+  @font-face { font-family: "Newsreader"; src: url("kit/fonts/newsreader-italic.woff2") format("woff2"); font-weight: 200 800; font-style: italic; }
+  /* PALETTE: paper = background, ink = type and rules, muted = small text, accent = issue number + one word in italics. */
+  :root {
+    --paper: #f4efe6; --paper-2: #e8e0d2; --ink: #1d1a16; --muted: #6f665a; --accent: #9a3b26;
+    --display: "Gloock", Georgia, serif; --text: "Newsreader", Georgia, serif;
+  }
+  html, body { margin: 0; width: 100%; height: 100%; background: var(--paper); }
+  #root { position: relative; width: 100%; height: 100%; overflow: hidden; color: var(--ink); font-family: var(--text);
+    background: radial-gradient(80% 60% at 50% 40%, var(--paper) 30%, var(--paper-2) 100%); }
+  .vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(130% 100% at 50% 45%, transparent 60%, rgba(40,25,10,.14)); }
+  .safe { position: absolute; left: 7%; right: 7%; top: 6%; bottom: 16%; display: flex; flex-direction: column; }
+  /* MASTHEAD: brand name between two hairlines, issue label on the right */
+  .masthead { display: flex; align-items: baseline; justify-content: space-between; padding: 1.4vmin 0; border-top: .25vmin solid var(--ink); border-bottom: .25vmin solid var(--ink); }
+  .mast { font: 400 4.2vmin/1 var(--display); letter-spacing: .02em; }
+  .issue { font: 500 2.2vmin/1 var(--text); letter-spacing: .22em; text-transform: uppercase; color: var(--muted); }
+  .issue b { color: var(--accent); font-weight: 600; }
+  .body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4vmin; margin-top: 4vmin; }
+  /* FRAME: photo with a thin inner keyline and a soft paper shadow */
+  .framewrap { position: relative; flex: 1; min-height: 0; container-type: size; display: grid; place-items: center; }
+  .frame { position: relative; width: min(100cqw, 80cqh); aspect-ratio: 4 / 5; max-height: 100cqh; background: #fff; padding: 1.6vmin; box-sizing: border-box;
+    box-shadow: 0 3vmin 6vmin -2vmin rgba(40,25,10,.35), 0 .4vmin 1vmin rgba(40,25,10,.15); }
+  .pic { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--paper-2); }
+  .media { position: absolute; inset: 0; }
+  .media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .media.illus { background: radial-gradient(60% 50% at 50% 50%, #fff 0%, transparent 75%), linear-gradient(170deg, var(--paper), var(--paper-2)); }
+  .media.illus img { object-fit: contain; padding: 16%; box-sizing: border-box; }
+  .keyline { position: absolute; inset: 1.4vmin; border: .2vmin solid rgba(255,255,255,.8); pointer-events: none; z-index: 2; }
+  .caption { position: absolute; left: 0; right: 0; bottom: -4.4vmin; font: italic 400 2.3vmin/1 var(--text); color: var(--muted); text-align: right; }
+  /* COPY */
+  .copyslot { display: grid; }
+  .copyslot > .scene { grid-area: 1 / 1; visibility: hidden; display: flex; flex-direction: column; }
+  .kicker { display: flex; white-space: nowrap; align-items: center; gap: 2vmin; font: 600 2.2vmin/1 var(--text); letter-spacing: .26em; text-transform: uppercase; color: var(--muted); }
+  .kicker .num { font: 400 4.4vmin/1 var(--display); letter-spacing: 0; color: var(--accent); }
+  .kicker .rule { flex: 0 0 10vmin; height: .2vmin; background: var(--ink); transform-origin: left center; }
+  .headline { font: 400 9vmin/1.02 var(--display); letter-spacing: -.01em; margin: 2vmin 0 0; }
+  .headline em { font-family: var(--text); font-style: italic; font-weight: 400; color: var(--accent); }
+  .headline .line { display: block; overflow: hidden; padding-bottom: .08em; }
+  .headline .line > span { display: inline-block; }
+  .sub { font: 400 3.4vmin/1.35 var(--text); color: var(--muted); margin-top: 1.6vmin; max-width: 30ch; }
+  .quote { font: italic 300 5.4vmin/1.2 var(--text); margin: 1.4vmin 0 0; max-width: 22ch; }
+  .quote cite { display: block; margin-top: 1.6vmin; font: normal 600 2.2vmin/1 var(--text); letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+  .cta { align-self: flex-start; margin-top: 2.6vmin; padding: 1.6vmin 0; border-bottom: .3vmin solid var(--accent); font: 600 3vmin/1 var(--text); letter-spacing: .18em; text-transform: uppercase; }
+  /* SQUARE / LANDSCAPE: photo left, copy right */
+  @media (min-aspect-ratio: 9/10) {
+    .safe { left: 6%; right: 6%; top: 6%; bottom: 7%; }
+    .body { flex-direction: row; align-items: center; gap: 5%; }
+    .framewrap { flex: 0 0 44%; align-self: stretch; }
+    .copyslot { flex: 1; }
+    .headline { font-size: 6.8vmin; } .quote { font-size: 4.2vmin; } .sub { font-size: 2.9vmin; }
+  }
+</style>
+</head>
+<body>
+<!-- SIZE 2/2: data-width / data-height. data-duration = sum of SCENES. -->
+<div id="root" data-composition-id="main" data-start="0" data-width="1080" data-height="1920" data-duration="15">
+  <div class="safe">
+    <div class="masthead"><span class="mast">Brand name</span><span class="issue">Issue <b>No. 04</b> · Spring</span></div>
+    <div class="body">
+      <div class="framewrap">
+        <div class="frame">
+          <div class="pic">
+            <div class="media illus m1"><img src="kit/illustrations/house.svg" alt=""></div><!-- IMAGE 1: the hero photo -->
+            <div class="media illus m2"><img src="kit/illustrations/beauty-bottle.svg" alt=""></div><!-- IMAGE 2: a detail (scene 2-3) -->
+          </div>
+          <div class="keyline"></div>
+          <div class="caption">Photographed at home, 2026</div>
+        </div>
+      </div>
+      <div class="copyslot">
+        <!-- SCENE 1 COVER: the idea in 3-6 words; wrap one word in <em> -->
+        <section class="scene">
+          <div class="kicker"><span class="num">01</span><i class="rule"></i>The cover story</div>
+          <h1 class="headline"><span class="line"><span>Quietly, <em>beautifully</em></span></span><span class="line"><span>made by hand.</span></span></h1>
+        </section>
+        <!-- SCENE 2 DETAIL: one detail worth noticing -->
+        <section class="scene">
+          <div class="kicker"><span class="num">02</span><i class="rule"></i>In detail</div>
+          <h1 class="headline"><span class="line"><span>Every <em>finish</em></span></span><span class="line"><span>considered.</span></span></h1>
+          <div class="sub">Natural materials, chosen one by one.</div>
+        </section>
+        <!-- SCENE 3 PULL QUOTE: a real customer line -->
+        <section class="scene">
+          <div class="kicker"><span class="num">03</span><i class="rule"></i>What they say</div>
+          <p class="quote">“The most considered place we have ever stayed.”<cite>— Alex M., guest</cite></p>
+        </section>
+        <!-- SCENE 4 END CARD -->
+        <section class="scene">
+          <div class="kicker"><span class="num">04</span><i class="rule"></i>Brand name</div>
+          <h1 class="headline"><span class="line"><span>Visit us <em>soon.</em></span></span></h1>
+          <div class="cta">brandname.com</div>
+        </section>
+      </div>
+    </div>
+  </div>
+  <div class="vignette"></div>
+</div>
+<script>
+  // SCENES: seconds per scene, in order. Editorial pacing is slow: keep each 3.4 s or more.
+  const SCENES = [3.8, 3.8, 3.8, 3.6];
+  const tl = gsap.timeline({ paused: true });
+  const scenes = gsap.utils.toArray(".scene");
+  const total = SCENES.reduce((a, b) => a + b, 0);
+  const s2 = SCENES[0], s3 = s2 + SCENES[1], s4 = s3 + SCENES[2];
+  // masthead: hairlines draw, name fades up
+  tl.from(".masthead", { clipPath: "inset(0 100% 0 0)", duration: 1.2, ease: "power3.inOut" }, 0.1);
+  tl.from(".mast, .issue", { opacity: 0, y: 12, duration: 0.8, ease: "power2.out", stagger: 0.15 }, 0.5);
+  // frame: reveals top-down like a page, photos drift slowly the whole time
+  tl.from(".frame", { clipPath: "inset(0 0 100% 0)", duration: 1.4, ease: "expo.inOut" }, 0.2);
+  tl.from(".frame", { y: 40, duration: 1.8, ease: "power3.out" }, 0.2);
+  tl.from(".caption", { opacity: 0, duration: 0.8 }, 1.4);
+  tl.fromTo(".m1 img", { scale: 1.12 }, { scale: 1.0, duration: s3, ease: "none" }, 0);
+  tl.fromTo(".m2 img", { scale: 1.0, xPercent: -2 }, { scale: 1.1, xPercent: 2, duration: total - s2, ease: "none" }, s2);
+  tl.set(".m2", { opacity: 0 }, 0);
+  tl.to(".m2", { opacity: 1, duration: 1.0, ease: "power1.inOut" }, s2 - 0.2);
+  tl.to(".m2", { opacity: 0, duration: 1.0, ease: "power1.inOut" }, s4 - 0.2);
+  let at = 0;
+  scenes.forEach((s, i) => {
+    const b = at + (i ? 0.35 : 0.9);
+    tl.set(s, { visibility: "visible" }, at);
+    if (i > 0) tl.to(scenes[i - 1], { opacity: 0, duration: 0.45, ease: "power1.in" }, at - 0.45).set(scenes[i - 1], { visibility: "hidden" }, at);
+    tl.from(s.querySelectorAll(".kicker .num, .kicker"), { opacity: 0, duration: 0.7, ease: "power1.out" }, b);
+    tl.from(s.querySelectorAll(".kicker .rule"), { scaleX: 0, duration: 0.9, ease: "power3.inOut" }, b + 0.1);
+    tl.from(s.querySelectorAll(".line > span"), { yPercent: 105, duration: 1.1, ease: "power4.out", stagger: 0.14 }, b + 0.2);
+    tl.from(s.querySelectorAll(".quote"), { opacity: 0, y: 24, duration: 1.1, ease: "power2.out" }, b + 0.2);
+    tl.from(s.querySelectorAll(".sub, .cta"), { opacity: 0, y: 16, duration: 0.8, ease: "power2.out" }, b + 0.7);
+    at += SCENES[i];
+  });
+  tl.from(".cta", { borderBottomColor: "transparent", duration: 0.6 }, s4 + 1.2);
+  tl.to({}, { duration: 0.01 }, total - 0.01);
+  window.__timelines = window.__timelines || {};
+  window.__timelines["main"] = tl;
+</script>
+</body>
+</html>
