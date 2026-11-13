@@ -25,7 +25,7 @@ const load = (p) => import(pathToFileURL(join(cliDist, p)).href);
 const { createMotionAgentSession } = await load("motion-agent/motion-agent.js");
 const { createAskUserTool } = await load("tools/ask-user.js");
 const { decideAsk } = await import(new URL("./ask-filter.mjs", import.meta.url).href);
-const { findFrameIssues, findLayoutProblems, qaFixPrompt, hasAudio, wantsSilence, newestCompositionHtml } = await import(new URL("./blank-check.mjs", import.meta.url).href);
+const { findFrameIssues, findMissingAssets, findLayoutProblems, qaFixPrompt, hasAudio, wantsSilence, newestCompositionHtml } = await import(new URL("./blank-check.mjs", import.meta.url).href);
 
 const ac = new AbortController();
 process.on("SIGTERM", () => ac.abort());
@@ -92,16 +92,17 @@ try {
     if (!asked && !ac.signal.aborted && process.env.STUDIO_QA !== "0") {
       const dir = resolve(projectDir);
       const since = promptStart - 1000;
-      const [frames, layout, html] = await Promise.all([
+      const [missing, frames, layout, html] = await Promise.all([
+        findMissingAssets(dir, { sinceMs: since }).catch(() => []),
         process.env.STUDIO_BLANK_CHECK === "0" ? { blank: [], sparse: [] } : findFrameIssues(dir, { sinceMs: since }).catch(() => ({ blank: [], sparse: [] })),
         process.env.STUDIO_LAYOUT_CHECK === "0" ? [] : findLayoutProblems(dir, { sinceMs: since }).catch(() => []),
         newestCompositionHtml(dir, since).catch(() => null),
       ]);
       const { blank, sparse } = frames;
       const music = process.env.STUDIO_MUSIC_CHECK !== "0" && !wantsSilence(prompt) && html !== null && !hasAudio(html);
-      const fix = blank.length > 0 || sparse.length > 0 || layout.length > 0 || music;
-      out({ type: "qa", checked: html !== null, blank, sparse, layout: layout.length, musicMissing: music, fix });
-      if (fix) await session.prompt(qaFixPrompt({ blank, sparse, layout, music }));
+      const fix = blank.length > 0 || sparse.length > 0 || layout.length > 0 || music || missing.length > 0;
+      out({ type: "qa", checked: html !== null, blank, sparse, layout: layout.length, musicMissing: music, missing: missing.length, fix });
+      if (fix) await session.prompt(qaFixPrompt({ blank, sparse, layout, music, missing }));
     }
   } finally {
     clearInterval(keepAlive);

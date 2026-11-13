@@ -73,3 +73,13 @@ describe("empty-area check", () => {
     expect(flatBandShare(full, w, 4)).toBe(0);
   });
 });
+
+// @ts-expect-error plain .mjs helper
+import { referencedFiles } from "../src/modules/ezmotion/agent/blank-check.mjs";
+describe("missing assets", () => {
+  it("lists local references only", () => {
+    const html = `<img src="kit/illustrations/croissant.svg"><img src='./brand/photos/a.jpg?x=1'><img src="https://x.com/a.png"><audio src="audio/music.wav"></audio>
+      <link rel="stylesheet" href="style.css"><div style="background:url('kit/x.png')"></div><script src="https://cdn/gsap.js"></script><img src="data:image/png;base64,AAA">`;
+    expect(referencedFiles(html).sort()).toEqual(["audio/music.wav", "brand/photos/a.jpg", "kit/illustrations/croissant.svg", "kit/x.png", "style.css"]);
+  });
+});

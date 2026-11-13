@@ -67,7 +67,7 @@ export type ChildLine =
   | { type: "question"; question: string; options: Array<{ label: string; value?: string; hint?: string; recommended?: boolean }>; allowOther?: boolean }
   | { type: "session"; path: string }
   | { type: "usage"; inputTokens: number; outputTokens: number; cacheRead: number }
-  | { type: "qa"; checked?: boolean; blank?: number[]; sparse?: number[]; layout?: number; musicMissing?: boolean; fix?: boolean }
+  | { type: "qa"; checked?: boolean; blank?: number[]; sparse?: number[]; layout?: number; musicMissing?: boolean; missing?: number; fix?: boolean }
   | { type: "done"; ok: boolean; message?: string; error?: string };
 
 export function parseChildLine(line: string): ChildLine | null {

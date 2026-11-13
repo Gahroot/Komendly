@@ -110,8 +110,9 @@ export async function findLayoutProblems(projectDir, { sinceMs = 0 } = {}) {
 }
 
 /** One combined fix prompt for everything the QA found (one extra agent round at most). */
-export function qaFixPrompt({ blank = [], sparse = [], layout = [], music = false }) {
+export function qaFixPrompt({ blank = [], sparse = [], layout = [], music = false, missing = [] }) {
   const parts = [];
+  if (missing.length) parts.push(`- These files are used in index.html but don't exist, so they show as empty spaces: ${missing.join(", ")}. Point each one at a file that exists (check with ls: kit/illustrations, kit/icons, brand/photos, brand/site, uploads) or remove it and fill the space.`);
   if (sparse.length) parts.push(`- Large empty areas: at ${sparse.map((t) => `${t}s`).join(", ")} half the frame or more is one flat colour with nothing in it. Fill the frame: make the hero image, footage or website piece much bigger (or full-bleed with a scrim), scale the type up, or centre the content block vertically. Nothing should sit in one half with the other half empty.`);
   if (blank.length) parts.push(`- Blank frames (one flat colour, nothing readable) at ${blank.map((t) => `${t}s`).join(", ")}: those scenes don't show. Find why (hidden elements, a wipe/overlay left covering the frame, elements never animated in, wrong timing) and fix it.`);
   if (layout.length) parts.push(`- Layout problems (text from different scenes stacked on top of each other, or text covered by other elements):\n${layout.map((l) => `  - ${l}`).join("\n")}\n  Make sure each scene's text is fully hidden before the next scene's text appears (animate it out or set autoAlpha 0 at the cut), and nothing covers text that should be read.`);
@@ -129,6 +130,36 @@ function hyperframesEntry() {
   } catch {
     return null;
   }
+}
+
+/** Pure: relative file references (src=, href= on link, url() in CSS) in a composition. */
+export function referencedFiles(raw) {
+  // Comments hold examples ("brand/photos/x.jpg"), not real references.
+  const html = String(raw).replace(/<!--[\s\S]*?-->/g, "").replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'])\/\/[^\n]*/g, "$1");
+  const out = new Set();
+  const add = (u) => {
+    const v = String(u).trim().replace(/^['"]|['"]$/g, "");
+    if (!v || /^(https?:|data:|blob:|#|\/\/|about:|javascript:)/i.test(v) || v.includes("${")) return;
+    out.add(decodeURI(v.split(/[?#]/)[0].replace(/^\.\//, "")));
+  };
+  for (const m of html.matchAll(/\s(?:src|poster)\s*=\s*("[^"]*"|'[^']*')/gi)) add(m[1]);
+  for (const m of html.matchAll(/<link\b[^>]*\bhref\s*=\s*("[^"]*"|'[^']*')/gi)) add(m[1]);
+  for (const m of html.matchAll(/url\(\s*("[^"]*"|'[^']*'|[^)'"]+)\s*\)/gi)) add(m[1]);
+  return [...out];
+}
+
+/** Files the newest composition points at that don't exist (images that will render as empty boxes). */
+export async function findMissingAssets(projectDir, { sinceMs = 0 } = {}) {
+  const comp = await newestComposition(projectDir);
+  if (!comp || comp.m < sinceMs) return [];
+  const { readFile, access } = await import("node:fs/promises");
+  const html = await readFile(join(comp.d, "index.html"), "utf8").catch(() => "");
+  const missing = [];
+  for (const f of referencedFiles(html)) {
+    const p = f.startsWith("/") ? join(projectDir, f) : join(comp.d, f);
+    if (await access(p).then(() => false, () => true)) missing.push(f);
+  }
+  return missing.slice(0, 12);
 }
 
 /** Newest composition html, or null. */
