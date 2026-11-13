@@ -66,6 +66,78 @@ async function newestComposition(dir, depth = 0) {
   return best;
 }
 
+/** The user asked for a silent video (then the music check is skipped). */
+export function wantsSilence(prompt) {
+  return /\b(no|without|skip|mute[ds]?|silent|zero)\s+(background\s+)?(music|sound|audio)\b|\bsilent( video| ad)?\b|\bno soundtrack\b/i.test(prompt);
+}
+
+/** Does this composition play any audio (an <audio> element or a <video> that isn't muted)? */
+export function hasAudio(html) {
+  return /<audio\b[^>]*\bsrc=/i.test(html) || /<video\b(?![^>]*\bmuted\b)[^>]*\bsrc=/i.test(html);
+}
+
+export const MUSIC_FIX_PROMPT = "[Studio QA, automatic] The video has no music or sound. Follow the Sound rule in ./studio.md: write ./audio/score.json for THIS business and mood (pick style, bpm, key and hits yourself), run `node kit/bin/score-synth.mjs audio/score.json audio/`, and add audio/music.wav and audio/sfx.wav to index.html as <audio> elements spanning the whole video. Keep the visuals exactly as they are. Then reply to the user again in one or two plain lines about the video (don't mention this check).";
+
+/** Pure: real layout problems from `hyperframes inspect --json` issues (overlapping/stacked text, covered text). */
+export function layoutProblems(issues) {
+  // Decorative glyphs (quote marks, bullets) don't count; a fix round needs 3+ distinct real problems.
+  const bad = (issues || []).filter((i) => ((i.code === "text_occluded" && i.severity === "error") || (i.code === "content_overlap" && i.severity === "warning")) && String(i.text ?? "").replace(/[^\p{L}\p{N}]/gu, "").length >= 3);
+  const seen = new Set();
+  const out = [];
+  for (const i of bad) {
+    const key = `${i.code}:${(i.text || "").slice(0, 30)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(`${Number(i.time ?? 0).toFixed(1)}s ${i.code === "text_occluded" ? "text covered by another element" : "elements overlapping"}${i.text ? `: "${String(i.text).slice(0, 40)}"` : ""}`);
+    if (out.length >= 8) break;
+  }
+  return out.length >= 3 ? out : [];
+}
+
+/** Overlap/covered-text problems in the newest composition ([] on any tooling problem: never block). */
+export async function findLayoutProblems(projectDir, { sinceMs = 0 } = {}) {
+  const comp = await newestComposition(projectDir);
+  if (!comp || comp.m < sinceMs) return [];
+  const entry = hyperframesEntry();
+  if (!entry) return [];
+  const r = await run(process.execPath, [entry, "inspect", comp.d, "--json", "--samples", "10"], { timeoutMs: 90_000, env: process.env });
+  const text = r.stdout.toString();
+  try {
+    return layoutProblems(JSON.parse(text.slice(text.indexOf("{"))).issues);
+  } catch {
+    return [];
+  }
+}
+
+/** One combined fix prompt for everything the QA found (one extra agent round at most). */
+export function qaFixPrompt({ blank = [], layout = [], music = false }) {
+  const parts = [];
+  if (blank.length) parts.push(`- Blank frames (one flat colour, nothing readable) at ${blank.map((t) => `${t}s`).join(", ")}: those scenes don't show. Find why (hidden elements, a wipe/overlay left covering the frame, elements never animated in, wrong timing) and fix it.`);
+  if (layout.length) parts.push(`- Layout problems (text from different scenes stacked on top of each other, or text covered by other elements):\n${layout.map((l) => `  - ${l}`).join("\n")}\n  Make sure each scene's text is fully hidden before the next scene's text appears (animate it out or set autoAlpha 0 at the cut), and nothing covers text that should be read.`);
+  if (music) parts.push("- No music or sound: follow the Sound rule in ./studio.md (write ./audio/score.json for THIS business and mood, run `node kit/bin/score-synth.mjs audio/score.json audio/`, add audio/music.wav and audio/sfx.wav as <audio> elements spanning the whole video).");
+  return `[Studio QA, automatic] The finished video has these problems:\n${parts.join("\n")}\nFix them in index.html, keep everything else the same, check the fixed times with \`hf snapshot --at\` and look at the images. Then reply to the user again in one or two plain lines about the video (don't mention this check).`;
+}
+
+function hyperframesEntry() {
+  try {
+    const req = createRequire(import.meta.url);
+    const pkgPath = req.resolve("hyperframes/package.json");
+    const pkg = req(pkgPath);
+    const bin = typeof pkg.bin === "string" ? pkg.bin : pkg.bin.hyperframes;
+    return join(dirname(pkgPath), bin);
+  } catch {
+    return null;
+  }
+}
+
+/** Newest composition html, or null. */
+export async function newestCompositionHtml(projectDir, sinceMs = 0) {
+  const comp = await newestComposition(projectDir);
+  if (!comp || comp.m < sinceMs) return null;
+  const { readFile } = await import("node:fs/promises");
+  return readFile(join(comp.d, "index.html"), "utf8").catch(() => null);
+}
+
 function compositionDuration(html) {
   const m = /data-duration="([\d.]+)"/.exec(html);
   return m ? Number(m[1]) : 0;

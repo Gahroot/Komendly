@@ -27,3 +27,37 @@ describe("snapshot leaves out the kit", () => {
     expect(includeInSnapshot("assets/kit/logo.svg")).toBe(true);
   });
 });
+
+// @ts-expect-error plain .mjs helper
+import { hasAudio, wantsSilence } from "../src/modules/ezmotion/agent/blank-check.mjs";
+describe("music gate", () => {
+  it("spots audio in a composition", () => {
+    expect(hasAudio('<audio id="m" src="audio/music.wav" data-start="0"></audio>')).toBe(true);
+    expect(hasAudio('<video src="uploads/a.mp4" data-start="0"></video>')).toBe(true);
+    expect(hasAudio('<video src="uploads/a.mp4" muted></video><div></div>')).toBe(false);
+    expect(hasAudio("<div>no sound</div>")).toBe(false);
+  });
+  it("respects a request for silence", () => {
+    expect(wantsSilence("make it 15s, no music please")).toBe(true);
+    expect(wantsSilence("a silent video for the lobby screen")).toBe(true);
+    expect(wantsSilence("music: lofi 82 bpm")).toBe(false);
+  });
+});
+
+// @ts-expect-error plain .mjs helper
+import { layoutProblems, qaFixPrompt } from "../src/modules/ezmotion/agent/blank-check.mjs";
+describe("layout gate", () => {
+  it("needs several real problems before asking for a fix", () => {
+    expect(layoutProblems([{ code: "text_occluded", severity: "info", time: 1 }])).toEqual([]);
+    const bad = Array.from({ length: 5 }, (_, i) => ({ code: "text_occluded", severity: "error", time: i, text: `line ${i}` }));
+    expect(layoutProblems(bad)).toHaveLength(5);
+    expect(layoutProblems(bad.slice(0, 2))).toEqual([]);
+    expect(layoutProblems(Array.from({ length: 5 }, (_, i) => ({ code: "text_occluded", severity: "error", time: i, text: "“" })))).toEqual([]);
+  });
+  it("one combined fix prompt", () => {
+    const p = qaFixPrompt({ blank: [3], layout: ["2.0s text covered"], music: true });
+    expect(p).toContain("3s");
+    expect(p).toContain("text covered");
+    expect(p).toContain("score-synth");
+  });
+});

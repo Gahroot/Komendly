@@ -25,7 +25,7 @@ const load = (p) => import(pathToFileURL(join(cliDist, p)).href);
 const { createMotionAgentSession } = await load("motion-agent/motion-agent.js");
 const { createAskUserTool } = await load("tools/ask-user.js");
 const { decideAsk } = await import(new URL("./ask-filter.mjs", import.meta.url).href);
-const { findBlankFrames, blankFixPrompt } = await import(new URL("./blank-check.mjs", import.meta.url).href);
+const { findBlankFrames, findLayoutProblems, qaFixPrompt, hasAudio, wantsSilence, newestCompositionHtml } = await import(new URL("./blank-check.mjs", import.meta.url).href);
 
 const ac = new AbortController();
 process.on("SIGTERM", () => ac.abort());
@@ -87,13 +87,21 @@ try {
     await session.initialize();
     const promptStart = Date.now();
     await session.prompt(prompt);
-    // Quality gate: if the finished composition shows blank frames, give the agent one fix round (STUDIO_BLANK_CHECK=0 turns it off).
-    if (!asked && !ac.signal.aborted && process.env.STUDIO_BLANK_CHECK !== "0") {
-      const blank = await findBlankFrames(resolve(projectDir), { sinceMs: promptStart - 1000 }).catch(() => []);
-      process.stderr.write(`${JSON.stringify({ blankCheck: blank })}\n`);
-      if (blank.length) {
-        out({ type: "qa", blank });
-        await session.prompt(blankFixPrompt(blank));
+    // Quality gate (one fix round at most): blank frames, stacked/covered text, missing music.
+    // STUDIO_QA=0 turns it all off; STUDIO_BLANK_CHECK / STUDIO_LAYOUT_CHECK / STUDIO_MUSIC_CHECK=0 turn off one check.
+    if (!asked && !ac.signal.aborted && process.env.STUDIO_QA !== "0") {
+      const dir = resolve(projectDir);
+      const since = promptStart - 1000;
+      const [blank, layout, html] = await Promise.all([
+        process.env.STUDIO_BLANK_CHECK === "0" ? [] : findBlankFrames(dir, { sinceMs: since }).catch(() => []),
+        process.env.STUDIO_LAYOUT_CHECK === "0" ? [] : findLayoutProblems(dir, { sinceMs: since }).catch(() => []),
+        newestCompositionHtml(dir, since).catch(() => null),
+      ]);
+      const music = process.env.STUDIO_MUSIC_CHECK !== "0" && !wantsSilence(prompt) && html !== null && !hasAudio(html);
+      process.stderr.write(`${JSON.stringify({ qa: { blank, layout: layout.length, music: !music } })}\n`);
+      if (blank.length || layout.length || music) {
+        out({ type: "qa", blank, layout: layout.length, music: !music });
+        await session.prompt(qaFixPrompt({ blank, layout, music }));
       }
     }
   } finally {
