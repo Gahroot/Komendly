@@ -18,7 +18,9 @@ const arg = (n: string) => { const i = process.argv.indexOf(`--${n}`); const v =
 if (!/komendly-dev|localhost|dev/i.test(process.env.DATABASE_URL ?? "") && !process.env.BENCH_ALLOW) throw new Error("refusing: DATABASE_URL does not look like dev (set BENCH_ALLOW=1 if it is)");
 const prompt = (await readFile(arg("prompt-file"), "utf8")).trim();
 const outDir = arg("out");
-const model = process.env.STUDIO_AGENT_MODEL ?? "(default)";
+const editIdx = process.argv.indexOf("--edit");
+const editText = editIdx >= 0 ? process.argv[editIdx + 1] : undefined;
+const model = `${process.env.STUDIO_AGENT_MODEL ?? "default"} / edit ${process.env.STUDIO_EDIT_MODEL ?? "default"}`;
 await mkdir(outDir, { recursive: true });
 const db = createDb();
 const storage = createStorage();
@@ -51,16 +53,20 @@ try {
   const turns = out.turns as Awaited<ReturnType<typeof turn>>[];
   turns.push(await turn(prompt));
   for (let i = 0; i < 2 && turns.at(-1)?.result.asked; i++) turns.push(await turn("Your call: go with what you recommend and make it now."));
+  const firstCount = turns.length;
+  if (editText) turns.push(await turn(editText));
+  out.perTurn = turns.map((t, i) => ({ kind: i < firstCount ? "first" : "edit", ms: t.ms, status: t.status, input: t.usage.reduce((a, u) => a + (u.inputTokens ?? 0), 0), output: t.usage.reduce((a, u) => a + (u.outputTokens ?? 0), 0), reply: t.reply.slice(0, 300) }));
   out.totalMs = turns.reduce((a, t) => a + t.ms, 0);
   out.inputTokens = turns.flatMap((t) => t.usage).reduce((a, u) => a + (u.inputTokens ?? 0), 0);
   out.outputTokens = turns.flatMap((t) => t.usage).reduce((a, u) => a + (u.outputTokens ?? 0), 0);
-  const r = await db.studioRender.findFirst({ where: { sessionId: session.id }, orderBy: { version: "desc" } });
-  if (r) {
-    const file = join(outDir, "video.mp4");
+  const renders = await db.studioRender.findMany({ where: { sessionId: session.id }, orderBy: { version: "asc" } });
+  out.renders = renders.map((r) => ({ version: r.version, seconds: r.seconds, ratio: r.ratio }));
+  out.render = renders.at(-1) ? { seconds: renders.at(-1)!.seconds, ratio: renders.at(-1)!.ratio, width: renders.at(-1)!.width, height: renders.at(-1)!.height } : undefined;
+  const ff = await ffmpegPath();
+  for (const r of renders) {
+    const file = join(outDir, `v${r.version}.mp4`);
     await writeFile(file, await storage.get(r.key));
-    out.render = { seconds: r.seconds, ratio: r.ratio, width: r.width, height: r.height };
-    const ff = await ffmpegPath();
-    if (ff) await run(ff, ["-y", "-v", "error", "-i", file, "-vf", "fps=8/15,scale=240:-2,tile=8x1", "-frames:v", "1", join(outDir, "sheet.jpg")]);
+    if (ff) await run(ff, ["-y", "-v", "error", "-i", file, "-vf", "fps=8/15,scale=240:-2,tile=8x1", "-frames:v", "1", join(outDir, `v${r.version}-sheet.jpg`)]);
   }
 } finally {
   await writeFile(join(outDir, "result.json"), JSON.stringify(out, null, 1));
@@ -74,6 +80,6 @@ try {
   await db.adsWorkspaceMember.deleteMany({ where: { workspaceId: ws.id } }).catch(() => undefined);
   await db.adsWorkspace.delete({ where: { id: ws.id } }).catch((e) => console.warn("ws cleanup", e.message));
   await db.user.delete({ where: { id: user.id } }).catch((e) => console.warn("user cleanup", e.message));
-  console.log("DONE", JSON.stringify({ model, totalMs: out.totalMs, inputTokens: out.inputTokens, outputTokens: out.outputTokens, render: out.render }));
+  console.log("DONE", JSON.stringify({ model, perTurn: out.perTurn, renders: out.renders }));
   await db.$disconnect();
 }
