@@ -62,6 +62,7 @@ export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryL
     '',
     `- [Free ad studio (homepage)](${SITE_URL}/): paste a website URL to get free ads`,
     `- [Ozzy Studio](${SITE_URL}/ozzy-studio): make video ads, motion graphics and footage edits by chatting with Ozzy; 1 free video`,
+    `- [Remix any ad](${SITE_URL}/remix): paste a link to any ad (TikTok, Reels, YouTube Shorts, Facebook, X) and Ozzy rebuilds its hook, pacing and style for your brand, never its footage, logos or words; first video free`,
     `- [Pricing](${SITE_URL}/pricing): one plan for Ozzy Studio, Ad Packs and Testimonials`,
     `- [Ads pricing](${SITE_URL}/ads/pricing): plans, credits and the free trial`,
     `- [Partner program](${SITE_URL}/partners): web designers, freelancers and agencies earn 30% of what referred clients pay for 12 months`,

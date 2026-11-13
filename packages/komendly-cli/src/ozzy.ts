@@ -131,6 +131,12 @@ export async function createSession(api: Api, prompt: string): Promise<SessionSu
   return res.session;
 }
 
+/** "Remix any ad": a new session that rebuilds the ad at `url` (or an uploaded recording) for the user's brand. */
+export async function startRemix(api: Api, body: { url?: string; uploadId?: string; notes?: string; aspect?: string }): Promise<SessionSummary> {
+  const res = await api.json<{ session: SessionSummary }>("POST", "/api/studio/remix", body);
+  return res.session;
+}
+
 export async function sendMessage(api: Api, sessionId: string, content: string, uploadIds: string[]): Promise<void> {
   await api.json("POST", `/api/studio/sessions/${encodeURIComponent(sessionId)}/messages`, { content, uploadIds });
 }

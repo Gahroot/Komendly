@@ -14,7 +14,7 @@ export const WEEKLY_DEFAULT_TZ = "America/New_York";
 /** Reuse the latest extraction unless it is older than this (then the run re-extracts). */
 export const WEEKLY_EXTRACTION_MAX_AGE_MS = 30 * 86_400_000;
 export const WEEKLY_HOUR = 9;
-export const WEEKLY_TEASER = "Ad Department members get 6 new ads every Monday, on top of unlimited ads anytime.";
+export const WEEKLY_TEASER = "Every Monday Ozzy makes you fresh ads and a new video, steered by one sentence from you. Included with Ozzy Ad Department.";
 
 /** Ad Department member (billing-config's hasAdDepartment) and not suspended. */
 export function isAdDepartment(ws: { adsPlan: string; subscriptionStatus: string; suspendedAt?: Date | null }): boolean {
@@ -54,20 +54,23 @@ export function isoWeekKey(now: Date, tz?: string | null): string {
   return `${date.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
 }
 
-export type WeeklyDecision = { due: true; week: string; reason: "first_drop" | "monday" } | { due: false; week: string; reason: "disabled" | "not_subscribed" | "already_this_week" | "before_monday_9am" };
+export type WeeklyDecision = { due: true; week: string; reason: "first_drop" | "monday" } | { due: false; week: string; reason: "disabled" | "not_subscribed" | "already_this_week" | "before_monday_9am" | "before_drop_time" };
 
 /**
  * Should this workspace get a drop now? First drop right after subscribing (counts as this week's); afterwards
  * from Monday 09:00 local on (a missed Monday catches up later in the same week), at most once per ISO week.
+ * Autopilot may move the day/hour (dayOfWeek 1 = Monday .. 7 = Sunday); the default keeps the Monday 9am reason.
  */
-export function weeklyDropDecision(i: { now: Date; tz?: string | null; enabled: boolean; subscribed: boolean; weeksDone: readonly string[] }): WeeklyDecision {
+export function weeklyDropDecision(i: { now: Date; tz?: string | null; enabled: boolean; subscribed: boolean; weeksDone: readonly string[]; dayOfWeek?: number; hour?: number }): WeeklyDecision {
   const week = isoWeekKey(i.now, i.tz);
   if (!i.enabled) return { due: false, week, reason: "disabled" };
   if (!i.subscribed) return { due: false, week, reason: "not_subscribed" };
   if (i.weeksDone.includes(week)) return { due: false, week, reason: "already_this_week" };
   if (i.weeksDone.length === 0) return { due: true, week, reason: "first_drop" };
   const { weekday, hour } = localParts(i.now, i.tz);
-  if (weekday === 1 && hour < WEEKLY_HOUR) return { due: false, week, reason: "before_monday_9am" };
+  const day = i.dayOfWeek ?? 1;
+  const at = i.hour ?? WEEKLY_HOUR;
+  if (weekday < day || (weekday === day && hour < at)) return { due: false, week, reason: day === 1 && at === WEEKLY_HOUR ? "before_monday_9am" : "before_drop_time" };
   return { due: true, week, reason: "monday" };
 }
 
@@ -108,16 +111,20 @@ export function weeklyDropTitle(createdAt: Date, tz?: string | null): string {
 }
 
 /** Fixed Ozzy-voice copy for the "your new ads are ready" email. */
-export function weeklyDropEmailCopy(o: { firstName: string | null; brandName: string | null; ready: number }): { subject: string; preheader: string; paragraphs: string[]; ctaLabel: string } {
+export function weeklyDropEmailCopy(o: { firstName: string | null; brandName: string | null; ready: number; focus?: string | null; videoReady?: boolean }): { subject: string; preheader: string; paragraphs: string[]; ctaLabel: string } {
   const hi = o.firstName ? `Hi ${o.firstName},` : "Hi,";
   const n = o.ready === 1 ? "1 new ad" : `${o.ready} new ads`;
   const brand = o.brandName?.trim();
+  const focus = o.focus?.trim();
+  const made = o.videoReady ? `${n} and a new video` : n;
   return {
-    subject: "Your new ads are ready",
-    preheader: `Ozzy made ${n}${brand ? ` for ${brand}` : ""} this week. Fresh angles, ready for Meta.`,
+    subject: o.videoReady ? "Your new ads and video are ready" : "Your new ads are ready",
+    preheader: `Ozzy made ${made}${brand ? ` for ${brand}` : ""} this week. Fresh angles, ready for Meta.`,
     paragraphs: [
-      `${hi} it's Ozzy. Your Weekly Drop is in: ${n}${brand ? ` for ${brand}` : ""}, made from your brand with angles you haven't run yet.`,
-      "Swap them in for whatever is getting tired, or test them side by side. That's 6 new ads every Monday, on top of unlimited ads anytime.",
+      `${hi} it's Ozzy. Your Weekly Drop is in: ${made}${brand ? ` for ${brand}` : ""}, made from your brand with angles you haven't run yet.`,
+      ...(focus ? [`This week's focus: ${focus}`] : []),
+      ...(o.videoReady ? ["Your Monday video is waiting in Ozzy Studio. Ask him for changes any time."] : []),
+      "Swap them in for whatever is getting tired, or test them side by side. Want a different focus next week? Change it on your dashboard in one sentence.",
     ],
     ctaLabel: "See this week's ads",
   };

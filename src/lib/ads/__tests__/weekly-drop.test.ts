@@ -41,6 +41,21 @@ describe("weekly drop content", () => {
     expect(weeklyDropTitle(new Date("2026-11-17T15:00:00Z"))).toBe("Weekly Drop · Nov 17");
     const c = weeklyDropEmailCopy({ firstName: "Ana", brandName: "Brew", ready: 6 });
     expect(c.subject).toBe("Your new ads are ready");
-    expect(c.paragraphs.join(" ")).toContain("6 new ads every Monday, on top of unlimited ads anytime");
+    expect(c.paragraphs.join(" ")).not.toContain("video");
+    expect(c.paragraphs.join(" ")).not.toContain("focus:");
+    const v = weeklyDropEmailCopy({ firstName: "Ana", brandName: "Brew", ready: 6, focus: "push the Black Friday sale", videoReady: true });
+    expect(v.subject).toBe("Your new ads and video are ready");
+    expect(v.paragraphs).toContain("This week's focus: push the Black Friday sale");
+    expect(v.paragraphs.join(" ")).toContain("Monday video");
+  });
+});
+
+describe("autopilot schedule", () => {
+  it("honours a custom day/hour and catches up later in the week", () => {
+    const wed = { ...base, weeksDone: ["2026-W46"], dayOfWeek: 3, hour: 14 };
+    expect(weeklyDropDecision({ ...wed, now: MON_10 })).toMatchObject({ due: false, reason: "before_drop_time" });
+    expect(weeklyDropDecision({ ...wed, now: new Date("2026-11-18T18:00:00Z") })).toMatchObject({ due: false, reason: "before_drop_time" }); // Wed 13:00 NY
+    expect(weeklyDropDecision({ ...wed, now: new Date("2026-11-18T19:00:00Z") })).toMatchObject({ due: true }); // Wed 14:00 NY
+    expect(weeklyDropDecision({ ...wed, now: new Date("2026-11-20T19:00:00Z") })).toMatchObject({ due: true }); // Friday catch-up
   });
 });

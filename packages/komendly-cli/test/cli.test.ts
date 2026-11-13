@@ -179,3 +179,93 @@ describe("help", () => {
     expect(t.out()).toContain('komendly video "<prompt>"');
   });
 });
+
+describe("remix", () => {
+  const thread = (status: string) => ({
+    session: { id: "s9", title: "Ad remix", status, freeVideo: true, lastActivityAt: "", archived: false },
+    messages: [
+      { id: "m1", role: "user", content: "Remix this ad for my brand: https://youtu.be/x", status: "done", renderIds: [], error: null },
+      { id: "m2", role: "assistant", content: status === "idle" ? "Kept the 1s hook and fast cuts, built for your brand." : "", status: status === "idle" ? "done" : "streaming", renderIds: [], error: null },
+    ],
+    renders: status === "idle" ? [{ id: "r9", version: 1, ratio: "9:16", seconds: 20, watermarked: false, messageId: "m2", posterKey: "p", createdAt: "" }] : [],
+  });
+
+  it("starts a remix from a link with notes and aspect, waits and reports the video", async () => {
+    const m = mockFetch({
+      "POST /api/studio/remix": () => json({ session: { id: "s9" } }, 201),
+      "GET /api/studio/sessions/s9": [() => json(thread("queued")), () => json(thread("idle"))],
+    });
+    const t = makeDeps(m.fetch);
+    expect(await run(["remix", "https://youtu.be/x", "--notes", "feature 20% off", "--aspect", "9:16", "--wait", "--json"], t.deps)).toBe(EXIT.ok);
+    expect(JSON.parse(m.calls[0]?.body ?? "")).toEqual({ url: "https://youtu.be/x", notes: "feature 20% off", aspect: "9:16" });
+    expect(JSON.parse(t.out())).toMatchObject({ session_id: "s9", status: "idle", video: { render_id: "r9", ratio: "9:16" } });
+  });
+
+  it("without --wait prints where to watch it", async () => {
+    const m = mockFetch({ "POST /api/studio/remix": () => json({ session: { id: "s9" } }, 201), "GET /api/studio/sessions/s9": () => json(thread("queued")) });
+    const t = makeDeps(m.fetch);
+    expect(await run(["remix", "https://www.tiktok.com/@a/video/1"], t.deps)).toBe(EXIT.ok);
+    expect(t.out()).toContain("https://k.test/studio/s9");
+  });
+
+  it("uploads a --file recording and remixes it", async () => {
+    const dir = await tempHome();
+    const file = join(dir, "rec.mp4");
+    await writeFile(file, "video-bytes");
+    const m = mockFetch({
+      "POST /api/studio/uploads": () => json({ upload: { id: "u7", filename: "rec.mp4", mime: "video/mp4", bytes: 11, status: "pending" }, putUrl: "https://s3.test/put/u7", headers: { "Content-Type": "video/mp4" } }, 201),
+      "PUT https://s3.test/put/u7": () => new Response(null, { status: 200 }),
+      "POST /api/studio/uploads/u7/complete": () => json({ upload: { id: "u7", filename: "rec.mp4", mime: "video/mp4", bytes: 11, status: "uploaded" } }),
+      "POST /api/studio/remix": () => json({ session: { id: "s9" } }, 201),
+      "GET /api/studio/sessions/s9": () => json(thread("queued")),
+    });
+    const t = makeDeps(m.fetch);
+    expect(await run(["remix", "--file", file, "--json"], t.deps)).toBe(EXIT.ok);
+    const call = m.calls.find((c) => c.url.endsWith("/api/studio/remix"));
+    expect(JSON.parse(call?.body ?? "")).toEqual({ uploadId: "u7" });
+  });
+
+  it("rejects a missing link, a bad aspect and shows help", async () => {
+    const t = makeDeps(mockFetch({}).fetch);
+    expect(await run(["remix"], t.deps)).toBe(EXIT.usage);
+    expect(await run(["remix", "https://x.com/a/status/1", "--aspect", "3:2"], t.deps)).toBe(EXIT.usage);
+    const h = makeDeps(mockFetch({}).fetch);
+    expect(await run(["remix", "--help"], h.deps)).toBe(EXIT.ok);
+    expect(h.out()).toContain("komendly remix <ad-url>");
+  });
+
+  it("maps a paywall to exit 4", async () => {
+    const m = mockFetch({ "POST /api/studio/remix": () => json({ error: "You need credits for this one.", code: "free_used", neededCredits: 5 }, 402) });
+    const t = makeDeps(m.fetch);
+    expect(await run(["remix", "https://youtu.be/x"], t.deps)).toBe(EXIT.payment);
+  });
+});
+
+describe("autopilot", () => {
+  const view = (o: Record<string, unknown> = {}) => ({ eligible: true, enabled: true, focus: null, nextDrop: "Next drop: Monday 9am", upgradeUrl: null, lastDrop: { title: "Weekly Drop · Nov 16", url: "/ads/runs/r1", ads: [{ id: "a" }, { id: "b" }], video: { status: "ready", url: "/studio/s1" } }, ...o });
+  it("shows the status", async () => {
+    const m = mockFetch({ "GET /api/ads/autopilot": () => json(view()) });
+    const t = makeDeps(m.fetch);
+    expect(await run(["autopilot"], t.deps)).toBe(EXIT.ok);
+    expect(t.out()).toContain("Ozzy Autopilot: ON");
+    expect(t.out()).toContain("Next drop: Monday 9am");
+    expect(t.out()).toContain("2 ads + video");
+  });
+  it("--off and --focus send one PATCH", async () => {
+    const m = mockFetch({ "PATCH /api/ads/autopilot": () => json(view({ enabled: false, focus: "push the Black Friday sale" })) });
+    const t = makeDeps(m.fetch);
+    expect(await run(["autopilot", "--off", "--focus", "push the Black Friday sale", "--json"], t.deps)).toBe(EXIT.ok);
+    expect(JSON.parse(m.calls[0]?.body ?? "{}")).toEqual({ enabled: false, focus: "push the Black Friday sale" });
+    expect(JSON.parse(t.out())).toMatchObject({ enabled: false, focus: "push the Black Friday sale" });
+  });
+  it("not eligible prints the upgrade link; --on --off is a usage error; help lists it", async () => {
+    const m = mockFetch({ "GET /api/ads/autopilot": () => json(view({ eligible: false, enabled: false, upgradeUrl: "/pricing?utm_source=autopilot", lastDrop: null })) });
+    const t = makeDeps(m.fetch);
+    expect(await run(["autopilot"], t.deps)).toBe(EXIT.ok);
+    expect(t.out()).toContain("https://k.test/pricing?utm_source=autopilot");
+    expect(await run(["autopilot", "--on", "--off"], makeDeps(m.fetch).deps)).toBe(EXIT.usage);
+    const h = makeDeps(m.fetch);
+    await run(["autopilot", "--help"], h.deps);
+    expect(h.out()).toContain('komendly autopilot [--on|--off] [--focus "..."]');
+  });
+});

@@ -1,16 +1,20 @@
+import { rm, rename } from "node:fs/promises";
 import { homedir } from "node:os";
+import { basename, dirname } from "node:path";
 import type { Readable } from "node:stream";
 import { flagBool, flagString, parseArgs, type ParsedArgs } from "./args.js";
 import { Api, ApiError, upgradeUrl, type FetchLike } from "./client.js";
 import { loadConfig, looksLikeKey, saveConfig } from "./config.js";
 import { downloadTo, uploadFile } from "./files.js";
 import { commandHelp, mainHelp, VERSION } from "./help.js";
+import { gitNotes, isLocalUrl, NO_BROWSER_HINT, recordLocal, withScheme, type Footage, type LaunchAspect, type Recorder } from "./launch.js";
 import { runMcpBridge } from "./mcp.js";
 import {
   createSession,
   getRun,
   getThread,
   sendMessage,
+  startRemix,
   summarizeRun,
   summarizeThread,
   waitForRun,
@@ -31,11 +35,15 @@ export interface Deps {
   now: () => number;
   /** Reads one line from the user (login prompt). */
   prompt?: (question: string) => Promise<string>;
+  /** `launch` on a local app: records it here (default: playwright-core + local Chrome). */
+  recordLocal?: Recorder;
+  /** `launch` without --notes: what shipped (default: `git log -n 10 --oneline` in cwd). */
+  gitNotes?: () => Promise<string | null>;
 }
 
 export const EXIT = { ok: 0, error: 1, usage: 2, auth: 3, payment: 4 } as const;
 
-const COMMANDS = new Set(["login", "whoami", "video", "say", "sessions", "session", "upload", "pack", "runs", "run", "download", "mcp", "help"]);
+const COMMANDS = new Set(["autopilot", "login", "whoami", "video", "remix", "launch", "say", "sessions", "session", "upload", "pack", "runs", "run", "download", "mcp", "help"]);
 
 class UsageError extends Error {}
 
@@ -128,6 +136,40 @@ async function whoami(ctx: Ctx): Promise<void> {
   );
 }
 
+interface AutopilotView {
+  eligible: boolean;
+  enabled: boolean;
+  focus: string | null;
+  nextDrop: string;
+  upgradeUrl: string | null;
+  lastDrop: null | { title: string; url: string; ads: { id: string }[]; video: null | { status: string; url: string } };
+}
+
+async function autopilot(ctx: Ctx): Promise<void> {
+  const on = flagBool(ctx.args, "on");
+  const off = flagBool(ctx.args, "off");
+  const focus = flagString(ctx.args, "focus");
+  if (on && off) throw new UsageError("Pick one: --on or --off.");
+  const api = await apiFor(ctx);
+  const change = on || off || focus !== undefined;
+  const v = change
+    ? await api.json<AutopilotView>("PATCH", "/api/ads/autopilot", { ...(on || off ? { enabled: on } : {}), ...(focus !== undefined ? { focus } : {}) })
+    : await api.json<AutopilotView>("GET", "/api/ads/autopilot");
+  const base = api.baseUrl;
+  const upgrade = v.upgradeUrl ? `${base}${v.upgradeUrl}` : null;
+  ctx.print(
+    v.eligible
+      ? [
+          `${change ? "Saved. " : ""}Ozzy Autopilot: ${v.enabled ? "ON" : "OFF"}`,
+          v.nextDrop,
+          `Focus: ${v.focus ?? "none (Ozzy picks)"}`,
+          ...(v.lastDrop ? [`Last drop: ${v.lastDrop.title}, ${v.lastDrop.ads.length} ads${v.lastDrop.video?.status === "ready" ? " + video" : ""} (${base}${v.lastDrop.url})`] : []),
+        ].join("\n")
+      : `Ozzy Autopilot (fresh ads + a new video every Monday) is included with Ozzy Ad Department.\nTurn it on: ${upgrade}`,
+    { ...v, upgradeUrl: upgrade },
+  );
+}
+
 async function uploadAll(ctx: Ctx, api: Api, sessionId: string | undefined): Promise<string[]> {
   if (ctx.args.files.length > 6) throw new UsageError("Up to 6 files per message.");
   const ids: string[] = [];
@@ -138,6 +180,11 @@ async function uploadAll(ctx: Ctx, api: Api, sessionId: string | undefined): Pro
 async function studioTurn(ctx: Ctx, api: Api, sessionId: string, message: string): Promise<void> {
   const uploadIds = await uploadAll(ctx, api, sessionId);
   await sendMessage(api, sessionId, message, uploadIds);
+  await followTurn(ctx, api, sessionId);
+}
+
+/** After a turn was queued: print where to watch it, or wait (and download with --out). */
+async function followTurn(ctx: Ctx, api: Api, sessionId: string): Promise<void> {
   const out = flagString(ctx.args, "out");
   const wait = flagBool(ctx.args, "wait") || out !== undefined;
   if (!wait) {
@@ -150,8 +197,11 @@ async function studioTurn(ctx: Ctx, api: Api, sessionId: string, message: string
   const result = summarizeThread(api.baseUrl, thread);
   if (timedOut) result.timed_out = true;
   if (out !== undefined && result.video) {
-    const saved = await downloadTo(api, `/api/studio/media?render=${encodeURIComponent(result.video.render_id)}&kind=video&download=1`, out, `ozzy-${result.video.render_id}.mp4`);
-    result.files = [saved.path];
+    // --out ending in a video extension is the file to write; otherwise a folder.
+    const asFile = /\.(mp4|mov|webm)$/i.test(out);
+    const saved = await downloadTo(api, `/api/studio/media?render=${encodeURIComponent(result.video.render_id)}&kind=video&download=1`, asFile ? dirname(out) : out, `ozzy-${result.video.render_id}.mp4`);
+    if (asFile && basename(saved.path) !== basename(out)) await rename(saved.path, out);
+    result.files = [asFile ? out : saved.path];
   }
   const lines = [
     timedOut ? `Still working after the wait limit. Check again with: komendly session ${sessionId}` : `Ozzy finished (${result.status}).`,
@@ -170,6 +220,51 @@ async function video(ctx: Ctx): Promise<void> {
   const session = await createSession(api, prompt);
   ctx.log(`Started session ${session.id}`);
   await studioTurn(ctx, api, session.id, prompt);
+}
+
+const ASPECTS = new Set(["9:16", "1:1", "4:5", "16:9"]);
+
+async function remix(ctx: Ctx): Promise<void> {
+  const url = ctx.args.positionals[0]?.trim();
+  if (!url && ctx.args.files.length !== 1) throw new UsageError("Pass a link to the ad (or one --file screen recording). Run `komendly remix --help`.");
+  const aspect = flagString(ctx.args, "aspect");
+  if (aspect !== undefined && !ASPECTS.has(aspect)) throw new UsageError("--aspect must be 9:16, 1:1, 4:5 or 16:9.");
+  const notes = flagString(ctx.args, "notes");
+  const api = await apiFor(ctx);
+  const uploadId = url ? undefined : (await uploadAll(ctx, api, undefined))[0];
+  const session = await startRemix(api, { ...(url ? { url } : {}), ...(uploadId ? { uploadId } : {}), ...(notes ? { notes } : {}), ...(aspect ? { aspect } : {}) });
+  ctx.log(`Started remix ${session.id}`);
+  await followTurn(ctx, api, session.id);
+}
+
+async function launch(ctx: Ctx): Promise<void> {
+  const raw = need(ctx.args, 0, "the address of your app (e.g. https://yourapp.com or localhost:3000)");
+  const aspect = flagString(ctx.args, "aspect") ?? "16:9";
+  if (aspect !== "16:9" && aspect !== "9:16") throw new UsageError("--aspect must be 16:9 or 9:16.");
+  const url = withScheme(raw);
+  try {
+    new URL(url);
+  } catch {
+    throw new UsageError(`"${raw}" doesn't look like a web address.`);
+  }
+  const notes = flagString(ctx.args, "notes") ?? (await (ctx.deps.gitNotes ?? (() => gitNotes(process.cwd())))()) ?? undefined;
+  const api = await apiFor(ctx);
+  let body: { url: string; notes?: string; aspect: LaunchAspect; uploadIds?: string[]; footage?: Footage[] } = { url, aspect, ...(notes ? { notes } : {}) };
+  if (isLocalUrl(url)) {
+    const rec = await (ctx.deps.recordLocal ?? recordLocal)({ url, aspect, log: ctx.log });
+    if (!rec) throw new ApiError(NO_BROWSER_HINT, 0, "no_browser");
+    try {
+      if (!rec.files.length) throw new ApiError(`Couldn't record ${url}. Is your app running?`, 0, "record_failed");
+      const uploadIds: string[] = [];
+      for (const file of rec.files) uploadIds.push((await uploadFile(api, file, { log: ctx.log })).upload_id);
+      body = { ...body, uploadIds, footage: rec.footage };
+    } finally {
+      await rm(rec.dir, { recursive: true, force: true }).catch(() => undefined);
+    }
+  }
+  const res = await api.json<{ session: SessionSummary }>("POST", "/api/studio/launch", body);
+  ctx.log(`Started launch video ${res.session.id}`);
+  await followTurn(ctx, api, res.session.id);
 }
 
 async function say(ctx: Ctx): Promise<void> {
@@ -292,7 +387,7 @@ async function mcp(ctx: Ctx): Promise<void> {
   await runMcpBridge({ baseUrl: api.baseUrl, apiKey: cfg.apiKey ?? "", fetch: ctx.deps.fetch, input: ctx.deps.stdin, write: (line) => ctx.deps.stdout(`${line}\n`), log: ctx.log });
 }
 
-const HANDLERS: Record<string, (ctx: Ctx) => Promise<void>> = { login, whoami, video, say, sessions, session, upload, pack, runs, run: runCmd, download, mcp };
+const HANDLERS: Record<string, (ctx: Ctx) => Promise<void>> = { autopilot, login, whoami, video, remix, launch, say, sessions, session, upload, pack, runs, run: runCmd, download, mcp };
 
 function exitFor(error: unknown): number {
   if (error instanceof UsageError) return EXIT.usage;

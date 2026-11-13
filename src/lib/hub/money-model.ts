@@ -55,7 +55,7 @@ export function planAppsSummary(key: AdsPlanKey): string[] {
   if (p.unlimited) {
     return [
       unlimitedLine(p) ?? "Unlimited Ad Packs and Ozzy Studio videos",
-      "6 fresh ads every Monday (5 static + 1 animated), made for you",
+      "Ozzy Autopilot: fresh ads + a new video every Monday (5 static + 1 animated + a 15s video)",
       "Ozzy Ad Coach: he tells you what's working and makes more of it",
       t > 0 ? `${t} AI testimonial videos / month` : "AI testimonial videos: Agency only",
     ];

@@ -1,4 +1,4 @@
-export const VERSION = "0.1.0";
+export const VERSION = "0.2.0";
 
 const GLOBAL = `Global options:
   --json             Print machine-readable JSON on stdout (progress still goes to stderr)
@@ -7,6 +7,17 @@ const GLOBAL = `Global options:
   -h, --help         Show help`;
 
 export const COMMAND_HELP: Record<string, string> = {
+  autopilot: `komendly autopilot [--on|--off] [--focus "..."]
+
+Ozzy Autopilot: every week Ozzy makes fresh ads and a new short video for your brand by himself.
+Without options it shows whether it's on, the next drop time, your focus and last week's drop.
+--focus steers the next drop in one sentence (--focus "" clears it and lets Ozzy pick).
+Included with Ozzy Ad Department; on other plans it prints the upgrade link.
+
+Examples:
+  komendly autopilot
+  komendly autopilot --focus "push the Black Friday sale"
+  komendly autopilot --off`,
   login: `komendly login [--key kmd_...]
 
 Save your personal API key (create one at https://www.komendly.com/dashboard/api).
@@ -22,6 +33,30 @@ Start a new Ozzy Studio video from a prompt. --file uploads footage, images or a
 Examples:
   komendly video "15s 9:16 teaser for our summer sale, bold captions" --wait --out ./videos
   komendly video "cut this into a 20s product demo with captions" --file demo.mp4 --out .`,
+  remix: `komendly remix <ad-url> [--notes "..."] [--aspect 9:16|1:1|4:5|16:9] [--wait] [--out dir] [--timeout seconds]
+komendly remix --file recording.mp4 [...]
+
+Show Ozzy any ad you like and get your own version: same hook, pacing, text style, transitions and music feel,
+rebuilt for your brand (never the original's footage, logos or words). Works with YouTube/Shorts, TikTok, Instagram,
+Facebook Ad Library and X links, direct video/image links, pages showing the ad, or a screen recording/screenshot via --file.
+Counts like any Ozzy video (your free video first, credits after).
+
+Examples:
+  komendly remix https://www.youtube.com/shorts/abc123 --wait --out ./videos
+  komendly remix https://www.tiktok.com/@brand/video/123 --notes "feature our 20% launch offer"
+  komendly remix --file ad-recording.mov --aspect 9:16 --wait`,
+  launch: `komendly launch <url> [--notes "..."] [--aspect 16:9|9:16] [--wait] [--out file.mp4|dir] [--timeout seconds]
+
+Make a 20-40s launch video for what you just shipped. Ozzy records your real product (a cursor on your main
+call to action, smooth scrolls, key pages, screenshots) and cuts it with captions and a call to action.
+Public addresses are recorded by Ozzy. localhost, private and .local/.test addresses are recorded on this machine
+with your installed Chrome (needs \`npm i -D playwright-core\` in your project), then uploaded.
+Without --notes, the last 10 commit titles of the git repo you're in say what shipped.
+Counts like any Ozzy video (your free video first, credits after).
+
+Examples:
+  komendly launch https://yourapp.com --notes "New: one-click CSV export" --wait --out launch.mp4
+  komendly launch localhost:3000 --aspect 9:16 --wait`,
   say: `komendly say <session_id> "<message>" [--file clip.mp4 ...] [--wait] [--out dir] [--timeout seconds]
 
 Send a follow-up to an Ozzy Studio session ("make it 9:16", "add captions", "shorter intro").`,
@@ -67,7 +102,10 @@ Usage: komendly <command> [options]
 Commands:
   login                  Save and verify your API key
   whoami                 Plan, credits and free allowances
+  autopilot              Ozzy Autopilot: weekly ads + video (--on, --off, --focus)
   video "<prompt>"       Start an Ozzy Studio video (--file, --wait, --out)
+  remix <ad-url>         Show Ozzy any ad, get your own version (--notes, --wait, --out)
+  launch <url>           Launch video recorded from your real product (--notes, --aspect, --out)
   say <session> "<msg>"  Ask Ozzy for an edit in an existing session
   sessions               List Studio sessions
   session <id>           Show one Studio session and its renders

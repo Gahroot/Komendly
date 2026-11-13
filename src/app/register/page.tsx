@@ -98,7 +98,8 @@ function RegisterContent() {
   }
 
   const busy = step !== "form";
-  if (!plan && !draft && params.get("flow") !== "first_video") return <div className="min-h-screen text-foreground"><SiteHeader cta={false} /><OzzyAuth mode="signup" /></div>;
+  // A same-origin ?next (e.g. /studio?remix=...) always wins over a saved testimonial draft.
+  if (!plan && (params.get("next") || (!draft && params.get("flow") !== "first_video"))) return <div className="min-h-screen text-foreground"><SiteHeader cta={false} /><OzzyAuth mode="signup" /></div>;
   const loginHref = "/login";
 
   return (

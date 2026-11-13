@@ -57,6 +57,7 @@ const publicPrefixes = [
   "/api/ads-billing/webhook", // Stripe webhook for ads billing (signature-verified)
   "/s/",                   // Ozzy Studio public share pages (/s/<token>)
   "/api/studio/share/",    // Public share data (token-checked)
+  "/api/studio/live/",     // Live preview files for the sandboxed player (per-version capability token; the entry needs a session)
   "/studio/invite/",       // Ozzy Studio invite landing ("2 free videos")
   "/api/studio/invite/",   // Invite accept: sets the invite cookie, redirects to sign-up
   "/api/mcp",              // Hosted Ozzy MCP server: authenticates its own API key (header or /api/mcp/k/<key>)
@@ -99,6 +100,13 @@ export async function middleware(request: NextRequest) {
 
   // Check for session token
   const sessionToken = request.cookies.get("session_token")?.value;
+
+  // Signed-out Studio visit: keep the full path + query (e.g. /studio?remix=<ad link>) through sign-in.
+  if (!sessionToken && (pathname === "/studio" || pathname.startsWith("/studio/"))) {
+    const loginUrl = new URL("/ads/login", request.url);
+    loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(loginUrl);
+  }
 
   // If no session token and trying to access protected route, redirect to login
   if (!sessionToken && pathname.startsWith("/dashboard")) {

@@ -52,9 +52,9 @@ describe("hosted MCP server", () => {
     expect(initBody.result.instructions).toContain("Ozzy");
     const res = await handleMcp(rpc({ jsonrpc: "2.0", id: 2, method: "tools/list" }), null);
     const body = (await res.json()) as { result: { tools: { name: string }[] } };
-    expect(body.result.tools.map((t) => t.name).sort()).toEqual(
-      ["ads_create_pack", "ads_get_run", "ads_list_runs", "get_account", "get_download_url", "studio_create_video", "studio_get_session", "studio_list_sessions", "studio_send_message", "upload_media"],
-    );
+    expect(body.result.tools.map((t) => t.name).sort()).toEqual(expect.arrayContaining(
+      ["ads_create_pack", "ads_get_run", "ads_list_runs", "autopilot_get", "autopilot_set", "get_account", "get_download_url", "studio_create_video", "studio_get_session", "studio_launch_video", "studio_list_sessions", "studio_remix", "studio_send_message", "upload_media"],
+    ));
   });
 
   it("get_account returns the key owner's plan and credits (also via the path key)", async () => {

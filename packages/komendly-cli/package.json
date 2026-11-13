@@ -1,6 +1,6 @@
 {
   "name": "komendly",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Ozzy by Komendly for AI agents and the terminal: make videos and ad packs, wait, download, and bridge the hosted MCP server.",
   "type": "module",
   "bin": {
@@ -35,5 +35,8 @@
     "vitest": "^3.2.0"
   },
   "homepage": "https://www.komendly.com/agents",
-  "author": "Komendly"
+  "author": "Komendly",
+  "optionalDependencies": {
+    "playwright-core": "^1.49.0"
+  }
 }

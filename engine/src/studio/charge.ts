@@ -1,6 +1,6 @@
 // Ozzy Studio charging: the contract's studioCharge applied in one transaction with the StudioRender row.
 import { studioCharge, type StudioCharge } from "../../../src/lib/studio/contracts";
-import { isUnlimitedPlan } from "../../../src/lib/ads/billing-config";
+import { hasAdDepartment, isUnlimitedPlan } from "../../../src/lib/ads/billing-config";
 import type { Db } from "../db";
 
 const PAID_STATUSES = new Set(["active", "trialing", "past_due"]);
@@ -26,8 +26,16 @@ export interface ChargeDecision extends StudioCharge {
   insufficient: boolean;
 }
 
-/** Pure: the contract price, then the balance rule (never negative; short balance -> watermarked, free). */
-export function decideCharge(ws: ChargeWorkspace, o: { priorRenders: number; seconds: number; sessionFree: boolean }): ChargeDecision {
+/**
+ * Pure: the contract price, then the balance rule (never negative; short balance -> watermarked, free).
+ * Autopilot (the weekly video Ozzy makes by himself, StudioSession.autopilotWeek set): never charged and never spends the
+ * free video. Included with Ad Department / Agency (clean); if the plan lapsed since, it is still free but watermarked.
+ */
+export function decideCharge(ws: ChargeWorkspace, o: { priorRenders: number; seconds: number; sessionFree: boolean; autopilot?: boolean }): ChargeDecision {
+  if (o.autopilot) {
+    const kind = o.priorRenders === 0 ? "new" : "revision";
+    return { kind, credits: 0, useFreeVideo: false, watermark: !hasAdDepartment(ws), deducted: 0, insufficient: false };
+  }
   // Unlimited plan (Ozzy Ad Department, Founding Unlimited): every render is free, never watermarked.
   const unlimited = isUnlimitedPlan(ws);
   const c = studioCharge({ priorRenders: o.priorRenders, seconds: o.seconds, sessionFree: o.sessionFree, freeVideosLeft: ws.studioFreeVideos, isPaidWorkspace: isPaidStudioWorkspace(ws), unlimited });
@@ -63,10 +71,10 @@ export async function chargeAndRecord(db: Db, r: DeliveredRender, watermarked: b
       SELECT "adsPlan", "subscriptionStatus", "suspendedAt", "creditBalance", "studioFreeVideos" FROM "AdsWorkspace" WHERE id = ${r.workspaceId} FOR UPDATE`;
     const ws = rows[0];
     if (!ws) throw new Error("workspace not found");
-    const session = await tx.studioSession.findUniqueOrThrow({ where: { id: r.sessionId }, select: { freeVideo: true } });
+    const session = await tx.studioSession.findUniqueOrThrow({ where: { id: r.sessionId }, select: { freeVideo: true, autopilotWeek: true } });
     const priorRenders = await tx.studioRender.count({ where: { sessionId: r.sessionId } });
     const version = priorRenders + 1;
-    const decision = decideCharge(ws, { priorRenders, seconds: r.seconds, sessionFree: session.freeVideo });
+    const decision = decideCharge(ws, { priorRenders, seconds: r.seconds, sessionFree: session.freeVideo, autopilot: session.autopilotWeek !== null });
     if (decision.watermark && !watermarked) return { ok: false as const, needWatermark: true as const, version };
     const render = await tx.studioRender.create({
       data: {

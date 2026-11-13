@@ -5,6 +5,7 @@ import { composeAnswers, type RenderView, type StudioQuestion, type ThreadMessag
 import { mediaUrl } from "./api";
 import { PhaseOrb } from "./phase-orb";
 import { Markdown } from "./markdown";
+import { LiveCard } from "./live-card";
 import { RenderCard } from "./render-card";
 import { useSmoothText } from "./use-smooth-text";
 
@@ -100,6 +101,7 @@ function Steps({ m, live }: { m: ThreadMessage; live: boolean }) {
 
 interface AssistantProps {
   m: ThreadMessage;
+  sessionId: string;
   renders: RenderView[];
   isLast: boolean;
   busy: boolean;
@@ -108,7 +110,7 @@ interface AssistantProps {
   onRegenerate: () => void;
 }
 
-export const AssistantMessage = memo(function AssistantMessage({ m, renders, isLast, busy, onSend, onPrefill, onRegenerate }: AssistantProps) {
+export const AssistantMessage = memo(function AssistantMessage({ m, sessionId, renders, isLast, busy, onSend, onPrefill, onRegenerate }: AssistantProps) {
   const live = m.status === "queued" || m.status === "streaming";
   const text = useSmoothText(m.content, live);
   const [copied, setCopied] = useState(false);
@@ -132,6 +134,7 @@ export const AssistantMessage = memo(function AssistantMessage({ m, renders, isL
       {(m.questions?.length || m.question) && (
         <QuestionCard questions={m.questions?.length ? m.questions : [m.question!]} disabled={!isLast || busy} onSend={onSend} onPrefill={onPrefill} />
       )}
+      {m.live && mine.length === 0 && m.status !== "cancelled" && <LiveCard key={m.live.version} sessionId={sessionId} live={m.live} finishing={live} />}
       {mine.map((r) => <RenderCard key={r.id} render={r} disabled={busy} onSend={onSend} onRemix={onPrefill} />)}
       {(m.status === "error" || m.status === "cancelled") && (
         <div className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm ${m.status === "error" ? "bg-[oklch(0.35_0.12_25/0.35)] text-[oklch(0.92_0.06_40)]" : "text-[oklch(0.78_0.03_290)]"}`} role={m.status === "error" ? "alert" : undefined}>

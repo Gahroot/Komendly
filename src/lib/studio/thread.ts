@@ -8,6 +8,8 @@ export interface QuestionOption { label: string; value: string; hint?: string; r
 export interface StudioQuestion { question: string; options: QuestionOption[]; allowOther?: boolean }
 export interface ThreadStep { label: string; detail?: string }
 export interface ThreadProgress { pct: number; label: string; etaSec?: number }
+/** A playable live preview of the work in progress (StudioEvent `live`). */
+export interface ThreadLive { version: string; ratio: string; width: number; height: number }
 export interface ThreadPreview { key: string; url?: string; caption?: string }
 
 export interface UploadView {
@@ -47,6 +49,8 @@ export interface ThreadMessage {
   /** Every question of the current ask (ask_user can carry several); `question` = the last one (legacy). */
   questions?: StudioQuestion[];
   renderIds: string[];
+  /** Newest live preview of this turn (replaced by the final video once it lands). */
+  live?: ThreadLive | null;
   phase: StudioPhase | null;
   phaseLabel: string | null;
   /** Latest honest render/encode progress (cleared when the turn ends or a render lands). */
@@ -147,6 +151,13 @@ export function applyEvent(messages: readonly ThreadMessage[], e: ThreadEvent): 
       next = { ...m, question: q, questions: [...prev, q] };
       break;
     }
+    case "live": {
+      const version = str(d.version);
+      const num = (v: unknown, dflt: number) => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : dflt);
+      if (!version || !/^[A-Za-z0-9_-]{1,80}$/.test(version)) return messages as ThreadMessage[];
+      next = { ...m, live: { version, ratio: str(d.ratio) ?? "9:16", width: num(d.width, 1080), height: num(d.height, 1920) } };
+      break;
+    }
     case "render": {
       const id = str(d.renderId);
       if (!id || m.renderIds.includes(id)) return messages as ThreadMessage[];
@@ -193,6 +204,7 @@ export function ozzyEventFor(e: ThreadEvent): { event: OzzyEvent; line?: string 
   }
   if (e.type === "progress") return { event: { type: "edit:start" } };
   if (e.type === "render") return { event: { type: "generation:done" }, line: "Ta-da! Your video's ready." };
+  if (e.type === "live") return { event: { type: "generation:done" }, line: "Here's a live preview!" };
   if (e.type === "question") return { event: { type: "goal:select" }, line: "Quick question for you." };
   if (e.type === "error") return str(e.data.code) === "cancelled" ? null : { event: { type: "error", kind: "generation" }, line: "Hmm, that one tripped me up." };
   if (e.type === "done") return { event: { type: "review:confirmed" } };

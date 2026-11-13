@@ -8,6 +8,7 @@ const LINK = "hidden rounded-lg px-3 py-2 text-muted-foreground transition-color
 export function StudioNav({ signedIn }: { signedIn: boolean }) {
   const links = [
     { href: "/ozzy-studio", label: "Ozzy Studio (new)" },
+    { href: "/remix", label: "Remix any ad" },
     { href: "/examples", label: "Examples" },
     { href: "/agents", label: "For AI agents" },
     { href: "/pricing", label: "Pricing" },

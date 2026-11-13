@@ -422,9 +422,27 @@ model AdsWorkspace {
   abuseFlags     AbuseFlag[]
   refunds        AdsRefund[]
   metaConnection MetaConnection?
+  autopilot      AdsAutopilot?
 
   @@index([ownerId])
   @@index([adsPlan])
+}
+
+/// Ozzy Autopilot settings (one row per workspace; missing row = defaults: on, Monday 9am, with video).
+model AdsAutopilot {
+  id             String    @id @default(cuid())
+  workspaceId    String    @unique
+  enabled        Boolean   @default(true)
+  focus          String? // one sentence steering this week's drop, e.g. "push the Black Friday sale"
+  focusUpdatedAt DateTime?
+  dayOfWeek      Int       @default(1) // 1 = Monday .. 7 = Sunday (workspace time zone)
+  hour           Int       @default(9) // 0-23 local
+  timezone       String? // IANA; null = US Eastern
+  includeVideo   Boolean   @default(true) // also make one Studio video each week
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  workspace AdsWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }
 
 model AdsWorkspaceMember {
@@ -971,6 +989,7 @@ model StudioSession {
   agentStateKey  String? // S3 key of the serialized agent session after the last turn
   freeVideo      Boolean   @default(false) // this session spends the workspace's free video (watermarked)
   starterId      String? // starter prompt id used to open it
+  autopilotWeek  String? // Ozzy Autopilot weekly video ("2026-W47"); never charged
   lastActivityAt DateTime  @default(now())
   archivedAt     DateTime?
   createdAt      DateTime  @default(now())
@@ -982,6 +1001,7 @@ model StudioSession {
   renders   StudioRender[]
   uploads   StudioUpload[]
 
+  @@unique([workspaceId, autopilotWeek])
   @@index([workspaceId, lastActivityAt])
   @@index([userId])
 }

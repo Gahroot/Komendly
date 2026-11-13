@@ -12,7 +12,9 @@ import {
   isAdDepartment, WEEKLY_EMAIL_KIND, WEEKLY_EXTRACTION_MAX_AGE_MS, WEEKLY_KIND, WEEKLY_MOTION, WEEKLY_RATIOS, WEEKLY_STARTED, WEEKLY_STATICS,
   weeklyAvoidList, weeklyAwarenessMix, weeklyDropDecision, weeklyDropEmailCopy, weeklyDropEnabled,
 } from "../../../src/lib/ads/weekly-drop";
+import { autopilotPlanPrompt, autopilotSettings, cleanFocus, upcomingMoments } from "../../../src/lib/ads/autopilot";
 import type { Db } from "../db";
+import { startAutopilotVideo } from "./autopilot-video";
 import { errMsg, log } from "../log";
 import { enqueue, priorityFor } from "../queue/queue";
 import { siteKey } from "./brand-history";
@@ -21,6 +23,8 @@ import { bestAd, emailImg } from "../lifecycle/studio-drop";
 import type { SendMail } from "../lifecycle/mail";
 
 const MAX_PER_TICK = 20;
+/** Hold the weekly email this long for the Autopilot video to finish (then send without it). */
+const VIDEO_WAIT_MS = 3 * 3_600_000;
 const LIFECYCLE_FLAG = "lifecycle_email";
 
 export interface WeeklyDeps {
@@ -41,8 +45,8 @@ async function weeksDone(db: Db, workspaceId: string): Promise<string[]> {
   });
 }
 
-/** Create this week's drop for one workspace (no-op if another tick/replica already did). */
-export async function startWeeklyRun(db: Db, ws: { id: string; ownerId: string }, week: string, now: Date): Promise<WeeklyStart> {
+/** Create this week's drop for one workspace (no-op if another tick/replica already did). `focus` = Autopilot focus, snapshotted on the run's event. */
+export async function startWeeklyRun(db: Db, ws: { id: string; ownerId: string }, week: string, now: Date, focus: string | null = null): Promise<WeeklyStart> {
   return db.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`weekly:${ws.id}:${week}`}))`;
     const prior = await tx.adsEvent.findFirst({ where: { name: WEEKLY_STARTED, workspaceId: ws.id, props: { path: ["week"], equals: week } }, select: { id: true } });
@@ -82,36 +86,60 @@ export async function startWeeklyRun(db: Db, ws: { id: string; ownerId: string }
       select: { id: true },
     });
     if (!fresh) await enqueue(tx, { type: "extract", runId: run.id, workspaceId: ws.id, priority: priorityFor(false), payload: { url: src.url } });
-    await tx.adsEvent.create({ data: { name: WEEKLY_STARTED, workspaceId: ws.id, userId: ws.ownerId, runId: run.id, props: { week, runId: run.id, reextract: !fresh } } });
+    await tx.adsEvent.create({ data: { name: WEEKLY_STARTED, workspaceId: ws.id, userId: ws.ownerId, runId: run.id, props: { week, runId: run.id, reextract: !fresh, ...(focus ? { focus } : {}) } } });
     return { created: true as const, runId: run.id, week };
   });
 }
 
-/** One scheduling pass over every Ad Department workspace. */
+/** One scheduling pass over every Ad Department / Agency workspace with Autopilot on (missing settings row = on). */
 export async function weeklyScheduleTick(deps: WeeklyDeps): Promise<WeeklyStart[]> {
   const env = deps.env ?? process.env;
   if (!weeklyDropEnabled(env)) return [];
   const now = deps.now?.() ?? new Date();
   const wss = await deps.db.adsWorkspace.findMany({
-    where: { adsPlan: "ad_department", subscriptionStatus: { in: ["active", "trialing", "past_due"] }, suspendedAt: null },
+    where: { adsPlan: { in: ["ad_department", "agency"] }, subscriptionStatus: { in: ["active", "trialing", "past_due"] }, suspendedAt: null },
     orderBy: { id: "asc" },
-    select: { id: true, ownerId: true, adsPlan: true, subscriptionStatus: true, suspendedAt: true },
+    select: { id: true, ownerId: true, adsPlan: true, subscriptionStatus: true, suspendedAt: true, autopilot: { select: { enabled: true, focus: true, dayOfWeek: true, hour: true, timezone: true, includeVideo: true } } },
   });
   const out: WeeklyStart[] = [];
   for (const ws of wss) {
     if (out.filter((r) => r.created).length >= MAX_PER_TICK) break;
-    // No per-workspace time zone is stored yet: US Eastern.
-    const d = weeklyDropDecision({ now, tz: null, enabled: true, subscribed: isAdDepartment(ws), weeksDone: await weeksDone(deps.db, ws.id) });
+    const ap = autopilotSettings(ws.autopilot);
+    // Time zone: Autopilot setting, else US Eastern.
+    const d = weeklyDropDecision({ now, tz: ap.timezone, enabled: ap.enabled, subscribed: isAdDepartment(ws), weeksDone: await weeksDone(deps.db, ws.id), dayOfWeek: ap.dayOfWeek, hour: ap.hour });
     if (!d.due) continue;
-    const r = await startWeeklyRun(deps.db, ws, d.week, now);
-    if (r.created) log("info", "weekly drop created", { workspaceId: ws.id, runId: r.runId, week: r.week, reason: d.reason });
+    const r = await startWeeklyRun(deps.db, ws, d.week, now, ap.focus);
+    if (r.created) {
+      log("info", "weekly drop created", { workspaceId: ws.id, runId: r.runId, week: r.week, reason: d.reason });
+      if (ap.includeVideo) {
+        const v = await startAutopilotVideo(deps.db, ws, { week: r.week, focus: ap.focus, tz: ap.timezone, now }).catch((e: unknown) => {
+          log("warn", "autopilot video not started", { workspaceId: ws.id, week: r.week, error: errMsg(e) });
+          return null;
+        });
+        if (v?.created) log("info", "autopilot video queued", { workspaceId: ws.id, sessionId: v.sessionId, week: r.week });
+      }
+    }
     out.push(r);
   }
   return out;
 }
 
-/** Planner block for weekly runs: earlier headlines/angles for the same website, never to be repeated. */
+/** The Autopilot focus snapshotted on this run's weekly_drop_started event (null = none). */
+async function runFocus(db: Db, runId: string): Promise<string | null> {
+  const ev = await db.adsEvent.findFirst({ where: { name: WEEKLY_STARTED, runId }, select: { props: true } });
+  const f = (ev?.props as Record<string, unknown> | null)?.focus;
+  return typeof f === "string" ? cleanFocus(f) : null;
+}
+
+/** Planner block for weekly runs: Autopilot focus + upcoming US dates, then earlier headlines/angles never to be repeated. */
 export async function weeklyAvoidPrompt(db: Db, run: { id: string; workspaceId: string; url: string; createdAt: Date }): Promise<string> {
+  const tz = (await db.adsAutopilot.findUnique({ where: { workspaceId: run.workspaceId }, select: { timezone: true } }))?.timezone ?? null;
+  const steer = autopilotPlanPrompt({ focus: await runFocus(db, run.id), moments: upcomingMoments(run.createdAt, tz) });
+  const avoid = await weeklyAvoidBlock(db, run);
+  return [steer, avoid].filter(Boolean).join("\n\n");
+}
+
+async function weeklyAvoidBlock(db: Db, run: { id: string; workspaceId: string; url: string; createdAt: Date }): Promise<string> {
   const site = siteKey(run.url);
   const runs = await db.adRun.findMany({ where: { workspaceId: run.workspaceId, id: { not: run.id }, kind: { not: "gift" }, createdAt: { lt: run.createdAt } }, orderBy: { createdAt: "desc" }, take: 30, select: { id: true, url: true } });
   const ids = runs.filter((r) => siteKey(r.url) === site).slice(0, 8).map((r) => r.id);
@@ -136,7 +164,7 @@ export async function weeklyEmailTick(deps: WeeklyDeps): Promise<WeeklyEmailResu
     where: { kind: WEEKLY_KIND, status: { in: ["completed", "partial"] }, completedAt: { gte: new Date(now.getTime() - 7 * 86_400_000) } },
     orderBy: { completedAt: "asc" },
     take: 100,
-    select: { id: true, userId: true, workspaceId: true, user: { select: { email: true, name: true } } },
+    select: { id: true, userId: true, workspaceId: true, completedAt: true, user: { select: { email: true, name: true } } },
   });
   const out: WeeklyEmailResult[] = [];
   for (const r of runs) {
@@ -148,7 +176,17 @@ export async function weeklyEmailTick(deps: WeeklyDeps): Promise<WeeklyEmailResu
     const ready = await deps.db.ad.count({ where: { runId: r.id, status: "ready" } });
     if (ready === 0) continue;
     const best = await bestAd(deps.db, r.id, now);
-    const copy = weeklyDropEmailCopy({ firstName: r.user.name?.trim().split(/\s+/)[0] ?? null, brandName: best.brandName, ready });
+    // Only mention what was delivered: the focus this run used, the video only if this week's one is finished.
+    const started = await deps.db.adsEvent.findFirst({ where: { name: WEEKLY_STARTED, runId: r.id }, select: { props: true } });
+    const sp = (started?.props as Record<string, unknown> | null) ?? {};
+    const week = typeof sp.week === "string" ? sp.week : null;
+    const videoReady = week ? (await deps.db.studioRender.count({ where: { workspaceId: r.workspaceId, session: { autopilotWeek: week } } })) > 0 : false;
+    // The weekly video is still being made: hold the email (up to VIDEO_WAIT_MS after the ads) so it can mention both.
+    if (!videoReady && week && r.completedAt && now.getTime() - r.completedAt.getTime() < VIDEO_WAIT_MS) {
+      const busy = await deps.db.studioSession.count({ where: { workspaceId: r.workspaceId, autopilotWeek: week, status: { in: ["queued", "working"] } } });
+      if (busy > 0) continue;
+    }
+    const copy = weeklyDropEmailCopy({ firstName: r.user.name?.trim().split(/\s+/)[0] ?? null, brandName: best.brandName, ready, focus: typeof sp.focus === "string" ? sp.focus : null, videoReady });
     const path = withUtm(`/ads/runs/${r.id}`, WEEKLY_EMAIL_KIND);
     const href = env.LIFECYCLE_CLICK_TRACKING === "1" ? `${base}/api/ads/email-click/${signEmailToken({ p: "click", u: r.userId, k: WEEKLY_EMAIL_KIND, l: path }, secret)}` : `${base}${path}`;
     const unsubscribeUrl = `${base}/api/ads/email-unsubscribe?t=${signEmailToken({ p: "unsub", u: r.userId }, secret)}`;

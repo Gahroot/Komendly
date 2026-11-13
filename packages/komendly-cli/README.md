@@ -23,8 +23,13 @@ export KOMENDLY_API_KEY=kmd_your_key
 
 ```bash
 komendly whoami                                        # plan, credits, free video / free pack left
+komendly autopilot --focus "push the Black Friday sale" # Ozzy Autopilot: weekly ads + video (--on / --off)
 komendly video "15s 9:16 teaser for our summer sale, bold captions" --wait --out ./videos
 komendly video "turn this into a 20s demo with captions" --file demo.mp4 --file logo.png --out .
+komendly remix https://www.youtube.com/shorts/abc123 --wait --out ./videos   # your version of any ad
+komendly remix --file ad-recording.mov --notes "feature our launch offer"
+komendly launch https://yourapp.com --notes "New: CSV export" --out launch.mp4   # launch video of your real product
+komendly launch localhost:3000 --aspect 9:16                # local app: recorded here with your Chrome
 komendly say <session_id> "make it 1:1 and slow down the intro" --out ./videos
 komendly sessions                                      # list Studio sessions
 komendly session <session_id>                          # status, Ozzy's last reply, every render
@@ -81,12 +86,16 @@ Tell your agent things like:
 - "Use the komendly CLI to make a 15 second 9:16 video ad for my bakery's sourdough subscription and save it to ./ads."
 - "Run `npx komendly upload ./footage/demo.mp4`, then make a 30s product demo with captions from it using `komendly video --file`."
 - "Use `npx komendly pack https://example.com --animated --out ./ad-pack --json` and tell me which ads came out."
+- "Run `npx komendly remix <link to an ad I like> --out ./ads --json`: same style and pacing, but for my brand."
+- "Make a launch video for what we just shipped." (the agent runs `npx komendly launch <url> --json`; notes default to your last 10 commits)
 - "Check `komendly whoami --json` and tell me how many credits I have left."
 
 ## Notes for agents
 
 - Always pass `--json` and read stdout; stderr is human progress only.
-- `video`/`say` results: `{ session_id, status, reply, error, video: { render_id, url, poster_url, seconds, ratio, watermarked } | null, renders[], view_url, files? }`.
+- `remix <url>` (or `remix --file recording.mp4`) rebuilds an ad's structure and style (hook, pacing, text, transitions) for the user's brand, never its footage, logos or words. `--aspect` and `--notes` are optional; it returns the same shape as `video`. If the link can't be opened, the reply asks for a screen recording: retry with `--file`. MCP: `studio_remix { url, notes?, aspect? }`.
+- `launch <url>` records the real product (hero + cursor on the main call to action, smooth scroll, up to 3 key pages, screenshots) and cuts a 20-40s launch video. `--aspect 16:9|9:16` (default 16:9), `--notes` (default: `git log -n 10 --oneline` when run in a git repo), `--out launch.mp4` or a folder. Public addresses are recorded by Ozzy; localhost/private/.local/.test addresses are recorded on this machine with installed Chrome and need `npm i -D playwright-core` (otherwise one hint line, exit 1). MCP: `studio_launch_video { url, notes, aspect? }` (public URLs only).
+- `video`/`say`/`remix`/`launch` results: `{ session_id, status, reply, error, video: { render_id, url, poster_url, seconds, ratio, watermarked } | null, renders[], view_url, files? }`.
 - `pack`/`run` results: `{ run_id, status, progress: { ready, total }, ads: [{ ad_id, kind, headline, status, locked, assets: [{ asset_id, ratio, mime, url }] }], view_url, files? }`.
 - Send follow-up edits with `say <session_id> "..."`; Ozzy works on one message per session at a time (409 = still busy: wait, then retry).
 - Asset and render `url`s need the API key; use `komendly download <id>` to save files.

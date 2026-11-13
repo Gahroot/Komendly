@@ -4,7 +4,7 @@
 // rendered (watermark + length cap by the engine) -> charge in one transaction -> persist the session.
 import { spawn } from "node:child_process";
 import { dropMissingAudio, isMissingAudioError } from "./missing-audio";
-import { access, copyFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { access, appendFile, copyFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { delimiter, dirname, extname, join } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
@@ -13,6 +13,7 @@ import {
   STUDIO_DEFAULT_THINKING,
   STUDIO_MAX_SECONDS,
   StudioTurnPayloadSchema,
+  isReferenceAttachment,
   studioKeys,
   type StudioPhase,
 } from "../../../src/lib/studio/contracts";
@@ -23,11 +24,12 @@ import { errMsg, log } from "../log";
 import { agentUsage } from "../modules/ezmotion/agent";
 import { type RenderProgress, ffmpegPath, renderComposition } from "../modules/ezmotion/runtime";
 import { Limiter } from "../providers/limiter";
-import { type BriefUpload, cleanUploadNames, studioBrief, turnPrompt } from "./brief";
+import { type BriefUpload, cleanUploadNames, launchBrief, studioBrief, turnPrompt } from "./brief";
 import { chargeAndRecord, decideCharge, isPaidStudioWorkspace } from "./charge";
 import { type StudioEventRow, StudioEventMapper, finalReply, parseChildLine, userFacingText } from "./events";
 import { finalizeDelivery, posterFrame, probeMedia, ratioOf } from "./media";
 import { changedComposition, packProject, pickDelivered, unpackProject, videoFiles } from "./project";
+import { livePublisher } from "./live";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const RUNNER = join(HERE, "..", "modules", "ezmotion", "agent", "run-studio-agent.mjs");
@@ -147,6 +149,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
   const thinking = process.env.STUDIO_AGENT_THINKING || STUDIO_DEFAULT_THINKING;
   let sessionFile: string | null = null;
   let deliveredRel: string | null = null;
+  let liveTimer: ReturnType<typeof setInterval> | undefined;
   try {
     // 1. Restore the project and the agent session.
     const firstTurn = !session.agentStateKey;
@@ -164,6 +167,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     // 2. Uploads (this message's attachments + every earlier one in the session) and the brand.
     const msgs = await db.studioMessage.findMany({ where: { sessionId, role: "user", createdAt: { lte: userMsg.createdAt } }, select: { attachments: true } });
     const ids = [...new Set(msgs.flatMap((m) => attachmentIds(m.attachments)))];
+    const referenceIds = new Set(msgs.flatMap((m) => (Array.isArray(m.attachments) ? m.attachments.flatMap((a: unknown) => (isReferenceAttachment(a) ? [a.uploadId] : [])) : [])));
     const uploads = await db.studioUpload.findMany({
       where: { workspaceId: session.workspaceId, status: { in: ["uploaded", "ready"] }, OR: [{ sessionId }, { id: { in: ids } }] },
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
@@ -175,7 +179,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     for (const [i, u] of uploads.entries()) {
       const file = names[i] ?? `file-${i + 1}`;
       await writeFile(join(project, "uploads", file), await storage.get(u.key));
-      const b: BriefUpload = { file, kind: kindOf(u.mime), durationSec: u.durationSec, width: u.width, height: u.height };
+      const b: BriefUpload = { file, kind: kindOf(u.mime), durationSec: u.durationSec, width: u.width, height: u.height, ...(referenceIds.has(u.id) ? { reference: true } : {}) };
       briefUploads.push(b);
       if (thisMsg.has(u.id)) attached.push(b);
     }
@@ -193,9 +197,20 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       logoFile,
     } : null;
     await writeFile(join(project, "studio.md"), studioBrief({ brand, uploads: briefUploads, paid }));
+    // Launch video: real recorded footage + the launch structure (./launch.md stays in the project for revisions).
+    const launch = parsed.data.launch;
+    if (launch) {
+      const byName = new Map<string, string>();
+      uploads.forEach((u, i) => { if (!byName.has(u.filename)) byName.set(u.filename, names[i] ?? ""); });
+      await writeFile(join(project, "launch.md"), launchBrief(launch, (n) => byName.get(n) || null));
+    }
+    if (await access(join(project, "launch.md")).then(() => true, () => false)) {
+      await appendFile(join(project, "studio.md"), "\n## Launch video\n- This chat is a product launch video: read ./launch.md (what they shipped, the recorded footage of their product and the structure). Their recorded footage is the hero.\n");
+    }
     const promptFile = join(root, "prompt.txt");
     await writeFile(promptFile, turnPrompt({ userText: userMsg.content, firstTurn, attached }));
-    if (attached.some((a) => a.kind === "video")) mapper.setPhase("looking", "Watching your footage");
+    if (attached.some((a) => a.reference)) mapper.setPhase("looking", "Studying the ad");
+    else if (attached.some((a) => a.kind === "video")) mapper.setPhase("looking", "Watching your footage");
 
     // 3. Login for the child (leased; a refreshed pair is adopted back after the run).
     const env: NodeJS.ProcessEnv = { ...process.env, HOME: home, USERPROFILE: home, EZCODER_NO_UPDATE_CHECK: "1", HYPERFRAMES_NO_TELEMETRY: "1", HYPERFRAMES_NO_UPDATE_CHECK: "1" };
@@ -246,6 +261,9 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     };
     // How many user turns came before this one (0 = first message of the session): Ozzy only asks the user in turn 0.
     const priorUserTurns = Math.max(0, (await db.studioMessage.count({ where: { sessionId, role: "user" } })) - 1);
+    // Live preview: publish the playable composition as soon as it exists (and again when it changes, throttled).
+    const live = livePublisher({ storage, workspaceId: session.workspaceId, sessionId, messageId: assistantMessageId, project, findComposition: () => changedComposition(project, turnStart), emit: (row) => ev.write([row]), now: Date.now });
+    liveTimer = setInterval(() => void live.tick(), 3_000);
     const result = await new Promise<{ ok: boolean; error?: string; asked: boolean; usage?: { inputTokens: number; outputTokens: number; cacheRead: number } }>((resolve) => {
       const child = spawn(process.execPath, [RUNNER, project, promptFile, "--model", model, "--thinking", thinking, "--turn", String(priorUserTurns), ...(resume ? ["--session", resume] : [])], { cwd: project, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
       // The agent's own preview/snapshot servers and background tasks share its process group: kill the whole group.
@@ -281,6 +299,9 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       });
     });
     mapper.flush();
+    clearInterval(liveTimer);
+    // The latest edit plays in the chat while the final video is made.
+    if (!turnAbort.signal.aborted && !result.asked) await live.flush();
     await scanPreviews().catch(() => undefined);
     if (creds && leased) {
       try {
@@ -393,6 +414,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     clearTimeout(timer);
     clearInterval(cancelPoll);
     clearInterval(tick);
+    clearInterval(liveTimer);
     ctx.signal.removeEventListener("abort", onShutdown);
     if (!process.env.STUDIO_KEEP_WORKDIR) await rm(root, { recursive: true, force: true }).catch(() => undefined);
   }
@@ -405,11 +427,11 @@ async function deliver(ctx: JobContext, o: { sessionId: string; assistantMessage
   if (!info?.hasVideo || !info.width || !info.height) throw Object.assign(new Error("delivered file is not a video"), { studioCode: "delivery" });
   o.mapper.setPhase("reviewing", "Finishing your video");
   const ws = await db.adsWorkspace.findUniqueOrThrow({ where: { id: o.workspaceId } });
-  const session = await db.studioSession.findUniqueOrThrow({ where: { id: o.sessionId }, select: { freeVideo: true } });
+  const session = await db.studioSession.findUniqueOrThrow({ where: { id: o.sessionId }, select: { freeVideo: true, autopilotWeek: true } });
   const priorRenders = await db.studioRender.count({ where: { sessionId: o.sessionId } });
   const maxSeconds = isPaidStudioWorkspace(ws) ? STUDIO_MAX_SECONDS.paid : STUDIO_MAX_SECONDS.free;
   const seconds = Math.min(info.durationSec ?? 0, maxSeconds);
-  let watermark = decideCharge(ws, { priorRenders, seconds, sessionFree: session.freeVideo }).watermark;
+  let watermark = decideCharge(ws, { priorRenders, seconds, sessionFree: session.freeVideo, autopilot: session.autopilotWeek !== null }).watermark;
   for (let attempt = 0; attempt < 2; attempt++) {
     const out = join(o.root, `deliver-${attempt}.mp4`);
     o.ev([{ type: "progress", data: { pct: 0, label: "Finishing your video" } }]);

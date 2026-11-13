@@ -13,6 +13,8 @@ import type { SessionSummary, ThreadData } from "./types";
 import { useStickToBottom } from "./use-stick-to-bottom";
 import { useStudioThread } from "./use-studio-thread";
 import { useUploads } from "./use-uploads";
+import { useOzzyVoice } from "./use-ozzy-voice";
+import { voiceNews, voiceStatus } from "@/lib/studio/voice-news";
 
 export function StudioChat({ initial, sessions }: { initial: ThreadData; sessions: SessionSummary[] }) {
   const [line, setLine] = useState<string | null>(null);
@@ -22,6 +24,10 @@ export function StudioChat({ initial, sessions }: { initial: ThreadData; session
   const uploads = useUploads({ sessionId: initial.session.id, onUploaded: (u) => t.addUploads([u]), onError: (m) => toast.error(m) });
   const { scrollRef, contentRef, atBottom, scrollToBottom } = useStickToBottom();
   const sentPending = useRef(false);
+  const messagesRef = useRef(t.messages);
+  useEffect(() => {
+    messagesRef.current = t.messages;
+  });
 
   const submit = useCallback(
     async (text: string, ids: string[] = []) => {
@@ -32,6 +38,29 @@ export function StudioChat({ initial, sessions }: { initial: ThreadData; session
     },
     [t, scrollToBottom],
   );
+
+  const voice = useOzzyVoice({
+    sessionId: initial.session.id,
+    send: (text) => submit(text),
+    status: () => voiceStatus(messagesRef.current),
+    setDraft: setValue,
+  });
+  // Studio news (live preview, final video, Ozzy's questions, his reply) read out during a voice call.
+  const announced = useRef<Set<string> | null>(null);
+  const { announce, mode: voiceMode } = voice;
+  useEffect(() => {
+    const news = voiceNews(t.messages);
+    // First run: everything already on screen counts as said.
+    if (!announced.current) {
+      announced.current = new Set(news.map((n) => n.key));
+      return;
+    }
+    for (const n of news) {
+      if (announced.current.has(n.key)) continue;
+      announced.current.add(n.key);
+      if (voiceMode === "call") announce(n.note);
+    }
+  }, [t.messages, announce, voiceMode]);
 
   // Handoff from /studio (hero composer or ?prompt=): send once.
   useEffect(() => {
@@ -90,7 +119,7 @@ export function StudioChat({ initial, sessions }: { initial: ThreadData; session
                 {m.role === "user" ? (
                   <UserMessage m={m} uploads={t.uploads} canEdit={i === lastUserIdx && !t.active} onEdit={() => prefill(m.content)} />
                 ) : (
-                  <AssistantMessage m={m} renders={t.renders} isLast={i === lastIdx} busy={t.active} onSend={(x) => void submit(x)} onPrefill={prefill} onRegenerate={() => void t.regenerate()} />
+                  <AssistantMessage m={m} sessionId={t.session.id} renders={t.renders} isLast={i === lastIdx} busy={t.active} onSend={(x) => void submit(x)} onPrefill={prefill} onRegenerate={() => void t.regenerate()} />
                 )}
               </div>
             ))}
@@ -116,6 +145,7 @@ export function StudioChat({ initial, sessions }: { initial: ThreadData; session
             onRemoveChip={uploads.remove}
             uploading={uploads.busy}
             textareaRef={textareaRef}
+            voice={voice}
             placeholder={t.messages.length ? "Ask for changes, or a new version…" : undefined}
           />
           <p className="mt-1.5 text-center text-[11px] text-[oklch(0.7_0.03_290)]">

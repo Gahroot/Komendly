@@ -46,6 +46,8 @@ const JOB_ROUTES = [
   /^\/api\/ads\/runs\/[^/]+\/(retry|confirm)\/?$/,
   /^\/api\/studio\/sessions\/[^/]+\/messages\/?$/,
   /^\/api\/studio\/sessions\/from-ad\/?$/,
+  /^\/api\/studio\/remix\/?$/,
+  /^\/api\/studio\/launch\/?$/,
   /^\/api\/ads\/gifts\/?$/,
 ];
 

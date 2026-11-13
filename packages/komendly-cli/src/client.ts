@@ -1,6 +1,6 @@
 export type FetchLike = (input: string | URL, init?: RequestInit) => Promise<Response>;
 
-export const USER_AGENT = "komendly-cli/0.1.0";
+export const USER_AGENT = "komendly-cli/0.2.0";
 
 export function upgradeUrl(baseUrl: string): string {
   return `${baseUrl}/pricing?utm_source=cli`;

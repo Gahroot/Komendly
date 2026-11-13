@@ -40,7 +40,8 @@ export async function POST(request: NextRequest, { params }: Ctx) {
     const paid = isPaidWorkspace(workspace);
     // Unlimited plan: Studio costs 0 credits; fair use = one Studio turn in progress per workspace.
     const unlimited = isUnlimitedPlan(workspace);
-    const busyElsewhere = { workspaceId: workspace.id, id: { not: session.id }, status: { in: ["queued", "working"] } };
+    // Autopilot's weekly video runs on spare capacity and never makes the member wait.
+    const busyElsewhere = { workspaceId: workspace.id, id: { not: session.id }, status: { in: ["queued", "working"] }, autopilotWeek: null };
     if (unlimited && (await prisma.studioSession.count({ where: busyElsewhere })) >= concurrentLimit(workspace)) throw new AdsHttpError(409, "busy", UNLIMITED_BUSY_MESSAGE);
     const [balance, priorRenders] = await Promise.all([getBalance(workspace.id), prisma.studioRender.count({ where: { sessionId: session.id } })]);
     const gate = canStartStudioTurn({ priorRenders, sessionFree: session.freeVideo, freeVideosLeft: workspace.studioFreeVideos, balance, isPaidWorkspace: paid, unlimited });

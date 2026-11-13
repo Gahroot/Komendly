@@ -114,6 +114,21 @@ export default function AgentsPage() {
           </ol>
         </section>
 
+        <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6" aria-labelledby="launch-title">
+          <h2 id="launch-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-5xl">Launch videos for builders</h2>
+          <p className="mt-4 max-w-2xl text-muted-foreground">Just shipped something? Ozzy opens your real product, records it (cursor on your main button, smooth scrolls, key pages) and cuts a 20–40 second launch video with captions and your link. Local or staging app? The CLI records it on your machine.</p>
+          <div className="mt-8 grid gap-4 lg:grid-cols-2">
+            <div className="studio-frame rounded-xl p-4">
+              <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">Ask Claude Code</p>
+              <p className="mt-3 rounded-md bg-black/40 p-3 text-sm text-foreground">“make a launch video for what we just shipped”</p>
+            </div>
+            <div className="studio-frame rounded-xl p-4">
+              <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">Or run it yourself</p>
+              <pre className="mt-3 overflow-x-auto whitespace-pre rounded-md bg-black/40 p-3 font-mono text-xs text-foreground"><code>{'npx komendly launch https://yourapp.com --notes "..."'}</code></pre>
+            </div>
+          </div>
+        </section>
+
         <section className="mx-auto max-w-3xl px-4 py-14 sm:px-6" aria-labelledby="faq-title">
           <h2 id="faq-title" className="font-display text-3xl font-medium tracking-[-0.02em]">Questions</h2>
           <div className="mt-6 divide-y divide-border rounded-2xl border border-border bg-[oklch(0.2_0.07_295/0.5)]">

@@ -8,8 +8,8 @@ export interface ParsedArgs {
 
 export type ParseResult = { ok: true; args: ParsedArgs } | { ok: false; error: string };
 
-const BOOLEAN_FLAGS = new Set(["json", "wait", "animated", "help", "version", "no-wait"]);
-const STRING_FLAGS = new Set(["key", "out", "file", "type", "session", "limit", "base-url", "timeout"]);
+const BOOLEAN_FLAGS = new Set(["json", "wait", "animated", "help", "version", "no-wait", "on", "off"]);
+const STRING_FLAGS = new Set(["key", "out", "file", "type", "session", "limit", "base-url", "timeout", "notes", "aspect", "focus"]);
 const SHORT: Record<string, string> = { h: "help", v: "version", o: "out", f: "file", w: "wait" };
 
 export function parseArgs(argv: readonly string[]): ParseResult {

@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { normalizeRemixUrl } from "@/lib/studio/contracts";
 import { toast } from "sonner";
 import { ozzy } from "@/components/ozzy";
 import { STUDIO_STARTERS } from "@/lib/studio/contracts";
@@ -15,7 +16,7 @@ import { useUploads } from "./use-uploads";
 /** sessionStorage handoff: the new chat page sends this once on mount. */
 export const pendingKey = (id: string) => `studio-send:${id}`;
 
-export function StudioHome({ sessions, account, initialPrompt }: { sessions: SessionSummary[]; account: StudioAccountView; initialPrompt: string | null }) {
+export function StudioHome({ sessions, account, initialPrompt, initialRemix = null }: { sessions: SessionSummary[]; account: StudioAccountView; initialPrompt: string | null; initialRemix?: string | null }) {
   const router = useRouter();
   const [value, setValue] = useState("");
   const [starterId, setStarterId] = useState<string | undefined>();
@@ -39,6 +40,7 @@ export function StudioHome({ sessions, account, initialPrompt }: { sessions: Ses
 
   useEffect(() => {
     ozzy.emit({ type: "page:landing" });
+    if (initialRemix?.trim()) return;
     if (initialPrompt?.trim() && !once.current) {
       once.current = true;
       void start(initialPrompt.trim(), []);
@@ -72,6 +74,7 @@ export function StudioHome({ sessions, account, initialPrompt }: { sessions: Ses
               textareaRef={textareaRef}
             />
           </div>
+          <RemixCard initialUrl={initialRemix} account={account} />
           <ul className="mt-4 flex flex-wrap justify-center gap-1.5 opacity-90" aria-label="Ideas to start with (fills the box)">
             {STUDIO_STARTERS.map((s) => (
               <li key={s.id}>
@@ -107,5 +110,102 @@ export function StudioHome({ sessions, account, initialPrompt }: { sessions: Ses
         </div>
       </main>
     </StudioShell>
+  );
+}
+
+/** "Remix an ad": paste a link to any ad (or upload a screen recording / screenshot) and Ozzy makes your version. */
+function RemixCard({ initialUrl, account }: { initialUrl: string | null; account: StudioAccountView }) {
+  const router = useRouter();
+  const [url, setUrl] = useState(initialUrl ?? "");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const upload = useUploads({ onError: (m) => setError(m) });
+  const chip = upload.chips[0];
+
+  const go = async (body: { url?: string; uploadId?: string }) => {
+    setBusy(true);
+    setError(null);
+    ozzy.emit({ type: "url:submit" });
+    const r = await api<{ url: string }>("/api/studio/remix", { body });
+    if (!r.ok) {
+      setBusy(false);
+      ozzy.emit({ type: "error", kind: "network" });
+      if (r.status === 402) return router.push("/pricing?utm_source=studio_remix");
+      return setError(r.error);
+    }
+    router.replace(r.data.url);
+  };
+
+  const submitLink = () => {
+    if (chip?.upload) return void go({ uploadId: chip.upload.id });
+    const u = normalizeRemixUrl(url);
+    if (!u) return setError("Paste a link to the ad (YouTube, TikTok, Instagram, Facebook, X or any page with the ad).");
+    void go({ url: u });
+  };
+
+  return (
+    <section aria-labelledby="remix-title" className="mt-6 rounded-2xl border border-[var(--studio-gold)]/40 bg-white/[0.04] p-4">
+      <div className="flex items-baseline justify-between gap-2">
+        <h3 id="remix-title" className="font-display text-xl text-[oklch(0.97_0.03_80)]">Remix an ad</h3>
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--studio-gold)]">Show Ozzy any ad. Get yours.</span>
+      </div>
+      <p className="mt-1 text-[13px] text-[oklch(0.84_0.03_80)]">
+        Paste a link to an ad you love. Ozzy copies its hook, pacing and style, and rebuilds it for your brand.
+        {!account.paid && account.freeVideosLeft > 0 && " Your first video is free."}
+      </p>
+      <form
+        className="mt-3 flex flex-col gap-2 sm:flex-row"
+        onSubmit={(e) => {
+          e.preventDefault();
+          submitLink();
+        }}
+      >
+        <label htmlFor="remix-url" className="sr-only">Link to the ad</label>
+        <input
+          id="remix-url"
+          type="url"
+          inputMode="url"
+          value={chip ? chip.name : url}
+          readOnly={Boolean(chip)}
+          onChange={(e) => {
+            setUrl(e.target.value);
+            setError(null);
+          }}
+          placeholder="https://www.tiktok.com/@brand/video/…"
+          className="min-h-11 flex-1 rounded-xl bg-black/30 px-3 text-sm text-[oklch(0.97_0.03_80)] placeholder:text-[oklch(0.7_0.03_290)] focus:outline-none focus:ring-2 focus:ring-[var(--studio-gold)]"
+        />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="video/mp4,video/quicktime,video/webm,image/png,image/jpeg,image/webp"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) {
+              if (chip) upload.remove(chip.localId);
+              upload.add([f]);
+            }
+            e.target.value = "";
+          }}
+        />
+        <button
+          type="button"
+          className="studio-chip !min-h-11 !px-3 !text-xs"
+          onClick={() => (chip ? upload.remove(chip.localId) : fileRef.current?.click())}
+          disabled={busy}
+        >
+          {chip ? (chip.status === "uploading" ? `Uploading ${Math.round(chip.progress * 100)}%` : "Remove file") : "Upload a recording"}
+        </button>
+        <button
+          type="submit"
+          disabled={busy || upload.busy || (!url.trim() && !chip?.upload)}
+          className="min-h-11 rounded-xl bg-[var(--studio-gold)] px-4 text-sm font-semibold text-[oklch(0.2_0.04_290)] disabled:opacity-50"
+        >
+          {busy ? "Opening…" : "Remix it"}
+        </button>
+      </form>
+      {(error ?? chip?.error) && <p role="alert" className="mt-2 text-[13px] text-[oklch(0.8_0.12_30)]">{error ?? chip?.error}</p>}
+    </section>
   );
 }

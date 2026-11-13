@@ -12,6 +12,11 @@ import { z } from "zod";
 export const STUDIO_TURN_JOB_TYPE = "studio_turn";
 /** AdJob.type that probes an uploaded file (duration/size/poster) with ffprobe. */
 export const STUDIO_PROBE_JOB_TYPE = "studio_probe";
+/** AdJob.type that downloads a reference ad from a link into a StudioUpload, then queues the remix turn. */
+export const STUDIO_INGEST_JOB_TYPE = "studio_ingest";
+
+/** AdJob.type that records real footage of a public website (launch videos), then queues the launch turn. */
+export const STUDIO_CAPTURE_JOB_TYPE = "studio_capture";
 
 /** Default AI: the engine's ChatGPT (Codex) subscription login. */
 export const STUDIO_DEFAULT_MODEL = "gpt-6.1-sol";
@@ -23,10 +28,104 @@ export const StudioTurnPayloadSchema = z.object({
   userMessageId: z.string().min(1),
   /** The assistant message the engine streams into. */
   assistantMessageId: z.string().min(1),
+  /** Launch video turn: real footage was recorded first (studio_capture) or uploaded by the CLI. */
+  launch: z.lazy(() => StudioLaunchInfoSchema).optional(),
 });
 export type StudioTurnPayload = z.infer<typeof StudioTurnPayloadSchema>;
 
+// ---- Launch videos ("make a launch video for what we just shipped") ----
+export const STUDIO_LAUNCH_ASPECTS = ["16:9", "9:16"] as const;
+export type StudioLaunchAspect = (typeof STUDIO_LAUNCH_ASPECTS)[number];
+
+/** Launch context the turn adds to the brief (carried on the studio_turn payload as `launch`). */
+export const StudioLaunchInfoSchema = z.object({
+  url: z.string().max(2048),
+  notes: z.string().max(4000).optional(),
+  aspect: z.enum(STUDIO_LAUNCH_ASPECTS).default("16:9"),
+  /** What each recorded clip / screenshot shows, by upload filename. */
+  footage: z.array(z.object({ filename: z.string().max(200), shows: z.string().max(300) })).max(20).default([]),
+  /** Brand hints read off the page when the workspace has no brand profile for the site. */
+  brand: z.object({ name: z.string().max(120).optional(), colors: z.array(z.string().max(32)).max(6).default([]) }).optional(),
+});
+export type StudioLaunchInfo = z.infer<typeof StudioLaunchInfoSchema>;
+
+/** studio_capture: record `url` (public), store clips as StudioUploads, then queue the studio_turn for these messages. */
+export const StudioCapturePayloadSchema = z.object({
+  sessionId: z.string().min(1),
+  userMessageId: z.string().min(1),
+  assistantMessageId: z.string().min(1),
+  url: z.string().url().max(2048),
+  paths: z.array(z.string().max(300)).max(5).optional(),
+  notes: z.string().max(4000).optional(),
+  aspect: z.enum(STUDIO_LAUNCH_ASPECTS).default("16:9"),
+});
+export type StudioCapturePayload = z.infer<typeof StudioCapturePayloadSchema>;
+
+/** Capture caps: pages visited besides the landing page, per-clip seconds, whole capture wall clock. */
+export const STUDIO_CAPTURE_LIMITS = { maxPages: 3, maxClipSeconds: 14, totalMs: 4 * 60_000, navTimeoutMs: 25_000, maxClipBytes: 80 * 1024 * 1024 } as const;
+
+/** What the chat shows as the user's message for a launch video. */
+export function launchMessage(o: { url: string; notes?: string | null }): string {
+  const head = `Make a launch video for what we just shipped: ${o.url}`;
+  const notes = (o.notes ?? "").trim();
+  return notes ? `${head}\n\nWhat we shipped: ${notes}` : head;
+}
+
+/** Session title for a launch video ("Launch video · example.com"). */
+export function launchTitle(url: string): string {
+  try {
+    return `Launch video · ${new URL(url).hostname.replace(/^www\./, "")}`.slice(0, 80);
+  } catch {
+    return "Launch video";
+  }
+}
+
 export const StudioProbePayloadSchema = z.object({ uploadId: z.string().min(1) });
+
+/**
+ * "Remix any ad": the engine fetches the ad behind `url` into StudioUpload `uploadId` (probed like an upload),
+ * then queues the studio_turn for the given messages. On failure the assistant message gets STUDIO_REMIX_LINK_FAILED.
+ */
+export const StudioIngestPayloadSchema = z.object({
+  uploadId: z.string().min(1),
+  url: z.string().url().max(2000),
+  sessionId: z.string().min(1),
+  userMessageId: z.string().min(1),
+  assistantMessageId: z.string().min(1),
+});
+export type StudioIngestPayload = z.infer<typeof StudioIngestPayloadSchema>;
+
+/** Caps for a fetched reference ad (longer videos keep their first maxSeconds). */
+export const STUDIO_INGEST_LIMITS = { maxBytes: 200 * 1024 * 1024, maxSeconds: 180, timeoutMs: 3 * 60_000 } as const;
+
+export const STUDIO_REMIX_LINK_FAILED = "I couldn't open that link. Upload a screen recording of the ad instead.";
+
+/** A user message attachment that is the ad to remix (the turn adds the remix brief for it). */
+export interface StudioReferenceAttachment { uploadId: string; reference: true; sourceUrl?: string }
+
+export function isReferenceAttachment(a: unknown): a is StudioReferenceAttachment {
+  return !!a && typeof a === "object" && (a as { reference?: unknown }).reference === true && typeof (a as { uploadId?: unknown }).uploadId === "string";
+}
+
+/** http(s) link the user pasted (bare domains get https://), else null. */
+export function normalizeRemixUrl(raw: string): string | null {
+  const t = raw.trim();
+  if (!t || t.length > 2000 || /\s/.test(t)) return null;
+  try {
+    const u = new URL(/^[a-z][a-z0-9+.-]*:/i.test(t) ? t : `https://${t}`);
+    if ((u.protocol !== "http:" && u.protocol !== "https:") || !u.hostname.includes(".")) return null;
+    return u.toString();
+  } catch {
+    return null;
+  }
+}
+
+/** What the chat shows as the user's message for a remix. */
+export function remixMessage(o: { url?: string | null; notes?: string | null }): string {
+  const head = o.url ? `Remix this ad for my brand: ${o.url}` : "Remix this ad for my brand.";
+  const notes = (o.notes ?? "").trim();
+  return notes ? `${head}\n\n${notes}` : head;
+}
 
 export const STUDIO_EVENT_TYPES = [
   "status", // { phase: StudioPhase, label: string } — Ozzy's current step, drives his pose
@@ -36,6 +135,7 @@ export const STUDIO_EVENT_TYPES = [
   "question", // { question: string, options: {label, value, hint?, recommended?}[], allowOther?: boolean } — ask_user mapped to a chat card; the turn ends
   "progress", // { pct: number (0-100), label: string, etaSec?: number } — honest render/encode progress (parsed from the renderer)
   "render", // { renderId, version, ratio, seconds, watermarked, free?, posterKey? } — a finished video was delivered
+  "live", // { version, width, height, ratio } — a playable live preview of the work in progress (files under studioKeys.live*)
   "charge", // { renderId, credits, free: boolean, balanceAfter?: number, freeVideosLeft?: number }
   "error", // { message, code? }
   "done", // { messageId } — the turn finished (assistant message content is final)
@@ -128,6 +228,10 @@ export const studioKeys = {
   project: (workspaceId: string, sessionId: string) => `studio/${workspaceId}/${sessionId}/project.tar.gz`,
   agentState: (workspaceId: string, sessionId: string) => `studio/${workspaceId}/${sessionId}/agent.jsonl`,
   preview: (workspaceId: string, sessionId: string, name: string) => `studio/${workspaceId}/${sessionId}/previews/${name}`,
+  /** Live preview: one file of a published version (rel = project-relative posix path). */
+  liveFile: (workspaceId: string, sessionId: string, version: string, rel: string) => `studio/${workspaceId}/${sessionId}/live/${version}/${rel}`,
+  /** Live preview manifest (LiveManifest JSON): which files a version has, their keys and its access token. */
+  liveManifest: (workspaceId: string, sessionId: string, version: string) => `studio/${workspaceId}/${sessionId}/live/${version}.json`,
 };
 
 /** Conversation starters shown on the empty Studio (also used by emails). */
@@ -160,4 +264,33 @@ export function videoTypePrompt(id: string, site: string | null | undefined): st
   if (!t) return "";
   const s = (site ?? "").trim();
   return s ? t.prompt.replaceAll("{site}", s) : t.prompt.replaceAll(" for {site}", "").replaceAll("{site}", "my business");
+}
+
+/** Live preview version id: `<assistantMessageId>-<n>` (also a URL path segment). */
+export const LIVE_VERSION_RE = /^[A-Za-z0-9_-]{1,80}$/;
+
+/** What the engine stores per live preview version; the web route serves only files listed here. */
+export const LiveManifestSchema = z.object({
+  /** Random capability token: asset requests from the sandboxed player carry it (no cookies there). */
+  token: z.string().min(16),
+  /** Project-relative path of the composition's index.html (relative asset paths resolve from it). */
+  entry: z.string().min(1),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  files: z.record(z.string(), z.object({ key: z.string().min(1), type: z.string().min(1), size: z.number().int().nonnegative() })),
+});
+export type LiveManifest = z.infer<typeof LiveManifestSchema>;
+
+/** Launch video address. Public sites need a dotted host; `local` (the CLI already recorded it) also allows localhost/IPs. */
+export function normalizeLaunchUrl(raw: string, opts: { local?: boolean } = {}): string | null {
+  const t = raw.trim();
+  if (!t || t.length > 2000 || /\s/.test(t)) return null;
+  try {
+    const u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(t) ? t : `${/^(localhost|127\.|\[?::1)/i.test(t) ? "http" : "https"}://${t}`);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+    if (!u.hostname.includes(".") && !(opts.local && (u.hostname === "localhost" || u.hostname.startsWith("[")))) return null;
+    return u.toString();
+  } catch {
+    return null;
+  }
 }

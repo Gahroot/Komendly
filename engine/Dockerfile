@@ -15,6 +15,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       fonts-liberation fonts-noto-core fonts-noto-color-emoji fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system app && useradd --system --gid app --create-home --home-dir /home/app app
+# yt-dlp (standalone x86_64 binary, no Python needed) for Studio "Remix any ad" links (studio_ingest). Latest release
+# on purpose: platforms change their players often. Found via YTDLP_PATH or PATH.
+ADD https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux /usr/local/bin/yt-dlp
+RUN chmod 0755 /usr/local/bin/yt-dlp
 
 WORKDIR /app
 # The engine imports ../src/lib/ads/contracts.ts and generates Prisma from ../prisma/schema.prisma.
@@ -27,6 +31,7 @@ COPY src/lib/studio/contracts.ts src/lib/studio/contracts.ts
 COPY src/lib/hub/money-model.ts src/lib/hub/money-model.ts
 COPY src/lib/ads/billing-config.ts src/lib/ads/billing-config.ts
 COPY src/lib/ads/weekly-drop.ts src/lib/ads/weekly-drop.ts
+COPY src/lib/ads/autopilot.ts src/lib/ads/autopilot.ts
 COPY src/lib/ads/lifecycle/ src/lib/ads/lifecycle/
 COPY src/lib/ads/bonus-access.ts src/lib/ads/bonus-access.ts
 COPY src/lib/ads/bonuses/contracts.ts src/lib/ads/bonuses/contracts.ts

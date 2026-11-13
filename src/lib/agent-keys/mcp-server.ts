@@ -15,18 +15,22 @@ import { STUDIO_UPLOAD_LIMITS } from "@/lib/studio/contracts";
 import { requireStudioSession, studioAccess, workspaceOwnsKey } from "@/lib/studio/server";
 import { POST as createSessionRoute, GET as listSessionsRoute } from "@/app/api/studio/sessions/route";
 import { POST as sendMessageRoute } from "@/app/api/studio/sessions/[id]/messages/route";
+import { POST as remixRoute } from "@/app/api/studio/remix/route";
+import { POST as launchRoute } from "@/app/api/studio/launch/route";
 import { POST as createUploadRoute } from "@/app/api/studio/uploads/route";
 import { POST as completeUploadRoute } from "@/app/api/studio/uploads/[id]/complete/route";
 import { POST as startRunRoute, GET as listRunsRoute } from "@/app/api/ads/runs/route";
 import { POST as confirmRunRoute } from "@/app/api/ads/runs/[id]/confirm/route";
 import { GET as assetDownloadRoute } from "@/app/api/ads/assets/[id]/download/route";
+import { AUTOPILOT_FOCUS_MAX, parseAutopilotPatch } from "@/lib/ads/autopilot";
+import { loadAutopilot, saveAutopilot } from "@/lib/ads/autopilot-server";
 import { currentAgent } from "./context";
 import { callRoute, type RouteResult } from "./internal-call";
 import { UPGRADE_URL } from "./policy";
 import { checkJobLimit, JOB_LIMIT_MESSAGE } from "./resolve";
 
 export const MCP_INSTRUCTIONS =
-  "Ozzy by Komendly makes videos and ads for the signed-in Komendly user, on their plan and credits. Use studio_create_video to have Ozzy make a short video from a prompt (optionally with footage added first via upload_media), then studio_send_message to edit it (\"make it 9:16\", \"add captions\"); studio_get_session and studio_list_sessions show progress, replies and fresh video links. Use ads_create_pack to turn a website into an Ad Pack (static and optionally animated ads), then ads_get_run to follow it and get the ad images; ads_list_runs lists packs. get_download_url gives a fresh short-lived link for an ad asset or a video render, and get_account shows the plan, credits and free videos left. Videos take a few minutes: when a tool says Ozzy is still working, check back with the get tool instead of starting again. When a tool returns an upgrade_url, pass it to the human; never invent payment steps.";
+  "Ozzy by Komendly makes videos and ads for the signed-in Komendly user, on their plan and credits. Use studio_launch_video to turn what was just shipped into a launch video recorded from the real product. Use studio_remix with a link to any ad to get its style and structure rebuilt for the user's brand. Use studio_create_video to have Ozzy make a short video from a prompt (optionally with footage added first via upload_media), then studio_send_message to edit it (\"make it 9:16\", \"add captions\"); studio_get_session and studio_list_sessions show progress, replies and fresh video links. Use ads_create_pack to turn a website into an Ad Pack (static and optionally animated ads), then ads_get_run to follow it and get the ad images; ads_list_runs lists packs. get_download_url gives a fresh short-lived link for an ad asset or a video render, and get_account shows the plan, credits and free videos left. autopilot_get / autopilot_set read and change Ozzy Autopilot (weekly ads + video, steered by a one-sentence focus). Videos take a few minutes: when a tool says Ozzy is still working, check back with the get tool instead of starting again. When a tool returns an upgrade_url, pass it to the human; never invent payment steps.";
 
 const WAIT_MS = 50_000;
 const POLL_MS = 2_000;
@@ -313,6 +317,30 @@ export function buildOzzyServer(info: McpRequestInfo): McpServer {
     }),
   );
 
+  server.registerTool("autopilot_get", { title: "Ozzy Autopilot", description: "Ozzy Autopilot: whether it's on, this week's focus, the next drop time and last week's ads and video.", inputSchema: {}, annotations: { readOnlyHint: true } }, () =>
+    run(async () => {
+      const { workspace } = await studioAccess();
+      const v = await loadAutopilot(workspace);
+      if (!v.eligible) return ok("Ozzy Autopilot is included with Ozzy Ad Department.", { ...v, upgrade_url: "https://www.komendly.com/pricing?utm_source=autopilot" });
+      return ok(`Autopilot is ${v.enabled ? "ON" : "OFF"}. ${v.nextDrop}. Focus: ${v.focus ?? "none (Ozzy picks)"}.`, { ...v });
+    }),
+  );
+
+  server.registerTool(
+    "autopilot_set",
+    { title: "Change Ozzy Autopilot", description: "Turn Ozzy Autopilot on/off and/or set the one-sentence focus for the next weekly drop (empty focus = Ozzy picks).", inputSchema: { enabled: z.boolean().optional(), focus: z.string().max(AUTOPILOT_FOCUS_MAX).optional() } },
+    ({ enabled, focus }) =>
+      run(async () => {
+        const agent = agentOrThrow();
+        const { workspace } = await studioAccess();
+        const parsed = parseAutopilotPatch({ ...(enabled !== undefined ? { enabled } : {}), ...(focus !== undefined ? { focus } : {}) });
+        if (!parsed.ok) throw new ToolFailure(parsed.error);
+        const r = await saveAutopilot(workspace, parsed.patch, agent.user.id);
+        if (!r.ok) throw new ToolFailure(r.message, { code: r.code, upgrade_url: "https://www.komendly.com/pricing?utm_source=autopilot" });
+        return ok(`Saved. Autopilot is ${r.view.enabled ? "ON" : "OFF"}. ${r.view.nextDrop}. Focus: ${r.view.focus ?? "none (Ozzy picks)"}.`, { ...r.view });
+      }),
+  );
+
   const waitArg = z.boolean().optional().describe("Wait up to ~50s for Ozzy's reply/video (default true). Otherwise returns right away.");
   const uploadIdsArg = z.array(z.string().min(1).max(64)).max(STUDIO_UPLOAD_LIMITS.maxFilesPerMessage).optional().describe("upload_id values from upload_media to use as footage.");
 
@@ -333,6 +361,54 @@ export function buildOzzyServer(info: McpRequestInfo): McpServer {
     "studio_send_message",
     { title: "Message Ozzy", description: "Send a follow-up in an Ozzy Studio chat: edits like \"make it 9:16\", \"add captions\", or answers to Ozzy's questions.", inputSchema: { session_id: z.string().min(1).max(64), message: z.string().min(1).max(8000), upload_ids: uploadIdsArg, wait: waitArg } },
     ({ session_id, message, upload_ids, wait }) => run(() => sendTurn(info, session_id, message, upload_ids ?? [], wait ?? true)),
+  );
+
+  server.registerTool(
+    "studio_remix",
+    {
+      title: "Remix an ad with Ozzy",
+      description: "Show Ozzy any ad (a YouTube/Shorts, TikTok, Instagram, Facebook Ad Library or X link, a direct video/image link, or a page with the ad) and Ozzy rebuilds its structure and style (hook, pacing, text, transitions) for the user's own brand. Never copies the original's footage, logos or words. Counts like any Ozzy video (free first video, credits after).",
+      inputSchema: {
+        url: z.string().min(4).max(2000).describe("Link to the ad to remix."),
+        notes: z.string().max(2000).optional().describe("Anything to change, e.g. the offer to feature."),
+        aspect: z.enum(["9:16", "1:1", "4:5", "16:9"]).optional().describe("Output shape; defaults to the reference's."),
+        wait: waitArg,
+      },
+    },
+    ({ url, notes, aspect, wait }) =>
+      run(async () => {
+        await requireJobSlot();
+        const started = await callRoute(remixRoute, { ...route(info), method: "POST", path: "/api/studio/remix", body: { url, notes, aspect } });
+        if (started.status >= 400) throw routeFailure(started);
+        const sessionId = String((started.json.session as { id: string }).id);
+        const assistant = started.json.assistantMessage as { id?: string } | undefined;
+        if (wait ?? true) await waitForSession(sessionId, Date.now() + WAIT_MS);
+        return turnResult(info, sessionId, assistant?.id ?? null);
+      }),
+  );
+
+  server.registerTool(
+    "studio_launch_video",
+    {
+      title: "Make a launch video",
+      description: "When the user says \"make a launch video for what we just shipped\": Ozzy opens their live product, records it (real clips and screenshots) and cuts a 20-40s launch video with captions and a call to action. Only for public http(s) addresses. For localhost, staging or anything behind a login, tell the user to run `npx komendly launch <url> --notes \"...\"` in their project instead (it records on their machine). Put what shipped in notes (e.g. from recent commits). Counts like any Ozzy video (free first video, credits after).",
+      inputSchema: {
+        url: z.string().min(4).max(2000).describe("Public address of the product, e.g. https://yourapp.com."),
+        notes: z.string().max(4000).describe("What was just shipped, in plain words (features, who it's for)."),
+        aspect: z.enum(["16:9", "9:16"]).optional().describe("16:9 (default, for X/YouTube/landing pages) or 9:16 (for Reels/TikTok)."),
+        wait: waitArg,
+      },
+    },
+    ({ url, notes, aspect, wait }) =>
+      run(async () => {
+        await requireJobSlot();
+        const started = await callRoute(launchRoute, { ...route(info), method: "POST", path: "/api/studio/launch", body: { url, notes, aspect } });
+        if (started.status >= 400) throw routeFailure(started);
+        const sessionId = String((started.json.session as { id: string }).id);
+        const assistant = started.json.assistantMessage as { id?: string } | undefined;
+        if (wait ?? true) await waitForSession(sessionId, Date.now() + WAIT_MS);
+        return turnResult(info, sessionId, assistant?.id ?? null);
+      }),
   );
 
   server.registerTool(

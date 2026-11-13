@@ -59,9 +59,11 @@ export type AdsEventName =
   | "gift_ready"
   // Ozzy Studio funnel (studio_render_delivered + studio_first_render are emitted by the engine)
   | "studio_session_started"
+  | "studio_remix_started"
   | "studio_free_blocked"
   | "studio_message_sent"
   | "studio_upload"
+  | "studio_launch_started"
   | "studio_render_delivered"
   | "studio_first_render"
   | "studio_paywall_shown"

@@ -58,7 +58,7 @@ export const FOUNDING_PRICE_LOCK = "Founding members keep their price for as lon
 /** The Hormozi value stack shown next to the hero plan (values are stated monthly worth, in dollars). */
 export const AD_DEPARTMENT_STACK: readonly { label: string; detail: string; valueUsd: number; bonus?: boolean }[] = [
   { label: "Unlimited ads + Ozzy Studio videos", detail: "Make as many Ad Packs and videos as you like, one at a time", valueUsd: 500 },
-  { label: "Weekly Drop", detail: "6 new ads every Monday (5 static + 1 animated), made for you", valueUsd: 300 },
+  { label: "Weekly Drop", detail: "Ozzy Autopilot: 6 new ads + a new 15s video every Monday, steered by your one-sentence focus", valueUsd: 300 },
   { label: "Ozzy Ad Coach", detail: "Show him your Ads Manager results; he says what to keep, what to kill, and makes more winners", valueUsd: 200 },
   { label: "Website check-up", detail: "Ozzy checks the page your ads send people to", valueUsd: 300, bonus: true },
   { label: "30-day ad plan", detail: "What to post, when, and what to test, day by day", valueUsd: 250, bonus: true },
@@ -106,7 +106,7 @@ export const ADS_PLANS: readonly AdsPlanTier[] = [
     unlimited: AD_DEPARTMENT_UNLIMITED,
     unlimitedBrands: 1,
     concurrent: 1,
-    highlights: ["Unlimited ads and Studio videos for your business, made one at a time", "Fresh ads every Monday: 5 static + 1 animated, made for you", "Ozzy Ad Coach: show him your results, he says what to keep and kill", "Bonuses: website check-up, 30-day ad plan, hook & caption library", "Post Ozzy's ads for 30 days. Not happy? One click, full refund."],
+    highlights: ["Unlimited ads and Studio videos for your business, made one at a time", "Ozzy Autopilot: fresh ads + a new video every Monday (5 static + 1 animated + a 15s video), steered by one sentence from you", "Ozzy Ad Coach: show him your results, he says what to keep and kill", "Bonuses: website check-up, 30-day ad plan, hook & caption library", "Post Ozzy's ads for 30 days. Not happy? One click, full refund."],
   },
   {
     key: "growth",
@@ -145,7 +145,7 @@ export const ADS_PLANS: readonly AdsPlanTier[] = [
     unlimited: true,
     unlimitedBrands: 10,
     concurrent: 3,
-    highlights: ["Everything in Ozzy Ad Department, for up to 10 client brands", "Unlimited ads and Studio videos, 3 at a time", "3 AI testimonial videos / month (real reviews, on camera)", "4 gift packs a month to pitch new clients"],
+    highlights: ["Everything in Ozzy Ad Department, for up to 10 client brands", "Ozzy Autopilot: fresh ads + a new video every Monday", "Unlimited ads and Studio videos, 3 at a time", "3 AI testimonial videos / month (real reviews, on camera)", "4 gift packs a month to pitch new clients"],
   },
 ];
 
