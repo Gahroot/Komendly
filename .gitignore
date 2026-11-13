@@ -44,6 +44,8 @@ next-env.d.ts
 
 # Generated video files
 *.mp4
+# Site videos ship with the git-connected Vercel deploy
+!public/**/*.mp4
 
 # Local images
 image.png
