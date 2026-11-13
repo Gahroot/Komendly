@@ -1,4 +1,5 @@
-// Kly's AI: the owner's Codex (ChatGPT) subscription through the engine's provider. No API-key path.
+// Kly's AI: text on the owner's Xiaomi MiMo Token Plan (Codex fallback per call), images + usage checks on the owner's
+// Codex (ChatGPT) subscription, both through the engine's providers.
 // CODEX_SHARED_STORE=db shares the rotating login with the engine via the CodexCredential row.
 import type { z } from "zod";
 import { CodexProvider } from "../../engine/src/providers/codex";
@@ -6,6 +7,7 @@ import { CodexAuth } from "../../engine/src/providers/codex-auth";
 import { sharedCodexStore, type CredDb } from "../../engine/src/providers/codex-store";
 import { loadPrices } from "../../engine/src/providers/cost";
 import { Limiter } from "../../engine/src/providers/limiter";
+import { withMimoText } from "../../engine/src/providers/mimo";
 import { structured } from "../../engine/src/providers/structured";
 import type { AIProvider, TextRequest, UsageMeter } from "../../engine/src/providers/types";
 
@@ -20,13 +22,14 @@ export interface KlyAI {
 export function createKlyAI(db: CredDb | undefined, env: NodeJS.ProcessEnv = process.env): KlyAI | null {
   const auth = CodexAuth.fromEnv(env, sharedCodexStore(db, env, "kly"));
   if (!auth.configured) return null;
-  const provider = new CodexProvider({
+  // Text (qualifier, copy, judge, strategist, replies) on MiMo; images on Codex (engine/src/providers/mimo.ts).
+  const provider = withMimoText(new CodexProvider({
     auth,
     prices: loadPrices(env),
     textModel: env.CODEX_TEXT_MODEL || DEFAULT_MODEL,
     limiter: new Limiter({ maxConcurrent: 4, maxPerWindow: 60, windowMs: 60_000 }),
     imageLimiter: new Limiter({ maxConcurrent: 1, maxPerWindow: 1, windowMs: 60_000 }),
-  });
+  }), env, "kly", { maxConcurrent: 6, perMin: 90 });
   return { provider, auth };
 }
 

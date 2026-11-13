@@ -55,6 +55,8 @@ export type AdsEventName =
   | "gift_created"
   | "gift_viewed"
   | "gift_shared"
+  // A gift recipient passed Ozzy on to another business from /gift/<token> (props.giftId, channel; public beacon)
+  | "gift_passed_on"
   | "gift_claimed"
   | "gift_ready"
   // Ozzy Studio funnel (studio_render_delivered + studio_first_render are emitted by the engine)

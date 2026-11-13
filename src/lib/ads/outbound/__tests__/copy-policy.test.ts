@@ -41,6 +41,14 @@ describe("outbound copy", () => {
     }
   });
 
+  it("allows only 'partner program' / 'partners program', not other uses of partner", () => {
+    expect(checkVariant("followup", "Our partner program pays you. {link}")).toBeNull();
+    expect(checkVariant("followup", "See the partners program. {link}")).toBeNull();
+    expect(checkVariant("followup", "We partner with shops like yours. {link}")).toBe("banned phrase");
+    expect(checkVariant("followup", "Be our partner. {link}")).toBe("banned phrase");
+    expect(checkVariant("followup", "A partnership awaits. {link}")).toBeNull();
+  });
+
   it("uses the clean name, the Ozzy signature and a compact footer", () => {
     const e = buildOutboundEmail(ctx());
     expect(e.subject).toBe(DEFAULT_SUBJECT);

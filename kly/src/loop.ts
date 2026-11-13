@@ -19,8 +19,10 @@ import { pageText, qualifyLead } from "./qualify";
 import { purgeStaleLeads } from "./retention";
 import { outboundEnv, senderTick } from "./sender";
 import { strategistTick } from "./strategist";
+import { socialTick } from "./social";
 import { voiceTick } from "./voice";
 import { warmupSecretOf, warmupTick } from "./warmup";
+import { createVerifyRuntime, verifyEnabled, verifyTick, type VerifyRuntime } from "./verify";
 import { createSourceRuntime, type SourceRuntime } from "./sources";
 import { dayStart, decide, getSettings, killSwitchReason, overBudget, upsertDaily, type KlySettingsRow } from "./settings";
 
@@ -101,10 +103,11 @@ export interface LoopState {
   sources: SourceRuntime;
   /** Pooled SMTP transports + Maildoso sync timing (mailboxes.ts). */
   mail: MailRuntime;
+  verify: VerifyRuntime;
 }
 
 export function newLoopState(): LoopState {
-  return { ticks: 0, lastTickAt: null, lastTickMs: null, lastImapAt: 0, lastRetentionDay: null, codexPct: null, codexPctAt: 0, lastStop: null, killSwitch: null, dailyVolume: null, errors: [], sources: createSourceRuntime(), mail: createMailRuntime() };
+  return { ticks: 0, lastTickAt: null, lastTickMs: null, lastImapAt: 0, lastRetentionDay: null, codexPct: null, codexPctAt: 0, lastStop: null, killSwitch: null, dailyVolume: null, errors: [], sources: createSourceRuntime(), mail: createMailRuntime(), verify: createVerifyRuntime() };
 }
 
 /** Claim and process one pending OutboundRun (admin/CLI lead-finding request). */
@@ -272,6 +275,13 @@ export async function runTick(d: LoopDeps, state: LoopState): Promise<void> {
       if (busy.length) log("info", "kly imap", { polled: r.length, busy });
     });
   }
+  // Our own email checker: every address is checked at its mail server before its first email (kly/src/verify.ts).
+  if (verifyEnabled(env)) {
+    await step(state, "email check", async () => {
+      const r = await verifyTick(db, state.verify, now);
+      if (r) log("info", "kly email check", r);
+    });
+  }
   // Peer warm-up (own switch KlySettings.warmupEnabled; runs before OUTBOUND_ENABLED so mailboxes warm first).
   if (boxes.length && !cfg.dryRun) {
     await step(state, "warmup", async () => {
@@ -297,6 +307,13 @@ export async function runTick(d: LoopDeps, state: LoopState): Promise<void> {
     await promoteAndRetire(db, now);
   });
   if (!kill) await step(state, "strategist", () => strategistTick(db, provider, now));
+  // Ozzy's daily organic post to Komendly's own FB Page / IG (own switch KlySettings.socialEnabled + connected Page).
+  if (s.socialEnabled) {
+    await step(state, "social", async () => {
+      const r = await socialTick({ db, settings: s, provider, env, now });
+      if ("posted" in r) log("info", "kly social", r);
+    });
+  }
   await step(state, "autoscale", async () => {
     state.dailyVolume = await autoscaleTick(db, s, now);
   });

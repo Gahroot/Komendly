@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Ozzy Studio: ONE conversational turn of the real EZ Motion agent (@prestyj/cli Motion mode), headless.
-// Usage: node run-studio-agent.mjs <projectDir> <promptFile> [--model m] [--thinking t] [--session <file>]
+// Usage: node run-studio-agent.mjs <projectDir> <promptFile> [--provider openai|xiaomi] [--model m] [--thinking t] [--session <file>]
 // --session resumes a prior Motion session file (must live under $HOME/.ezcoder/motion-sessions).
-// Auth: the openai entry of $HOME/.ezcoder/auth.json (the engine writes a per-run HOME).
+// Auth: the openai (or xiaomi) entry of $HOME/.ezcoder/auth.json (the engine writes a per-run HOME).
 // stdout: one JSON line per event: text_delta | tool | tool_end | question | session | usage | done (last).
 // ask_user: the question is printed, the tool tells the agent the user's next message is the answer,
 // and the run stops at the next step boundary (after the tool result is persisted) so the turn ends cleanly.
@@ -55,7 +55,8 @@ let session;
 let usage = { inputTokens: 0, outputTokens: 0, cacheRead: 0 };
 try {
   session = await createMotionAgentSession({
-    provider: "openai",
+    // --provider xiaomi: MiMo fallback when the Codex weekly window is nearly used up (studio/brain.ts).
+    provider: opt("--provider", "openai"),
     model: opt("--model", "gpt-6.1-sol"),
     thinkingLevel: opt("--thinking", "high"),
     cwd: resolve(projectDir),

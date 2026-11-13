@@ -28,7 +28,7 @@ export interface OutboundEmail {
   text: string;
 }
 
-const BANNED = /\b(guarantee|guaranteed|results|roi|revenue|leads? (?:will|guaranteed)|customer of ours|we work with|partner|award|#1|best in|free forever|limited time|act now|urgent|last chance|congratulations|winner|100%|dear sir|to whom it may concern|i hope this (?:email|message) finds you|hi there)\b|%|\$|!{2,}|https?:|www\.|@/i;
+const BANNED = /\b(guarantee|guaranteed|results|roi|revenue|leads? (?:will|guaranteed)|customer of ours|we work with|partner(?!s? program)|award|#1|best in|free forever|limited time|act now|urgent|last chance|congratulations|winner|100%|dear sir|to whom it may concern|i hope this (?:email|message) finds you|hi there)\b|%|\$|!{2,}|https?:|www\.|@/i;
 
 // ---------------------------------------------------------------------------
 // Names
@@ -113,6 +113,10 @@ export const SEED_COPY: Array<{ dimension: CopyDimension; key: string; template:
   { dimension: "body", key: "agency-headline", timing: "prebuilt", audience: "agency", template: ["\"{headline}\"", "", "That's an ad Ozzy made for {business} from your site:", "", "{link}", "", "Komendly turns any client's website into ready-to-run Facebook and Instagram ads. Your first 10 are free."].join("\n") },
   { dimension: "followup", key: "agency-still-here", timing: "prebuilt", audience: "agency", template: ["Still here if you want it: {link}", "", "Worth a look before your next client creative sprint."].join("\n") },
   { dimension: "followup", key: "agency-last-note", timing: "prebuilt", audience: "agency", template: ["Last note from me. If your team already has creative covered, all good.", "", "The ad's yours either way: {link}"].join("\n") },
+  // Partner program (real terms: AdsPartner.commissionPct 30, 12 months; see /partners). "%" is banned, so "percent".
+  { dimension: "body", key: "agency-partner-roster", timing: "prebuilt", audience: "agency", template: ["Made this for {business}, straight from your website \u2193", "", "{link}", "", "Ozzy can do the same for any client's site. And if your clients sign up through our partner program, you earn 30 percent of what they pay for 12 months. Your first 10 ads are free."].join("\n") },
+  { dimension: "body", key: "oc-agency-partner", timing: "on-click", audience: "agency", template: ["Want to see what Ozzy draws from your website?", "", "{link}", "", "Tap it and he makes three ready-to-run Meta ads live. If your clients like them too, our partner program pays you 30 percent of what they pay for 12 months. First 10 ads are free, no card."].join("\n") },
+  { dimension: "followup", key: "agency-partner-note", timing: "any", audience: "agency", template: ["One more thing: if your clients sign up through our partner program, you earn 30 percent of what they pay for 12 months.", "", "Ozzy's still here for you: {link}"].join("\n") },
   // Gift on click: no ad exists yet when the email goes out; Ozzy draws 3 live when they open the link. So the copy
   // must never say "made you" / "your ad" (it isn't made yet): it offers the drawing instead.
   { dimension: "subject", key: "oc-want-a-free-ad", timing: "on-click", template: "want a free ad?" },

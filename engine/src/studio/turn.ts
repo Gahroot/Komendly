@@ -9,8 +9,6 @@ import { delimiter, dirname, extname, join } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import {
-  STUDIO_DEFAULT_MODEL,
-  STUDIO_DEFAULT_THINKING,
   STUDIO_MAX_SECONDS,
   StudioTurnPayloadSchema,
   isReferenceAttachment,
@@ -24,6 +22,8 @@ import { errMsg, log } from "../log";
 import { agentUsage } from "../modules/ezmotion/agent";
 import { type RenderProgress, ffmpegPath, renderComposition } from "../modules/ezmotion/runtime";
 import { Limiter } from "../providers/limiter";
+import { pickStudioModel } from "./model-choice";
+import { chooseStudioBrain, codexWeeklyPctSeen, isCodexLimitError, mimoAtPct, mimoAuth, MIMO_DEFAULT_MODEL, type StudioBrain } from "./brain";
 import { type BriefUpload, cleanUploadNames, launchBrief, studioBrief, turnPrompt } from "./brief";
 import { chargeAndRecord, decideCharge, isPaidStudioWorkspace } from "./charge";
 import { type StudioEventRow, StudioEventMapper, finalReply, parseChildLine, userFacingText } from "./events";
@@ -145,8 +145,8 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
   const tick = setInterval(() => mapper.tick(), 150);
   const creds = ctx.provider.agentCredentials;
   let leased: Awaited<ReturnType<NonNullable<typeof creds>["lease"]>> | null = null;
-  const model = process.env.STUDIO_AGENT_MODEL || STUDIO_DEFAULT_MODEL;
-  const thinking = process.env.STUDIO_AGENT_THINKING || STUDIO_DEFAULT_THINKING;
+  // First video of a chat on Sol, edits of an existing video on Luna (see ./model-choice.ts).
+  const { model, thinking, edit: editTurn } = pickStudioModel({ env: process.env, hasVideo: (await db.studioRender.count({ where: { sessionId } })) > 0 });
   let sessionFile: string | null = null;
   let deliveredRel: string | null = null;
   let liveTimer: ReturnType<typeof setInterval> | undefined;
@@ -219,12 +219,32 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     if (browser) { env.HYPERFRAMES_BROWSER_PATH = browser; env.PRODUCER_HEADLESS_SHELL_PATH = browser; }
     const ff = await ffmpegPath();
     if (ff) env.PATH = `${dirname(ff)}${delimiter}${env.PATH ?? ""}`;
-    if (creds) {
+    // Brain: Codex unless its weekly window is nearly used up (then MiMo); see ./brain.ts.
+    const mimo = mimoAuth();
+    const hasCodex = Boolean(creds) || Boolean(process.env.OPENAI_API_KEY);
+    let brain: StudioBrain = chooseStudioBrain({ forced: process.env.STUDIO_BRAIN ?? null, codexPct: mimo ? await codexWeeklyPctSeen(db) : null, atPct: mimoAtPct(), hasMimo: Boolean(mimo), hasCodex });
+    const useMimo = async () => {
+      await writeFile(join(home, ".ezcoder", "auth.json"), JSON.stringify({ xiaomi: mimo }), { mode: 0o600 });
+      brain = "mimo";
+    };
+    if (brain === "mimo") await useMimo();
+    else if (creds) {
       leased = await creds.lease(studioTurnTimeoutMs() + 5 * 60_000);
       await writeFile(join(home, ".ezcoder", "auth.json"), JSON.stringify({ openai: leased }), { mode: 0o600 });
     } else if (!process.env.OPENAI_API_KEY) {
       throw Object.assign(new Error("no Codex login for the studio agent"), { studioCode: "no_login" });
     }
+    if (brain === "mimo") log("info", "studio turn on MiMo", { sessionId });
+    else log("info", "studio turn model", { sessionId, model, thinking, edit: editTurn });
+    // A refreshed Codex pair is adopted back (before any switch to MiMo rewrites auth.json).
+    const adoptBack = async () => {
+      if (!creds || !leased) return;
+      try {
+        const after = (JSON.parse(await readFile(join(home, ".ezcoder", "auth.json"), "utf8")) as { openai?: typeof leased }).openai;
+        if (after?.refreshToken && after.refreshToken !== leased.refreshToken) await creds.adopt(after);
+      } catch { /* unchanged */ }
+    };
+    const resumeSnapshot = resume ? await readFile(resume).catch(() => null) : null;
 
     // 4. Run one turn.
     const before = await videoFiles(project);
@@ -264,8 +284,9 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     // Live preview: publish the playable composition as soon as it exists (and again when it changes, throttled).
     const live = livePublisher({ storage, workspaceId: session.workspaceId, sessionId, messageId: assistantMessageId, project, findComposition: () => changedComposition(project, turnStart), emit: (row) => ev.write([row]), now: Date.now });
     liveTimer = setInterval(() => void live.tick(), 3_000);
-    const result = await new Promise<{ ok: boolean; error?: string; asked: boolean; usage?: { inputTokens: number; outputTokens: number; cacheRead: number } }>((resolve) => {
-      const child = spawn(process.execPath, [RUNNER, project, promptFile, "--model", model, "--thinking", thinking, "--turn", String(priorUserTurns), ...(resume ? ["--session", resume] : [])], { cwd: project, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
+    const runAgent = () => new Promise<{ ok: boolean; error?: string; asked: boolean; usage?: { inputTokens: number; outputTokens: number; cacheRead: number } }>((resolve) => {
+      const brainArgs = brain === "mimo" ? ["--provider", "xiaomi", "--model", process.env.STUDIO_MIMO_MODEL || MIMO_DEFAULT_MODEL] : ["--model", model];
+      const child = spawn(process.execPath, [RUNNER, project, promptFile, ...brainArgs, "--thinking", thinking, "--turn", String(priorUserTurns), ...(resume ? ["--session", resume] : [])], { cwd: project, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
       // The agent's own preview/snapshot servers and background tasks share its process group: kill the whole group.
       const killGroup = (sig: NodeJS.Signals) => {
         try {
@@ -298,18 +319,22 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
         setTimeout(() => resolve(done), 50);
       });
     });
+    let result = await runAgent();
+    // Codex hit its plan limit mid-turn: put the session back as it was and run the same turn once on MiMo.
+    if (!result.ok && !result.asked && brain === "codex" && mimo && !turnAbort.signal.aborted && isCodexLimitError(result.error)) {
+      log("warn", "studio turn: Codex limit, retrying on MiMo", { sessionId, error: (result.error ?? "").slice(0, 200) });
+      await adoptBack();
+      if (resume && resumeSnapshot) await writeFile(resume, resumeSnapshot);
+      await useMimo();
+      result = await runAgent();
+    }
     mapper.flush();
     clearInterval(liveTimer);
     // The latest edit plays in the chat while the final video is made.
     if (!turnAbort.signal.aborted && !result.asked) await live.flush();
     await scanPreviews().catch(() => undefined);
-    if (creds && leased) {
-      try {
-        const after = (JSON.parse(await readFile(join(home, ".ezcoder", "auth.json"), "utf8")) as { openai?: typeof leased }).openai;
-        if (after?.refreshToken && after.refreshToken !== leased.refreshToken) await creds.adopt(after);
-      } catch { /* unchanged */ }
-    }
-    const usage = await agentUsage(home, model).catch(() => ({ costMicros: 0, inputTokens: 0, outputTokens: 0 }));
+    await adoptBack();
+    const usage = await agentUsage(home, brain === "mimo" ? process.env.STUDIO_MIMO_MODEL || MIMO_DEFAULT_MODEL : model).catch(() => ({ costMicros: 0, inputTokens: 0, outputTokens: 0 }));
     ctx.usage.push({ costMicros: usage.costMicros, inputTokens: usage.inputTokens, outputTokens: usage.outputTokens, latencyMs: Date.now() - started });
 
     const reason = turnAbort.signal.aborted ? String(turnAbort.signal.reason) : null;

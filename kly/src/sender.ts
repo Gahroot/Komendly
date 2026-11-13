@@ -18,6 +18,7 @@ import { adImageUrl, extendAssets, ON_CLICK_NOTE } from "./hook";
 import { addCost, type KlySettingsRow } from "./settings";
 import { warmupGates, type WarmupSettings } from "./warmup";
 import { maybeProbe } from "./probe";
+import { verifyEnabled } from "./verify";
 
 /** Voice call outcomes that end the cold email sequence (no follow-up after the phone call settled it). */
 export const VOICE_STOP_STATUSES = ["gift_yes", "info_requested", "not_interested", "opt_out"] as const;
@@ -310,7 +311,8 @@ async function mailboxHealth(db: Db, b: StoredMailbox, now: Date): Promise<strin
  */
 export async function assignLeads(db: Db, mailboxIds: string[], now: Date, followUpDays: number, maxSteps: number): Promise<Map<string, { lead: LeadRow; step: 1 | 2 }>> {
   const candidates = await db.outboundLead.findMany({
-    where: { purgedAt: null, email: { not: "" }, OR: [{ status: { in: ["ad_made", "queued"] }, step: 0, OR: [{ mailboxId: null }, { mailboxId: { in: mailboxIds } }] }, { status: "sent", step: 1, mailboxId: { in: mailboxIds } }], AND: [{ OR: [{ voiceStatus: null }, { voiceStatus: { notIn: [...VOICE_STOP_STATUSES] } }] }] },
+    // First emails go only to addresses our own checker passed (kly/src/verify.ts), unless checking is switched off.
+    where: { purgedAt: null, email: { not: "" }, OR: [{ status: { in: ["ad_made", "queued"] }, step: 0, ...(verifyEnabled() ? { emailCheck: { in: ["valid", "catch_all", "unknown"] } } : {}), OR: [{ mailboxId: null }, { mailboxId: { in: mailboxIds } }] }, { status: "sent", step: 1, mailboxId: { in: mailboxIds } }], AND: [{ OR: [{ voiceStatus: null }, { voiceStatus: { notIn: [...VOICE_STOP_STATUSES] } }] }] },
     orderBy: [{ step: "desc" }, { createdAt: "asc" }],
     take: Math.max(200, mailboxIds.length * 20),
   });

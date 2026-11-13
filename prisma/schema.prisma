@@ -1420,6 +1420,8 @@ model KlySettings {
   warmupMinDays      Int      @default(14) // warm-up days before a mailbox may send cold
   warmupReadySpamPct Int      @default(10) // 7-day warm-up spam placement must be under this to send cold
   warmupPauseSpamPct Int      @default(25) // above this, cold sending is auto-paused (warm-up continues)
+  socialEnabled      Boolean  @default(false) // Ozzy's daily organic post to Komendly's own FB Page + IG (kly/src/social.ts); also needs KlySocialConnection
+  socialHourEt       Int      @default(10) // hour (America/New_York) from which the daily post may go out
   notes              String?
   updatedBy          String?
   createdAt          DateTime @default(now())
@@ -1607,4 +1609,37 @@ model AdsBonus {
 
   @@unique([workspaceId, kind])
   @@index([kind, status])
+}
+
+/// Komendly's OWN Facebook Page (+ linked Instagram business account) for Ozzy's daily organic post. Singleton id "komendly".
+/// Connected once by an admin (/api/admin/ads/social/connect). pageTokenEnc = non-expiring Page token sealed with ADS_TOKEN_KEY.
+model KlySocialConnection {
+  id           String   @id @default("komendly")
+  pageId       String
+  pageName     String
+  pageTokenEnc String
+  igUserId     String?
+  igUsername   String?
+  connectedBy  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+/// One organic post per platform per ET day. The row is created (claimed) before publishing, so a restart never double-posts.
+model KlySocialPost {
+  id         String   @id @default(cuid())
+  day        String // YYYY-MM-DD in America/New_York
+  platform   String // facebook | instagram
+  sourceKind String // showcase (consented AdsFeature) | example (Komendly-owned sample) | tip (Ozzy art)
+  sourceRef  String // AdsFeature.adId, example path or tip key
+  caption    String
+  imageUrl   String
+  status     String   @default("posting") // posting | posted | failed
+  postId     String?
+  error      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([day, platform])
+  @@index([createdAt])
 }

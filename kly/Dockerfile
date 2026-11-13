@@ -15,6 +15,7 @@ COPY prisma/schema.prisma prisma/schema.prisma
 COPY src/lib/ads/contracts.ts src/lib/ads/contracts.ts
 COPY src/lib/ads/billing-config.ts src/lib/ads/billing-config.ts
 COPY src/lib/ads/meta/core/crypto.ts src/lib/ads/meta/core/crypto.ts
+COPY src/lib/kly/social-core.ts src/lib/kly/social-core.ts
 COPY src/lib/ads/outbound/copy.ts src/lib/ads/outbound/policy.ts src/lib/ads/outbound/inbound.ts src/lib/ads/outbound/
 COPY engine/src/db.ts engine/src/db.ts
 COPY engine/src/providers/ engine/src/providers/

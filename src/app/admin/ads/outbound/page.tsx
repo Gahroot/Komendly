@@ -11,6 +11,8 @@ import { AdminAdsShell } from "../_components/admin-ads-shell";
 import { KlyChart } from "./_components/kly-chart";
 import { KlySettingsDrawer } from "./_components/kly-settings-drawer";
 import { KlyStage } from "./_components/kly-stage";
+import { KlySocialPanel } from "./_components/kly-social-panel";
+import { loadSocialPanel } from "@/lib/kly/social-connect";
 
 export const dynamic = "force-dynamic";
 
@@ -47,11 +49,11 @@ function Stat({ label, value, hint, gold }: { label: string; value: string; hint
   );
 }
 
-export default async function KlyPage() {
+export default async function KlyPage({ searchParams }: { searchParams: Promise<{ social?: string }> }) {
   // The shell renders "Admin access required" for non-admins; skip the queries for them.
   const admin = await getAdminUser();
   if (!admin) return <AdminAdsShell title="Kly">{null}</AdminAdsShell>;
-  const d = await loadKlyDashboard();
+  const [d, social, sp] = await Promise.all([loadKlyDashboard(), loadSocialPanel(), searchParams]);
   const { money: m, health: h } = d;
   const fresh = FRESH[h.heartbeat];
   const sendingOn = d.settings.enabled && h.killSwitchOn;
@@ -227,6 +229,8 @@ export default async function KlyPage() {
               <Stat label="Phone opt-outs" value={String(d.voice.optOuts)} />
             </div>
           </Panel>
+
+          <KlySocialPanel d={social} notice={sp.social} />
 
           <Panel kicker="Recent activity" title="Who Kly is talking to">
             {d.activity.length === 0 ? <Empty>Nothing yet. Sends, replies, signups and payments will show up here as they happen.</Empty> : (

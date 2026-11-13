@@ -6,6 +6,7 @@ import { fraunces } from "@/components/studio/fonts";
 import { StudioRoot } from "@/components/studio/studio-spell";
 import { GiftViewBeacon } from "@/components/growth/gift-view-beacon";
 import { GiftSlots } from "@/components/growth/gift-slots";
+import { GiftPassOn } from "@/components/growth/gift-pass-on";
 import { giftByToken, giftView, recipientHasAccount } from "@/lib/ads/gifts";
 import { REFERRED_TRIAL_STATIC } from "@/lib/ads/referrals";
 import { prisma } from "@/lib/prisma";
@@ -42,6 +43,8 @@ export default async function GiftPage({ params }: Props) {
   const cta = outbound && !hasAccount
     ? startHref(g.url, "auto", false)
     : hasAccount ? `/ads/login?next=${encodeURIComponent("/ads/app")}` : code ? `/r/${code}?gift=${token}` : `/ads/signup?next=${encodeURIComponent(`/ads/start?url=${encodeURIComponent(g.url)}&goal=auto`)}`;
+  // Pass it on: the sender's referral link when they have one (credits the referral), else /free-ads with UTM tags (kmd_ft first touch).
+  const passOnLink = code ? `https://www.komendly.com/r/${code}` : `https://www.komendly.com/free-ads?${new URLSearchParams({ utm_source: "gift_share", utm_medium: "referral", utm_campaign: token })}`;
   return (
     <StudioRoot className={`${fraunces.variable} relative min-h-screen overflow-hidden bg-[#0c0820] text-foreground`}>
       <GiftViewBeacon token={token} />
@@ -76,6 +79,7 @@ export default async function GiftPage({ params }: Props) {
           <a href={cta} className="spellbar__cta mt-5 inline-flex h-13 w-full items-center justify-center rounded-2xl px-6 text-base font-semibold sm:w-auto">{hasAccount ? "Log in" : outbound ? "Get my 10 free ads" : "Get your full free pack"}</a>
           {!hasAccount && <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">{["No card", "Ready in minutes", "Yours to keep"].map((t) => <li key={t} className="inline-flex items-center gap-1"><Check className="size-3.5 text-[var(--studio-gold)]" />{t}</li>)}</ul>}
         </section>
+        <GiftPassOn token={token} link={passOnLink} />
       </main>
     </StudioRoot>
   );
