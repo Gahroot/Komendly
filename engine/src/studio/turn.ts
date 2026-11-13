@@ -321,6 +321,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
         if (!line) return;
         if (line.type === "session") sessionFile = line.path;
         else if (line.type === "usage") done.usage = line;
+        else if (line.type === "qa") log("info", "studio qa", { sessionId, ...(line as Record<string, unknown>) });
         else if (line.type === "done") done = { ...done, ok: line.ok, error: line.error, asked: (line as { asked?: boolean }).asked === true };
         else {
           if (line.type === "tool_end" && (lastTool.name === "screenshot" || /contact-sheet/.test(lastTool.arg))) void scanPreviews().catch(() => undefined);

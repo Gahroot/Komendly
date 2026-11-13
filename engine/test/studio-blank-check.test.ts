@@ -61,3 +61,15 @@ describe("layout gate", () => {
     expect(p).toContain("score-synth");
   });
 });
+
+// @ts-expect-error plain .mjs helper
+import { flatBandShare } from "../src/modules/ezmotion/agent/blank-check.mjs";
+describe("empty-area check", () => {
+  it("bottom half flat = 0.5", () => {
+    const w = 64, h = 64;
+    const px = Uint8Array.from({ length: w * h }, (_, i) => (i < (w * h) / 2 ? ((i % 7) * 30) : 230));
+    expect(flatBandShare(px, w, 4)).toBe(0.5);
+    const full = Uint8Array.from({ length: w * h }, (_, i) => (i % 7) * 30);
+    expect(flatBandShare(full, w, 4)).toBe(0);
+  });
+});

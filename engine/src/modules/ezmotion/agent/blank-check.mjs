@@ -110,8 +110,9 @@ export async function findLayoutProblems(projectDir, { sinceMs = 0 } = {}) {
 }
 
 /** One combined fix prompt for everything the QA found (one extra agent round at most). */
-export function qaFixPrompt({ blank = [], layout = [], music = false }) {
+export function qaFixPrompt({ blank = [], sparse = [], layout = [], music = false }) {
   const parts = [];
+  if (sparse.length) parts.push(`- Large empty areas: at ${sparse.map((t) => `${t}s`).join(", ")} half the frame or more is one flat colour with nothing in it. Fill the frame: make the hero image, footage or website piece much bigger (or full-bleed with a scrim), scale the type up, or centre the content block vertically. Nothing should sit in one half with the other half empty.`);
   if (blank.length) parts.push(`- Blank frames (one flat colour, nothing readable) at ${blank.map((t) => `${t}s`).join(", ")}: those scenes don't show. Find why (hidden elements, a wipe/overlay left covering the frame, elements never animated in, wrong timing) and fix it.`);
   if (layout.length) parts.push(`- Layout problems (text from different scenes stacked on top of each other, or text covered by other elements):\n${layout.map((l) => `  - ${l}`).join("\n")}\n  Make sure each scene's text is fully hidden before the next scene's text appears (animate it out or set autoAlpha 0 at the cut), and nothing covers text that should be read.`);
   if (music) parts.push("- No music or sound: follow the Sound rule in ./studio.md (write ./audio/score.json for THIS business and mood, run `node kit/bin/score-synth.mjs audio/score.json audio/`, add audio/music.wav and audio/sfx.wav as <audio> elements spanning the whole video).");
@@ -144,13 +145,36 @@ function compositionDuration(html) {
 }
 
 /** Times (seconds) of blank frames in the newest composition, or [] (also on any tooling problem: never block). */
-export async function findBlankFrames(projectDir, { sinceMs = 0, ffmpeg = "ffmpeg" } = {}) {
+/** Pure: share of horizontal bands (of `bands`) that are flat, from 8-bit grey pixels `w` wide. */
+export function flatBandShare(bytes, w, bands = 4) {
+  const h = Math.floor(bytes.length / w);
+  if (!w || h < bands) return 0;
+  let flat = 0;
+  for (let b = 0; b < bands; b++) {
+    const from = Math.floor((b * h) / bands) * w, to = Math.floor(((b + 1) * h) / bands) * w;
+    if (isBlankSpread(lumaSpread(bytes.subarray(from, to)))) flat++;
+  }
+  return flat / bands;
+}
+
+/** Blank frames AND mostly-empty frames (half or more of the frame is one flat colour), from the same stills. */
+export async function findFrameIssues(projectDir, opts = {}) {
+  const r = await frameStats(projectDir, opts);
+  return r;
+}
+
+export async function findBlankFrames(projectDir, opts = {}) {
+  return (await frameStats(projectDir, opts)).blank;
+}
+
+async function frameStats(projectDir, { sinceMs = 0, ffmpeg = "ffmpeg" } = {}) {
+  const none = { blank: [], sparse: [] };
   const comp = await newestComposition(projectDir);
-  if (!comp || comp.m < sinceMs) return [];
+  if (!comp || comp.m < sinceMs) return none;
   const { readFile } = await import("node:fs/promises");
   const duration = compositionDuration(await readFile(join(comp.d, "index.html"), "utf8").catch(() => ""));
   const times = checkTimes(duration);
-  if (!times.length) return [];
+  if (!times.length) return none;
   // Each time is checked twice, 0.6 s apart: a wipe or fade passing over the frame is fine, a frame that stays flat isn't.
   const shots = times.flatMap((t) => [t, Math.min(Math.round((t + 0.6) * 100) / 100, Math.max(duration - 0.05, 0))]);
   let entry;
@@ -161,21 +185,25 @@ export async function findBlankFrames(projectDir, { sinceMs = 0, ffmpeg = "ffmpe
     const bin = typeof pkg.bin === "string" ? pkg.bin : pkg.bin.hyperframes;
     entry = join(dirname(pkgPath), bin);
   } catch {
-    return [];
+    return none;
   }
   const outDir = await mkdtemp(join(tmpdir(), "ozzy-qa-"));
   try {
     const snap = await run(process.execPath, [entry, "snapshot", comp.d, "-o", outDir, "--at", shots.join(","), "--no-end", "--describe", "false"], { timeoutMs: 120_000, env: process.env });
-    if (snap.code !== 0) return [];
+    if (snap.code !== 0) return none;
     const files = (await readdir(outDir)).filter((f) => f.endsWith(".png")).sort();
-    if (!files.length) return [];
-    if (files.length < shots.length) return [];
-    const flat = [];
+    if (files.length < shots.length) return none;
+    const flat = [], half = [];
     for (const f of files.slice(0, shots.length)) {
       const g = await run(ffmpeg, ["-v", "error", "-i", join(outDir, f), "-vf", "scale=64:-1,format=gray", "-f", "rawvideo", "-"], { timeoutMs: 20_000 });
-      flat.push(g.code === 0 && g.stdout.length > 0 && isBlankSpread(lumaSpread(g.stdout)));
+      const ok = g.code === 0 && g.stdout.length > 0;
+      flat.push(ok && isBlankSpread(lumaSpread(g.stdout)));
+      half.push(ok && flatBandShare(g.stdout, 64, 4) >= 0.5);
     }
-    return times.filter((_, i) => flat[2 * i] && flat[2 * i + 1]);
+    const blank = times.filter((_, i) => flat[2 * i] && flat[2 * i + 1]);
+    // Mostly empty: half the frame flat in both stills, and that's true for 3+ of the 10 check times.
+    const sparseTimes = times.filter((t, i) => !blank.includes(t) && half[2 * i] && half[2 * i + 1]);
+    return { blank, sparse: sparseTimes.length >= 3 ? sparseTimes : [] };
   } finally {
     await rm(outDir, { recursive: true, force: true }).catch(() => undefined);
   }
