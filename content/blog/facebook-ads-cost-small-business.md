@@ -10,8 +10,9 @@ tags:
   - "Facebook ads"
   - "Small business marketing"
   - "Advertising budgets"
-published: false
-status: "draft"
+published: true
+status: "approved"
+approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "how much do facebook ads cost small business"
 secondary_keywords:
   - "facebook ads budget"
