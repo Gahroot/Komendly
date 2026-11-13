@@ -27,6 +27,7 @@ import { installStudioKit } from "./kit-install";
 import { installBrandPhotos } from "./brand-photos";
 import { installSiteComponents } from "./site-components";
 import { ensureMusic } from "./music-fallback";
+import { compositionSheet, needsRework, reworkPrompt, tasteCheck, writeConcept } from "./creative";
 import { guardRoute } from "../jobs/extract/crawl";
 import { assertPublicUrl } from "../net/ssrf";
 import { chooseStudioBrain, codexWeeklyPctSeen, isCodexLimitError, mimoAtPct, mimoAuth, MIMO_DEFAULT_MODEL, type StudioBrain } from "./brain";
@@ -226,8 +227,17 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     if (await access(join(project, "launch.md")).then(() => true, () => false)) {
       await appendFile(join(project, "studio.md"), "\n## Launch video\n- This chat is a product launch video: read ./launch.md (what they shipped, the recorded footage of their product and the structure). Their recorded footage is the hero.\n");
     }
+    // Creative direction: the strong text model writes ./concept.md for a new video (world, atmosphere, scenes, images,
+    // sound); the builder follows it and the same director reviews the frames once at the end (STUDIO_CONCEPT=0 off).
+    let concept: string | null = null;
+    if (!editTurn && process.env.STUDIO_CONCEPT !== "0") {
+      tm.phase("concept");
+      mapper.setPhase("thinking", "Planning the look");
+      concept = await writeConcept(ctx.provider, { userText: userMsg.content, brand, uploads: briefUploads, launch: Boolean(parsed.data.launch) }, ctx.usage, turnAbort.signal).catch((e) => { log("warn", "studio concept failed", { error: errMsg(e) }); return null; });
+      if (concept) await writeFile(join(project, "concept.md"), `${concept}\n`);
+    }
     const promptFile = join(root, "prompt.txt");
-    await writeFile(promptFile, turnPrompt({ userText: userMsg.content, firstTurn, attached }));
+    await writeFile(promptFile, turnPrompt({ userText: userMsg.content, firstTurn, attached, concept: Boolean(concept) }));
     if (attached.some((a) => a.reference)) mapper.setPhase("looking", "Studying the ad");
     else if (attached.some((a) => a.kind === "video")) mapper.setPhase("looking", "Watching your footage");
 
@@ -304,9 +314,9 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     // Live preview: publish the playable composition as soon as it exists (and again when it changes, throttled).
     const live = livePublisher({ storage, workspaceId: session.workspaceId, sessionId, messageId: assistantMessageId, project, findComposition: () => changedComposition(project, turnStart), emit: (row) => ev.write([row]), now: Date.now });
     liveTimer = setInterval(() => void live.tick(), 3_000);
-    const runAgent = () => new Promise<{ ok: boolean; error?: string; asked: boolean; usage?: { inputTokens: number; outputTokens: number; cacheRead: number } }>((resolve) => {
+    const runAgent = (promptPath: string = promptFile, sessionPath: string | null | undefined = resume) => new Promise<{ ok: boolean; error?: string; asked: boolean; usage?: { inputTokens: number; outputTokens: number; cacheRead: number } }>((resolve) => {
       const brainArgs = brain === "mimo" ? ["--provider", "xiaomi", "--model", process.env.STUDIO_MIMO_MODEL || MIMO_DEFAULT_MODEL] : ["--model", model];
-      const child = spawn(process.execPath, [RUNNER, project, promptFile, ...brainArgs, "--thinking", thinking, "--turn", String(priorUserTurns), ...(resume ? ["--session", resume] : [])], { cwd: project, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
+      const child = spawn(process.execPath, [RUNNER, project, promptPath, ...brainArgs, "--thinking", thinking, "--turn", String(priorUserTurns), ...(sessionPath ? ["--session", sessionPath] : [])], { cwd: project, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
       // The agent's own preview/snapshot servers and background tasks share its process group: kill the whole group.
       const killGroup = (sig: NodeJS.Signals) => {
         try {
@@ -350,6 +360,24 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       if (resume && resumeSnapshot) await writeFile(resume, resumeSnapshot);
       await useMimo();
       result = await runAgent();
+    }
+    // Taste check: the director looks at 10 frames of the finished composition against the concept; one rework round.
+    if (concept && result.ok && !result.asked && mapper.questions.length === 0 && !turnAbort.signal.aborted && sessionFile && process.env.STUDIO_TASTE !== "0") {
+      tm.phase("taste");
+      const compPath = await changedComposition(project, turnStart);
+      const html = compPath ? await readFile(join(compPath, "index.html"), "utf8").catch(() => "") : "";
+      const dur = Number(/data-duration="([\d.]+)"/.exec(html)?.[1] ?? 0);
+      const sheet = compPath && dur > 0 ? await compositionSheet(compPath, dur, turnAbort.signal).catch(() => null) : null;
+      const taste = sheet ? await tasteCheck(ctx.provider, { sheet, concept, userText: userMsg.content }, ctx.usage, turnAbort.signal) : null;
+      log("info", "studio taste", { sessionId, score: taste?.score ?? null, templated: taste?.templated ?? null, broken: taste?.broken.length ?? null, rework: taste ? needsRework(taste) : false });
+      if (taste && needsRework(taste) && !turnAbort.signal.aborted) {
+        mapper.setPhase("building", "Polishing the details");
+        const reworkFile = join(root, "rework.txt");
+        await writeFile(reworkFile, reworkPrompt(taste));
+        const again = await runAgent(reworkFile, sessionFile);
+        if (again.ok) result = again;
+        else log("warn", "studio rework failed", { sessionId, error: (again.error ?? "").slice(0, 200) });
+      }
     }
     tm.phase("agent_after");
     mapper.flush();
