@@ -27,6 +27,7 @@ import { installStudioKit } from "./kit-install";
 import { installBrandPhotos } from "./brand-photos";
 import { installSiteComponents } from "./site-components";
 import { ensureMusic } from "./music-fallback";
+import { fixCompositionScripts } from "./script-urls";
 
 /** Same website (host without www), for matching a brand profile to a launch URL. */
 export function sameSite(a: string | null | undefined, b: string | null | undefined): boolean {
@@ -426,6 +427,8 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
         const out = join(root, "engine-render.mp4");
         const prog = progressThrottle(ev.write, "Rendering your video", Date.now);
         prog.emit({ pct: 0, stage: "start" }, true);
+        const fixedUrls = await fixCompositionScripts(comp).catch(() => 0);
+        if (fixedUrls) log("warn", "studio render: repaired library URLs", { sessionId, fixed: fixedUrls });
         let rr = await renderComposition(comp, out, { fps: 30, signal: turnAbort.signal, timeoutMs: 10 * 60_000, onProgress: (p) => prog.emit(p) });
         // Two retries with backoff: a background ffmpeg cut can still be landing, or the box is briefly out of
         // Chrome capacity; the last try uses one Chrome worker so it fits on a busy machine.
@@ -452,7 +455,8 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
           prog.emit({ pct: 100, stage: "done" }, true);
         }
         else log("warn", "studio render failed", { error: (rr.stderr || rr.stdout).slice(-300) });
-        if (!source && agentRel) { deliveredRel = agentRel; source = join(project, agentRel); }
+        // An older agent MP4 is only an intermediate (often a raw footage cut): never pass it off as the finished video.
+        if (!source && agentRel) log("warn", "studio render failed; not delivering the older agent file", { sessionId, agentRel });
       }
       renderFailed = !source && Boolean(comp);
       if (source) {
