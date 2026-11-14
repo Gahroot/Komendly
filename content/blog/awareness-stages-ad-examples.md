@@ -11,8 +11,9 @@ tags:
   - "copywriting"
   - "customer awareness"
   - "creative strategy"
-published: false
-status: "draft"
+published: true
+status: "approved"
+approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "stages of awareness ads"
 secondary_keywords:
   - "eugene schwartz awareness levels"
