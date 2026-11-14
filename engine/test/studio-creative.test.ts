@@ -22,3 +22,12 @@ describe("creative direction", () => {
     expect(turnPrompt({ userText: "hi", firstTurn: true, attached: [] })).not.toContain("concept.md");
   });
 });
+
+import { sameSite } from "../src/studio/turn";
+describe("launch brand match", () => {
+  it("matches hosts without www", () => {
+    expect(sameSite("https://www.komendly.com", "https://komendly.com/x")).toBe(true);
+    expect(sameSite("https://bridgetowndental.com", "https://www.komendly.com")).toBe(false);
+    expect(sameSite(null, "https://a.com")).toBe(false);
+  });
+});

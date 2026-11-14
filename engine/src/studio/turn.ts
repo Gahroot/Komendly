@@ -27,6 +27,13 @@ import { installStudioKit } from "./kit-install";
 import { installBrandPhotos } from "./brand-photos";
 import { installSiteComponents } from "./site-components";
 import { ensureMusic } from "./music-fallback";
+
+/** Same website (host without www), for matching a brand profile to a launch URL. */
+export function sameSite(a: string | null | undefined, b: string | null | undefined): boolean {
+  const host = (u: string | null | undefined) => { try { return new URL(String(u)).hostname.replace(/^www\./, "").toLowerCase(); } catch { return null; } };
+  const x = host(a), y = host(b);
+  return Boolean(x && y && x === y);
+}
 import { compositionSheet, needsRework, reworkPrompt, tasteCheck, writeConcept } from "./creative";
 import { guardRoute } from "../jobs/extract/crawl";
 import { assertPublicUrl } from "../net/ssrf";
@@ -195,7 +202,10 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       briefUploads.push(b);
       if (thisMsg.has(u.id)) attached.push(b);
     }
-    const bp = await db.brandProfile.findFirst({ where: { workspaceId: session.workspaceId }, orderBy: { updatedAt: "desc" } });
+    const latestBp = await db.brandProfile.findFirst({ where: { workspaceId: session.workspaceId }, orderBy: { updatedAt: "desc" } });
+    // A launch video is about the site they launched: never mix in another brand from the workspace (agencies keep many).
+    const launchUrl = parsed.data.launch?.url ?? (/\bon (https?:\/\/\S+)/.exec(await readFile(join(project, "launch.md"), "utf8").catch(() => ""))?.[1] ?? null);
+    const bp = launchUrl && latestBp && !sameSite(latestBp.url, launchUrl) ? null : latestBp;
     let logoFile: string | null = null;
     if (bp?.logoKey) {
       logoFile = `logo${extname(bp.logoKey) || ".png"}`;
