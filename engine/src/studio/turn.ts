@@ -235,7 +235,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       await writeFile(join(project, "launch.md"), launchBrief(launch, (n) => byName.get(n) || null));
     }
     if (await access(join(project, "launch.md")).then(() => true, () => false)) {
-      await appendFile(join(project, "studio.md"), "\n## Launch video\n- This chat is a product launch video: read ./launch.md (what they shipped, the recorded footage of their product and the structure). Their recorded footage is the hero.\n");
+      await appendFile(join(project, "studio.md"), "\n## Launch video\n- This chat is a product launch video: read ./launch.md (what they shipped, the recorded footage of their product and the structure). Their recorded footage is the hero, shown inside a device or browser frame in a lit scene with depth; never full-bleed with captions over it (the site's own text clashes with yours). Your words go in clear space beside, above or below the frame, on a calm background, and only one caption at a time.\n");
     }
     // Creative direction: the strong text model writes ./concept.md for a new video (world, atmosphere, scenes, images,
     // sound); the builder follows it and the same director reviews the frames once at the end (STUDIO_CONCEPT=0 off).
