@@ -29,6 +29,11 @@ import { installSiteComponents } from "./site-components";
 import { ensureMusic } from "./music-fallback";
 import { fixCompositionScripts } from "./script-urls";
 
+/** The user says this video is for someone else (a client, a friend), so their own brand must stay out. */
+export function isForSomeoneElse(text: string): boolean {
+  return /\b(for (a|my) client|client'?s (business|brand)|not (for )?my (own )?(business|brand)|don'?t use my (logo|brand|photos|website))/i.test(text);
+}
+
 /** Same website (host without www), for matching a brand profile to a launch URL. */
 export function sameSite(a: string | null | undefined, b: string | null | undefined): boolean {
   const host = (u: string | null | undefined) => { try { return new URL(String(u)).hostname.replace(/^www\./, "").toLowerCase(); } catch { return null; } };
@@ -206,7 +211,10 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     const latestBp = await db.brandProfile.findFirst({ where: { workspaceId: session.workspaceId }, orderBy: { updatedAt: "desc" } });
     // A launch video is about the site they launched: never mix in another brand from the workspace (agencies keep many).
     const launchUrl = parsed.data.launch?.url ?? (/\bon (https?:\/\/\S+)/.exec(await readFile(join(project, "launch.md"), "utf8").catch(() => ""))?.[1] ?? null);
-    const bp = launchUrl && latestBp && !sameSite(latestBp.url, launchUrl) ? null : latestBp;
+    // The whole conversation so far (the first message holds the brief; later ones are answers and changes).
+    const convo = (await db.studioMessage.findMany({ where: { sessionId, role: "user", createdAt: { lte: userMsg.createdAt } }, orderBy: { createdAt: "asc" }, select: { content: true } })).map((m) => m.content.trim()).filter(Boolean);
+    const forClient = convo.some(isForSomeoneElse);
+    const bp = forClient || (launchUrl && latestBp && !sameSite(latestBp.url, launchUrl)) ? null : latestBp;
     let logoFile: string | null = null;
     if (bp?.logoKey) {
       logoFile = `logo${extname(bp.logoKey) || ".png"}`;
@@ -244,7 +252,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     if (!editTurn && process.env.STUDIO_CONCEPT !== "0") {
       tm.phase("concept");
       mapper.setPhase("thinking", "Planning the look");
-      concept = await writeConcept(ctx.provider, { userText: userMsg.content, brand, uploads: briefUploads, launch: Boolean(parsed.data.launch) }, ctx.usage, turnAbort.signal).catch((e) => { log("warn", "studio concept failed", { error: errMsg(e) }); return null; });
+      concept = await writeConcept(ctx.provider, { userText: convo.length > 1 ? convo.map((c, i) => (i === 0 ? c : `Then the user added: ${c}`)).join("\n\n") : userMsg.content, brand, uploads: briefUploads, launch: Boolean(parsed.data.launch) }, ctx.usage, turnAbort.signal).catch((e) => { log("warn", "studio concept failed", { error: errMsg(e) }); return null; });
       if (concept) await writeFile(join(project, "concept.md"), `${concept}\n`);
     }
     const promptFile = join(root, "prompt.txt");
@@ -379,7 +387,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       const html = compPath ? await readFile(join(compPath, "index.html"), "utf8").catch(() => "") : "";
       const dur = Number(/data-duration="([\d.]+)"/.exec(html)?.[1] ?? 0);
       const sheet = compPath && dur > 0 ? await compositionSheet(compPath, dur, turnAbort.signal).catch(() => null) : null;
-      const taste = sheet ? await tasteCheck(ctx.provider, { sheet, concept, userText: userMsg.content }, ctx.usage, turnAbort.signal) : null;
+      const taste = sheet ? await tasteCheck(ctx.provider, { sheet, concept, userText: convo.join("\n\n") || userMsg.content }, ctx.usage, turnAbort.signal) : null;
       log("info", "studio taste", { sessionId, score: taste?.score ?? null, templated: taste?.templated ?? null, broken: taste?.broken.length ?? null, rework: taste ? needsRework(taste) : false });
       if (taste && needsRework(taste) && !turnAbort.signal.aborted) {
         mapper.setPhase("building", "Polishing the details");

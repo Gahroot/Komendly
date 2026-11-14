@@ -31,3 +31,11 @@ describe("launch brand match", () => {
     expect(sameSite(null, "https://a.com")).toBe(false);
   });
 });
+
+import { isForSomeoneElse } from "../src/studio/turn";
+describe("client work", () => {
+  it("spots videos for someone else", () => {
+    expect(isForSomeoneElse("This one is for a client, not my business: don't use my logo")).toBe(true);
+    expect(isForSomeoneElse("make a promo for my bakery")).toBe(false);
+  });
+});
