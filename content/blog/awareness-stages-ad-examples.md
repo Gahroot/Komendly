@@ -31,7 +31,7 @@ faq:
   - q: "Which awareness stage should I target first?"
     a: "My recommendation is to start where your customer evidence is strongest. Test solution-aware messaging when people already ask about ways to solve the problem; test product-aware messaging when their questions concern your specific offer."
   - q: "What is the difference between solution aware and product aware?"
-    a: "A solution-aware prospect understands the desired result or available approaches but may not know your product provides it. A product-aware prospect knows what you sell but is still deciding whether it fits.[^3]"
+    a: "A solution-aware prospect knows the result they want but may not know your product provides it. A product-aware prospect knows what you sell but is still deciding whether it fits.[^3]"
   - q: "Should every awareness-stage ad ask for a purchase?"
     a: "I recommend choosing the next step alongside the message. An educational example might invite readers to explore a guide, while an offer-focused example might ask them to choose a plan or start a trial."
   - q: "Can Komendly create ads for different awareness stages?"
@@ -65,7 +65,7 @@ claims:
     source: 1
   - text: "A problem-aware prospect recognizes a problem but does not know there is a solution."
     source: 1
-  - text: "A solution-aware prospect knows the desired result or possible solutions but may not know that the advertised product provides the solution."
+  - text: "A solution-aware prospect knows the desired result but may not know that the advertised product provides it."
     source: 3
   - text: "A product-aware prospect knows what the business sells but is unsure whether it is right for them."
     source: 3
@@ -85,13 +85,13 @@ Stages of awareness ads change their opening message according to what the buyer
 
 ## What are the 5 stages of awareness?
 
-Eugene Schwartz introduced the awareness framework in *Breakthrough Advertising*.[^1] The Eugene Schwartz awareness levels give you a way to decide how much explanation to put before your offer.
+Eugene Schwartz introduced the awareness framework in *Breakthrough Advertising*.[^1] Use the Eugene Schwartz awareness levels to decide how much explanation to put before your offer.
 
 | Awareness stage | What the buyer understands | Suggested starting point for your ad |
 | --- | --- | --- |
 | Unaware | Has not recognized the problem.[^1] | A familiar moment or observation |
 | Problem aware | Recognizes the problem, but not a solution.[^1] | Name the difficulty clearly |
-| Solution aware | Knows the desired result or possible approaches, but may not know your product provides it.[^3] | Explain your approach |
+| Solution aware | Knows the desired result, but may not know your product provides it.[^3] | Explain your approach |
 | Product aware | Knows what you sell, but is unsure it fits.[^3] | Answer a specific buying question |
 | Most aware | Knows your product and needs the deal.[^3] | State the offer and next step |
 
@@ -246,7 +246,7 @@ My suggested testing worksheet has these fields:
 
 If you change the message and destination together, record that you are comparing complete routes. Avoid attributing the outcome solely to the headline.
 
-When planning Facebook or Instagram ads in Meta Ads Manager, keep this worksheet beside your creative brief. For production specifications, consult the [Facebook and Instagram ad sizes guide](/blog/facebook-instagram-ad-sizes).
+Keep this worksheet beside your creative brief during campaign planning. For production specifications, consult the [Facebook and Instagram ad sizes guide](/blog/facebook-instagram-ad-sizes).
 
 If results disappoint, inspect the whole route before assigning blame to the awareness stage. Check that the message is clear, the promised information exists, and the requested action is possible. Treat any explanation as something to investigate rather than a proven diagnosis.
 
