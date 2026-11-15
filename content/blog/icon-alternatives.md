@@ -11,8 +11,9 @@ tags:
   - "AI ad tools"
   - "UGC"
   - "small business marketing"
-published: false
-status: "draft"
+published: true
+status: "approved"
+approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "icon alternatives"
 secondary_keywords:
   - "icon ai alternatives"
