@@ -1,51 +1,56 @@
 <!-- gg:init:start -->
 # Komendly
 
-A paid SaaS with two products sharing one Next.js app and one Postgres database: (1) **testimonials**, which turns customer reviews into AI-avatar videos (FAL, Mirage, KIE, lip-sync pipeline); (2) **Website2ads**, which turns a brand's website into ad creatives (rendered by `engine/`, published to Meta).
+Paid SaaS on one Next.js app + one Postgres DB: **testimonials** (reviews → AI-avatar videos), **Website2ads** (website → ad creatives, published to Meta) and **Ozzy Studio** (chat-directed promo/launch videos), plus its own acquisition systems (Kly cold email, blog-engine).
 
 ## Parts
-- `src/app/api/{generate,fal-generate,mirage,videos,reviews,webhooks}` + `src/lib/{fal,mirage,kie,fal-lipsync}`: testimonial video jobs. `fal-lipsync` runs split script → TTS → clips → remove silences → ffmpeg stitch → upload to FAL storage. Testimonial media lives on FAL/vendor URLs, not S3.
-- `src/app/api/{ads,ads-billing}` + `src/lib/ads`: Website2ads workspaces, credit ledger, abuse/trial checks, job enqueueing, S3 presigned URLs (≤10 min), Meta OAuth/publishing.
-- `engine/` (Node ≥22, ESM, Railway): the ads worker. It extracts the brand, plans, generates images, renders (Playwright/hyperframes), runs QC, and publishes.
-- `src/app/api/admin` + `/admin`: admin for users, revenue, analytics and engine health (`EngineHeartbeat`).
-- `scripts/`, `prisma/seed-*.ts`: one-off ops scripts. None are in package.json.
+- Testimonials: `src/lib/{fal,mirage,kie,fal-lipsync}`. Media lives on FAL/vendor URLs, not S3.
+- Website2ads: `src/lib/ads` (credit ledger, trial/abuse, S3 presigned URLs ≤10 min, Meta publishing).
+- Agent access: `api/mcp`, `api/oauth`, `src/lib/agent-keys` (`kmd_` Bearer keys). `packages/komendly-cli` is the npm `komendly`/`ozzy` CLI that calls these public APIs.
+- `engine/` (Node ≥22, ESM, tsx, Railway): ad rendering, Studio turns, gift/autopilot pipelines.
+- `kly/` (Railway, port 4200): cold-email worker (leads, gift ads, SMTP/IMAP). State in `Kly*`/`Outbound*` models.
+- `blog-engine/`: separate Railway service with its own Postgres; it only opens PRs into `content/blog`.
 
 ## Architecture
-- **The web app and engine never talk over HTTP; they communicate only through Postgres.** `run-start` reserves credits in `CreditLedger` and inserts `AdJob` rows. The engine claims jobs with `FOR UPDATE SKIP LOCKED`, then writes `Ad`/`AdAsset` rows and uploads to S3-compatible storage (`S3_ENDPOINT`).
-- The engine imports `src/lib/ads/contracts` directly and uses the root `prisma/schema.prisma`. Changes there affect both deploys, so ship them together.
-- **There are two separate billing systems.** Testimonials use a Stripe subscription plus credit packs (`/api/stripe/webhooks`). Ads use workspace credits in a ledger (`/api/ads-billing/webhook`, `STRIPE_ADS_WEBHOOK_SECRET`).
-- **Auth is a custom session.** Login sets a random `session_token` cookie backed by the `Session` table, with PBKDF2 password hashes. It does not use NextAuth or JWT.
-- `src/lib/video-queue.ts` keeps state in memory, so it is lost on restart and not shared across serverless instances.
+- **Web, engine and kly never talk over HTTP; only through Postgres.** The web app inserts `AdJob` rows (also `studio_turn|probe|ingest|capture` for Studio) and the engine claims them with `FOR UPDATE SKIP LOCKED`. Kly inserts gift `AdRun`/`AdJob` rows and waits for the engine. Studio progress is streamed as `StudioEvent` rows (the SSE route tails them).
+- **There are two billing systems.** Testimonials use a Stripe subscription + credit packs (`/api/stripe/webhooks`). Ads use a workspace credit ledger (`/api/ads-billing/webhook`, `STRIPE_ADS_WEBHOOK_SECRET`).
+- **Auth is custom:** a random `session_token` cookie backed by the `Session` table, with PBKDF2 hashes. No NextAuth or JWT. On `/api/*`, a `Authorization: Bearer kmd_…` request skips the cookie logic. Middleware then stamps `x-kmd-route`, which `src/lib/auth.ts` trusts, and refuses paths matched by `isRefusedForApiKey`. Changing them can break published CLI versions.
+- `src/lib/video-queue.ts` is an in-memory Map: lost on restart and not shared across serverless instances.
 
 ## Gotchas
-- **Middleware does not enforce subscriptions.** It only checks that the session cookie exists and sets an `x-subscription-check` header, which nothing reads. Every gated route or page must check the subscription in the database itself.
-- **New public endpoints (webhooks, callbacks) must be added to `publicPrefixes` in `src/middleware.ts`.** Otherwise they get a 401 and Stripe/FAL keep retrying. The middleware matcher skips image extensions.
-- **Webhooks must call `request.text()` before verifying the signature.** Parsing JSON first breaks the Stripe/HMAC checks. FAL and video-status webhooks skip verification when their secret is unset.
-- **Credit-pack idempotency comes from `CreditPurchase.stripePaymentId @unique`.** The create must come before the minutes increment, so a replayed event throws first. Don't turn it into an upsert.
-- **Credit packs raise both `bonusMinutes` and `minutesLimit`.** Any renewal reset of `minutesLimit` must add `bonusMinutes` back.
-- **Checkout success syncs the subscription directly** (because a delayed webhook once left Pro users with 0 minutes). The webhook can process the same event too, so both paths must stay idempotent.
-- **Ads refund clawbacks are clamped at 0**, because the user may already have spent the credits. Invoices issued from admin are skipped in the billing webhook.
-- **Read API keys inside functions, not as module-level constants.** A module-level `MIRAGE_API_KEY` was undefined on Vercel serverless.
-- **Caching is configured in `next.config.ts` `headers()`.**
-  - `/` is `private, no-store` because the content depends on the session and A/B variant.
-  - Other marketing pages are cached publicly.
-  - A new authenticated top-level route must be added to the exclusion regex there, or a CDN will cache it publicly.
-- **OG image routes read fonts and images from disk.** Each new one needs an `outputFileTracingIncludes` entry, or it breaks only in production.
-- **`.vercelignore` drops `*.png` except `public/**` and `src/app/*.png`.** It also drops `engine/`, tests and `.env*`. Put new PNGs in those allowed places.
-- **The VEO REFERENCE_2_VIDEO prompt must not describe appearance.** The reference image sets the look; the prompt covers only the script and voice (`src/lib/fal-lipsync/veo3.ts`).
+- **The engine and kly Dockerfiles COPY a whitelist of individual shared files** (`src/lib/...`, and for kly also `engine/src/{db,providers,queue,net,util}`). A new import of a web/engine file passes tsc locally but crashes the Railway image (module not found). Add it to the COPY list. Packages used by shared files must also be in that service's `package.json`, because `/app/node_modules` is symlinked to the service's `node_modules`.
+- Files the engine imports (`src/lib/ads/contracts.ts`, `src/lib/studio/contracts.ts`, etc.) must stay pure TS + zod: no Next, Prisma or Node-only imports.
+- **The schema is shared by web, engine and kly. Ship schema changes together.** There is no `prisma/migrations`. Set both `DATABASE_URL` (pooled) and `POSTGRES_URL_NON_POOLING` (`directUrl`).
+- **Middleware does not enforce subscriptions.** It only checks that the cookie exists, and the `x-subscription-check` header it sets is on the response and read by nothing. Gated routes and pages must check the subscription in the DB.
+- **New public endpoints (webhooks, callbacks, share links) must be added to `publicPrefixes` in `src/middleware.ts`**, or they get a 401 and Stripe/FAL retry forever.
+- **Webhooks must call `request.text()` before signature verification.** FAL and video-status webhooks skip verification when their secret is unset.
+- **Credit-pack idempotency is `CreditPurchase.stripePaymentId @unique`.** The create must run before the minutes increment, so a replayed event throws first. Never make it an upsert.
+- Credit packs raise both `bonusMinutes` and `minutesLimit`, so a renewal reset of `minutesLimit` must add `bonusMinutes` back.
+- **Checkout success syncs the subscription directly** (a delayed webhook once left Pro users at 0 minutes). The webhook may process the same event, so both paths must stay idempotent.
+- Ads refund clawbacks are clamped at 0, because credits may already be spent. Billing webhooks skip invoices issued from admin.
+- **Read API keys inside functions, not as module constants.** A module-level key was undefined on Vercel serverless.
+- **Caching lives in `next.config.ts` `headers()`.** `/` is `private, no-store` (session + A/B variant). A new authenticated top-level route must be added to the exclusion regex there, or the CDN caches it publicly.
+- **OG image routes read fonts and images from disk.** Each new one needs an `outputFileTracingIncludes` entry (`src/lib/og/fonts/**`, `public/brand/**`), or it breaks only in production.
+- **What deploys:**
+  - `.vercelignore` drops `*.png` except `public/**` and `src/app/*.png`, and also drops `engine/`, `scripts/`, tests and `.env*`.
+  - `.gitignore` ignores `*.mp4` except `public/**/*.mp4`. Vercel deploys from git, so site videos must live there.
+- **Kly safety:** sending needs `KlySettings.enabled`, AdsFeatureFlag `outbound` and `OUTBOUND_ENABLED=1`. Inbound replies, bounces and unsubscribes are still processed when it is off. Engine and kly are single-replica on purpose (ticks must not overlap).
+- **The VEO REFERENCE_2_VIDEO prompt must not describe appearance.** The reference image sets the look (`src/lib/fal-lipsync/veo3.ts`).
 
 ## Workflows
-- **Schema:** there is no `prisma/migrations` folder (no migration history). Both `DATABASE_URL` (pooled) and `POSTGRES_URL_NON_POOLING` (`directUrl`) must be set.
-  - After changing the schema, also run `cd engine && node scripts/prisma-generate.mjs`. It regenerates the engine's client from the root schema with the Debian binary target (`npm install` runs it via postinstall).
-- **Web tests:** there is no test script, so run `npx vitest run`. It only picks up `src/**/__tests__/**/*.test.ts`, loads `.env.local`, and may hit real services. Engine tests are separate: `cd engine && npm test`, plus `npm run typecheck`.
-- **Scripts:** run with `npx tsx`. They load env in different ways:
-  - `ads-*` scripts: `set -a; . ./.env.local; set +a; npx tsx scripts/<x>.ts`. `ads-stripe-setup` targets test mode unless `--live` is passed.
-  - `set-admin`: `npx tsx --env-file=.env.local scripts/set-admin.ts <email> [--admin]`.
-  - `prisma/seed-*.ts` load no env, so source it first. `prisma db seed` is not wired up.
-- **Engine:** `cd engine && npm run dev`. It does not auto-load env; source `../.env.local` first.
-  - Railway builds `engine/Dockerfile` with the **repo root as context**: `docker build -f engine/Dockerfile .`.
-  - It runs as a single replica on port 4100, with the health check at `/healthz`.
-- **Web deploy:** Vercel default Next build (`prisma generate && next build`); there is no CI.
+- **No workspaces.** Each of root, `engine/`, `kly/`, `blog-engine/` and `packages/komendly-cli/` has its own lockfile and `npm install`.
+- **After a schema change:** run `node scripts/prisma-generate.mjs` in both `engine/` and `kly/` (postinstall also runs it). It regenerates each client from the root schema with the Debian binary target.
+- **Tests:**
+  - Web: `npx vitest run` (no script). It only picks up `src/**/__tests__/**/*.test.ts`, loads `.env.local`, and may hit real services.
+  - `engine/` and `kly/`: `npm test` and `npm run typecheck`.
+  - CLI: `npm test` in `packages/komendly-cli`.
+- **Engine/kly local runs:** neither auto-loads env, so run `set -a; . ../.env.local; set +a; npm run dev` first.
+- **Engine/kly Railway builds** use the **repo root as context**: `docker build -f engine/Dockerfile .` (same for `kly/`). The health check is `/healthz`; the engine runs on port 4100.
+- **Scripts** (`npx tsx scripts/<x>.ts`) load env differently; check each file's header.
+  - `ads-*`, `oauth-e2e`, `outbound-run`: source `.env.local` first.
+  - `set-admin`, `experiment-readout`: use `--env-file=.env.local`.
+  - `ads-stripe-setup` targets test mode unless `--live` is passed.
+- **Web deploy:** Vercel (`prisma generate && next build`). There is no CI.
 <!-- gg:init:end -->
 
 ## Blog & SEO

@@ -2,20 +2,20 @@
   "version": 1,
   "items": {
     "agent-setup": {
-      "checkedAt": "2026-11-07T19:12:05.354Z",
-      "commit": "18f59ac",
+      "checkedAt": "2026-11-16T14:35:22.780Z",
+      "commit": "49977a3",
       "uncommittedChanges": true,
       "result": "issues",
-      "summary": "CLAUDE.md is rewritten and checked against the code, but .ezcoder/skills is empty, so no project skills cover the recurring work.",
+      "summary": "CLAUDE.md is current with the code, including kly/, the CLI and Ozzy Studio, but the project has no skills for its recurring work.",
       "findings": [
-        "Medium: .ezcoder/skills/ is empty. Recurring workflows (schema change plus engine Prisma regeneration, ads engine job changes, blog generation) have no skills. Blog generation is only a .claude command. Fix: add project skills."
+        "The project has no skills (.ezcoder/skills is empty, there is no .claude/skills). Medium. Add skills for recurring work, e.g. shipping a schema change across web, engine and kly, and adding a public endpoint or OG route."
       ],
       "evidence": [
-        "Rewrote CLAUDE.md within the gg:init fence (5896 bytes)",
-        "Checked claims against package.json, vitest.config.ts, .vercelignore, next.config.ts, src/middleware.ts, engine/railway.json, prisma/schema.prisma",
-        "ls .ezcoder/skills: empty; .claude/commands has blog-generator.md and commit.md",
-        "Scope: root CLAUDE.md, the agent skills/commands folders, and deploy/test config",
-        "Not checked: every webhook route line by line; engine/src internals beyond the contracts imports"
+        "Rewrote the gg:init block in CLAUDE.md using research from 3 subagents.",
+        "Spot-checked: Dockerfile COPY lists, kly PORT 4200, the Bearer branch in middleware, the .gitignore mp4 rule, OUTBOUND_ENABLED.",
+        "Ran ls .ezcoder/skills .claude/skills: no skills found.",
+        "Scope: the CLAUDE.md generated block, deploy manifests and the skill folders.",
+        "Not checked: all ~30 publicPrefixes entries and every script header."
       ]
     }
   }
