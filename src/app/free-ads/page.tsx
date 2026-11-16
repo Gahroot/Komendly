@@ -17,10 +17,10 @@ import "@/components/studio/studio.css";
 // the CTA sends everyone to signup, which forwards signed-in users straight to /ads/start.
 // Buyers are mostly owners aged 35-64 on phones in the Facebook app: big type, real proof up top, one field.
 export const metadata: Metadata = {
-  title: "Free Ad Pack: 10 Facebook & Instagram ads from your website",
-  description: "Paste your website. Get 10 ready-to-run Facebook & Instagram ads plus an animated video ad, free, in minutes. No card, no designer, no prompts.",
+  title: "Free Ad Pack: 10 ready-to-run ads from your website",
+  description: "Paste your website. Get 10 ready-to-run ads plus an animated video ad, free, in minutes. No card, no designer, no prompts.",
   alternates: { canonical: "/free-ads" },
-  openGraph: { title: "Free Ad Pack: 10 ads from your website", description: "10 ready-to-run Facebook & Instagram ads + 1 animated ad, free. No card.", url: "/free-ads" },
+  openGraph: { title: "Free Ad Pack: 10 ads from your website", description: "10 ready-to-run ads + 1 animated ad, free. No card.", url: "/free-ads" },
 };
 
 // Verbatim from Trustpilot (shared with Max's OK).
@@ -33,7 +33,7 @@ const MAX = {
 };
 
 const STACK = [
-  { what: "10 ready-to-post ads (Facebook & Instagram feed size)", worth: "Freelancers charge $15-60 per ad" },
+  { what: "10 ready-to-post ads for your social feeds", worth: "Freelancers charge $15-60 per ad" },
   { what: "1 animated video ad", worth: "Video ads usually cost the most to make" },
   { what: "The words for every ad, written for your customers", worth: "Headlines and text pulled from your own website" },
   { what: "Your logo and colours, taken from your site", worth: "Every ad looks like your business, not a template" },
@@ -55,7 +55,7 @@ const FAQ = [
   { q: "Is it really free?", a: "Yes. The Free Ad Pack needs no card. You only pay if you choose a plan afterwards." },
   { q: "Do I need to be good with computers?", a: "No. If you can type your website address, you can do this. We do the design and the writing." },
   { q: "Why only one per business?", a: "Each pack runs real image and video generation, so it's one free pack per business, per device and per email." },
-  { q: "Can I run the ads on Facebook and Instagram?", a: "Yes. They're made in the feed size Meta recommends, and they're yours to use." },
+  { q: "Where can I run the ads?", a: "Anywhere you advertise. They're made in the 4:5 feed size, and they're yours to use." },
   { q: "What if I upgrade and don't like it?", a: "Paid plans come with a 30-day money-back guarantee on your first payment. Ask and we refund it." },
 ];
 
@@ -109,7 +109,7 @@ export default function FreeAdsPage() {
             Free Ad Pack · no card needed
           </p>
           <h1 id="offer-title" className="font-display mt-3 text-balance text-[2.4rem] font-medium leading-[1.08] tracking-[-0.02em] sm:text-6xl">
-            Paste your website. Get 10 ready-to-run Facebook &amp; Instagram ads, free.
+            Paste your website. Get 10 ready-to-run ads, free.
           </h1>
           <p className="mt-3 max-w-xl text-pretty text-lg text-foreground/90 sm:text-xl">
             Plus a video ad. Made from your own website in minutes. No designer needed.
