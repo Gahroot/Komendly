@@ -1,0 +1,1954 @@
+{
+  "note": "bpm from the composer's catalogue (incompetech pieces.json); hits measured (energy-onset peaks, >=2 s apart). Each file: first <=90 s, fade-out, loudnorm -14 LUFS / -1 dBTP, 128 kbps MP3.",
+  "tracks": [
+    {
+      "id": "kevin-macleod-carefree",
+      "title": "Carefree",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-carefree.mp3",
+      "seconds": 90,
+      "bpm": 96,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "playful",
+        "vlog",
+        "warm"
+      ],
+      "energy": 4,
+      "goodFor": [
+        "cafe",
+        "local service",
+        "travel",
+        "food",
+        "kids"
+      ],
+      "hits": [
+        5.95,
+        10.35,
+        14.15,
+        17.85,
+        26.6,
+        32.9,
+        42.25,
+        51,
+        69.3,
+        79.45
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Carefree.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Carefree\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-life-of-riley",
+      "title": "Life of Riley",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-life-of-riley.mp3",
+      "seconds": 90,
+      "bpm": 102,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "playful",
+        "vlog",
+        "warm"
+      ],
+      "energy": 3,
+      "goodFor": [
+        "cafe",
+        "food",
+        "local service",
+        "kids",
+        "travel"
+      ],
+      "hits": [
+        3.65,
+        7.15,
+        11.85,
+        17.75,
+        27.1,
+        33.1,
+        40.1,
+        50.75,
+        54.2,
+        70.75
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Life%20of%20Riley.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Life of Riley\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-inspired",
+      "title": "Inspired",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-inspired.mp3",
+      "seconds": 90,
+      "bpm": 120,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "vlog",
+        "warm",
+        "emotional"
+      ],
+      "energy": 3,
+      "goodFor": [
+        "saas",
+        "travel",
+        "launch",
+        "real estate",
+        "wellness"
+      ],
+      "hits": [
+        1,
+        20,
+        33.5,
+        36.05,
+        52,
+        55.5,
+        64,
+        67.5,
+        77.5,
+        80
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Inspired.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Inspired\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-montauk-point",
+      "title": "Montauk Point",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-montauk-point.mp3",
+      "seconds": 90,
+      "bpm": 118,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "vlog",
+        "warm"
+      ],
+      "energy": 4,
+      "goodFor": [
+        "travel",
+        "fitness",
+        "local service",
+        "launch"
+      ],
+      "hits": [
+        2.15,
+        6.15,
+        8.2,
+        10.3,
+        25.2,
+        28.5,
+        36.7,
+        46.3,
+        54.45,
+        61.05
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Montauk%20Point.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Montauk Point\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-fretless",
+      "title": "Fretless",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-fretless.mp3",
+      "seconds": 90,
+      "bpm": 100,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "warm",
+        "vlog",
+        "chill"
+      ],
+      "energy": 3,
+      "goodFor": [
+        "cafe",
+        "travel",
+        "local service",
+        "food"
+      ],
+      "hits": [
+        8.45,
+        18.05,
+        28.25,
+        38.4,
+        46.85,
+        55.85,
+        63.3,
+        66.65,
+        75.05,
+        85.85
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Fretless.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Fretless\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-daily-beetle",
+      "title": "Daily Beetle",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-daily-beetle.mp3",
+      "seconds": 90,
+      "bpm": 100,
+      "key": null,
+      "moods": [
+        "playful",
+        "chill",
+        "vlog",
+        "warm"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "cafe",
+        "kids",
+        "food",
+        "local service"
+      ],
+      "hits": [
+        0.95,
+        5.75,
+        10.55,
+        18,
+        20.15,
+        24.6,
+        44.15,
+        63.35,
+        75,
+        77.75
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Daily%20Beetle.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Daily Beetle\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-easy-lemon",
+      "title": "Easy Lemon",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-easy-lemon.mp3",
+      "seconds": 90,
+      "bpm": 82,
+      "key": null,
+      "moods": [
+        "chill",
+        "warm",
+        "vlog"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "cafe",
+        "saas",
+        "local service",
+        "wellness"
+      ],
+      "hits": [
+        3.05,
+        11.25,
+        17.1,
+        34.7,
+        40.55,
+        46.4,
+        49.9,
+        58.1,
+        63.95,
+        73.3
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Easy%20Lemon.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Easy Lemon\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-local-forecast-elevator",
+      "title": "Local Forecast - Elevator",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-local-forecast-elevator.mp3",
+      "seconds": 90,
+      "bpm": 82,
+      "key": null,
+      "moods": [
+        "chill",
+        "playful",
+        "warm"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "cafe",
+        "saas",
+        "local service",
+        "real estate"
+      ],
+      "hits": [
+        2.3,
+        24.3,
+        28.85,
+        34.75,
+        40.5,
+        46.05,
+        49.1,
+        65.15,
+        70.7,
+        79.5
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Local%20Forecast%20-%20Elevator.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Local Forecast - Elevator\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-local-forecast",
+      "title": "Local Forecast",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-local-forecast.mp3",
+      "seconds": 90,
+      "bpm": 93,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "playful",
+        "warm"
+      ],
+      "energy": 3,
+      "goodFor": [
+        "cafe",
+        "food",
+        "local service"
+      ],
+      "hits": [
+        9.4,
+        18.1,
+        22.45,
+        30.2,
+        35.35,
+        38.75,
+        56,
+        62.45,
+        68.9,
+        81.65
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Local%20Forecast.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Local Forecast\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-space-1990-b",
+      "title": "Space 1990-B",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-space-1990-b.mp3",
+      "seconds": 90,
+      "bpm": 82,
+      "key": null,
+      "moods": [
+        "chill",
+        "lofi",
+        "vlog"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "saas",
+        "cafe",
+        "tech"
+      ],
+      "hits": [
+        16.1,
+        21.45,
+        24.85,
+        30,
+        34.3,
+        54.3,
+        58.6,
+        74.3,
+        77.7,
+        84.85
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Space%201990-B.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Space 1990-B\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-chill-wave",
+      "title": "Chill Wave",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-chill-wave.mp3",
+      "seconds": 90,
+      "bpm": 100,
+      "key": null,
+      "moods": [
+        "chill",
+        "lofi",
+        "vlog"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "saas",
+        "cafe",
+        "travel",
+        "fashion"
+      ],
+      "hits": [
+        1.25,
+        10.85,
+        20.45,
+        30.05,
+        39.7,
+        42.05,
+        49.3,
+        51.65,
+        78.1,
+        80.45
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Chill%20Wave.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Chill Wave\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-slow-jam",
+      "title": "Slow Jam",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-slow-jam.mp3",
+      "seconds": 90,
+      "bpm": 75,
+      "key": null,
+      "moods": [
+        "chill",
+        "lofi",
+        "warm"
+      ],
+      "energy": 1,
+      "goodFor": [
+        "cafe",
+        "wellness",
+        "beauty"
+      ],
+      "hits": [
+        12.05,
+        15.25,
+        18.85,
+        24.85,
+        28.85,
+        35.25,
+        37.65,
+        44.45,
+        50.45,
+        70.45
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Slow%20Jam.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Slow Jam\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-late-night-radio",
+      "title": "Late Night Radio",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-late-night-radio.mp3",
+      "seconds": 90,
+      "bpm": 72,
+      "key": null,
+      "moods": [
+        "chill",
+        "lofi",
+        "warm"
+      ],
+      "energy": 1,
+      "goodFor": [
+        "cafe",
+        "food",
+        "wellness"
+      ],
+      "hits": [
+        0.3,
+        11.9,
+        15.25,
+        38.55,
+        41.9,
+        46.9,
+        53.6,
+        68.55,
+        71.9,
+        81.9
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Late%20Night%20Radio.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Late Night Radio\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-past-sadness",
+      "title": "Past Sadness",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-past-sadness.mp3",
+      "seconds": 90,
+      "bpm": 72,
+      "key": null,
+      "moods": [
+        "chill",
+        "lofi",
+        "emotional"
+      ],
+      "energy": 1,
+      "goodFor": [
+        "cafe",
+        "wellness",
+        "real estate"
+      ],
+      "hits": [
+        4.6,
+        13.35,
+        17.95,
+        24.6,
+        26.7,
+        53.35,
+        57.95,
+        64.6,
+        66.7,
+        84.6
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Past%20Sadness.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Past Sadness\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-sincerely",
+      "title": "Sincerely",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-sincerely.mp3",
+      "seconds": 90,
+      "bpm": 72,
+      "key": null,
+      "moods": [
+        "chill",
+        "lofi",
+        "warm"
+      ],
+      "energy": 1,
+      "goodFor": [
+        "cafe",
+        "wellness",
+        "beauty"
+      ],
+      "hits": [
+        6.75,
+        13,
+        15.05,
+        28.4,
+        39.65,
+        41.75,
+        46.75,
+        66.3,
+        68.4,
+        73.4
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Sincerely.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Sincerely\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-too-cool",
+      "title": "Too Cool",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-too-cool.mp3",
+      "seconds": 90,
+      "bpm": 80,
+      "key": null,
+      "moods": [
+        "chill",
+        "lofi",
+        "vlog"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "fashion",
+        "cafe",
+        "saas"
+      ],
+      "hits": [
+        49.4,
+        52.35,
+        55.4,
+        58.4,
+        62.25,
+        65.25,
+        68.25,
+        74.25,
+        77.25,
+        80.25
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Too%20Cool.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Too Cool\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-chillin-hard",
+      "title": "Chillin Hard",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-chillin-hard.mp3",
+      "seconds": 90,
+      "bpm": 80,
+      "key": null,
+      "moods": [
+        "chill",
+        "lofi",
+        "vlog"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "fashion",
+        "food",
+        "cafe"
+      ],
+      "hits": [
+        1.35,
+        4.2,
+        10.9,
+        13.35,
+        16.35,
+        24.05,
+        37.35,
+        48,
+        72.05,
+        76.2
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Chillin%20Hard.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Chillin Hard\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-study-and-relax",
+      "title": "Study And Relax",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-study-and-relax.mp3",
+      "seconds": 90,
+      "bpm": 72,
+      "key": null,
+      "moods": [
+        "chill",
+        "lofi",
+        "warm"
+      ],
+      "energy": 1,
+      "goodFor": [
+        "cafe",
+        "saas",
+        "education"
+      ],
+      "hits": [
+        11.7,
+        15,
+        20.05,
+        23.35,
+        34.95,
+        46.7,
+        65.05,
+        69.2,
+        76.7,
+        81.7
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Study%20And%20Relax.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Study And Relax\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-vibing-over-venus",
+      "title": "Vibing Over Venus",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-vibing-over-venus.mp3",
+      "seconds": 90,
+      "bpm": 94,
+      "key": null,
+      "moods": [
+        "chill",
+        "lofi",
+        "warm"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "cafe",
+        "beauty",
+        "wellness"
+      ],
+      "hits": [
+        2.3,
+        12.5,
+        17.6,
+        32.95,
+        38.05,
+        43.15,
+        68.7,
+        73.8,
+        78.9,
+        84
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Vibing%20Over%20Venus.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Vibing Over Venus\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-pleasant-porridge",
+      "title": "Pleasant Porridge",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-pleasant-porridge.mp3",
+      "seconds": 90,
+      "bpm": 119,
+      "key": null,
+      "moods": [
+        "chill",
+        "warm",
+        "vlog"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "cafe",
+        "food",
+        "local service"
+      ],
+      "hits": [
+        7.6,
+        16.15,
+        22.2,
+        33.3,
+        35.3,
+        38.35,
+        41.35,
+        45.4,
+        48.4,
+        54.45
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Pleasant%20Porridge.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Pleasant Porridge\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-jazz-brunch",
+      "title": "Jazz Brunch",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-jazz-brunch.mp3",
+      "seconds": 90,
+      "bpm": 100,
+      "key": null,
+      "moods": [
+        "warm",
+        "chill",
+        "premium"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "cafe",
+        "food",
+        "restaurant",
+        "real estate"
+      ],
+      "hits": [
+        1.45,
+        4.75,
+        18.25,
+        24.25,
+        31.45,
+        36.25,
+        53.05,
+        67.45,
+        72.25,
+        78.15
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Jazz%20Brunch.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Jazz Brunch\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-bossa-antigua",
+      "title": "Bossa Antigua",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-bossa-antigua.mp3",
+      "seconds": 90,
+      "bpm": 70,
+      "key": null,
+      "moods": [
+        "warm",
+        "chill",
+        "premium"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "cafe",
+        "restaurant",
+        "real estate",
+        "beauty"
+      ],
+      "hits": [
+        3.7,
+        7.2,
+        10.55,
+        19.95,
+        36.45,
+        46.75,
+        60.05,
+        69.95,
+        74.2,
+        86.85
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Bossa%20Antigua.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Bossa Antigua\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-lobby-time",
+      "title": "Lobby Time",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-lobby-time.mp3",
+      "seconds": 90,
+      "bpm": 128,
+      "key": null,
+      "moods": [
+        "warm",
+        "chill",
+        "playful"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "cafe",
+        "saas",
+        "local service",
+        "real estate"
+      ],
+      "hits": [
+        1.9,
+        11.3,
+        26.35,
+        31.9,
+        38.45,
+        46,
+        51.15,
+        66.6,
+        80.25,
+        83.95
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Lobby%20Time.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Lobby Time\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-backbay-lounge",
+      "title": "Backbay Lounge",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-backbay-lounge.mp3",
+      "seconds": 90,
+      "bpm": 120,
+      "key": null,
+      "moods": [
+        "warm",
+        "premium",
+        "chill"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "restaurant",
+        "real estate",
+        "beauty",
+        "cafe"
+      ],
+      "hits": [
+        0.6,
+        4.55,
+        9.55,
+        16.55,
+        20.55,
+        41.55,
+        47.55,
+        52.55,
+        70.05,
+        82.05
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Backbay%20Lounge.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Backbay Lounge\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-cold-sober",
+      "title": "Cold Sober",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-cold-sober.mp3",
+      "seconds": 90,
+      "bpm": 80,
+      "key": null,
+      "moods": [
+        "chill",
+        "warm",
+        "vlog"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "cafe",
+        "food",
+        "travel"
+      ],
+      "hits": [
+        1.9,
+        5.7,
+        7.9,
+        10.9,
+        13.9,
+        19.9,
+        49.9,
+        61.9,
+        67.9,
+        79.9
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Cold%20Sober.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Cold Sober\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-funky-chunk",
+      "title": "Funky Chunk",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-funky-chunk.mp3",
+      "seconds": 90,
+      "bpm": 115,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "punchy",
+        "vlog"
+      ],
+      "energy": 4,
+      "goodFor": [
+        "fitness",
+        "food",
+        "fashion",
+        "sale"
+      ],
+      "hits": [
+        3.4,
+        6.8,
+        13.6,
+        16.2,
+        40.2,
+        48.55,
+        59.5,
+        76.2,
+        80.35,
+        86.1
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Funky%20Chunk.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Funky Chunk\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-got-funk",
+      "title": "Got Funk",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-got-funk.mp3",
+      "seconds": 90,
+      "bpm": 98,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "punchy",
+        "playful"
+      ],
+      "energy": 4,
+      "goodFor": [
+        "food",
+        "sale",
+        "local service",
+        "fashion"
+      ],
+      "hits": [
+        38.45,
+        48.7,
+        53.15,
+        55.6,
+        58.05,
+        65.4,
+        70.3,
+        72.75,
+        75.2,
+        77.65
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Got%20Funk.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Got Funk\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-groundwork",
+      "title": "Groundwork",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-groundwork.mp3",
+      "seconds": 90,
+      "bpm": 102,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "vlog",
+        "warm"
+      ],
+      "energy": 3,
+      "goodFor": [
+        "local service",
+        "saas",
+        "launch",
+        "travel"
+      ],
+      "hits": [
+        30.05,
+        45.65,
+        48.85,
+        56.55,
+        61.8,
+        68.85,
+        73.9,
+        77.1,
+        80.6,
+        86.5
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Groundwork.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Groundwork\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-overcast",
+      "title": "Overcast",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-overcast.mp3",
+      "seconds": 90,
+      "bpm": 120,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "vlog",
+        "chill"
+      ],
+      "energy": 3,
+      "goodFor": [
+        "saas",
+        "travel",
+        "launch",
+        "tech"
+      ],
+      "hits": [
+        7,
+        16,
+        32,
+        39,
+        48,
+        64,
+        67,
+        71,
+        75,
+        79
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Overcast.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Overcast\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-son-of-a-rocket",
+      "title": "Son of a Rocket",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-son-of-a-rocket.mp3",
+      "seconds": 90,
+      "bpm": 110,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "playful",
+        "vlog"
+      ],
+      "energy": 4,
+      "goodFor": [
+        "saas",
+        "launch",
+        "tech",
+        "kids"
+      ],
+      "hits": [
+        2.8,
+        9.9,
+        17.5,
+        20.25,
+        33.35,
+        37.7,
+        39.9,
+        42.6,
+        44.8,
+        49.7
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Son%20Of%20A%20Rocket.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Son of a Rocket\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-new-friendly",
+      "title": "New Friendly",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-new-friendly.mp3",
+      "seconds": 90,
+      "bpm": 114,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "vlog",
+        "playful"
+      ],
+      "energy": 3,
+      "goodFor": [
+        "saas",
+        "launch",
+        "tech",
+        "local service"
+      ],
+      "hits": [
+        18.9,
+        25.1,
+        33.45,
+        35.5,
+        41.8,
+        43.85,
+        51.15,
+        53.25,
+        75.2,
+        79.35
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/New%20Friendly.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"New Friendly\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-digital-lemonade",
+      "title": "Digital Lemonade",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-digital-lemonade.mp3",
+      "seconds": 90,
+      "bpm": 120,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "playful",
+        "chill"
+      ],
+      "energy": 3,
+      "goodFor": [
+        "saas",
+        "tech",
+        "food",
+        "cafe"
+      ],
+      "hits": [
+        2.4,
+        5.55,
+        13.55,
+        15.55,
+        18.05,
+        20.05,
+        30.4,
+        50.05,
+        52.05,
+        68
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Digital%20Lemonade.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Digital Lemonade\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-sunflower-dance-party",
+      "title": "Sunflower Dance Party",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-sunflower-dance-party.mp3",
+      "seconds": 90,
+      "bpm": 108,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "playful",
+        "vlog"
+      ],
+      "energy": 4,
+      "goodFor": [
+        "sale",
+        "food",
+        "kids",
+        "fashion"
+      ],
+      "hits": [
+        17.8,
+        23.35,
+        27.25,
+        29.45,
+        33.4,
+        38.35,
+        42.8,
+        57.25,
+        62.25,
+        67.25
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Sunflower%20Dance%20Party.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Sunflower Dance Party\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-electrodoodle",
+      "title": "Electrodoodle",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-electrodoodle.mp3",
+      "seconds": 90,
+      "bpm": 120,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "playful",
+        "chill"
+      ],
+      "energy": 3,
+      "goodFor": [
+        "saas",
+        "tech",
+        "launch"
+      ],
+      "hits": [
+        3.05,
+        6.05,
+        18.05,
+        22.05,
+        28.1,
+        35.05,
+        39.05,
+        50.05,
+        54.05,
+        60.1
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Electrodoodle.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Electrodoodle\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-nowhere-land",
+      "title": "Nowhere Land",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-nowhere-land.mp3",
+      "seconds": 90,
+      "bpm": 120,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "chill",
+        "emotional"
+      ],
+      "energy": 3,
+      "goodFor": [
+        "travel",
+        "saas",
+        "real estate"
+      ],
+      "hits": [
+        19.25,
+        31.95,
+        34,
+        38,
+        42,
+        55.25,
+        63.95,
+        66,
+        74,
+        78
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Nowhere%20Land.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Nowhere Land\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-newer-wave",
+      "title": "Newer Wave",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-newer-wave.mp3",
+      "seconds": 90,
+      "bpm": 110,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "vlog",
+        "punchy"
+      ],
+      "energy": 4,
+      "goodFor": [
+        "fashion",
+        "fitness",
+        "launch",
+        "tech"
+      ],
+      "hits": [
+        2.2,
+        9.3,
+        14.2,
+        19.1,
+        27.3,
+        33.3,
+        73.1,
+        75.3,
+        80.2,
+        86.2
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Newer%20Wave.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Newer Wave\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-voxel-revolution",
+      "title": "Voxel Revolution",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-voxel-revolution.mp3",
+      "seconds": 90,
+      "bpm": 122,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "punchy",
+        "playful"
+      ],
+      "energy": 4,
+      "goodFor": [
+        "sale",
+        "launch",
+        "tech",
+        "fitness"
+      ],
+      "hits": [
+        2,
+        6.9,
+        9.35,
+        13.3,
+        22.65,
+        34.45,
+        61.5,
+        70.6,
+        76.25,
+        85.6
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Voxel%20Revolution.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Voxel Revolution\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-werq",
+      "title": "Werq",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-werq.mp3",
+      "seconds": 90,
+      "bpm": 125,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "punchy",
+        "vlog"
+      ],
+      "energy": 4,
+      "goodFor": [
+        "fashion",
+        "fitness",
+        "sale",
+        "beauty"
+      ],
+      "hits": [
+        17.3,
+        21.15,
+        23.55,
+        25.95,
+        29.3,
+        65.3,
+        70.1,
+        72.5,
+        79.7,
+        85.45
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Werq.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Werq\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-getting-it-done",
+      "title": "Getting it Done",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-getting-it-done.mp3",
+      "seconds": 90,
+      "bpm": 135,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "punchy",
+        "vlog"
+      ],
+      "energy": 4,
+      "goodFor": [
+        "saas",
+        "fitness",
+        "launch",
+        "local service"
+      ],
+      "hits": [
+        0.5,
+        4.05,
+        7.6,
+        11.15,
+        14.7,
+        18.25,
+        21.8,
+        24.25,
+        39.6,
+        71.6
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Getting%20it%20Done.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Getting it Done\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-raving-energy",
+      "title": "Raving Energy",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-raving-energy.mp3",
+      "seconds": 90,
+      "bpm": 122,
+      "key": null,
+      "moods": [
+        "punchy",
+        "upbeat"
+      ],
+      "energy": 5,
+      "goodFor": [
+        "fitness",
+        "sale",
+        "launch",
+        "fashion"
+      ],
+      "hits": [
+        7.9,
+        9.9,
+        16.8,
+        31.55,
+        47.25,
+        49.25,
+        58.1,
+        61.5,
+        64,
+        73.35
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Raving%20Energy.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Raving Energy\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-go-cart-loop-mix",
+      "title": "Go Cart - Loop Mix",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-go-cart-loop-mix.mp3",
+      "seconds": 83.5,
+      "bpm": 115,
+      "key": null,
+      "moods": [
+        "punchy",
+        "upbeat"
+      ],
+      "energy": 5,
+      "goodFor": [
+        "sale",
+        "fitness",
+        "automotive",
+        "launch"
+      ],
+      "hits": [
+        4.3,
+        8.4,
+        18.9,
+        23.05,
+        27.15,
+        31.35,
+        37.6,
+        41.8,
+        45.95,
+        60.6
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Go%20Cart%20-%20Loop%20Mix.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Go Cart - Loop Mix\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-exit-the-premises",
+      "title": "Exit the Premises",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-exit-the-premises.mp3",
+      "seconds": 90,
+      "bpm": 128,
+      "key": null,
+      "moods": [
+        "punchy",
+        "cinematic"
+      ],
+      "energy": 5,
+      "goodFor": [
+        "fitness",
+        "launch",
+        "tech",
+        "automotive"
+      ],
+      "hits": [
+        1.35,
+        5.1,
+        15.05,
+        23,
+        30.5,
+        34.25,
+        56.75,
+        64.25,
+        68,
+        75.5
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Exit%20the%20Premises.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Exit the Premises\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-edm-detection-mode",
+      "title": "EDM Detection Mode",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-edm-detection-mode.mp3",
+      "seconds": 90,
+      "bpm": 128,
+      "key": null,
+      "moods": [
+        "punchy",
+        "upbeat"
+      ],
+      "energy": 5,
+      "goodFor": [
+        "fitness",
+        "sale",
+        "launch",
+        "fashion"
+      ],
+      "hits": [
+        15.05,
+        19.75,
+        23.5,
+        27.25,
+        53.5,
+        61,
+        64.75,
+        68.5,
+        79.75,
+        83.5
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/EDM%20Detection%20Mode.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"EDM Detection Mode\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-who-likes-to-party",
+      "title": "Who Likes to Party",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-who-likes-to-party.mp3",
+      "seconds": 90,
+      "bpm": 117,
+      "key": null,
+      "moods": [
+        "punchy",
+        "upbeat",
+        "playful"
+      ],
+      "energy": 5,
+      "goodFor": [
+        "sale",
+        "food",
+        "fashion",
+        "launch"
+      ],
+      "hits": [
+        3.1,
+        7.2,
+        11.3,
+        13.35,
+        15.4,
+        51.3,
+        53.35,
+        55.4,
+        64.65,
+        72.85
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Who%20Likes%20to%20Party.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Who Likes to Party\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-disco-con-tutti",
+      "title": "Disco con Tutti",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-disco-con-tutti.mp3",
+      "seconds": 90,
+      "bpm": 115,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "punchy",
+        "playful"
+      ],
+      "energy": 4,
+      "goodFor": [
+        "sale",
+        "fashion",
+        "food",
+        "launch"
+      ],
+      "hits": [
+        2.1,
+        7.3,
+        10.45,
+        15.65,
+        24,
+        32.35,
+        35.5,
+        43.85,
+        74.1,
+        82.45
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Disco%20con%20Tutti.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Disco con Tutti\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-happy-bee",
+      "title": "Happy Bee",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-happy-bee.mp3",
+      "seconds": 90,
+      "bpm": 122,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "playful"
+      ],
+      "energy": 4,
+      "goodFor": [
+        "food",
+        "kids",
+        "local service",
+        "sale"
+      ],
+      "hits": [
+        0.05,
+        3,
+        6.95,
+        11.65,
+        14.8,
+        32.25,
+        34.25,
+        39.4,
+        46.3,
+        86.6
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Happy%20Bee.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Happy Bee\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-move-forward",
+      "title": "Move Forward",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-move-forward.mp3",
+      "seconds": 69.3,
+      "bpm": 111,
+      "key": null,
+      "moods": [
+        "upbeat",
+        "playful",
+        "warm"
+      ],
+      "energy": 4,
+      "goodFor": [
+        "kids",
+        "local service",
+        "saas",
+        "food"
+      ],
+      "hits": [
+        0.3,
+        4.65,
+        10.05,
+        14.35,
+        17.05,
+        34.35,
+        44.35,
+        47.6,
+        50.85,
+        66.25
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Move%20Forward.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Move Forward\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-reunited",
+      "title": "Reunited",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-reunited.mp3",
+      "seconds": 71.4,
+      "bpm": 120,
+      "key": null,
+      "moods": [
+        "cinematic",
+        "emotional",
+        "warm"
+      ],
+      "energy": 3,
+      "goodFor": [
+        "real estate",
+        "wedding",
+        "travel",
+        "premium"
+      ],
+      "hits": [
+        0.55,
+        6.55,
+        30.8,
+        39.5,
+        41.5,
+        43.5,
+        45.5,
+        47.5,
+        49.5,
+        51.5
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Reunited.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Reunited\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-americana",
+      "title": "Americana",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-americana.mp3",
+      "seconds": 90,
+      "bpm": 104,
+      "key": null,
+      "moods": [
+        "cinematic",
+        "emotional",
+        "premium"
+      ],
+      "energy": 3,
+      "goodFor": [
+        "real estate",
+        "travel",
+        "launch",
+        "wedding"
+      ],
+      "hits": [
+        2.85,
+        6.55,
+        11.45,
+        13.65,
+        18.9,
+        24.65,
+        34,
+        76.15,
+        81.95,
+        84.05
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Americana.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Americana\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-dream-culture",
+      "title": "Dream Culture",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-dream-culture.mp3",
+      "seconds": 90,
+      "bpm": 70,
+      "key": null,
+      "moods": [
+        "cinematic",
+        "chill",
+        "emotional"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "real estate",
+        "wellness",
+        "beauty",
+        "premium"
+      ],
+      "hits": [
+        20.7,
+        29.25,
+        32.7,
+        39.55,
+        44.7,
+        53.25,
+        65.25,
+        75.55,
+        78.9,
+        85.75
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Dream%20Culture.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Dream Culture\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-infinite-perspective",
+      "title": "Infinite Perspective",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-infinite-perspective.mp3",
+      "seconds": 90,
+      "bpm": 80,
+      "key": null,
+      "moods": [
+        "cinematic",
+        "premium",
+        "emotional"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "real estate",
+        "luxury",
+        "saas",
+        "launch"
+      ],
+      "hits": [
+        0.3,
+        6.35,
+        12.5,
+        24.2,
+        31.6,
+        60.25,
+        66.35,
+        70.5,
+        78.2,
+        84.05
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Infinite%20Perspective.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Infinite Perspective\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-undaunted",
+      "title": "Undaunted",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-undaunted.mp3",
+      "seconds": 90,
+      "bpm": 95,
+      "key": null,
+      "moods": [
+        "cinematic",
+        "punchy"
+      ],
+      "energy": 5,
+      "goodFor": [
+        "launch",
+        "fitness",
+        "automotive",
+        "tech"
+      ],
+      "hits": [
+        2.6,
+        5.15,
+        10.2,
+        12.55,
+        15.25,
+        17.65,
+        30.45,
+        45.55,
+        50.65,
+        55.65
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Undaunted.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Undaunted\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    },
+    {
+      "id": "kevin-macleod-inner-light",
+      "title": "Inner Light",
+      "artist": "Kevin MacLeod",
+      "file": "kevin-macleod-inner-light.mp3",
+      "seconds": 90,
+      "bpm": 105,
+      "key": null,
+      "moods": [
+        "warm",
+        "emotional",
+        "chill"
+      ],
+      "energy": 2,
+      "goodFor": [
+        "wellness",
+        "real estate",
+        "beauty",
+        "local service"
+      ],
+      "hits": [
+        0.15,
+        6.8,
+        29.1,
+        35.95,
+        41.3,
+        56.55,
+        66.8,
+        70.25,
+        75.4,
+        83.95
+      ],
+      "sourceUrl": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/Inner%20Light.mp3",
+      "licence": "CC-BY-4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "credit": "\"Inner Light\" Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 http://creativecommons.org/licenses/by/4.0/"
+    }
+  ]
+}
