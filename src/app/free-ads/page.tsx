@@ -102,7 +102,7 @@ export default function FreeAdsPage() {
     <StudioRoot className={`${fraunces.variable} min-h-screen bg-[#0c0820]`}>
       <DeviceCookie />
       <TrackOnMount event="landing_view" params={{ page: "free_ads" }} />
-      <StudioNav signedIn={false} />
+      <StudioNav signedIn={false} minimal />
       <main>
         <section className="mx-auto flex max-w-3xl flex-col items-center px-4 pb-16 pt-3 text-center sm:px-6 sm:pt-14" aria-labelledby="offer-title">
           <p className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-1.5 text-sm font-semibold uppercase tracking-[0.1em] text-[var(--studio-gold)]">

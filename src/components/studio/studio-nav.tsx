@@ -5,7 +5,19 @@ import { BrandMark } from "@/components/brand-mark";
 const LINK = "hidden rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:text-foreground";
 
 /** Transparent night nav over the sky (marketing pages). One front door: /login, /register, /dashboard. */
-export function StudioNav({ signedIn }: { signedIn: boolean }) {
+export function StudioNav({ signedIn, minimal = false }: { signedIn: boolean; /** Paid landing pages: logo only, nothing to click away to. */ minimal?: boolean }) {
+  if (minimal) {
+    return (
+      <header className="relative z-20">
+        <div className="mx-auto flex h-16 max-w-6xl items-center px-4 sm:px-6">
+          <span className="font-display flex items-center gap-2 text-xl font-semibold tracking-tight text-foreground">
+            <BrandMark className="size-8" />
+            Komendly
+          </span>
+        </div>
+      </header>
+    );
+  }
   const links = [
     { href: "/ozzy-studio", label: "Ozzy Studio (new)" },
     { href: "/remix", label: "Remix any ad" },
