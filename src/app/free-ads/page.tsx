@@ -23,12 +23,12 @@ export const metadata: Metadata = {
   openGraph: { title: "Free Ad Pack: 10 ads from your website", description: "10 ready-to-run Facebook & Instagram ads + 1 animated ad, free. No card.", url: "/free-ads" },
 };
 
-// Verbatim from Trustpilot (shared with Max's OK). Set `photo` to a /public path once we have his picture.
+// Verbatim from Trustpilot (shared with Max's OK).
 const MAX = {
   quote: "The service Nolan provided helped me save a ton of time making 300 versions of content for my meta ads. His delivery was fast and straight forward!",
   name: "Max",
   business: "Maxteriors Exterior Lighting",
-  photo: null as string | null,
+  photo: "/testimonials/max-maxteriors.jpg" as string | null,
   source: "https://www.trustpilot.com/review/prestyj.com",
 };
 
@@ -83,7 +83,7 @@ function MaxQuote() {
       </blockquote>
       <figcaption className="flex items-center gap-3">
         {MAX.photo ? (
-          <Image src={MAX.photo} alt={`${MAX.name}, ${MAX.business}`} width={56} height={56} className="size-12 rounded-full object-cover" />
+          <Image src={MAX.photo} alt={`${MAX.name}, ${MAX.business}`} width={48} height={48} priority className="size-12 rounded-full object-cover" />
         ) : (
           <span aria-hidden className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--studio-gold)] font-display text-2xl font-semibold text-[#2a0f10]">{MAX.name[0]}</span>
         )}
