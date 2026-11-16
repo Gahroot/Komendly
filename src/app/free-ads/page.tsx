@@ -39,10 +39,9 @@ const STACK = [
   { what: "Your logo and colours, taken from your site", worth: "Every ad looks like your business, not a template" },
 ];
 
-// Local and service businesses only: that's who clicks our ads. Add more as customers OK sharing theirs.
+// Local and service businesses only: that's who clicks our ads. Only ads showing Max's real lighting jobs (ad-4's stock house photo was dropped).
 const SAMPLES = [
   { src: "/ads/samples/maxteriors-ad-0.jpg", alt: "Maxteriors ad: I want the lights, not another trip up the ladder", w: 900, h: 900 },
-  { src: "/ads/samples/maxteriors-ad-4.jpg", alt: "Maxteriors ad: You planned to decorate, not untangle lights", w: 900, h: 900 },
   { src: "/ads/samples/maxteriors-ad-8.jpg", alt: "Maxteriors ad: Your Govee lights are finally out of the box", w: 900, h: 900 },
 ];
 
@@ -120,13 +119,13 @@ export default function FreeAdsPage() {
           <FreeAdsDemo />
         </section>
 
-        <section className="mx-auto max-w-5xl px-4 pb-16 sm:px-6" aria-labelledby="examples-title">
+        <section className="mx-auto max-w-3xl px-4 pb-16 sm:px-6" aria-labelledby="examples-title">
           <h2 id="examples-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-4xl">Max&apos;s ads, made from his website</h2>
           <p className="mt-2 text-lg text-foreground/90">{MAX.business} installs outdoor lighting. These came straight out of Komendly, untouched.</p>
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-5">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
             {SAMPLES.map((s) => (
               <div key={s.src} className="studio-frame rounded-xl p-1.5 sm:p-2">
-                <Image src={s.src} alt={s.alt} width={s.w} height={s.h} sizes="(min-width: 640px) 33vw, 100vw" loading="lazy" className="h-auto w-full rounded-md" />
+                <Image src={s.src} alt={s.alt} width={s.w} height={s.h} sizes="(min-width: 640px) 360px, 100vw" loading="lazy" className="h-auto w-full rounded-md" />
               </div>
             ))}
           </div>
