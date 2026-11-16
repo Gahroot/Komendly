@@ -4,11 +4,14 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import type { StudioAccountView } from "@/lib/studio/thread";
+import { usageMeter } from "@/lib/ads/billing-config";
 import { InviteDialog } from "./invite-dialog";
 import { SessionRail } from "./rail";
 import type { SessionSummary } from "./types";
 
 export function Counters({ account }: { account: StudioAccountView }) {
+  const meter = account.paid ? usageMeter(account.plan, account.balance) : null;
+  const unlimitedUntil = account.unlimitedUntil ? new Date(account.unlimitedUntil) : null;
   return (
     <div className="flex items-center gap-1.5 text-xs">
       {!account.paid && (
@@ -16,8 +19,9 @@ export function Counters({ account }: { account: StudioAccountView }) {
           <Sparkles className="size-3.5 text-[var(--studio-gold)]" aria-hidden /><span className="tabular-nums font-semibold">{account.freeVideosLeft}</span> free
         </span>
       )}
-      <Link href="/ads/billing" className="inline-flex h-8 items-center gap-1.5 rounded-full border border-white/12 bg-black/25 px-3 text-[oklch(0.95_0.03_80)] hover:bg-white/8" title="Ozzy credits">
-        <Coins className="size-3.5 text-[var(--studio-gold)]" aria-hidden /><span className="tabular-nums font-semibold">{account.balance}</span> credits
+      <Link href="/ads/billing" className="inline-flex h-8 items-center gap-1.5 rounded-full border border-white/12 bg-black/25 px-3 text-[oklch(0.95_0.03_80)] hover:bg-white/8" title={meter ? meter.label : "Ozzy credits"}>
+        <Coins className="size-3.5 text-[var(--studio-gold)]" aria-hidden />
+        {unlimitedUntil ? <span className="font-semibold">Unlimited until {unlimitedUntil.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</span> : meter ? <><span className="relative h-1.5 w-12 overflow-hidden rounded-full bg-white/15" aria-hidden><span className="absolute inset-y-0 left-0 rounded-full bg-[var(--studio-gold)]" style={{ width: `${meter.percentLeft}%` }} /></span><span className="tabular-nums font-semibold">{meter.percentLeft}%</span> left</> : <><span className="tabular-nums font-semibold">{account.balance}</span> credits</>}
       </Link>
     </div>
   );

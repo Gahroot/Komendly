@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { komendlyCheckoutText } from "@/lib/checkout-branding";
 import { z } from "zod";
-import { annualPriceIdFor, getOffer, getPlan, isPlanForSale, LAUNCH_QUARTER, offerCouponId, getTopup, priceIdFor, UNLOCK_PACK, UNLOCK_PACK_NOTE, unlockPackCouponId } from "@/lib/ads/billing-config";
+import { annualPriceIdFor, canBuyUnlimitedWeek, UNLIMITED_WEEK, getOffer, getPlan, isPlanForSale, LAUNCH_QUARTER, offerCouponId, getTopup, priceIdFor, UNLOCK_PACK, UNLOCK_PACK_NOTE, unlockPackCouponId } from "@/lib/ads/billing-config";
 import { getLaunchOfferState } from "@/lib/ads/launch-offer";
 import { appUrl, getAdsStripe } from "@/lib/ads/billing-stripe";
 import { trackAdsEvent } from "@/lib/ads/events";
@@ -54,6 +54,10 @@ export async function POST(request: NextRequest) {
 
     const ws = await getOrCreateWorkspace(user);
     if (ws.suspendedAt) return NextResponse.json({ error: "This workspace is suspended.", code: "suspended" }, { status: 403 });
+    // Unlimited week: an add-on for active paid plans only (and only while it is for sale).
+    if (kind === "topup" && key === UNLIMITED_WEEK.key && !canBuyUnlimitedWeek(ws)) {
+      return NextResponse.json({ error: "Unlimited week is an add-on for paid plans. Pick a plan first.", code: "needs_plan" }, { status: 409 });
+    }
     if (kind === "offer" && !(await getLaunchOfferState(ws.id)).open) {
       return NextResponse.json({ error: "This launch offer has expired.", code: "offer_expired" }, { status: 410 });
     }
@@ -80,7 +84,7 @@ export async function POST(request: NextRequest) {
     // Launch offers (72h post-trial, Studio launch): $100 off the first hero-plan invoice. No coupon = not sold.
     const launchCoupon = offer ? offerCouponId(offer) : studioLaunch ? offerCouponId(LAUNCH_QUARTER) : null;
     if ((offer?.couponEnv || studioLaunch) && !launchCoupon) return NextResponse.json({ error: "That option isn't available.", code: "unknown_price" }, { status: 400 });
-    const founding = (kind === "plan" && getPlan(key)?.unlimited) || (offer && getPlan(offer.plan)?.unlimited);
+    const founding = (kind === "plan" && getPlan(key)?.usageMultiple) || (offer && getPlan(offer.plan)?.usageMultiple);
     const unlockCredit = couponId && !ws.stripeSubscriptionId
       ? Boolean(await prisma.creditLedger.findFirst({ where: { workspaceId: ws.id, reason: "topup", note: UNLOCK_PACK_NOTE, delta: { gt: 0 } }, select: { id: true } }))
       : false;

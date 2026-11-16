@@ -1,4 +1,4 @@
-import { ADS_GUARANTEE, ADS_TOPUPS, FOUNDING_TERMS, PLANS_FOR_SALE, unlimitedLine } from '@/lib/ads/billing-config'
+import { ADS_GUARANTEE, ADS_TOPUPS, FOUNDING_TERMS, PLANS_FOR_SALE, planUsageLine } from '@/lib/ads/billing-config'
 import { CATEGORIES, type BlogPostMeta } from '@/lib/blog'
 import { stripFootnotes } from '@/lib/blog-content'
 import { SITE_URL } from '@/lib/site'
@@ -13,7 +13,7 @@ export function productFacts(): string[] {
     'Free trial: 10 static ads + 1 animated ad, no credit card required (one trial per website, device and network; email verification required).',
     'Ad sizes: 4:5, 1:1 and 9:16. Ads cover all 5 awareness stages.',
     '1 credit = 1 static ad in one size; an animated ad costs 5 credits.',
-    `Monthly plans: ${PLANS_FOR_SALE.map((p) => `${p.name} ${usd(p.priceCents)}/month (${p.unlimited ? `${unlimitedLine(p)}; 6 fresh ads every Monday; Ozzy Ad Coach${p.key === 'agency' ? '; 3 testimonial videos a month' : ''}` : `${p.monthlyCredits} credits`})`).join(', ')}.`,
+    `Monthly plans: ${PLANS_FOR_SALE.map((p) => `${p.name} ${usd(p.priceCents)}/month (${p.usageMultiple ? `${planUsageLine(p)}; 6 fresh ads every Monday; Ozzy Ad Coach${p.key === 'agency' ? '; 3 testimonial videos a month' : ''}` : `${p.monthlyCredits} credits`})`).join(', ')}.`,
     `${FOUNDING_TERMS}`,
     `One-time credit top-ups: ${ADS_TOPUPS.map((t) => `${t.credits} credits ${usd(t.priceCents)}`).join(', ')}.`,
     ADS_GUARANTEE,

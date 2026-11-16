@@ -208,3 +208,44 @@ export async function adminAdjustCredits(workspaceId: string, delta: number, act
 export function upgradeTopUpCredits(newPeriodCredits: number, lastGrant: number): number {
   return Math.max(0, newPeriodCredits - Math.max(0, lastGrant));
 }
+
+/**
+ * Unlimited week pass purchase: a 0-credit ledger row (audit + idempotency per checkout) and AdsWorkspace.unlimitedUntil
+ * pushed 7 days out (stacks on a running pass). Returns the new end, or null on a replayed event.
+ */
+export async function grantUnlimitedWeek(workspaceId: string, stripeRef: string, now: Date = new Date()): Promise<Date | null> {
+  const { extendUnlimitedUntil, UNLIMITED_WEEK_DAYS, UNLIMITED_WEEK_NOTE } = await import("./billing-config");
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const rows = await tx.$queryRaw<{ creditBalance: number; unlimitedUntil: Date | null }[]>`
+        SELECT "creditBalance", "unlimitedUntil" FROM "AdsWorkspace" WHERE id = ${workspaceId} FOR UPDATE`;
+      const row = rows[0];
+      if (!row) throw new Error(`AdsWorkspace ${workspaceId} not found`);
+      if (await tx.creditLedger.findUnique({ where: { stripeRef } })) return null;
+      const until = extendUnlimitedUntil(row.unlimitedUntil, now, UNLIMITED_WEEK_DAYS);
+      await tx.creditLedger.create({ data: { workspaceId, delta: 0, balanceAfter: row.creditBalance, reason: "topup", stripeRef, note: `${UNLIMITED_WEEK_NOTE} until ${until.toISOString()}` } });
+      await tx.adsWorkspace.update({ where: { id: workspaceId }, data: { unlimitedUntil: until } });
+      return until;
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") return null;
+    throw err;
+  }
+}
+
+/** Refunded pass: unlimited ends now (idempotent per refund key; audit row with 0 credits). */
+export async function endUnlimitedWeek(workspaceId: string, refundKey: string, now: Date = new Date()): Promise<void> {
+  const stripeRef = `refund:${refundKey}`;
+  try {
+    await prisma.$transaction(async (tx) => {
+      const rows = await tx.$queryRaw<{ creditBalance: number; unlimitedUntil: Date | null }[]>`
+        SELECT "creditBalance", "unlimitedUntil" FROM "AdsWorkspace" WHERE id = ${workspaceId} FOR UPDATE`;
+      const row = rows[0];
+      if (!row || (await tx.creditLedger.findUnique({ where: { stripeRef } }))) return;
+      await tx.creditLedger.create({ data: { workspaceId, delta: 0, balanceAfter: row.creditBalance, reason: "refund", stripeRef, note: "unlimited week refunded: ended" } });
+      if (row.unlimitedUntil && row.unlimitedUntil > now) await tx.adsWorkspace.update({ where: { id: workspaceId }, data: { unlimitedUntil: now } });
+    });
+  } catch (err) {
+    if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002")) throw err;
+  }
+}

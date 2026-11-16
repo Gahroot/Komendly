@@ -133,7 +133,7 @@ export function CoachApp() {
         <section className="space-y-4">
           <div className="rounded-2xl border border-[#f5c542]/50 bg-[#f5c542]/10 p-4">
             <p className="font-semibold">Here&apos;s what a check-up looks like.</p>
-            <p className="text-sm text-muted-foreground">This is an example. Unlimited check-ups for your own ads come with Ozzy Ad Department.</p>
+            <p className="text-sm text-muted-foreground">This is an example. Daily check-ups for your own ads come with Ozzy Ad Department.</p>
             <Button asChild className="mt-3"><Link href="/ads/pricing">Get Ozzy Ad Department</Link></Button>
           </div>
           <CoachVerdictView verdict={SAMPLE_VERDICT} />
@@ -190,7 +190,7 @@ export function CoachApp() {
           ) : null}
           <Input value={note} onChange={(e) => setNote(e.target.value)} maxLength={COACH_LIMITS.noteMax} placeholder="Optional: what's your goal? e.g. more bookings" />
           <Button onClick={() => void submit()} disabled={!files.length || busy !== null} className="w-full sm:w-auto">{busy === "uploading" ? "Sending to Ozzy…" : "Check my ads"}</Button>
-          {access.mode === "one_free" ? <p className="text-xs text-muted-foreground">Your plan includes one free check-up. Unlimited check-ups come with Ozzy Ad Department.</p> : null}
+          {access.mode === "one_free" ? <p className="text-xs text-muted-foreground">Your plan includes one free check-up. Daily check-ups come with Ozzy Ad Department.</p> : null}
         </section>
       ) : (
         <section className="rounded-2xl border border-[#f5c542]/50 bg-[#f5c542]/10 p-5">
@@ -199,7 +199,7 @@ export function CoachApp() {
           ) : (
             <>
               <p className="font-semibold">You&apos;ve used your free check-up.</p>
-              <p className="text-sm text-muted-foreground">Ozzy Ad Department gives you unlimited check-ups and unlimited ads.</p>
+              <p className="text-sm text-muted-foreground">Ozzy Ad Department gives you daily check-ups and 20x Starter usage for ads.</p>
               <Button asChild className="mt-3"><Link href="/ads/pricing">Get Ozzy Ad Department</Link></Button>
             </>
           )}

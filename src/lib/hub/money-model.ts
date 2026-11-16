@@ -10,7 +10,7 @@
 // Plans/prices are the EXISTING Stripe ads plans (no new subscription prices). Existing testimonial
 // subscribers (User.plan starter/pro/enterprise) are grandfathered: shown as "Legacy testimonials plan" in the hub,
 // with a one-click switch offer to an Ozzy plan.
-import { ADS_PLANS, type AdsPlanKey, unlimitedLine } from "../ads/billing-config";
+import { ADS_PLANS, type AdsPlanKey, planUsageLine } from "../ads/billing-config";
 
 /** Testimonial videos (1 video = up to 60s = 1 testimonial minute) included per month by plan. */
 export const TESTIMONIALS_PER_MONTH: Record<AdsPlanKey, number> = { starter: 0, ad_department: 0, growth: 0, scale: 1, agency: 3 };
@@ -24,9 +24,9 @@ export const ATTRACTION = {
 
 /**
  * Studio launch offer (upsell at peak value): shown for 72h after the first free Studio video is delivered
- * (AdsWorkspace.studioOfferReadyAt). Since 2026-11-11 = the hero plan (Ozzy Ad Department, Founding Unlimited)
- * with the same first-month coupon as the trial launch offer ($100 off: $97 today). bonusCredits = 0: unlimited
- * replaces credits. Checkout metadata offer=studio_launch; the server enforces the window.
+ * (AdsWorkspace.studioOfferReadyAt). Since 2026-11-11 = the hero plan (Ozzy Ad Department, 20x Starter usage)
+ * with the same first-month coupon as the trial launch offer ($100 off: $97 today). bonusCredits = 0: the plan's
+ * own monthly credits are the value. Checkout metadata offer=studio_launch; the server enforces the window.
  */
 export const STUDIO_LAUNCH_OFFER = {
   key: "studio_launch",
@@ -36,7 +36,7 @@ export const STUDIO_LAUNCH_OFFER = {
   windowHours: 72,
   headline: "Keep Ozzy on your team",
   stack: [
-    "Unlimited Studio videos and Ad Packs, made one at a time",
+    "20x Starter usage for Studio videos and Ad Packs",
     "6 fresh ads every Monday, made for you",
     "Ozzy Ad Coach: he tells you what's working",
     "First month $97 instead of $197 (only for the next 72 hours)",
@@ -52,9 +52,9 @@ export function planAppsSummary(key: AdsPlanKey): string[] {
   const p = ADS_PLANS.find((x) => x.key === key);
   if (!p) return [];
   const t = TESTIMONIALS_PER_MONTH[key];
-  if (p.unlimited) {
+  if (p.usageMultiple) {
     return [
-      unlimitedLine(p) ?? "Unlimited Ad Packs and Ozzy Studio videos",
+      planUsageLine(p),
       "Ozzy Autopilot: fresh ads + a new video every Monday (5 static + 1 animated + a 15s video)",
       "Ozzy Ad Coach: he tells you what's working and makes more of it",
       t > 0 ? `${t} AI testimonial videos / month` : "AI testimonial videos: Agency only",

@@ -1,5 +1,5 @@
 // Hosted "Ozzy" MCP server (stateless Streamable HTTP). Every tool runs as the API key's user (runAsAgent) and goes
-// through the same route handlers / gates as the web app: credits, free video, trial pack, unlimited limits, email gate.
+// through the same route handlers / gates as the web app: credits, free video, trial pack, plan limits, email gate.
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
@@ -7,6 +7,7 @@ import { AdsHttpError, isPaidWorkspace, requireWorkspaceMember } from "@/lib/ads
 import { assertSafeTargetUrl } from "@/lib/ads/abuse";
 import { presignShareable } from "@/lib/ads/storage";
 import { getBalance } from "@/lib/ads/credits";
+import { unlimitedPassActive, usageMeter } from "@/lib/ads/billing-config";
 import { loadRunView } from "@/lib/ads/run-view";
 import { canServeAsset } from "@/lib/ads/bonus-access";
 import { isBonusUnlocked } from "@/lib/ads/bonus-unlock";
@@ -499,13 +500,16 @@ async function campaignKit(info: McpRequestInfo, runId: string | undefined, sess
 export function buildOzzyServer(info: McpRequestInfo): McpServer {
   const server = new McpServer({ name: "ozzy", title: "Ozzy by Komendly", version: "1.0.0" }, { instructions: MCP_INSTRUCTIONS });
 
-  server.registerTool("get_account", { title: "Account", description: "Plan, credit balance, free Ozzy Studio videos left and whether the free Ad Pack was used.", inputSchema: {}, annotations: { readOnlyHint: true } }, () =>
+  server.registerTool("get_account", { title: "Account", description: "Plan, credit balance (or usage_left_percent on 20x/50x plans), free Ozzy Studio videos left and whether the free Ad Pack was used.", inputSchema: {}, annotations: { readOnlyHint: true } }, () =>
     run(async () => {
       const { workspace } = await studioAccess();
       const paid = isPaidWorkspace(workspace);
+      const balance = await getBalance(workspace.id);
       const data = {
         plan: paid ? workspace.adsPlan : "free",
-        credits: await getBalance(workspace.id),
+        // "Nx Starter" plans report a usage percentage, never the credit number (same as the app).
+        ...((m) => (m ? { usage_left_percent: m.percentLeft } : { credits: balance }))(paid ? usageMeter(workspace.adsPlan, balance) : null),
+        ...(unlimitedPassActive(workspace) && workspace.unlimitedUntil ? { unlimited_until: workspace.unlimitedUntil.toISOString() } : {}),
         free_studio_videos_left: paid ? 0 : workspace.studioFreeVideos,
         free_pack_used: paid || workspace.trialUsedAt !== null,
         upgrade_url: UPGRADE_URL,

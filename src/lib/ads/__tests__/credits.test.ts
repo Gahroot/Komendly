@@ -87,3 +87,23 @@ describe("credit ledger (dev DB)", () => {
     expect(computeExpiringIncluded(60, 0, 20)).toBe(20);
   });
 });
+
+describe("Unlimited week pass (dev DB)", () => {
+  it("grants 7 days once per checkout, stacks a second week, leaves credits alone, and a refund ends it", async () => {
+    const { grantUnlimitedWeek, endUnlimitedWeek } = await import("../credits");
+    const before = await getBalance(wsId);
+    const now = new Date();
+    const first = await grantUnlimitedWeek(wsId, `${tag}:uw_1`, now);
+    expect(first?.getTime()).toBe(now.getTime() + 7 * 86_400_000);
+    expect(await grantUnlimitedWeek(wsId, `${tag}:uw_1`, now)).toBeNull();
+    const second = await grantUnlimitedWeek(wsId, `${tag}:uw_2`, now);
+    expect(second?.getTime()).toBe(now.getTime() + 14 * 86_400_000);
+    expect(await getBalance(wsId)).toBe(before);
+    expect(await ledgerSum()).toBe(before);
+    await endUnlimitedWeek(wsId, `${tag}:re_1`, now);
+    await endUnlimitedWeek(wsId, `${tag}:re_1`, now);
+    const ws = await prisma.adsWorkspace.findUniqueOrThrow({ where: { id: wsId } });
+    expect(ws.unlimitedUntil?.getTime()).toBe(now.getTime());
+    expect(await prisma.creditLedger.count({ where: { workspaceId: wsId, stripeRef: { startsWith: `refund:${tag}:re_1` } } })).toBe(1);
+  });
+});

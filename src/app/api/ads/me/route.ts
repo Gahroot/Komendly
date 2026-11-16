@@ -3,6 +3,7 @@ import { getBalance } from "@/lib/ads/credits";
 import { TRIAL_GRANT } from "@/lib/ads/contracts";
 import { expiringCredits, trialStaticCountFor } from "@/lib/ads/referrals";
 import type { WorkspaceView } from "@/lib/ads/run-types";
+import { unlimitedPassActive } from "@/lib/ads/billing-config";
 import { adsErrorResponse, getOrCreateWorkspace, isPaidWorkspace, requireUser } from "@/lib/ads/workspace";
 
 export async function GET() {
@@ -22,6 +23,7 @@ export async function GET() {
       email: user.email,
       trialStatic: await trialStaticCountFor(ws.id, Number(process.env.ADS_TRIAL_STATIC_COUNT) || TRIAL_GRANT.static),
       expiring: await expiringCredits(ws.id, balance),
+      unlimitedUntil: unlimitedPassActive(ws) && ws.unlimitedUntil ? ws.unlimitedUntil.toISOString() : null,
     };
     return NextResponse.json(view, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {

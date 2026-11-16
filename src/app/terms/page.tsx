@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, type LegalSection } from "@/components/legal/legal-page";
-import { ADS_PLANS, ADS_TOPUPS, FOUNDING_PRICE_LOCK, FOUNDING_TERMS, LAUNCH_QUARTER, offerFirstPaymentCents, unlimitedLine } from "@/lib/ads/billing-config";
+import { UNLIMITED_WEEK, UNLIMITED_WEEK_DAYS, ADS_PLANS, ADS_TOPUPS, FOUNDING_PRICE_LOCK, FOUNDING_TERMS, LAUNCH_QUARTER, offerFirstPaymentCents } from "@/lib/ads/billing-config";
 import { FIRST_VIDEO_OFFER, formatUsd } from "@/lib/first-video-offer";
 
 // Static on purpose (no session read) so it is publicly cacheable per next.config.ts headers.
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/terms" },
 };
 
-const plans = ADS_PLANS.map((p) => `${p.name} ${formatUsd(p.priceCents)}/month (${unlimitedLine(p) ?? `${p.monthlyCredits} credits`})${p.hiddenForNewBuyers ? " (existing subscribers only)" : ""}`).join(", ");
+const plans = ADS_PLANS.map((p) => `${p.name} ${formatUsd(p.priceCents)}/month (${p.usageMultiple ? `${p.usageMultiple}x Starter: ${p.monthlyCredits} credits` : `${p.monthlyCredits} credits`} a month)${p.hiddenForNewBuyers ? " (existing subscribers only)" : ""}`).join(", ");
 const topups = ADS_TOPUPS.map((t) => `${t.credits} credits for ${formatUsd(t.priceCents)}`).join(" and ");
 
 const SECTIONS: readonly LegalSection[] = [
@@ -53,6 +53,7 @@ const SECTIONS: readonly LegalSection[] = [
     body: (
       <ul>
         <li>Komendly Ads plans: {plans}. Launch offer: within {LAUNCH_QUARTER.windowHours} hours of your free ads, the first month of Ozzy Ad Department is {formatUsd(offerFirstPaymentCents(LAUNCH_QUARTER))}; it then renews at {formatUsd(LAUNCH_QUARTER.priceCents)}/month. {FOUNDING_TERMS} {FOUNDING_PRICE_LOCK} Existing Launch Quarter subscribers keep their terms.</li>
+        <li>{UNLIMITED_WEEK.name} (add-on for paid plans): {formatUsd(UNLIMITED_WEEK.priceCents)} one-time for {UNLIMITED_WEEK_DAYS} days of Ad Packs and Ozzy Studio videos at no credit cost, one in progress at a time, for your own business (up to 10 brands on Agency). It does not renew. We may stop selling it at any time; a week you have already bought runs to its end. A refunded week ends when the refund is issued.</li>
         <li>Subscriptions renew automatically at the end of each period and Stripe charges the card on file until you cancel. Prices are in US dollars, plus any tax shown at checkout.</li>
         <li>You can cancel any time from your billing page. Cancelling stops future renewals; you keep access until the end of the period you have paid for. Apart from the guarantees below, we do not refund part-used periods.</li>
         <li>We may change prices for future periods. We will tell you before a change affects your next renewal so you can cancel first.</li>

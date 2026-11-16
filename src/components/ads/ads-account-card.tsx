@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAdsWorkspace } from "@/hooks/useAdsWorkspace";
+import { UsageBar } from "@/components/ads/usage-bar";
+import { usageMeter } from "@/lib/ads/billing-config";
 
 /** Credit balance, plan badge and the free-trial state with an upgrade CTA. */
 export function AdsAccountCard() {
@@ -26,9 +28,11 @@ export function AdsAccountCard() {
       <CardContent className="space-y-4">
         <div className="glass-subtle flex items-center gap-3 rounded-xl p-4">
           <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Coins className="size-5" aria-hidden /></div>
-          <div>
-            <p className="text-2xl font-semibold tabular-nums">{data.balance}</p>
-            <p className="text-xs text-muted-foreground">credits · 1 credit = 1 static ad</p>
+          <div className="min-w-0 flex-1">
+            {data.unlimitedUntil ? <p className="text-base font-semibold">Unlimited until {new Date(data.unlimitedUntil).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}</p> : usageMeter(data.plan, data.balance) ? <UsageBar plan={data.plan} balance={data.balance} /> : <>
+              <p className="text-2xl font-semibold tabular-nums">{data.balance}</p>
+              <p className="text-xs text-muted-foreground">credits · 1 credit = 1 static ad</p>
+            </>}
             {data.expiring.map((e) => (
               <p key={e.expiresAt} className="text-xs font-medium text-[var(--studio-gold,currentColor)]">{e.credits} referral credits expire {new Date(e.expiresAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</p>
             ))}

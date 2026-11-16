@@ -5,6 +5,7 @@ import { AdsHttpError, getOrCreateWorkspace, isPaidWorkspace, requireUser, requi
 import { isStudioLaunchOfferOpen, STUDIO_LAUNCH_OFFER } from "@/lib/hub/money-model";
 import { getLaunchOfferState, type LaunchOfferState } from "@/lib/ads/launch-offer";
 import { arbitrateStudioOffer } from "./bridge";
+import { canBuyUnlimitedWeek, unlimitedPassActive } from "@/lib/ads/billing-config";
 import type { MessageStatus, RenderView, StudioAccountView, ThreadEvent, ThreadMessage, UploadView } from "./thread";
 
 export interface StudioAccess {
@@ -48,6 +49,8 @@ export function studioAccount(ws: AdsWorkspace, now: Date, lq: LaunchOfferState 
     paid,
     plan: ws.adsPlan,
     freeVideosLeft: ws.studioFreeVideos,
+    unlimitedUntil: unlimitedPassActive(ws, now) && ws.unlimitedUntil ? ws.unlimitedUntil.toISOString() : null,
+    canBuyUnlimitedWeek: canBuyUnlimitedWeek(ws),
     offer: {
       open,
       endsAt: open && ws.studioOfferReadyAt ? new Date(ws.studioOfferReadyAt.getTime() + STUDIO_LAUNCH_OFFER.windowHours * 3_600_000).toISOString() : null,

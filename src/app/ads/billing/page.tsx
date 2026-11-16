@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getCurrentUser } from "@/lib/auth";
-import { AD_DEPARTMENT_STACK, ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS, FOUNDING_FAIR_USE, FOUNDING_PRICE_LOCK, FOUNDING_TERMS, LAUNCH_QUARTER, offerCouponId, offerFirstPaymentCents, stackTotalUsd, ANNUAL_MONTHS, ANNUAL_MONTHS_PAID, annualCredits, annualPriceCents, annualPriceIdFor, getPlan, priceIdFor, UNLOCK_PACK, unlockPackCouponId, unlimitedLine } from "@/lib/ads/billing-config";
+import { AD_DEPARTMENT_STACK, ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS, PLAN_USAGE_NOTE, FOUNDING_PRICE_LOCK, FOUNDING_TERMS, LAUNCH_QUARTER, offerCouponId, offerFirstPaymentCents, stackTotalUsd, ANNUAL_MONTHS, ANNUAL_MONTHS_PAID, annualCredits, annualPriceCents, annualPriceIdFor, getPlan, priceIdFor, UNLOCK_PACK, unlockPackCouponId, planUsageLine } from "@/lib/ads/billing-config";
+import { UsageBar } from "@/components/ads/usage-bar";
+import { canBuyUnlimitedWeek, UNLIMITED_WEEK, UNLIMITED_WEEK_LINE, unlimitedPassActive, usageMeter } from "@/lib/ads/billing-config";
 import { isBonusUnlocked } from "@/lib/ads/bonus-unlock";
 import { UnlockPackNext } from "@/components/ads/unlock-pack-offer";
 import Link from "next/link";
@@ -68,6 +70,8 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
   // plan still sees their own plan card.
   const shownPlans = ADS_PLANS.filter((p) => !p.hiddenForNewBuyers || (paid && ws.adsPlan === p.key));
   const onDepartment = paid && Boolean(plan?.weeklyDrop);
+  const passOn = unlimitedPassActive(ws, now);
+  const passBuyable = canBuyUnlimitedWeek(ws) && Boolean(priceIdFor(UNLIMITED_WEEK));
   const refund = paid ? await getSelfRefundEligibility(ws, user, now) : null;
   // $9 "Unlock this pack" replaces the 10-credit pack in the cancel downsell while the user has locked bonus ads.
   const downsellUnlock = checkout === "canceled" && Boolean(declined) && !paid && !ws.suspendedAt && Boolean(priceIdFor(UNLOCK_PACK))
@@ -130,12 +134,12 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
           </Card>
           <Card>
             <CardHeader>
-              <CardDescription>Credit balance</CardDescription>
-              <CardTitle className="text-4xl tabular-nums">{ws.creditBalance}</CardTitle>
+              <CardDescription>{passOn ? "Unlimited week" : usageMeter(ws.adsPlan, ws.creditBalance) ? "Usage this month" : "Credit balance"}</CardDescription>
+              {passOn && ws.unlimitedUntil ? <CardTitle className="text-2xl">Unlimited until {formatDate(ws.unlimitedUntil).slice(0, 10)}</CardTitle> : usageMeter(ws.adsPlan, ws.creditBalance) ? <UsageBar plan={ws.adsPlan} balance={ws.creditBalance} className="pt-2" /> : <CardTitle className="text-4xl tabular-nums">{ws.creditBalance}</CardTitle>}
             </CardHeader>
             <CardContent className="space-y-1 text-sm text-muted-foreground">
               {expiring.map((e) => <p key={e.expiresAt} className="font-medium text-[var(--studio-gold,currentColor)]">{e.credits} referral credits expire {formatDate(new Date(e.expiresAt)).slice(0, 10)}</p>)}
-              <p>Plan credits reset each billing period. Top-up credits never expire. Referral credits expire 30 days after you earn them.</p>
+              <p>Plan usage resets each billing period. Top-up credits never expire. Referral credits expire 30 days after you earn them.</p>
             </CardContent>
           </Card>
           <Card>
@@ -152,12 +156,12 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
         {onDepartment && plan && (
           <Card className="border-2 border-primary">
             <CardHeader>
-              <CardDescription>{plan.key === "agency" ? "Your Ozzy Agency plan · unlimited for up to 10 brands" : `Your Ozzy Ad Department${plan.unlimited ? " · Founding Unlimited" : ""}`}</CardDescription>
+              <CardDescription>{plan.key === "agency" ? `Your Ozzy Agency plan · ${planUsageLine(plan)}` : `Your Ozzy Ad Department${plan.usageMultiple ? ` · ${plan.usageMultiple}x Starter usage` : ""}`}</CardDescription>
               <CardTitle className="font-display text-2xl">Fresh ads every Monday, a coach that tells you what&apos;s working</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <ul className="space-y-2">{AD_DEPARTMENT_STACK.map((i) => <li key={i.label} className="flex items-start gap-2"><Check className="mt-0.5 size-4 shrink-0 text-primary" /><span><span className="font-medium">{i.bonus ? "Bonus: " : ""}{i.label}</span> · {i.detail}</span></li>)}</ul>
-              {plan.unlimited && <p className="text-muted-foreground">{FOUNDING_FAIR_USE} {FOUNDING_TERMS} {FOUNDING_PRICE_LOCK}</p>}
+              {plan.usageMultiple && <p className="text-muted-foreground">{PLAN_USAGE_NOTE} {FOUNDING_TERMS} {FOUNDING_PRICE_LOCK}</p>}
             </CardContent>
           </Card>
         )}
@@ -175,14 +179,14 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
               return (
                 <Card key={p.key} className={current || (!paid && p.recommended) ? "glow-primary border-2 border-primary md:-my-2" : undefined}>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">{p.name}{current ? <Badge>current</Badge> : !paid && p.recommended && <Badge>{p.unlimited ? "Founding · Unlimited" : "Recommended"}</Badge>}</CardTitle>
+                    <CardTitle className="flex items-center gap-2">{p.name}{current ? <Badge>current</Badge> : !paid && p.recommended && <Badge>{p.usageMultiple ? `Founding · ${p.usageMultiple}x` : "Recommended"}</Badge>}</CardTitle>
                     <CardDescription>
                       {yearly ? (
                         <><span className="text-3xl font-semibold text-foreground">{formatCents(annualPriceCents(p))}</span> / year
-                          <span className="mt-1 block text-xs">{p.unlimited ? "Unlimited ads + Studio" : `${annualCredits(p)} credits up front · ${perCredit(annualPriceCents(p), annualCredits(p))}`} · save {formatCents(p.priceCents * (ANNUAL_MONTHS - ANNUAL_MONTHS_PAID))}</span></>
+                          <span className="mt-1 block text-xs">{p.usageMultiple ? planUsageLine(p) : `${annualCredits(p)} credits up front · ${perCredit(annualPriceCents(p), annualCredits(p))}`} · save {formatCents(p.priceCents * (ANNUAL_MONTHS - ANNUAL_MONTHS_PAID))}</span></>
                       ) : (
                         <><span className="text-3xl font-semibold text-foreground">{formatCents(p.priceCents)}</span> / month
-                          <span className="mt-1 block text-xs">{p.unlimited ? (p.key === "agency" ? unlimitedLine(p) : `Unlimited ads + Studio · stacked value $${stackTotalUsd().toLocaleString("en-US")}/month`) : perCredit(p.priceCents, p.monthlyCredits)}</span></>
+                          <span className="mt-1 block text-xs">{p.usageMultiple ? (p.key === "agency" ? planUsageLine(p) : `${p.usageMultiple}x Starter usage · stacked value $${stackTotalUsd().toLocaleString("en-US")}/month`) : perCredit(p.priceCents, p.monthlyCredits)}</span></>
                       )}
                     </CardDescription>
                   </CardHeader>
@@ -205,6 +209,21 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
             {ADS_GUARANTEE}
           </p>
         </section>
+
+        {(passBuyable || passOn) && (
+          <Card className="border-2 border-primary">
+            <CardHeader>
+              <CardDescription>Need more than your plan?</CardDescription>
+              <CardTitle>{UNLIMITED_WEEK.name} · {formatCents(UNLIMITED_WEEK.priceCents)} one-time</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              {UNLIMITED_WEEK_LINE}{passOn && ws.unlimitedUntil ? ` Yours runs until ${formatDate(ws.unlimitedUntil).slice(0, 10)}; another week adds 7 more days.` : ""}
+            </CardContent>
+            <CardFooter>
+              <BillingActionButton endpoint="/api/ads-billing/checkout" body={{ kind: "topup", key: UNLIMITED_WEEK.key }} label={passOn ? "Add another week" : "Go unlimited for a week"} disabled={!configured || !passBuyable} />
+            </CardFooter>
+          </Card>
+        )}
 
         <section className="space-y-4">
           <div className="space-y-1">

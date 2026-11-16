@@ -1,8 +1,8 @@
 // Ads Stripe webhook handlers. Every credit effect is idempotent via CreditLedger.stripeRef.
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
-import { annualCredits, intervalFromPriceId, getOffer, getPlan, getTopup, offerCreditsFor, UNLOCK_PACK, UNLOCK_PACK_NOTE, offerFromPriceId, planFromPriceId, type AdsLaunchOffer } from "./billing-config";
-import { applyCreditMutation, grantSubscriptionCredits, grantTopup, refundCredits, upgradeTopUpCredits } from "./credits";
+import { annualCredits, intervalFromPriceId, getOffer, getPlan, getTopup, offerCreditsFor, UNLOCK_PACK, UNLOCK_PACK_NOTE, UNLIMITED_WEEK, offerFromPriceId, planFromPriceId, type AdsLaunchOffer } from "./billing-config";
+import { applyCreditMutation, endUnlimitedWeek, grantSubscriptionCredits, grantTopup, grantUnlimitedWeek, refundCredits, upgradeTopUpCredits } from "./credits";
 import { trackAdsEvent } from "./events";
 import { getAdsStripe } from "./billing-stripe";
 import { commissionsForStripeEvent } from "./commissions";
@@ -47,7 +47,9 @@ async function onCheckoutCompleted(s: Stripe.Checkout.Session) {
   if (s.mode === "payment" && s.metadata?.kind === "topup" && s.payment_status === "paid") {
     const pack = getTopup(s.metadata.topup ?? "");
     // unlock_pack is a topup row too, so bonus-unlock opens the locked bonus ads; its note marks it for the Starter coupon.
-    if (pack) await grantTopup(ws.id, `checkout:${s.id}`, pack.credits, pack.key === UNLOCK_PACK.key ? UNLOCK_PACK_NOTE : undefined);
+    // Unlimited week: no credits, unlimitedUntil +7 days (checkout success may run it too: both idempotent per session).
+    if (pack?.key === UNLIMITED_WEEK.key) await grantUnlimitedWeek(ws.id, `checkout:${s.id}`);
+    else if (pack) await grantTopup(ws.id, `checkout:${s.id}`, pack.credits, pack.key === UNLOCK_PACK.key ? UNLOCK_PACK_NOTE : undefined);
   }
   if (s.mode === "subscription") {
     const plan = getPlan(s.metadata?.plan ?? "");
@@ -202,6 +204,7 @@ async function onChargeRefunded(ch: Stripe.Charge) {
   const pack = ch.metadata?.kind === "topup" ? getTopup(ch.metadata.topup ?? "") : undefined;
   const credits = pack && ch.amount > 0 ? Math.round((pack.credits * ch.amount_refunded) / ch.amount) : 0;
   if (credits > 0) await refundCredits(ws.id, ref, credits);
+  if (pack?.key === UNLIMITED_WEEK.key && ch.amount_refunded > 0) await endUnlimitedWeek(ws.id, ref);
   await prisma.adsRefund.upsert({
     where: { stripeRefundId: ref },
     create: { workspaceId: ws.id, stripeRefundId: ref, amountCents: ch.amount_refunded, credits, reason: "stripe_dashboard", actorId: "stripe" },

@@ -68,7 +68,7 @@ export function TrialUpsell({ runId, bonus, offerOpen, remainingMs, onDecline, v
         ) : (
           <Card className="glow-primary border-2 border-primary md:-my-2">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">{hero.name}<Badge>Founding · Unlimited</Badge></CardTitle>
+              <CardTitle className="flex items-center gap-2">{hero.name}<Badge>Founding · {hero.usageMultiple ?? 20}x</Badge></CardTitle>
               <CardDescription><span className="text-3xl font-semibold text-foreground">{usd(hero.priceCents)}</span> / month</CardDescription>
             </CardHeader>
             <CardContent><Highlights items={hero.highlights} /></CardContent>

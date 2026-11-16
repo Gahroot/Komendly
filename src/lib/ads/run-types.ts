@@ -95,6 +95,8 @@ export interface WorkspaceView {
   trialStatic: number;
   /** Referral credits in the balance that expire, soonest first. */
   expiring: { credits: number; expiresAt: string }[];
+  /** Unlimited week pass end (ISO) while running, else null. */
+  unlimitedUntil?: string | null;
 }
 
 export interface BrandSummary {

@@ -104,7 +104,7 @@ export function planView(u: HubUserInput, w: HubWorkspaceInput, now: Date): HubP
     return {
       kind: "paid",
       label: "Ozzy Ad Department",
-      line: "Fresh ads land every Monday. Unlimited Ad Packs and Studio videos, made one at a time. Ad Coach is ready when you have results.",
+      line: "Fresh ads land every Monday. 20x Starter usage for Ad Packs and Studio videos. Ad Coach is ready when you have results.",
       cta: { label: "Post your ads on Meta", href: "/ads/billing#launch-guide" },
       offerEndsAt: null,
     };

@@ -11,6 +11,8 @@ export interface ChargeWorkspace {
   suspendedAt: Date | null;
   creditBalance: number;
   studioFreeVideos: number;
+  /** Unlimited week pass end: renders are free until then. */
+  unlimitedUntil?: Date | null;
 }
 
 /** Mirrors src/lib/ads/billing-gates.ts isPaidWorkspace, plus "has a credit balance". */
@@ -36,7 +38,7 @@ export function decideCharge(ws: ChargeWorkspace, o: { priorRenders: number; sec
     const kind = o.priorRenders === 0 ? "new" : "revision";
     return { kind, credits: 0, useFreeVideo: false, watermark: !hasAdDepartment(ws), deducted: 0, insufficient: false };
   }
-  // Unlimited plan (Ozzy Ad Department, Founding Unlimited): every render is free, never watermarked.
+  // Unlimited week pass (or an unlimited plan): every render is free, never watermarked.
   const unlimited = isUnlimitedPlan(ws);
   const c = studioCharge({ priorRenders: o.priorRenders, seconds: o.seconds, sessionFree: o.sessionFree, freeVideosLeft: ws.studioFreeVideos, isPaidWorkspace: isPaidStudioWorkspace(ws), unlimited });
   if (c.credits > ws.creditBalance) return { ...c, credits: c.credits, deducted: 0, insufficient: true, watermark: true };
@@ -68,7 +70,7 @@ export type ChargeTxResult =
 export async function chargeAndRecord(db: Db, r: DeliveredRender, watermarked: boolean, now: Date): Promise<ChargeTxResult> {
   return db.$transaction(async (tx) => {
     const rows = await tx.$queryRaw<ChargeWorkspace[]>`
-      SELECT "adsPlan", "subscriptionStatus", "suspendedAt", "creditBalance", "studioFreeVideos" FROM "AdsWorkspace" WHERE id = ${r.workspaceId} FOR UPDATE`;
+      SELECT "adsPlan", "subscriptionStatus", "suspendedAt", "creditBalance", "studioFreeVideos", "unlimitedUntil" FROM "AdsWorkspace" WHERE id = ${r.workspaceId} FOR UPDATE`;
     const ws = rows[0];
     if (!ws) throw new Error("workspace not found");
     const session = await tx.studioSession.findUniqueOrThrow({ where: { id: r.sessionId }, select: { freeVideo: true, autopilotWeek: true } });

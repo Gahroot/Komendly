@@ -1,6 +1,6 @@
 // Shared Stripe Checkout copy so every checkout reads as Komendly + Ozzy (not the Stripe account's legal name).
 // custom_text renders above the pay button; max 1200 chars each.
-import { ADS_GUARANTEE, FOUNDING_FAIR_USE, FOUNDING_PRICE_LOCK, FOUNDING_TERMS } from "@/lib/ads/billing-config";
+import { ADS_GUARANTEE, PLAN_USAGE_NOTE, FOUNDING_PRICE_LOCK, FOUNDING_TERMS } from "@/lib/ads/billing-config";
 
 /** Per-session Checkout branding: shows Komendly + the Ozzy mark instead of the Stripe account's legal name/colours. */
 function brandingSettings() {
@@ -12,7 +12,7 @@ function brandingSettings() {
 export function komendlyCheckoutText(kind: "plan" | "pack" | "testimonials" | "founding" = "plan") {
   const line =
     kind === "founding"
-      ? `Ozzy Ad Department, Founding Unlimited. ${FOUNDING_FAIR_USE} ${FOUNDING_TERMS} ${FOUNDING_PRICE_LOCK} ${ADS_GUARANTEE}`
+      ? `Ozzy Ad Department, founding member. ${PLAN_USAGE_NOTE} ${FOUNDING_TERMS} ${FOUNDING_PRICE_LOCK} ${ADS_GUARANTEE}`
       : kind === "pack"
       ? "Komendly: Ozzy makes your ads and videos. Credits land in your account right after payment and never expire."
       : kind === "testimonials"

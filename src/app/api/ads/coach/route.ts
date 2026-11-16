@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     if (!access.canReview) {
       if (access.reason === "daily_limit") throw new AdsHttpError(429, "daily_limit", `That's ${COACH_LIMITS.perDay} check-ups today. Ozzy will be ready for more tomorrow.`);
       await trackAdsEvent("coach_upsell_shown", { workspaceId: ws.id, userId: user.id, props: { reason: access.reason, at: "upload" } });
-      throw new AdsHttpError(402, "upgrade", "Unlimited check-ups come with Ozzy Ad Department.", { upgradeUrl: "/ads/pricing" });
+      throw new AdsHttpError(402, "upgrade", "Daily check-ups come with Ozzy Ad Department.", { upgradeUrl: "/ads/pricing" });
     }
     if (!(await rateLimit(`coach:${user.id}`, 20, 3600))) throw new AdsHttpError(429, "rate_limited", "Too many uploads this hour. Try again soon.");
     const review = await prisma.adCoachReview.create({

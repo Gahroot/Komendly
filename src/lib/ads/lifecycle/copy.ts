@@ -1,6 +1,6 @@
 // Lifecycle email copy: facts the AI may use, the strict prompt, a validator, and fixed fallbacks.
 // Pure; shared by engine (writes/sends) and tests.
-import { ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS, FOUNDING_FAIR_USE, getPlan, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE, offerFirstPaymentCents, offerSavingsCents, UNLOCK_PACK } from "../billing-config";
+import { ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS, PLAN_USAGE_NOTE, planUsageLine, getPlan, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE, offerFirstPaymentCents, offerSavingsCents, UNLOCK_PACK } from "../billing-config";
 import { REFERRAL_FACTS } from "./facts";
 import { isFreshKind, isStartKind, type LifecycleKind } from "./select";
 
@@ -57,7 +57,7 @@ function brandFit(name: string | null, room: number): string | null {
 }
 
 export const PRICE_FACTS = {
-  launchQuarter: `Launch offer: the first month of Ozzy Ad Department for ${usd(offerFirstPaymentCents(LAUNCH_QUARTER))} instead of ${usd(LAUNCH_QUARTER.priceCents)} (then ${usd(LAUNCH_QUARTER.priceCents)}/month, cancel anytime), only within ${LAUNCH_QUARTER.windowHours} hours after the free ads were ready. Ozzy Ad Department = their AI ad department: 6 fresh ads every Monday (5 static + 1 animated), unlimited Ad Packs and Ozzy Studio videos (${FOUNDING_FAIR_USE.toLowerCase()}), and Ozzy Ad Coach (upload Ads Manager results, Ozzy says what to keep or kill and makes more like the winners)`,
+  launchQuarter: `Launch offer: the first month of Ozzy Ad Department for ${usd(offerFirstPaymentCents(LAUNCH_QUARTER))} instead of ${usd(LAUNCH_QUARTER.priceCents)} (then ${usd(LAUNCH_QUARTER.priceCents)}/month, cancel anytime), only within ${LAUNCH_QUARTER.windowHours} hours after the free ads were ready. Ozzy Ad Department = their AI ad department: 6 fresh ads every Monday (5 static + 1 animated), ${PLAN_USAGE_NOTE.charAt(0).toLowerCase()}${PLAN_USAGE_NOTE.slice(1, -1)} (never call it unlimited), and Ozzy Ad Coach (upload Ads Manager results, Ozzy says what to keep or kill and makes more like the winners)`,
   starter: starter ? `${starter.name}: ${usd(starter.priceCents)}/month, ${starter.monthlyCredits} credits/month, cancel anytime` : "",
   topup: topup ? `One-time pack: ${topup.name} for ${usd(topup.priceCents)}, no subscription` : "",
   guarantee: LAUNCH_QUARTER_GUARANTEE,
@@ -68,7 +68,7 @@ export const PRICE_FACTS = {
   giftPaid: "Gift a pack: they paste another business's website and Ozzy makes that business 3 free ads from them. Paid plans get 1 gift a month, Agency 4.",
   partner: "Partner program: earn 30% of what the businesses they refer pay, for 12 months.",
   yearly: "Every plan can be paid yearly: 2 months free (pay for 10 months, get 12).",
-  agency: agency ? `${agency.name}: ${usd(agency.priceCents)}/month, ${agency.monthlyCredits} credits/month, all client brands in one workspace, 4 gift packs a month to pitch new clients.` : "",
+  agency: agency ? `${agency.name}: ${usd(agency.priceCents)}/month, ${planUsageLine(agency)}, all client brands in one workspace, 4 gift packs a month to pitch new clients.` : "",
   gallery: "Komendly has a public gallery of real ads made with it (Ad examples) and picks an Ad of the week. They can opt in to have their own ad featured from their results page. Do not invent numbers about other customers.",
   freshLocked: "Ozzy made one new ad for their brand from their current website. It is locked (shown blurred) and unlocks with any paid plan or credit pack.",
   freeTrial: "Free pack: Ozzy reads their website and makes 10 static ads plus 1 animated ad in their brand, usually in a few minutes. No card needed. They only need their website address.",
@@ -265,7 +265,7 @@ export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCop
       return {
         subject: sub((x) => `${x}: launch offer ends tomorrow`, "Your launch offer ends tomorrow"),
         preheader: `${lq} closes in about ${left ?? 24} hours.`,
-        paragraphs: [hi, `Want more ads like this one for ${brand}? The ${lq} closes in about ${left ?? 24} hours.`, `6 fresh ads every Monday, unlimited ads and Studio videos, and a coach that tells you what's working. ${LAUNCH_QUARTER_GUARANTEE}`],
+        paragraphs: [hi, `Want more ads like this one for ${brand}? The ${lq} closes in about ${left ?? 24} hours.`, `6 fresh ads every Monday, 20x Starter usage for ads and Studio videos, and a coach that tells you what's working. ${LAUNCH_QUARTER_GUARANTEE}`],
         ctaLabel: "Get the launch offer",
       };
     case "last_chance":
@@ -321,7 +321,7 @@ export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCop
           hi,
           `It's been a month since your free ads for ${brand}. If ads are still on your list, ${st} is the simplest start, and paying yearly gets you 2 months free.`,
           ctx.agencyLike && agency
-            ? `Running ads for clients? ${agency.name} is ${usd(agency.priceCents)}/month with ${agency.monthlyCredits} credits and all your client brands in one workspace.`
+            ? `Running ads for clients? ${agency.name} is ${usd(agency.priceCents)}/month with ${planUsageLine(agency)} and all your client brands in one workspace.`
             : "Know businesses that need ads? Our partner program pays 30% of what they pay, for 12 months.",
           "This is my last check-in for a while.",
         ],

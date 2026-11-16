@@ -72,6 +72,10 @@ export interface StudioAccountView {
   paid: boolean;
   plan: string;
   freeVideosLeft: number;
+  /** Unlimited week pass end (ISO) while it is running, else null. */
+  unlimitedUntil?: string | null;
+  /** A paid plan member may buy an Unlimited week now. */
+  canBuyUnlimitedWeek?: boolean;
   offer: { open: boolean; endsAt: string | null };
   /** Launch Quarter window open: shown INSTEAD of the Studio launch offer (one offer at a time). */
   launchQuarter?: { open: boolean; endsAt: string | null };

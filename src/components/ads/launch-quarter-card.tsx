@@ -4,7 +4,7 @@ import { Check, Clock, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { BillingActionButton } from "@/app/ads/billing/_components/billing-action-button";
-import { FOUNDING_FAIR_USE, getPlan, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE, offerFirstPaymentCents } from "@/lib/ads/billing-config";
+import { PLAN_USAGE_NOTE, getPlan, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE, offerFirstPaymentCents } from "@/lib/ads/billing-config";
 import type { BonusSummary } from "@/lib/ads/bonus-access";
 import { postOfferEvent, type OfferPlacement } from "@/lib/ads/offer-client";
 import { formatCountdown, launchQuarterValueStack } from "@/lib/ads/offer-value";
@@ -36,10 +36,10 @@ export function LaunchQuarterCard({ placement, bonus, remainingMs, runId, classN
   return (
     <Card className={`glow-primary border-2 border-primary ${className}`}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">{hero?.name ?? LAUNCH_QUARTER.name}<Badge>Founding · Unlimited</Badge></CardTitle>
+        <CardTitle className="flex items-center gap-2">{hero?.name ?? LAUNCH_QUARTER.name}<Badge>Founding · {hero?.usageMultiple ?? 20}x</Badge></CardTitle>
         <CardDescription>
           <span className="text-3xl font-semibold text-foreground">{usd(offerFirstPaymentCents(LAUNCH_QUARTER))}</span> your first month
-          <span className="mt-1 block text-xs">Then {usd(LAUNCH_QUARTER.priceCents)}/month, price locked while you stay. {FOUNDING_FAIR_USE} Cancel anytime in one click.</span>
+          <span className="mt-1 block text-xs">Then {usd(LAUNCH_QUARTER.priceCents)}/month, price locked while you stay. {PLAN_USAGE_NOTE} Cancel anytime in one click.</span>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">

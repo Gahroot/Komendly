@@ -53,8 +53,8 @@ beforeEach(() => {
 });
 
 describe("studio launch bonus", () => {
-  // Since 2026-11-11 the Studio launch offer is the unlimited Ad Department with a first-month coupon: no bonus credits.
-  it("grants no offer_bonus credits on the unlimited Ad Department launch offer", async () => {
+  // Since 2026-11-11 the Studio launch offer is Ad Department with a first-month coupon: no bonus credits.
+  it("grants no offer_bonus credits on the Ad Department launch offer", async () => {
     const ev = invoice("in_1", "subscription_create", { plan: "ad_department", offer: "studio_launch" }, 9700);
     await handleAdsStripeEvent(ev);
     await handleAdsStripeEvent(invoice("in_2", "subscription_cycle", { plan: "ad_department", offer: "studio_launch" }, 19700));

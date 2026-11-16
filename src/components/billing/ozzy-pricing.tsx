@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Check, Clapperboard, Clock, Gem, Megaphone, ShieldCheck, Sparkles, Wand2 } from "lucide-react";
 import type { ReactNode } from "react";
-import { AD_DEPARTMENT_STACK, ADS_GUARANTEE, ADS_TOPUPS, FOUNDING_FAIR_USE, FOUNDING_PRICE_LOCK, FOUNDING_TERMS, PLANS_FOR_SALE, stackTotalUsd, ANNUAL_MONTHS, ANNUAL_MONTHS_PAID, annualCredits, annualPriceCents, type AdsPlanKey, type AdsPlanTier, unlimitedLine } from "@/lib/ads/billing-config";
+import { AD_DEPARTMENT_STACK, ADS_GUARANTEE, ADS_TOPUPS, PLAN_USAGE_NOTE, FOUNDING_PRICE_LOCK, FOUNDING_TERMS, PLANS_FOR_SALE, stackTotalUsd, ANNUAL_MONTHS, ANNUAL_MONTHS_PAID, annualCredits, annualPriceCents, type AdsPlanKey, type AdsPlanTier, planUsageLine } from "@/lib/ads/billing-config";
 import { formatCents } from "@/lib/ads/billing-format";
 import { FIRST_VIDEO_OFFER, perVideoUsd, VIDEO_PACK_OFFER } from "@/lib/first-video-offer";
 import { ATTRACTION, planAppsSummary, TESTIMONIALS_PER_MONTH } from "@/lib/hub/money-model";
@@ -43,7 +43,7 @@ const STACK = [
 ] as const;
 
 const FAQ = [
-  { q: "What does Founding Unlimited mean?", a: `${FOUNDING_FAIR_USE} ${FOUNDING_TERMS} ${FOUNDING_PRICE_LOCK}` },
+  { q: "What does 20x Starter mean?", a: `${PLAN_USAGE_NOTE} ${FOUNDING_TERMS} ${FOUNDING_PRICE_LOCK}` },
   { q: "What is an Ozzy credit?", a: `One wallet for Ad Packs and Ozzy Studio. A static ad costs 1 credit, an animated ad 5. A new Studio video costs ${STUDIO_PRICE.newShort} credits (${STUDIO_PRICE.newLong} if longer than ${STUDIO_PRICE.longOverSeconds}s), with ${STUDIO_PRICE.includedRevisions} revisions included and ${STUDIO_PRICE.revision} credit per revision after that.` },
   { q: "Why are testimonial videos only on Agency?", a: "Each AI testimonial video takes real presenter rendering time and costs us far more than an ad, so we keep them scarce: 3 a month on Agency, plus one-off packs. Unused plan testimonials don't roll over." },
   { q: "Is there really a free video?", a: `Yes. Everyone gets ${ATTRACTION.studio}. Invite a friend and they get ${STUDIO_INVITE.friendFreeVideos} free videos; you get ${STUDIO_INVITE.senderRewardVideos} more when they join.` },
@@ -53,7 +53,7 @@ const FAQ = [
 ] as const;
 
 function priceOf(p: AdsPlanTier, yearly: boolean) {
-  if (p.unlimited) return yearly ? { price: formatCents(annualPriceCents(p)), note: "/ year", sub: `${p.key === "agency" ? "Unlimited for up to 10 brands" : "Unlimited ads + Studio"} · save ${formatCents(p.priceCents * (ANNUAL_MONTHS - ANNUAL_MONTHS_PAID))}` } : { price: formatCents(p.priceCents), note: "/ month", sub: p.key === "agency" ? `${unlimitedLine(p)} · 3 testimonials / month` : `Founding Unlimited · stacked value $${stackTotalUsd().toLocaleString("en-US")}/month` };
+  if (p.usageMultiple) return yearly ? { price: formatCents(annualPriceCents(p)), note: "/ year", sub: `${planUsageLine(p)} · save ${formatCents(p.priceCents * (ANNUAL_MONTHS - ANNUAL_MONTHS_PAID))}` } : { price: formatCents(p.priceCents), note: "/ month", sub: p.key === "agency" ? `${planUsageLine(p)} · 3 testimonials / month` : `${p.usageMultiple}x Starter usage · stacked value $${stackTotalUsd().toLocaleString("en-US")}/month` };
   return yearly ? { price: formatCents(annualPriceCents(p)), note: "/ year", sub: `${annualCredits(p)} credits up front · save ${formatCents(p.priceCents * (ANNUAL_MONTHS - ANNUAL_MONTHS_PAID))}` } : { price: formatCents(p.priceCents), note: "/ month", sub: `${formatCents(Math.round(p.priceCents / p.monthlyCredits))} per credit` };
 }
 
@@ -96,7 +96,7 @@ export function OzzyPricing({ yearly, basePath, planHref, freeHref, testimonialA
           const pr = priceOf(p, yearly);
           return (
             <section key={p.key} aria-label={p.name} className={cn("glass relative flex flex-col rounded-2xl p-6", featured && "order-first ring-2 ring-[var(--studio-gold)] lg:order-none")}>
-              {featured && <span className="absolute -top-3 left-6 rounded-full bg-[var(--studio-gold)] px-2.5 py-0.5 text-xs font-semibold text-[#2a0f10]">{p.unlimited ? "Founding · Unlimited" : "Recommended"}</span>}
+              {featured && <span className="absolute -top-3 left-6 rounded-full bg-[var(--studio-gold)] px-2.5 py-0.5 text-xs font-semibold text-[#2a0f10]">{p.usageMultiple ? `Founding · ${p.usageMultiple}x` : "Recommended"}</span>}
               {TESTIMONIALS_PER_MONTH[p.key] > 0 && !featured && <span className="absolute -top-3 left-6 rounded-full border border-[var(--studio-gold)] bg-background px-2.5 py-0.5 text-xs font-semibold text-[var(--studio-gold)]">Includes testimonials</span>}
               <h2 className="font-display text-xl font-medium">{p.name}</h2>
               <p className="mt-3 flex items-baseline gap-1"><span className="text-4xl font-semibold tabular-nums">{pr.price}</span><span className="text-sm text-muted-foreground">{pr.note}</span></p>
@@ -123,7 +123,7 @@ export function OzzyPricing({ yearly, basePath, planHref, freeHref, testimonialA
             ))}
           </ul>
           <p className="mt-4 border-t border-border pt-4 text-sm"><span className="font-semibold">Total value ${stackTotalUsd().toLocaleString("en-US")}/month.</span> Yours for {formatCents(hero.priceCents)}/month.</p>
-          {hero.unlimited && <p className="mt-2 text-xs text-muted-foreground">{FOUNDING_FAIR_USE} {FOUNDING_TERMS} {FOUNDING_PRICE_LOCK}</p>}
+          {hero.usageMultiple && <p className="mt-2 text-xs text-muted-foreground">{PLAN_USAGE_NOTE} {FOUNDING_TERMS} {FOUNDING_PRICE_LOCK}</p>}
         </section>
       )}
 

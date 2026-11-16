@@ -43,15 +43,15 @@ export function OfferNudge({ runId, ready, bonus, remainingMs, onDismiss, valueL
         <div className="space-y-1">
           <p className="flex items-center gap-2 text-lg font-semibold tracking-tight"><Sparkles className="size-5 text-primary" aria-hidden /> Keep these coming: your AI ad department</p>
           <p className="text-sm text-muted-foreground">
-            You just got {ready} {ready === 1 ? "ad" : "ads"} from your site, and Ozzy is still making the rest. {hero.name} keeps fresh ones landing: 6 new ads every Monday, unlimited Ad Packs and Studio videos, and a coach that tells you what&apos;s working. First month {today}, then {usd(hero.priceCents)}/month.
+            You just got {ready} {ready === 1 ? "ad" : "ads"} from your site, and Ozzy is still making the rest. {hero.name} keeps fresh ones landing: 6 new ads every Monday, {hero.usageMultiple ?? 20}x Starter usage for Ad Packs and Studio videos, and a coach that tells you what&apos;s working. First month {today}, then {usd(hero.priceCents)}/month.
           </p>
         </div>
         <p className="rounded-lg bg-primary/10 px-3 py-2 text-sm">
-          A freelancer charges about $35 an ad. An agency charges $2,000+ a month. Ozzy makes unlimited ads for {usd(hero.priceCents)}/month{today !== usd(hero.priceCents) ? ` (your first month ${today})` : ""}.
+          A freelancer charges about $35 an ad. An agency charges $2,000+ a month. Ozzy makes far more ads than you&apos;ll need for {usd(hero.priceCents)}/month{today !== usd(hero.priceCents) ? ` (your first month ${today})` : ""}.
         </p>
         <ul className="grid gap-2 text-sm sm:grid-cols-3">
           <li className="flex items-start gap-2"><CalendarClock className="mt-0.5 size-4 shrink-0 text-primary" />6 fresh ads every Monday</li>
-          <li className="flex items-start gap-2"><Smartphone className="mt-0.5 size-4 shrink-0 text-primary" />Unlimited ads, one at a time</li>
+          <li className="flex items-start gap-2"><Smartphone className="mt-0.5 size-4 shrink-0 text-primary" />{hero.usageMultiple ?? 20}x Starter usage</li>
           <li className="flex items-start gap-2"><Film className="mt-0.5 size-4 shrink-0 text-primary" />{bonus?.locked ? "Unlocks your bonus ads too" : "Animated ads included"}</li>
         </ul>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

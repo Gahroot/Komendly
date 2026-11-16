@@ -15,7 +15,7 @@ export function offerPerAdCents(offer: AdsLaunchOffer = LAUNCH_QUARTER): { offer
 
 export function launchQuarterValueStack(bonus: BonusSummary | null, offer: AdsLaunchOffer = LAUNCH_QUARTER): string[] {
   const plan = getPlan(offer.plan);
-  if (plan?.unlimited) {
+  if (plan?.weeklyDrop) {
     // Hormozi stack: stated value per line, then the price today.
     const lines = AD_DEPARTMENT_STACK.map((i) => `${i.bonus ? "Bonus: " : ""}${i.label}: ${i.detail} (worth $${i.valueUsd}/month)`);
     if (bonus?.locked) lines.push(`Unlocks your ${bonusLabel(bonus)} right away`);

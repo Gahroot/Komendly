@@ -48,7 +48,7 @@ const PROMPTS = [
 const FAQ = [
   { q: "What does it cost to use Ozzy from an agent?", a: "The same as the web app. Your agent works on your account, with your plan and your credits. Nothing extra to buy and no separate API pricing." },
   { q: "Do the free video and free ad pack work from an agent?", a: "Yes. A new account gets the same free Ozzy Studio video and free ad pack whether you start them in the browser or from Claude, Cursor, ChatGPT or the CLI." },
-  { q: "Is it unlimited on the Ad Department and Agency plans?", a: "Yes. On Ad Department and Agency, Studio videos and ad packs are unlimited from an agent too, with the same fair-use rule as the app: one job at a time on Ad Department (one business), three at a time on Agency (up to 10 brands)." },
+  { q: "Do agent requests use my plan the same way?", a: "Yes. Studio videos and ad packs made from an agent use the same plan usage as the app: 20x Starter on Ad Department, 50x on Agency." },
   { q: "What happens when I run out of credits?", a: "Ozzy tells your agent in plain words and includes a link to the pricing page, so the agent can pass it on to you. Nothing is charged without you." },
   { q: "Is it safe to connect?", a: "You sign in on komendly.com and approve each app yourself; the app never sees your password. You can see every connected app and CLI key at Dashboard > API and disconnect any of them at once." },
 ];

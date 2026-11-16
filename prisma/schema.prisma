@@ -468,6 +468,7 @@ model AdsWorkspace {
   trialUsedAt          DateTime?
   studioFreeVideos     Int       @default(1) // Ozzy Studio: free finished videos left (1 per new workspace; +1 per studio referral reward; +2 for invited friends)
   studioOfferReadyAt   DateTime? // first free Studio video delivered -> 72h Studio launch offer window starts
+  unlimitedUntil       DateTime? // Unlimited week pass (one-time purchase): Ad Packs + Studio cost 0 credits until then
   // Billing (monthly plan with included credits + top-ups)
   stripeCustomerId     String?   @unique
   stripeSubscriptionId String?   @unique

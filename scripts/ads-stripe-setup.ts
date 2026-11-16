@@ -3,7 +3,7 @@
 // Usage: set -a; . ./.env.local; set +a; npx tsx scripts/ads-stripe-setup.ts [--live] [--api-key sk_...] [--only unlock_pack]
 // --only unlock_pack: just the $9 "Unlock this pack" price + its "$9 off the first Starter month" coupon (touches nothing else).
 import Stripe from "stripe";
-import { ADS_PLANS, ADS_TOPUPS, annualCredits, annualPriceCents, LAUNCH_FIRST_MONTH_OFF_CENTS, LAUNCH_QUARTER, UNLOCK_PACK, UNLOCK_PACK_COUPON_ENV } from "../src/lib/ads/billing-config";
+import { ADS_PLANS, ADS_TOPUPS, annualCredits, annualPriceCents, LAUNCH_FIRST_MONTH_OFF_CENTS, LAUNCH_QUARTER, UNLIMITED_WEEK, UNLOCK_PACK, UNLOCK_PACK_COUPON_ENV } from "../src/lib/ads/billing-config";
 
 const UNLOCK_COUPON_ID = `ads_unlock_pack_credit_${UNLOCK_PACK.priceCents}`;
 
@@ -62,6 +62,11 @@ async function main() {
   const lines: string[] = [];
   const unlockId = await ensurePrice(stripe, { name: UNLOCK_PACK.name, priceCents: UNLOCK_PACK.priceCents, lookupKey: `ads_${UNLOCK_PACK.key}_${UNLOCK_PACK.priceCents}_${UNLOCK_PACK.credits}`, recurring: false, credits: UNLOCK_PACK.credits });
   lines.push(`${UNLOCK_PACK.priceEnv}=${unlockId}`, `${UNLOCK_PACK_COUPON_ENV}=${await ensureUnlockCoupon(stripe)}`);
+  if (argValue("--only") === UNLIMITED_WEEK.key) {
+    const id = await ensurePrice(stripe, { name: UNLIMITED_WEEK.name, priceCents: UNLIMITED_WEEK.priceCents, lookupKey: `ads_${UNLIMITED_WEEK.key}_${UNLIMITED_WEEK.priceCents}`, recurring: false, credits: 0 });
+    console.log(`# ${UNLIMITED_WEEK.name} (${live ? "LIVE" : "test"} mode). Add to your env:\n${UNLIMITED_WEEK.priceEnv}=${id}`);
+    return;
+  }
   if (argValue("--only") === UNLOCK_PACK.key) {
     console.log(`# ${UNLOCK_PACK.name} (${live ? "LIVE" : "test"} mode). Add to your env:`);
     console.log(lines.join("\n"));

@@ -16,7 +16,7 @@
 
 export type AdsPlanKey = "starter" | "ad_department" | "growth" | "scale" | "agency";
 export type BillingInterval = "month" | "year";
-export type AdsTopupKey = "topup_10" | "topup_30" | "unlock_pack";
+export type AdsTopupKey = "topup_10" | "topup_30" | "unlock_pack" | "unlimited_week";
 
 export interface AdsPlanTier {
   key: AdsPlanKey;
@@ -39,25 +39,30 @@ export interface AdsPlanTier {
   unlimitedBrands?: number;
   /** Unlimited plans: ad runs / Studio turns that may be in progress at once (fair use). Default 1. */
   concurrent?: number;
-  /** Ad Packs and Ozzy Studio cost 0 credits (fair use: 1 run + 1 Studio turn in progress at a time). */
+  /** Ad Packs and Ozzy Studio cost 0 credits. No plan sets this since 2026-11-13 (owner: never sell unlimited). */
   unlimited?: boolean;
+  /** Sold as "Nx Starter" (monthlyCredits = N x Starter's); pricing copy says the multiple, not the credit count. */
+  usageMultiple?: number;
 }
 
-// Ozzy Ad Department, Founding Unlimited (owner decision 2026-11-11): the hero plan sold after the free pack.
+// Ozzy Ad Department: the hero plan sold after the free pack. Owner decision 2026-11-13: no unlimited plans (no
+// obligation to unlimited use); instead "20x Starter" usage, AI-company style, with the credit count kept off pricing copy.
 // Single price constant: changing the price is this one line (+ a new Stripe price, see scripts/ads-stripe-setup.ts).
 export const AD_DEPARTMENT_PRICE_CENTS = 19700;
-/** Unlimited: Ad Packs + Ozzy Studio cost 0 credits on ad_department (fair use: one run + one Studio turn at a time). */
-export const AD_DEPARTMENT_UNLIMITED = true;
+/** Starter's monthly credits; the bigger plans are sold as a multiple of it. */
+export const STARTER_MONTHLY_CREDITS = 60;
+export const AD_DEPARTMENT_USAGE_MULTIPLE = 20;
+export const AGENCY_USAGE_MULTIPLE = 50;
 /** Founding offer: Growth and Scale are hidden from new buyers while it runs. */
 export const FOUNDING_OFFER_ACTIVE = true;
-export const FOUNDING_FAIR_USE = "Unlimited ads and Studio videos, made one at a time.";
-export const FOUNDING_TERMS =
-  "Founding offer for the first 100 members or until we end it. Unlimited is guaranteed for your first 3 months; after that we'd give you 30 days' notice before any change. Cancel anytime in one click.";
+/** One plain line on what the hero plan's usage means (no credit count). */
+export const PLAN_USAGE_NOTE = `${AD_DEPARTMENT_USAGE_MULTIPLE}x the usage of Starter: far more ads and Studio videos than most businesses ever make.`;
+export const FOUNDING_TERMS = "Founding offer for the first 100 members or until we end it. Cancel anytime in one click.";
 export const FOUNDING_PRICE_LOCK = "Founding members keep their price for as long as they stay subscribed.";
 
 /** The Hormozi value stack shown next to the hero plan (values are stated monthly worth, in dollars). */
 export const AD_DEPARTMENT_STACK: readonly { label: string; detail: string; valueUsd: number; bonus?: boolean }[] = [
-  { label: "Unlimited ads + Ozzy Studio videos", detail: "Make as many Ad Packs and videos as you like, one at a time", valueUsd: 500 },
+  { label: `${AD_DEPARTMENT_USAGE_MULTIPLE}x Starter usage for ads + Ozzy Studio videos`, detail: "Far more Ad Packs and videos than most businesses ever make", valueUsd: 500 },
   { label: "Weekly Drop", detail: "Ozzy Autopilot: 6 new ads + a new 15s video every Monday, steered by your one-sentence focus", valueUsd: 300 },
   { label: "Ozzy Ad Coach", detail: "Show him your Ads Manager results; he says what to keep, what to kill, and makes more winners", valueUsd: 200 },
   { label: "Website check-up", detail: "Ozzy checks the page your ads send people to", valueUsd: 300, bonus: true },
@@ -86,27 +91,24 @@ export const ADS_PLANS: readonly AdsPlanTier[] = [
     key: "starter",
     name: "Starter",
     priceCents: 4900,
-    monthlyCredits: 20,
+    monthlyCredits: STARTER_MONTHLY_CREDITS,
     priceEnv: "STRIPE_ADS_STARTER_PRICE_ID",
     annualPriceEnv: "STRIPE_ADS_STARTER_ANNUAL_PRICE_ID",
     giftsPerMonth: 1,
-    highlights: ["20 Ozzy credits / month for Ad Packs and Ozzy Studio", "About 4 Studio videos or 20 static ads, mix as you like", "All sizes (4:5, 1:1, 9:16) · animated ads", "Buy one, give one: 1 gift pack a month for a friend"],
+    highlights: [`${STARTER_MONTHLY_CREDITS} Ozzy credits / month for Ad Packs and Ozzy Studio`, `About ${STARTER_MONTHLY_CREDITS / 5} Studio videos or ${STARTER_MONTHLY_CREDITS} static ads, mix as you like`, "All sizes (4:5, 1:1, 9:16) · animated ads", "Buy one, give one: 1 gift pack a month for a friend"],
   },
   {
     key: "ad_department",
     name: "Ozzy Ad Department",
     priceCents: AD_DEPARTMENT_PRICE_CENTS,
-    // Unlimited replaces credits: the grant stays (0) so the ledger code paths are unchanged.
-    monthlyCredits: 0,
+    monthlyCredits: STARTER_MONTHLY_CREDITS * AD_DEPARTMENT_USAGE_MULTIPLE,
+    usageMultiple: AD_DEPARTMENT_USAGE_MULTIPLE,
     priceEnv: "STRIPE_ADS_AD_DEPARTMENT_PRICE_ID",
     annualPriceEnv: "STRIPE_ADS_AD_DEPARTMENT_ANNUAL_PRICE_ID",
     giftsPerMonth: 1,
     recommended: true,
     weeklyDrop: true,
-    unlimited: AD_DEPARTMENT_UNLIMITED,
-    unlimitedBrands: 1,
-    concurrent: 1,
-    highlights: ["Unlimited ads and Studio videos for your business, made one at a time", "Ozzy Autopilot: fresh ads + a new video every Monday (5 static + 1 animated + a 15s video), steered by one sentence from you", "Ozzy Ad Coach: show him your results, he says what to keep and kill", "Bonuses: website check-up, 30-day ad plan, hook & caption library", "Post Ozzy's ads for 30 days. Not happy? One click, full refund."],
+    highlights: [`${AD_DEPARTMENT_USAGE_MULTIPLE}x Starter usage: far more ads and Studio videos than most businesses ever make`, "Ozzy Autopilot: fresh ads + a new video every Monday (5 static + 1 animated + a 15s video), steered by one sentence from you", "Ozzy Ad Coach: show him your results, he says what to keep and kill", "Bonuses: website check-up, 30-day ad plan, hook & caption library", "Post Ozzy's ads for 30 days. Not happy? One click, full refund."],
   },
   {
     key: "growth",
@@ -132,20 +134,21 @@ export const ADS_PLANS: readonly AdsPlanTier[] = [
     highlights: ["115 Ozzy credits / month for Ad Packs and Ozzy Studio", "1 AI testimonial video / month (a real review, on camera)", "About 23 Studio videos or 115 static ads", "Everything in Growth, priority generation"],
   },
   {
-    // Agency (owner decision 2026-11-11): Ad Department, unlimited, for up to 10 client brands, 3 in progress at a time,
-    // plus 3 testimonial videos and 4 gift packs a month. No Agency subscribers existed when it went unlimited.
+    // Agency: Ad Department features at 50x Starter usage for client brands, plus 3 testimonial videos and 4 gift
+    // packs a month. Was unlimited 2026-11-11..13; no Agency subscriber ever existed.
     key: "agency",
     name: "Agency",
     priceCents: 49700,
-    monthlyCredits: 0,
+    monthlyCredits: STARTER_MONTHLY_CREDITS * AGENCY_USAGE_MULTIPLE,
+    usageMultiple: AGENCY_USAGE_MULTIPLE,
+    // Unlimited week on Agency covers up to 10 client brands (1 business on every other plan).
+    unlimitedBrands: 10,
     priceEnv: "STRIPE_ADS_AGENCY_PRICE_ID",
     annualPriceEnv: "STRIPE_ADS_AGENCY_ANNUAL_PRICE_ID",
     giftsPerMonth: 4,
     weeklyDrop: true,
-    unlimited: true,
-    unlimitedBrands: 10,
     concurrent: 3,
-    highlights: ["Everything in Ozzy Ad Department, for up to 10 client brands", "Ozzy Autopilot: fresh ads + a new video every Monday", "Unlimited ads and Studio videos, 3 at a time", "3 AI testimonial videos / month (real reviews, on camera)", "4 gift packs a month to pitch new clients"],
+    highlights: ["Everything in Ozzy Ad Department, for your client brands", "Ozzy Autopilot: fresh ads + a new video every Monday", `${AGENCY_USAGE_MULTIPLE}x Starter usage for ads and Studio videos, 3 at a time`, "3 AI testimonial videos / month (real reviews, on camera)", "4 gift packs a month to pitch new clients"],
   },
 ];
 
@@ -162,6 +165,8 @@ export interface PlanCheckWorkspace {
   adsPlan: string;
   subscriptionStatus: string;
   suspendedAt?: Date | null;
+  /** Unlimited week pass end (AdsWorkspace.unlimitedUntil). */
+  unlimitedUntil?: Date | null;
 }
 
 const ACTIVE_SUB_STATUSES = new Set(["active", "trialing", "past_due"]);
@@ -185,9 +190,9 @@ export function concurrentLimit(ws: PlanCheckWorkspace, user?: { isAdmin?: boole
   return getPlan(ws.adsPlan)?.concurrent ?? 1;
 }
 
-/** Unlimited plans: how many of the member's own businesses the unlimited Ad Packs cover (null = no cap). */
-export function unlimitedBrandLimit(ws: PlanCheckWorkspace): number | null {
-  return isUnlimitedPlan(ws) ? (getPlan(ws.adsPlan)?.unlimitedBrands ?? null) : null;
+/** Unlimited (plan or week pass): how many of the member's own businesses the free Ad Packs cover (null = no cap). */
+export function unlimitedBrandLimit(ws: PlanCheckWorkspace, now: Date = new Date()): number | null {
+  return isUnlimitedPlan(ws, now) ? (getPlan(ws.adsPlan)?.unlimitedBrands ?? 1) : null;
 }
 
 /** Pure: may an unlimited workspace start ads for `domain`, given the businesses it already uses? */
@@ -201,9 +206,37 @@ export const BRAND_LIMIT_MESSAGE = (limit: number) =>
     ? "Your plan covers one business. To make ads for more brands, Agency covers up to 10."
     : `Your plan covers up to ${limit} brands. Reply to any Ozzy email and we'll sort out more.`;
 
-/** Ad Packs and Ozzy Studio are free (0 credits) for this workspace: an active plan with `unlimited`. */
-export function isUnlimitedPlan(ws: PlanCheckWorkspace): boolean {
-  return Boolean(getPlan(ws.adsPlan)?.unlimited) && activeOn(ws);
+/** Ad Packs and Ozzy Studio are free (0 credits) for this workspace: an Unlimited week pass running (or a plan with `unlimited`). */
+export function isUnlimitedPlan(ws: PlanCheckWorkspace, now: Date = new Date()): boolean {
+  return unlimitedPassActive(ws, now) || (Boolean(getPlan(ws.adsPlan)?.unlimited) && activeOn(ws));
+}
+
+/**
+ * Unlimited week (owner decision 2026-11-13): unlimited is never a plan, only a one-time 7-day pass bought on top of a
+ * paid plan. Nothing recurs, so it can be withdrawn any time (UNLIMITED_WEEK_FOR_SALE=false or unset the price env);
+ * passes already bought run to their end. Fair use as before: one Ad Pack + one Studio turn in progress at a time.
+ */
+export const UNLIMITED_WEEK_DAYS = 7;
+export const UNLIMITED_WEEK_FOR_SALE = true;
+export const UNLIMITED_WEEK: AdsTopupPack = { key: "unlimited_week", name: "Unlimited week", priceCents: 4900, credits: 0, priceEnv: "STRIPE_ADS_UNLIMITED_WEEK_PRICE_ID" };
+/** CreditLedger note on the pass's 0-credit purchase row (idempotency per checkout session). */
+export const UNLIMITED_WEEK_NOTE = "unlimited_week";
+export const UNLIMITED_WEEK_LINE = `Unlimited ads and Studio videos for ${UNLIMITED_WEEK_DAYS} days, one at a time. One payment, nothing renews.`;
+
+/** The pass is running for this workspace (never while suspended). */
+export function unlimitedPassActive(ws: Pick<PlanCheckWorkspace, "unlimitedUntil" | "suspendedAt">, now: Date = new Date()): boolean {
+  return Boolean(ws.unlimitedUntil && ws.unlimitedUntil > now && !ws.suspendedAt);
+}
+
+/** Pure: new pass end after buying one more week (stacks on a running pass). */
+export function extendUnlimitedUntil(current: Date | null | undefined, now: Date, days: number = UNLIMITED_WEEK_DAYS): Date {
+  const from = current && current > now ? current : now;
+  return new Date(from.getTime() + days * 86_400_000);
+}
+
+/** Who may buy the pass: an active paid plan, not suspended, while it is for sale. */
+export function canBuyUnlimitedWeek(ws: PlanCheckWorkspace): boolean {
+  return UNLIMITED_WEEK_FOR_SALE && ws.adsPlan !== "trial" && ws.adsPlan !== "none" && activeOn(ws);
 }
 
 /** Fair-use message when an unlimited workspace already has something in progress (plain words, no jargon). */
@@ -263,7 +296,7 @@ export function getPlan(key: string): AdsPlanTier | undefined {
 }
 
 export function getTopup(key: string): AdsTopupPack | undefined {
-  return key === UNLOCK_PACK.key ? UNLOCK_PACK : ADS_TOPUPS.find((t) => t.key === key);
+  return key === UNLOCK_PACK.key ? UNLOCK_PACK : key === UNLIMITED_WEEK.key ? UNLIMITED_WEEK : ADS_TOPUPS.find((t) => t.key === key);
 }
 
 export function priceIdFor(item: { priceEnv: string }, env: Record<string, string | undefined> = process.env): string | null {
@@ -392,10 +425,21 @@ export function offerSavingsCents(offer: AdsLaunchOffer): number {
   return (getPlan(offer.plan)?.priceCents ?? 0) * offer.intervalMonths - offerFirstPaymentCents(offer);
 }
 
-/** One plain line describing what "unlimited" covers on a plan (null for credit plans). */
-export function unlimitedLine(p: Pick<AdsPlanTier, "unlimited" | "unlimitedBrands" | "concurrent">): string | null {
-  if (!p.unlimited) return null;
-  const brands = p.unlimitedBrands ?? 1;
-  const atOnce = p.concurrent ?? 1;
-  return `Unlimited ads and Studio videos ${brands === 1 ? "for your business" : `for up to ${brands} brands`}, ${atOnce === 1 ? "made one at a time" : `${atOnce} at a time`}`;
+/**
+ * "Nx Starter" plans show members a usage bar, never the credit number (owner decision 2026-11-13).
+ * percentLeft = balance vs the plan's monthly grant, clamped 0..100 (top-ups can push the balance over the grant).
+ * null = show the plain credit count (Starter, legacy plans, trial).
+ */
+export function usageMeter(planKey: string, balance: number): { percentLeft: number; label: string } | null {
+  // (An active Unlimited week is shown by the callers instead of this bar.)
+  const p = getPlan(planKey);
+  if (!p?.usageMultiple || p.monthlyCredits <= 0) return null;
+  const raw = Math.round((Math.max(0, balance) / p.monthlyCredits) * 100);
+  const percentLeft = Math.min(100, balance > 0 ? Math.max(1, raw) : 0);
+  return { percentLeft, label: percentLeft === 0 ? "This month's usage is used up" : `${percentLeft}% of this month's usage left` };
+}
+
+/** One plain line on a plan's usage: "20x Starter usage ..." for multiple plans (no credit count), else the credits. */
+export function planUsageLine(p: Pick<AdsPlanTier, "usageMultiple" | "monthlyCredits">): string {
+  return p.usageMultiple ? `${p.usageMultiple}x Starter usage for ads and Studio videos` : `${p.monthlyCredits} credits / month`;
 }

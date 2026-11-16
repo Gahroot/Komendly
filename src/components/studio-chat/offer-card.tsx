@@ -2,7 +2,7 @@
 import { Check, Loader2, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ADS_TOPUPS, FOUNDING_FAIR_USE, getPlan, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE, offerFirstPaymentCents, PLANS_FOR_SALE, unlimitedLine } from "@/lib/ads/billing-config";
+import { ADS_TOPUPS, PLAN_USAGE_NOTE, getPlan, usageMeter, UNLIMITED_WEEK, UNLIMITED_WEEK_LINE, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE, offerFirstPaymentCents, PLANS_FOR_SALE, planUsageLine } from "@/lib/ads/billing-config";
 import { LQ_STUDIO_LINE } from "@/lib/studio/bridge";
 import { STUDIO_LAUNCH_OFFER } from "@/lib/hub/money-model";
 import type { StudioAccountView } from "@/lib/studio/thread";
@@ -50,7 +50,7 @@ export function LaunchQuarterStudioCard({ endsAt, placement }: { endsAt: string 
   const plan = getPlan(LAUNCH_QUARTER.plan);
   const today = `$${(offerFirstPaymentCents(LAUNCH_QUARTER) / 100).toFixed(0)}`;
   const lines = [
-    `Unlimited Studio videos and Ad Packs. ${FOUNDING_FAIR_USE}`,
+    PLAN_USAGE_NOTE,
     "6 fresh ads every Monday, made for you",
     "Ozzy Ad Coach: he tells you what's working",
     LAUNCH_QUARTER_GUARANTEE,
@@ -117,11 +117,17 @@ export function PaywallCard({ account, neededCredits, onClose }: { account: Stud
         <div>
           <h3 className="font-display text-xl text-[oklch(0.97_0.03_80)]">This one needs {neededCredits} credit{neededCredits === 1 ? "" : "s"}</h3>
           <p className="mt-1 text-sm text-[oklch(0.84_0.03_80)]">
-            You have {account.balance} credit{account.balance === 1 ? "" : "s"}. A new video is 5 credits (8 over 30s); 3 revisions are included.
+            {usageMeter(account.plan, account.balance) ? "You've used this month's plan usage. A top-up keeps Ozzy going until it resets." : <>You have {account.balance} credit{account.balance === 1 ? "" : "s"}. A new video is 5 credits (8 over 30s); 3 revisions are included.</>}
           </p>
         </div>
         <button type="button" onClick={onClose} className="text-xs text-[oklch(0.8_0.03_290)] underline underline-offset-4">Close</button>
       </div>
+      {account.canBuyUnlimitedWeek && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--studio-gold)] bg-[oklch(0.25_0.09_295/0.9)] p-3 text-sm text-[oklch(0.93_0.03_80)]">
+          <span><span className="font-semibold">Need more? {UNLIMITED_WEEK.name}, ${(UNLIMITED_WEEK.priceCents / 100).toFixed(0)}.</span> {UNLIMITED_WEEK_LINE}</span>
+          <div className="w-44"><CheckoutButton primary label="Go unlimited" body={{ kind: "topup", key: UNLIMITED_WEEK.key, placement: "studio_paywall" }} /></div>
+        </div>
+      )}
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {plans.map((p) => {
           const rec = Boolean(p.recommended);
@@ -130,7 +136,7 @@ export function PaywallCard({ account, neededCredits, onClose }: { account: Stud
               {rec && <span className="absolute -top-2.5 left-3 inline-flex items-center gap-1 rounded-full bg-[var(--studio-gold)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#2a0f10]"><Sparkles className="size-3" />Recommended</span>}
               <p className="text-sm font-semibold text-[oklch(0.97_0.03_80)]">{p.name}</p>
               <p className="font-display text-2xl text-[oklch(0.97_0.03_80)]">${(p.priceCents / 100).toFixed(0)}<span className="text-sm text-[oklch(0.8_0.03_290)]">/mo</span></p>
-              <p className="mb-3 text-xs text-[oklch(0.84_0.03_80)]">{p.unlimited ? `${unlimitedLine(p)} · 6 fresh ads every Monday` : `${p.monthlyCredits} credits · about ${Math.floor(p.monthlyCredits / 5)} videos · own footage up to 90s`}</p>
+              <p className="mb-3 text-xs text-[oklch(0.84_0.03_80)]">{p.usageMultiple ? `${planUsageLine(p)} · 6 fresh ads every Monday` : `${p.monthlyCredits} credits · about ${Math.floor(p.monthlyCredits / 5)} videos · own footage up to 90s`}</p>
               <div className="mt-auto"><CheckoutButton primary={rec} label={`Choose ${p.name}`} body={{ kind: "plan", key: p.key, placement: "studio_paywall" }} /></div>
             </div>
           );
