@@ -22,6 +22,10 @@ export interface SocialContent {
   imageUrl: string;
   /** Public JPEG URL for Instagram (IG only takes JPEG). */
   igImageUrl: string;
+  /** Public MP4 (9:16, H.264/AAC): when set, the post is a Page video + Instagram Reel instead of a photo. */
+  videoUrl?: string;
+  /** Instagram-only video (tips: photo on Facebook, Reel on Instagram). */
+  igVideoUrl?: string;
   /** What the post is about, for the caption writer. */
   brief: string;
   /** Consented showcase only: the business's name / handle to credit. */
@@ -73,17 +77,21 @@ export function socialGate(g: SocialGateInput): string | null {
 // ---------------------------------------------------------------------------
 // Content pool
 
+// Every example is a 9:16 MP4 with a same-named .jpg poster frame. Post the video (a poster still looks like a frozen clip).
 const EXAMPLES: ReadonlyArray<{ path: string; brief: string }> = [
-  { path: "/studio-examples/dentist.jpg", brief: "a dental clinic's website turned into a scroll-stopping ad by Ozzy" },
-  { path: "/studio-examples/plumber.jpg", brief: "a plumber's website turned into an ad by Ozzy" },
-  { path: "/studio-examples/roofer.jpg", brief: "a roofing company's website turned into an ad by Ozzy" },
-  { path: "/studio-examples/landscaper.jpg", brief: "a landscaper's website turned into an ad by Ozzy" },
-  { path: "/studio-examples/dessert.jpg", brief: "a dessert shop's website turned into an ad by Ozzy" },
-  { path: "/studio-examples/ad43.jpg", brief: "a sample ad Ozzy made from a website" },
-  { path: "/studio-examples/ad08.jpg", brief: "a sample ad Ozzy made from a website" },
-  { path: "/studio-examples/ad53.jpg", brief: "a sample ad Ozzy made from a website" },
-  { path: "/examples/dental-priya.jpg", brief: "a dentist's sample ad made by Ozzy" },
+  { path: "/studio-examples/dentist.mp4", brief: "a short video ad Ozzy made from a dental clinic's website" },
+  { path: "/studio-examples/plumber.mp4", brief: "a short video ad Ozzy made from a plumber's website" },
+  { path: "/studio-examples/roofer.mp4", brief: "a short video ad Ozzy made from a roofing company's website" },
+  { path: "/studio-examples/landscaper.mp4", brief: "a short video ad Ozzy made from a landscaper's website" },
+  { path: "/studio-examples/dessert.mp4", brief: "a short video ad Ozzy made from a dessert shop's website" },
+  { path: "/studio-examples/ad43.mp4", brief: "a short video ad Ozzy made from a small business's website" },
+  { path: "/studio-examples/ad08.mp4", brief: "a short video ad Ozzy made from a small business's website" },
+  { path: "/studio-examples/ad53.mp4", brief: "a short video ad Ozzy made from a small business's website" },
+  { path: "/studio-examples/ozzy-v07.mp4", brief: "Ozzy himself in a short video, showing how he turns a website into ads" },
+  { path: "/studio-examples/ozzy-v10.mp4", brief: "Ozzy himself in a short video, showing how he turns a website into ads" },
+  { path: "/examples/dental-priya.mp4", brief: "a testimonial-style video ad Komendly made for a dental clinic with an AI presenter talking to camera about check-ups (don't call her a real patient or say it is unscripted)" },
 ];
+const poster = (mp4: string) => mp4.replace(/\.mp4$/, ".jpg");
 
 const TIPS: ReadonlyArray<{ key: string; art: string; brief: string }> = [
   { key: "tip-one-message", art: "ozzy-classic-happy.png", brief: "ad tip: one ad, one message. Pick the single thing customers love most" },
@@ -98,11 +106,11 @@ const TIPS: ReadonlyArray<{ key: string; art: string; brief: string }> = [
 
 /** Komendly-owned examples + tips; consented showcases are added by the caller. */
 export function ownedContent(site = SOCIAL_SITE): SocialContent[] {
-  const examples = EXAMPLES.map((e): SocialContent => ({ kind: "example", ref: e.path, imageUrl: site + e.path, igImageUrl: site + e.path, brief: e.brief }));
-  // IG needs a JPEG, Ozzy art is PNG: the tip's IG image is one of our own example ads.
+  const examples = EXAMPLES.map((e): SocialContent => ({ kind: "example", ref: e.path, imageUrl: site + poster(e.path), igImageUrl: site + poster(e.path), videoUrl: site + e.path, brief: e.brief }));
+  // Tips: Ozzy art photo on Facebook; IG can't take PNG, so the tip goes out as a Reel of one of our example videos.
   const tips = TIPS.map((t, i): SocialContent => {
     const ex = EXAMPLES[i % EXAMPLES.length] ?? EXAMPLES[0];
-    return { kind: "tip", ref: t.key, imageUrl: `${site}/brand/${t.art}`, igImageUrl: site + (ex?.path ?? ""), brief: t.brief };
+    return { kind: "tip", ref: t.key, imageUrl: `${site}/brand/${t.art}`, igImageUrl: site + poster(ex?.path ?? ""), igVideoUrl: site + (ex?.path ?? ""), brief: t.brief };
   });
   return [...examples, ...tips];
 }
@@ -182,8 +190,13 @@ async function graph(f: FetchFn, version: string, path: string, params: Record<s
   return json;
 }
 
-/** Photo post on the Page; returns the post id. */
-export async function publishFacebook(o: { f: FetchFn; version: string; pageId: string; token: string; imageUrl: string; caption: string; signal?: AbortSignal }): Promise<string> {
+/** Photo (or video, when videoUrl is set) post on the Page; returns the post / video id. */
+export async function publishFacebook(o: { f: FetchFn; version: string; pageId: string; token: string; imageUrl: string; videoUrl?: string; caption: string; signal?: AbortSignal }): Promise<string> {
+  if (o.videoUrl) {
+    const v = await graph(o.f, o.version, `${o.pageId}/videos`, { file_url: o.videoUrl, description: o.caption, access_token: o.token }, "POST", o.signal);
+    if (typeof v.id !== "string") throw new Error("Meta videos: no video id");
+    return v.id;
+  }
   const r = await graph(o.f, o.version, `${o.pageId}/photos`, { url: o.imageUrl, caption: o.caption, access_token: o.token }, "POST", o.signal);
   const id = typeof r.post_id === "string" ? r.post_id : typeof r.id === "string" ? r.id : "";
   if (!id) throw new Error("Meta photos: no post id");
@@ -191,16 +204,19 @@ export async function publishFacebook(o: { f: FetchFn; version: string; pageId: 
 }
 
 /** IG container -> wait until FINISHED -> media_publish; returns the IG media id. */
-export async function publishInstagram(o: { f: FetchFn; version: string; igUserId: string; token: string; imageUrl: string; caption: string; signal?: AbortSignal; sleep?: (ms: number) => Promise<void>; tries?: number }): Promise<string> {
+export async function publishInstagram(o: { f: FetchFn; version: string; igUserId: string; token: string; imageUrl: string; videoUrl?: string; caption: string; signal?: AbortSignal; sleep?: (ms: number) => Promise<void>; tries?: number }): Promise<string> {
   const sleep = o.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
-  const c = await graph(o.f, o.version, `${o.igUserId}/media`, { image_url: o.imageUrl, caption: o.caption, access_token: o.token }, "POST", o.signal);
+  const media: Record<string, string> = o.videoUrl ? { media_type: "REELS", video_url: o.videoUrl, share_to_feed: "true" } : { image_url: o.imageUrl };
+  const c = await graph(o.f, o.version, `${o.igUserId}/media`, { ...media, caption: o.caption, access_token: o.token }, "POST", o.signal);
   const creation = typeof c.id === "string" ? c.id : "";
   if (!creation) throw new Error("Meta media: no container id");
-  for (let i = 0; i < (o.tries ?? 10); i++) {
+  // Reels take ~30-90s to process.
+  for (let i = 0; i < (o.tries ?? (o.videoUrl ? 60 : 10)); i++) {
     const s = await graph(o.f, o.version, creation, { fields: "status_code", access_token: o.token }, "GET", o.signal);
     if (s.status_code === "FINISHED") break;
     if (s.status_code === "ERROR" || s.status_code === "EXPIRED") throw new Error(`Meta media container ${String(s.status_code)}`);
     await sleep(3000);
+    if (i === (o.tries ?? (o.videoUrl ? 60 : 10)) - 1) throw new Error("Meta media container still processing");
   }
   const p = await graph(o.f, o.version, `${o.igUserId}/media_publish`, { creation_id: creation, access_token: o.token }, "POST", o.signal);
   if (typeof p.id !== "string") throw new Error("Meta media_publish: no media id");

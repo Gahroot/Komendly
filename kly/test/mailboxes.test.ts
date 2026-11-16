@@ -177,26 +177,35 @@ describe("imap schedule + pool", () => {
 
 describe("domain health", () => {
   const enotfound = () => Promise.reject(Object.assign(new Error("nf"), { code: "ENOTFOUND" }));
+  const isTest = (n: string) => /^(dbltest\.com|test\.surbl\.org|test\.uribl\.com)\./.test(n);
+  const listsOk = async (n: string) => (isTest(n) ? ["127.0.1.2"] : enotfound());
   const healthy: Resolver = {
     resolveMx: async () => [{ exchange: "mx.maildoso.com" }],
     resolveTxt: async (n) => (n.startsWith("_dmarc.") ? [["v=DMARC1; p=none"]] : n.includes("._domainkey.") ? [["v=DKIM1; k=rsa; p=MIGf"]] : [["v=spf1 include:maildoso.com ~all"]]),
-    resolve4: enotfound,
+    resolve4: listsOk,
   };
 
+  it("skips a list whose lookup path doesn't report its own test entry (Railway resolver: NXDOMAIN for dbltest.com)", async () => {
+    const c = await checkDomain("kommendly.com", null, { ...healthy, resolve4: enotfound });
+    expect(c).toMatchObject({ listedOn: [], skippedLists: ["SURBL", "Spamhaus DBL", "URIBL"] });
+    const f = fakeDb({ outboundDomain: { findMany: () => [{ domain: "kommendly.com", dkimSelector: null, failStreak: 0, paused: true, pausedReason: "auto: listed on Spamhaus DBL" }] } });
+    expect(await domainHealthTick(f.db, ["kommendly.com"], NOW, { ...healthy, resolve4: enotfound })).toEqual([]);
+  });
+
   it("passes a healthy domain and skips refused blocklists (public resolver)", async () => {
-    const c = await checkDomain("ok.com", "md", { ...healthy, resolve4: async (n) => (n.endsWith("dbl.spamhaus.org") ? ["127.255.255.254"] : Promise.reject(Object.assign(new Error(), { code: "ENOTFOUND" }))) });
+    const c = await checkDomain("ok.com", "md", { ...healthy, resolve4: async (n) => (n.endsWith("dbl.spamhaus.org") ? ["127.255.255.254"] : listsOk(n)) });
     expect(c).toMatchObject({ mx: true, spf: true, dmarc: true, dkim: true, listedOn: [], skippedLists: ["Spamhaus DBL"] });
     expect(domainVerdict(c, 0).pause).toBeNull();
   });
 
   it("transient DNS errors never count as broken", async () => {
-    const c = await checkDomain("x.com", null, { resolveMx: () => Promise.reject(Object.assign(new Error(), { code: "ETIMEOUT" })), resolveTxt: () => Promise.reject(Object.assign(new Error(), { code: "ESERVFAIL" })), resolve4: enotfound });
+    const c = await checkDomain("x.com", null, { resolveMx: () => Promise.reject(Object.assign(new Error(), { code: "ETIMEOUT" })), resolveTxt: () => Promise.reject(Object.assign(new Error(), { code: "ESERVFAIL" })), resolve4: listsOk });
     expect(c.mx).toBeNull();
     expect(domainVerdict(c, 5).pause).toBeNull();
   });
 
   it("pauses a listed domain at once and broken DNS after a streak, with a KlyDecision", async () => {
-    const listed: Resolver = { ...healthy, resolve4: async (n) => (n.endsWith("multi.uribl.com") ? ["127.0.0.2"] : Promise.reject(Object.assign(new Error(), { code: "ENOTFOUND" }))) };
+    const listed: Resolver = { ...healthy, resolve4: async (n) => (n === "bad.com.multi.uribl.com" ? ["127.0.0.2"] : listsOk(n)) };
     const f = fakeDb({ outboundDomain: { findMany: () => [{ domain: "bad.com", dkimSelector: null, failStreak: 0, paused: false, pausedReason: null }] } });
     expect(await domainHealthTick(f.db, ["bad.com"], NOW, listed)).toEqual(["bad.com: paused (listed on URIBL)"]);
     expect((f.of("outboundDomain", "update")[0] as { data: { paused: boolean } }).data.paused).toBe(true);
@@ -231,5 +240,25 @@ describe("senderTick at scale", () => {
     expect(res.map((r) => r.mailbox)).toEqual(["a@one.com"]);
     const claims = f.of("outboundLead", "updateMany") as Array<{ where: { id: string }; data: { mailboxId: string } }>;
     expect(claims.map((c) => [c.where.id, c.data.mailboxId])).toEqual([["fu", "A"]]);
+  });
+});
+
+describe("look-alike sending domains", () => {
+  it("flags brand misspellings and tiny affixes (advisory, no pause), not real-word prefixes", async () => {
+    const { lookalikeReason } = await import("../src/domains");
+    for (const d of ["comendly.com", "kommendly.com", "kkomendly.com", "komendlyy.com", "komendy.com"]) expect(lookalikeReason(d), d).not.toBeNull();
+    for (const d of ["komendly.com", "getkomendly.com", "trykomendly.com", "usekomendly.com", "lovekomendly.com", "hello-komendly.com", "acme.com"]) expect(lookalikeReason(d), d).toBeNull();
+    expect(domainVerdict({ mx: true, spf: true, dmarc: true, dkim: null, listedOn: [], skippedLists: [], lookalike: lookalikeReason("kkomendly.com") }, 0).pause).toBeNull();
+  });
+});
+
+describe("blocklist pause needs a real answer to lift", () => {
+  it("keeps a DBL-paused domain paused while Spamhaus refuses the lookup", async () => {
+    const { fakeDb } = await import("./fakes");
+    const r: Resolver = { resolveMx: async () => [{ exchange: "mx" }], resolveTxt: async (n) => (n.startsWith("_dmarc.") ? [["v=DMARC1; p=none"]] : [["v=spf1 ~all"]]), resolve4: async (n) => (n.endsWith("dbl.spamhaus.org") ? ["127.255.255.254"] : Promise.reject(Object.assign(new Error(), { code: "ENOTFOUND" }))) };
+    const f = fakeDb({ outboundDomain: { findMany: () => [{ domain: "x.com", paused: true, pausedReason: "auto: listed on Spamhaus DBL", failStreak: 0, dkimSelector: null }] } });
+    await domainHealthTick(f.db, ["x.com"], new Date(), r);
+    expect((f.of("outboundDomain", "update")[0] as { data: { paused?: boolean } }).data.paused).toBeUndefined();
+    expect(f.of("klyDecision", "create")).toHaveLength(0);
   });
 });

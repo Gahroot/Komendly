@@ -20,6 +20,8 @@ const CaptionSchema = z.object({ facebook: z.string(), instagram: z.string() });
 const SYSTEM = `You write one organic social post for Komendly, in the voice of Ozzy: a friendly Aussie dingo wizard who makes ads for small businesses.
 Komendly: paste your website and Ozzy makes you 10 free Facebook/Instagram ads.
 Rules: short (2-4 sentences), warm, genuinely useful, light Aussie flavour. No hype, no promises of results, sales, ROI or numbers you can't back up, no urgency, no exclamation chains. At most 2 hashtags.
+Ozzy made the ad in the post; never tell people to copy it or swap in their own details: Ozzy makes ads for THEIR business from their website.
+Never claim people in the videos are real customers or that anything is unscripted or real footage.
 facebook: must include this exact link once: {fb}
 instagram: no links or URLs at all; say "link in bio".`;
 
@@ -85,19 +87,20 @@ export async function socialTick(d: SocialDeps): Promise<SocialResult> {
   const posted: Array<{ platform: SocialPlatform; ok: boolean; id?: string; error?: string }> = [];
   for (const platform of platforms) {
     const imageUrl = platform === "facebook" ? content.imageUrl : content.igImageUrl;
+    const videoUrl = platform === "facebook" ? content.videoUrl : content.videoUrl ?? content.igVideoUrl;
     // Claim first: the unique (day, platform) makes a second claim (restart, overlapping tick) throw instead of posting.
     let rowId: string;
     try {
-      const row = await db.klySocialPost.create({ data: { day, platform, sourceKind: content.kind, sourceRef: content.ref, caption: captions[platform], imageUrl } });
+      const row = await db.klySocialPost.create({ data: { day, platform, sourceKind: content.kind, sourceRef: content.ref, caption: captions[platform], imageUrl: videoUrl ?? imageUrl } });
       rowId = row.id;
     } catch {
       continue;
     }
     try {
-      const signal = AbortSignal.timeout(60_000);
+      const signal = AbortSignal.timeout(videoUrl ? 240_000 : 60_000);
       const id = platform === "facebook"
-        ? await publishFacebook({ f, version, pageId: conn.pageId, token, imageUrl, caption: captions.facebook, signal })
-        : await publishInstagram({ f, version, igUserId: conn.igUserId ?? "", token, imageUrl, caption: captions.instagram, signal });
+        ? await publishFacebook({ f, version, pageId: conn.pageId, token, imageUrl, videoUrl, caption: captions.facebook, signal })
+        : await publishInstagram({ f, version, igUserId: conn.igUserId ?? "", token, imageUrl, videoUrl, caption: captions.instagram, signal });
       await db.klySocialPost.update({ where: { id: rowId }, data: { status: "posted", postId: id } });
       posted.push({ platform, ok: true, id });
     } catch (e) {

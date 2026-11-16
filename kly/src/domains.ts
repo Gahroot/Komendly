@@ -18,14 +18,47 @@ export interface Resolver {
   resolve4: (name: string) => Promise<string[]>;
 }
 
-export const systemResolver: Resolver = { resolveMx: (n) => dnsp.resolveMx(n), resolveTxt: (n) => dnsp.resolveTxt(n), resolve4: (n) => dnsp.resolve4(n) };
-
-/** DBL-style domain lists. `refused` = the list answered "won't serve you" (e.g. Spamhaus via a public resolver): skip. */
-export const BLOCKLISTS: ReadonlyArray<{ name: string; zone: string; refused: (ip: string) => boolean }> = [
-  { name: "Spamhaus DBL", zone: "dbl.spamhaus.org", refused: (ip) => ip.startsWith("127.255.255.") },
-  { name: "SURBL", zone: "multi.surbl.org", refused: (ip) => ip === "127.0.0.1" },
-  { name: "URIBL", zone: "multi.uribl.com", refused: (ip) => ip === "127.0.0.1" },
+/** DBL-style domain lists. `refused` = the list answered "won't serve you" (e.g. Spamhaus via a public resolver): skip.
+ * `testName` is the list's permanent test entry: a lookup path that doesn't report it listed can't be trusted (Nov 15:
+ * Railway's resolver returned NXDOMAIN even for dbltest.com, so a DBL-listed domain looked clean and was resumed). */
+export const BLOCKLISTS: ReadonlyArray<{ name: string; zone: string; testName: string; refused: (ip: string) => boolean }> = [
+  { name: "Spamhaus DBL", zone: "dbl.spamhaus.org", testName: "dbltest.com", refused: (ip) => ip.startsWith("127.255.255.") },
+  { name: "SURBL", zone: "multi.surbl.org", testName: "test.surbl.org", refused: (ip) => ip === "127.0.0.1" },
+  { name: "URIBL", zone: "multi.uribl.com", testName: "test.uribl.com", refused: (ip) => ip === "127.0.0.1" },
 ];
+
+/** Blocklist lookups go to the list's own authoritative servers (public/cloud resolvers get refused or NXDOMAIN). */
+const LIST_NS_TTL_MS = 6 * 3600_000;
+const listServers = new Map<string, { at: number; ips: Promise<string[]> }>();
+async function authoritativeIps(zone: string): Promise<string[]> {
+  const ns = (await dnsp.resolveNs(zone)).sort().slice(0, 4);
+  const ips = await Promise.all(ns.map((h) => dnsp.resolve4(h).then((a) => a[0] ?? null, () => null)));
+  return ips.filter((x): x is string => Boolean(x));
+}
+async function listResolve4(zone: string, name: string): Promise<string[]> {
+  let e = listServers.get(zone);
+  if (!e || Date.now() - e.at > LIST_NS_TTL_MS) {
+    e = { at: Date.now(), ips: authoritativeIps(zone) };
+    listServers.set(zone, e);
+  }
+  const ips = await e.ips.catch(() => [] as string[]);
+  if (!ips.length) {
+    listServers.delete(zone);
+    return dnsp.resolve4(name);
+  }
+  const r = new dnsp.Resolver({ timeout: 5000, tries: 2 });
+  r.setServers(ips);
+  return r.resolve4(name);
+}
+
+export const systemResolver: Resolver = {
+  resolveMx: (n) => dnsp.resolveMx(n),
+  resolveTxt: (n) => dnsp.resolveTxt(n),
+  resolve4: (n) => {
+    const list = BLOCKLISTS.find((b) => n.endsWith(`.${b.zone}`));
+    return list ? listResolve4(list.zone, n) : dnsp.resolve4(n);
+  },
+};
 
 type Lookup<T> = { ok: true; value: T } | { ok: false; notFound: boolean };
 
@@ -50,6 +83,34 @@ export interface DomainCheck {
   dkim: boolean | null;
   listedOn: string[];
   skippedLists: string[];
+  /** Set when the domain is a misspelling of the brand (blocklists treat those as phishing look-alikes). */
+  lookalike?: string | null;
+}
+
+/** The brand the sending domains are named after (Nov 14: comendly.com + kommendly.com got Spamhaus DBL-listed). */
+export const BRAND_MARK = "komendly";
+
+function editDistance(a: string, b: string): number {
+  const d = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = d[0] as number;
+    d[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cur = d[j] as number;
+      d[j] = Math.min(cur + 1, (d[j - 1] as number) + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = cur;
+    }
+  }
+  return d[b.length] as number;
+}
+
+/** A sending domain must spell the brand right with a real word around it (getkomendly, trykomendly). A misspelling
+ * (comendly, kommendly) or a one/two-letter affix (kkomendly) reads as typosquatting: reason, else null. */
+export function lookalikeReason(domain: string, brand = BRAND_MARK): string | null {
+  const label = (domain.toLowerCase().split(".")[0] ?? "").replace(/-/g, "");
+  if (!label || label === brand) return null;
+  if (label.includes(brand)) return label.length - brand.length < 3 ? `look-alike of ${brand} (one/two-letter affix)` : null;
+  return editDistance(label, brand) <= 2 ? `look-alike of ${brand} (misspelling)` : null;
 }
 
 const joinTxt = (rows: string[][]) => rows.map((r) => r.join(""));
@@ -66,6 +127,12 @@ export async function checkDomain(domain: string, dkimSelector: string | null, r
   const skippedLists: string[] = [];
   await Promise.all(
     BLOCKLISTS.map(async (b) => {
+      // The lookup path must report the list's own test entry as listed, or "not found" means nothing.
+      const t = await look(() => r.resolve4(`${b.testName}.${b.zone}`));
+      if (!t.ok || t.value.some(b.refused) || !t.value.some((ip) => ip.startsWith("127."))) {
+        skippedLists.push(b.name);
+        return;
+      }
       const a = await look(() => r.resolve4(`${domain}.${b.zone}`));
       if (!a.ok) {
         if (!a.notFound) skippedLists.push(b.name);
@@ -82,6 +149,7 @@ export async function checkDomain(domain: string, dkimSelector: string | null, r
     dkim: dkim ? val(dkim, (v) => joinTxt(v).some((t) => /(^|;)\s*p=[a-z0-9+/]/i.test(t))) : null,
     listedOn: listedOn.sort(),
     skippedLists: skippedLists.sort(),
+    lookalike: lookalikeReason(domain),
   };
 }
 
@@ -107,14 +175,15 @@ export async function domainHealthTick(db: Db, domains: readonly string[], now: 
   for (const d of due) {
     const c = await checkDomain(d.domain, d.dkimSelector, r);
     const v = domainVerdict(c, d.failStreak);
-    const note = [v.dnsBroken.length ? v.dnsBroken.join(", ") : null, c.skippedLists.length ? `not checked: ${c.skippedLists.join(", ")}` : null].filter(Boolean).join("; ") || null;
+    const note = [c.lookalike ? `warning: ${c.lookalike}` : null, v.dnsBroken.length ? v.dnsBroken.join(", ") : null, c.skippedLists.length ? `not checked: ${c.skippedLists.join(", ")}` : null].filter(Boolean).join("; ") || null;
     const base = { mxOk: c.mx, spfOk: c.spf, dkimOk: c.dkim, dmarcOk: c.dmarc, listedOn: c.listedOn, failStreak: v.dnsBroken.length ? d.failStreak + 1 : 0, checkNote: note, checkedAt: now };
     if (v.pause && !d.paused) {
       await db.outboundDomain.update({ where: { domain: d.domain }, data: { ...base, paused: true, pausedReason: `auto: ${v.pause}` } });
       await db.klyDecision.create({ data: { kind: "pause", summary: `Paused every mailbox on ${d.domain}: ${v.pause}.`, data: { domain: d.domain, ...c } } });
       log("warn", "kly domain auto-paused", { domain: d.domain, reason: v.pause });
       out.push(`${d.domain}: paused (${v.pause})`);
-    } else if (!v.pause && d.paused && d.pausedReason?.startsWith("auto:") && !v.dnsBroken.length) {
+    } else if (!v.pause && d.paused && d.pausedReason?.startsWith("auto:") && !v.dnsBroken.length && !(d.pausedReason.includes("listed on") && c.skippedLists.length)) {
+      // A blocklist pause lifts only when every list actually answered (Spamhaus refuses public resolvers: no answer != clean).
       await db.outboundDomain.update({ where: { domain: d.domain }, data: { ...base, paused: false, pausedReason: null } });
       await db.klyDecision.create({ data: { kind: "resume", summary: `Resumed mailboxes on ${d.domain}: its DNS and blocklist checks are clean again (it was paused for: ${d.pausedReason.slice(6)}).`, data: { domain: d.domain } } });
       out.push(`${d.domain}: resumed`);

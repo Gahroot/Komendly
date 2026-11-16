@@ -85,9 +85,10 @@ describe("gate", () => {
     const f = async (u: string | URL) => (calls.push(String(u)), new Response(JSON.stringify({ id: "photo1", post_id: "P1_9" })));
     const fresh = fakeDb({ klySocialConnection: { findUnique: () => conn }, klySocialPost: { create: () => ({ id: "row1" }) } });
     const r = await socialTick({ db: fresh.db, settings: { socialEnabled: true, socialHourEt: 0 }, provider: null, env: { ADS_TOKEN_KEY: KEY }, now: NOON_ET, fetch: f });
-    expect(r).toEqual({ posted: [{ platform: "facebook", ok: true, id: "P1_9" }] });
+    // NOON_ET falls on a showcase/example day: the first example is a video, so it's a Page video post.
+    expect(r).toEqual({ posted: [{ platform: "facebook", ok: true, id: "photo1" }] });
     expect(calls).toHaveLength(1);
-    expect(calls[0]).toContain("/P1/photos");
+    expect(calls[0]).toContain("/P1/videos");
     const already = fakeDb({ klySocialConnection: { findUnique: () => conn }, klySocialPost: { findMany: (a) => ((a as { where: { day?: string } }).where.day ? [{ platform: "facebook" }] : []) } });
     expect(await socialTick({ db: already.db, settings: { socialEnabled: true, socialHourEt: 0 }, provider: null, env: { ADS_TOKEN_KEY: KEY }, now: NOON_ET, fetch: f })).toEqual({ skipped: "already posted today" });
     const raced = fakeDb({ klySocialConnection: { findUnique: () => conn }, klySocialPost: { create: () => { throw new Error("Unique constraint failed"); } } });
@@ -103,5 +104,29 @@ describe("choosePage", () => {
     expect(choosePage([p("1", "Other"), p("2", "Komendly")])).toMatchObject({ id: "2" });
     expect(choosePage([p("1", "A"), p("2", "B")])).toMatch(/KLY_SOCIAL_PAGE_ID/);
     expect(choosePage([p("1", "A")], "9")).toMatch(/not among/);
+  });
+});
+
+describe("video posts", () => {
+  it("examples carry their MP4, posted as a Page video and an IG Reel", async () => {
+    const { publishFacebook, publishInstagram } = await import("../../src/lib/kly/social-core");
+    for (const c of ownedContent()) {
+      if (c.kind === "example") expect(c.videoUrl).toMatch(/\.mp4$/);
+      if (c.kind === "tip") expect(c.igVideoUrl).toMatch(/\.mp4$/);
+      expect(c.igImageUrl).toMatch(/\.jpg$/);
+    }
+    const calls: Array<{ path: string; body: string }> = [];
+    const f = (async (u: string | URL, init?: RequestInit) => {
+      const url = new URL(String(u));
+      calls.push({ path: url.pathname, body: String(init?.body ?? url.search) });
+      const json = url.pathname.endsWith("/media") ? { id: "c1" } : url.pathname.endsWith("/c1") ? { status_code: "FINISHED" } : { id: "v1" };
+      return new Response(JSON.stringify(json), { status: 200 });
+    }) as typeof fetch;
+    expect(await publishFacebook({ f, version: "v25.0", pageId: "p1", token: "t", imageUrl: "x.jpg", videoUrl: "https://s/a.mp4", caption: "hi" })).toBe("v1");
+    expect(calls[0]?.path).toBe("/v25.0/p1/videos");
+    expect(calls[0]?.body).toContain("file_url=");
+    expect(await publishInstagram({ f, version: "v25.0", igUserId: "ig", token: "t", imageUrl: "x.jpg", videoUrl: "https://s/a.mp4", caption: "hi", sleep: async () => {} })).toBe("v1");
+    expect(calls[1]?.body).toContain("media_type=REELS");
+    expect(calls[1]?.body).toContain("video_url=");
   });
 });

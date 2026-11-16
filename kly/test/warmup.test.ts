@@ -143,3 +143,71 @@ describe("readiness / auto-pause", () => {
     expect(isWarmupSender(b)).toBe(true);
   });
 });
+
+describe("Nov 14 safeguards", () => {
+  it("ramps warm-up from 3/day by +2 per day up to the target", async () => {
+    const { rampedTarget } = await import("../src/warmup");
+    expect(rampedTarget(40, null, now)).toBe(3);
+    expect(rampedTarget(40, new Date(now.getTime() - 86_400_000 * 2.5), now)).toBeGreaterThanOrEqual(7);
+    expect(rampedTarget(40, new Date(now.getTime() - 86_400_000 * 60), now)).toBe(40);
+  });
+  it("delivery canary switches warm-up off when receivers find almost nothing", async () => {
+    const { canaryVerdict } = await import("../src/warmup");
+    expect(canaryVerdict(50, 0)).toBeNull();
+    expect(canaryVerdict(1000, 900)).toBeNull();
+    expect(canaryVerdict(32829, 0)).toMatch(/found only 0 of 32829/);
+    const b = box("a", "trykomendly.com");
+    const f = fakeDb({ klyWarmupMessage: { count: (a) => ((a as { where: { seenAt?: unknown } }).where.seenAt ? 3 : 400), groupBy: () => [] } });
+    const out = await warmupHealthTick({ db: f.db, settings: S, boxes: [b], now, rt: { lastHealthAt: 0 } });
+    expect(out).toEqual(["warm-up off: delivery canary"]);
+    expect((f.of("klySettings", "update")[0] as { data: unknown }).data).toEqual({ warmupEnabled: false });
+    expect(f.of("klyDecision", "create")).toHaveLength(1);
+  });
+});
+
+describe("Maildoso peers never receive (Nov 14)", () => {
+  it("warm-up sends only to Gmail inboxes", async () => {
+    const boxes = [box("a", "trykomendly.com"), box("b", "usekomendly.com"), box("g", "getkomendly.com", "gmail")];
+    const sent: Array<{ to: string }> = [];
+    const f = fakeDb({ klyWarmupMessage: { groupBy: () => [] } });
+    await warmupSendTick({ db: f.db, settings: S, boxes, transport: () => async (m) => void sent.push(m), now, rng: seededRng(1), secret: SECRET, rt: { lastHealthAt: 0 } });
+    expect(sent.length).toBeGreaterThan(0);
+    expect(sent.every((m) => m.to.endsWith("@getkomendly.com"))).toBe(true);
+  });
+  it("with warm-up off, pauses a domain whose Gmail spam check is bad and sends nothing", async () => {
+    const { warmupTick } = await import("../src/warmup");
+    const boxes = [box("a", "trykomendly.com"), box("g", "getkomendly.com", "gmail")];
+    const f = fakeDb({
+      klyWarmupMessage: { groupBy: () => [{ senderDomain: "trykomendly.com", placement: "inbox", _count: { _all: 10 } }, { senderDomain: "trykomendly.com", placement: "spam", _count: { _all: 15 } }] },
+      outboundDomain: { findMany: () => [{ domain: "trykomendly.com", paused: false }] },
+    });
+    const sent: unknown[] = [];
+    const r = await warmupTick({ db: f.db, settings: { ...S, warmupEnabled: false }, boxes, transport: () => async (m) => void sent.push(m), now, rng: seededRng(1), secret: SECRET, rt: { lastHealthAt: 0 } }).catch(() => null);
+    expect(sent).toHaveLength(0);
+    expect((f.of("outboundDomain", "update")[0] as { data: { pausedReason: string } }).data.pausedReason).toMatch(/^spam check: 60%/);
+    expect(r === null || r.sent === 0).toBe(true);
+  });
+});
+
+describe("canary after the warm-up restart (Nov 15)", () => {
+  it("judges only mail sent to the Gmail receivers, so old Maildoso-peer mail can't switch warm-up off", async () => {
+    const b = box("a", "trykomendly.com");
+    const g = box("g", "getkomendly.com", "gmail");
+    const wheres: unknown[] = [];
+    const f = fakeDb({ klyWarmupMessage: { count: (a) => (wheres.push((a as { where: unknown }).where), 0), groupBy: () => [] } });
+    const out = await warmupHealthTick({ db: f.db, settings: S, boxes: [b, g], now, rt: { lastHealthAt: 0 } });
+    expect(out).not.toContain("warm-up off: delivery canary");
+    expect(JSON.stringify(wheres[0])).toContain('"recipientId":{"in":["g"]}');
+  });
+});
+
+describe("warm-up skips blocklisted / spam-check-paused domains (Nov 15)", () => {
+  it("sends nothing from a paused listed domain", async () => {
+    const boxes = [box("a", "trykomendly.com"), box("k", "kommendly.com"), box("g", "getkomendly.com", "gmail")];
+    const sent: Array<{ from: string }> = [];
+    const f = fakeDb({ klyWarmupMessage: { groupBy: () => [] }, outboundDomain: { findMany: () => [{ domain: "kommendly.com" }] } });
+    await warmupSendTick({ db: f.db, settings: S, boxes, transport: () => async (m) => void sent.push(m as { from: string }), now, rng: seededRng(1), secret: SECRET, rt: { lastHealthAt: 0 } });
+    expect(sent.length).toBeGreaterThan(0);
+    expect(sent.some((m) => JSON.stringify(m).includes("kommendly.com"))).toBe(false);
+  });
+});

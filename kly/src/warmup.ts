@@ -9,7 +9,8 @@
 import { createHmac, randomBytes } from "node:crypto";
 import { ImapFlow } from "imapflow";
 import type { Prisma } from "@prisma/client";
-import { sendDayStart, spamPlacementRate, WARMUP_PAUSE_PREFIX, type MailboxEnv, type WarmupGate } from "../../src/lib/ads/outbound/policy";
+import { sendDayStart, spamPlacementRate, warmupDays, WARMUP_PAUSE_PREFIX, type MailboxEnv, type WarmupGate } from "../../src/lib/ads/outbound/policy";
+import { SETTINGS_ID } from "./settings";
 import type { Rng } from "./arms";
 import type { Db } from "./db";
 import { duePolls } from "./imap";
@@ -34,6 +35,7 @@ export const ENGAGE_LOOKBACK_MS = 3 * 86_400_000;
 export const STAR_PCT = 20;
 /** Not seen by the receiver after this = "missing". */
 export const MISSING_AFTER_MS = 48 * 3600_000;
+export const WARMUP_CANARY_OFF = "warm-up off: delivery canary";
 export const WARMUP_RETENTION_MS = 30 * 86_400_000;
 export const WARMUP_HEALTH_EVERY_MS = 30 * 60_000;
 const DAY_MS = 86_400_000;
@@ -104,6 +106,25 @@ export function composeWarmupReply(rng: Rng, fromName: string, toName: string, s
 
 export function dailyTarget(perDay: number): number {
   return Math.max(0, Math.min(WARMUP_MAX_PER_DAY, Math.round(perDay)));
+}
+
+/** Ramp (Nov 14 incident: 40/box from day 1 on same-day domains, then two got DBL-listed): day 1 sends
+ * WARMUP_RAMP_START, +WARMUP_RAMP_STEP each warm-up day, up to the configured daily target. */
+export const WARMUP_RAMP_START = 3;
+export const WARMUP_RAMP_STEP = 2;
+export function rampedTarget(perDay: number, since: Date | null, now: Date): number {
+  const day = Math.max(1, warmupDays(since, now));
+  return Math.min(dailyTarget(perDay), WARMUP_RAMP_START + WARMUP_RAMP_STEP * (day - 1));
+}
+
+/** Delivery canary: warm-up mail between rented boxes that no receiver ever finds is pure one-way bulk mail (the
+ * Nov 14 incident: 0 of 32.8k found). Judged on mail 6-48h old; below CANARY_MIN_SEEN of a CANARY_MIN_SAMPLE sample,
+ * warm-up switches itself off with a KlyDecision (an operator turns it back on after fixing delivery). */
+export const CANARY_MIN_SAMPLE = 100;
+export const CANARY_MIN_SEEN = 0.3;
+export function canaryVerdict(sent: number, seen: number): string | null {
+  if (sent < CANARY_MIN_SAMPLE) return null;
+  return seen / sent < CANARY_MIN_SEEN ? `receivers found only ${seen} of ${sent} warm-up emails sent 6-48h ago` : null;
 }
 
 /** Share of today's ET send window elapsed, in [0,1]. */
@@ -299,10 +320,11 @@ export function earlyStarters(boxes: ReadonlyArray<{ id: string; domain: string;
 export async function warmupGates(db: Db, s: WarmupSettings, boxes: readonly StoredMailbox[], now: Date): Promise<Map<string, WarmupGate>> {
   const inWarmup = boxes.filter((b) => s.warmupEnabled && b.provider !== "gmail" && b.row.warmupEnabled);
   if (!inWarmup.length) return new Map();
-  const p = await placementsBy(db, "senderId", { senderId: { in: inWarmup.map((b) => b.id) }, sentAt: { gte: new Date(now.getTime() - 7 * DAY_MS) } });
+  // Per domain: a few dozen Gmail placements a day can't grade 300 mailboxes one by one, but they grade their domain.
+  const p = await placementsBy(db, "senderDomain", { senderDomain: { in: [...new Set(inWarmup.map((b) => b.domain))] }, sentAt: { gte: new Date(now.getTime() - 7 * DAY_MS) } });
   const early = earlyStarters(inWarmup);
   return new Map(inWarmup.map((b) => {
-    const c = p.get(b.id) ?? { inbox: 0, spam: 0, missing: 0 };
+    const c = p.get(b.domain) ?? { inbox: 0, spam: 0, missing: 0 };
     const minDays = early.has(b.id) ? Math.min(EARLY_MIN_DAYS, s.warmupMinDays) : s.warmupMinDays;
     return [b.id, { since: b.row.warmupSince, spamRate: spamPlacementRate(c.inbox, c.spam), coldStartedAt: b.row.coldStartedAt, minDays, maxSpamRate: s.warmupReadySpamPct / 100 }];
   }));
@@ -324,9 +346,12 @@ export async function warmupSendTick(d: WarmupDeps): Promise<{ sent: number; rep
   const { db, settings: s, now, rng } = d;
   const res = { sent: 0, replies: 0, failed: 0 };
   if (!s.warmupEnabled || !d.secret) return res;
-  const senders = d.boxes.filter(isWarmupSender);
+  // Domains paused for a blocklist listing or a failed spam check can't send cold: the few Gmail slots go to the rest.
+  const blocked = new Set((await db.outboundDomain.findMany({ where: { paused: true, OR: [{ pausedReason: { contains: "listed on" } }, { pausedReason: { startsWith: "spam check:" } }] }, select: { domain: true } })).map((x) => x.domain));
+  const senders = d.boxes.filter((b) => isWarmupSender(b) && !blocked.has(b.domain));
   if (!senders.length) return res;
-  const receivers = [...senders, ...d.boxes.filter((b) => b.provider === "gmail" && b.row.warmupEnabled && s.warmupGmailCap > 0)];
+  // Gmail only: Maildoso silently drops mail between its own mailboxes (Nov 14: 0 of 32.8k peer mails delivered).
+  const receivers = d.boxes.filter((b) => b.provider === "gmail" && b.row.warmupEnabled && s.warmupGmailCap > 0);
   const byId = new Map(d.boxes.map((b) => [b.id, b]));
   const day = sendDayStart(now);
   const ids = receivers.map((b) => b.id);
@@ -337,8 +362,7 @@ export async function warmupSendTick(d: WarmupDeps): Promise<{ sent: number; rep
   ]);
   const sentToday = new Map(sentG.map((g) => [g.senderId, g._count._all]));
   const recvToday = new Map(recvG.map((g) => [g.recipientId, g._count._all]));
-  const target = dailyTarget(s.warmupPerDay);
-  const quota = new Map(senders.map((b) => [b.id, Math.min(WARMUP_PER_MAILBOX_PER_TICK, dueByNow(target, now, tieRank(day.toISOString(), b.id) / 2 ** 32) - (sentToday.get(b.id) ?? 0))]));
+  const quota = new Map(senders.map((b) => [b.id, Math.min(WARMUP_PER_MAILBOX_PER_TICK, dueByNow(rampedTarget(s.warmupPerDay, b.row.warmupSince, now), now, tieRank(day.toISOString(), b.id) / 2 ** 32) - (sentToday.get(b.id) ?? 0))]));
 
   const out: Outgoing[] = [];
   // Replies the receivers decided on (engagement pass), oldest first, within each replier's quota.
@@ -471,8 +495,9 @@ export async function engageMailbox(db: Db, m: StoredMailbox, s: WarmupSettings,
 /** Staggered engagement (same 10-15 min per-address slots as the inbound poll, on its own warmupPolledAt stamp). */
 export async function warmupEngageTick(d: WarmupDeps, open: (m: MailboxEnv) => ImapLike = openImap): Promise<Array<{ mailbox: string; error?: string } & Partial<EngageResult>>> {
   const { db, settings: s, now } = d;
-  if (!s.warmupEnabled || !d.secret) return [];
-  const boxes = d.boxes.filter((b) => isWarmupSender(b) || (b.provider === "gmail" && b.row.warmupEnabled && s.warmupGmailCap > 0));
+  if (!d.secret) return [];
+  // Warm-up off: still read the Gmail seed inboxes so cold spam-check probes get their placement (and get rescued).
+  const boxes = d.boxes.filter((b) => (s.warmupEnabled && isWarmupSender(b)) || (b.provider === "gmail" && b.row.warmupEnabled));
   const due = duePolls(boxes.map((b) => ({ b, address: b.address, lastPolledAt: b.row.warmupPolledAt })), now, ENGAGE_PER_TICK);
   const res = await mapPool(due, ENGAGE_CONCURRENCY, ({ b }) => engageMailbox(db, b, s, d.secret, now, d.rng, open));
   if (due.length) await db.outboundMailbox.updateMany({ where: { id: { in: due.map((x) => x.b.id) } }, data: { warmupPolledAt: now } });
@@ -491,6 +516,17 @@ export async function warmupHealthTick(d: Pick<WarmupDeps, "db" | "settings" | "
   await db.klyWarmupMessage.deleteMany({ where: { sentAt: { lt: new Date(now.getTime() - WARMUP_RETENTION_MS) } } });
   const inWarmup = d.boxes.filter((b) => b.provider !== "gmail" && b.row.warmupEnabled);
   if (!inWarmup.length) return [];
+  // Judged only on mail to receivers we read (the Gmail boxes): old Maildoso-peer mail is never seen by design.
+  const receivers = d.boxes.filter((b) => b.provider === "gmail").map((b) => b.id);
+  const rented = { senderId: { in: inWarmup.map((b) => b.id) }, recipientId: { in: receivers }, sentAt: { gte: new Date(now.getTime() - 48 * 3600_000), lt: new Date(now.getTime() - 6 * 3600_000) } };
+  const [cSent, cSeen] = await Promise.all([db.klyWarmupMessage.count({ where: rented }), db.klyWarmupMessage.count({ where: { ...rented, seenAt: { not: null } } })]);
+  const dead = canaryVerdict(cSent, cSeen);
+  if (dead) {
+    await db.klySettings.update({ where: { id: SETTINGS_ID }, data: { warmupEnabled: false } });
+    await db.klyDecision.create({ data: { kind: "pause", summary: `Switched warm-up off: ${dead}. Mail nobody receives builds no reputation and looks like bulk spam; fix delivery before turning it back on.`, data: { sent: cSent, seen: cSeen } } });
+    log("error", "kly warm-up off: delivery canary", { sent: cSent, seen: cSeen });
+    return [WARMUP_CANARY_OFF];
+  }
   const p = await placementsBy(db, "senderId", { senderId: { in: inWarmup.map((b) => b.id) }, sentAt: { gte: new Date(now.getTime() - 7 * DAY_MS) } });
   const out: string[] = [];
   for (const b of inWarmup) {
@@ -516,14 +552,44 @@ export async function warmupHealthTick(d: Pick<WarmupDeps, "db" | "settings" | "
   return out;
 }
 
+/** Cold spam check per sending domain (Gmail placements of probes + any warm-up, 7 days): over warmupPauseSpamPct with
+ * a real sample pauses the whole domain. Prefix "spam check:" is not "auto:", so DNS checks never lift it; an operator
+ * does once the copy or domain is fixed. Runs every WARMUP_HEALTH_EVERY_MS. */
+export const SPAM_CHECK_PAUSE_PREFIX = "spam check:";
+export async function spamCheckDomainTick(d: Pick<WarmupDeps, "db" | "settings" | "boxes" | "now" | "rt">): Promise<string[]> {
+  const { db, settings: s, now } = d;
+  if (Date.now() - d.rt.lastHealthAt < WARMUP_HEALTH_EVERY_MS) return [];
+  d.rt.lastHealthAt = Date.now();
+  const domains = [...new Set(d.boxes.filter((b) => b.provider !== "gmail").map((b) => b.domain))];
+  if (!domains.length) return [];
+  const p = await placementsBy(db, "senderDomain", { senderDomain: { in: domains }, sentAt: { gte: new Date(now.getTime() - 7 * DAY_MS) } });
+  const rows = await db.outboundDomain.findMany({ where: { domain: { in: domains } }, select: { domain: true, paused: true } });
+  const out: string[] = [];
+  for (const r of rows) {
+    const c = p.get(r.domain) ?? { inbox: 0, spam: 0, missing: 0 };
+    if (r.paused || warmupVerdict(c, s, false) !== "pause") continue;
+    const pct = `${Math.round((spamPlacementRate(c.inbox, c.spam) ?? 0) * 100)}%`;
+    await db.outboundDomain.update({ where: { domain: r.domain }, data: { paused: true, pausedReason: `${SPAM_CHECK_PAUSE_PREFIX} ${pct} of Gmail placements in spam` } });
+    await db.klyDecision.create({ data: { kind: "pause", summary: `Paused every mailbox on ${r.domain}: ${pct} of its emails checked at our Gmail inboxes landed in spam over 7 days (limit ${s.warmupPauseSpamPct}%, ${c.inbox + c.spam} checked).`, data: { domain: r.domain, ...c } } });
+    out.push(`${r.domain}: paused (${pct} spam)`);
+  }
+  return out;
+}
+
 /** The loop's warm-up step: health, sends, then the staggered IMAP engagement. */
 export async function warmupTick(d: WarmupDeps): Promise<{ sent: number; replies: number; failed: number; engaged: number; changed: string[] }> {
-  if (!d.settings.warmupEnabled) return { sent: 0, replies: 0, failed: 0, engaged: 0, changed: [] };
+  if (!d.settings.warmupEnabled) {
+    if (!d.secret) return { sent: 0, replies: 0, failed: 0, engaged: 0, changed: [] };
+    const changed = await spamCheckDomainTick(d);
+    const e = await warmupEngageTick(d);
+    return { sent: 0, replies: 0, failed: 0, engaged: e.filter((x) => !x.error).length, changed };
+  }
   if (!d.secret) {
     log("warn", "kly warm-up off: no KLY_WARMUP_SECRET / ADS_TOKEN_KEY");
     return { sent: 0, replies: 0, failed: 0, engaged: 0, changed: [] };
   }
   const changed = await warmupHealthTick(d);
+  if (changed.includes(WARMUP_CANARY_OFF)) return { sent: 0, replies: 0, failed: 0, engaged: 0, changed };
   const s = await warmupSendTick(d);
   const e = await warmupEngageTick(d);
   const bad = e.filter((x) => x.error);

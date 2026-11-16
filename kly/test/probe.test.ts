@@ -10,7 +10,7 @@ describe("cold spam check seed", () => {
   it("prefers our Google inbox while under the daily cap", () => {
     expect(pickSeed(from, boxes, 0, 0.3)?.address).toBe("hello@getkomendly.com");
   });
-  it("falls back to a peer on another domain, never the same domain", () => {
-    expect(pickSeed(from, boxes, PROBE_GMAIL_PER_DAY, 0.9)?.address).toBe("c@usekomendly.com");
+  it("never seeds a Maildoso peer (Maildoso drops mail between its own mailboxes)", () => {
+    expect(pickSeed(from, boxes, PROBE_GMAIL_PER_DAY, 0.9)).toBeNull();
   });
 });
