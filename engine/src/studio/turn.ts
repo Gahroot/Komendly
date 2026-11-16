@@ -1,3 +1,4 @@
+import { homedir } from "node:os";
 // studio_turn job: one conversational turn of Ozzy Studio.
 // Restore the session (project tar + agent session file from S3) -> run the EZ Motion agent for ONE turn in a
 // child process (run-studio-agent.mjs) -> stream friendly StudioEvent rows -> deliver the newest MP4 the agent
@@ -5,7 +6,7 @@
 import { spawn } from "node:child_process";
 import { dropMissingAudio, isMissingAudioError } from "./missing-audio";
 import { access, appendFile, copyFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
-import { delimiter, dirname, extname, join } from "node:path";
+import { basename, delimiter, dirname, extname, join, relative } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 import {
@@ -20,13 +21,16 @@ import { JobAbortedError } from "../jobs/abort";
 import { PermanentJobError, type JobContext, type JobHandler } from "../jobs/context";
 import { errMsg, log } from "../log";
 import { agentUsage } from "../modules/ezmotion/agent";
+// @ts-expect-error plain .mjs helper shared with the agent child process
+import { flashSafe } from "../modules/ezmotion/agent/pixel-qa.mjs";
 import { type RenderProgress, ffmpegPath, probe, renderComposition } from "../modules/ezmotion/runtime";
 import { Limiter } from "../providers/limiter";
 import { pickStudioModel } from "./model-choice";
 import { installStudioKit } from "./kit-install";
 import { installBrandPhotos } from "./brand-photos";
 import { installSiteComponents } from "./site-components";
-import { ensureMusic } from "./music-fallback";
+import { compositionMusicCredits, ensureMusic, withMusicCredit } from "./music-fallback";
+import { ensureBrandWorld } from "./brand-world";
 import { fixCompositionScripts } from "./script-urls";
 
 /** The user says this video is for someone else (a client, a friend), so their own brand must stay out. */
@@ -40,7 +44,7 @@ export function sameSite(a: string | null | undefined, b: string | null | undefi
   const x = host(a), y = host(b);
   return Boolean(x && y && x === y);
 }
-import { compositionSheet, needsRework, reworkPrompt, tasteCheck, writeConcept } from "./creative";
+import { compositionSheet, editReworkPrompt, needsRework, reworkPrompt, tasteCheck, writeConcept } from "./creative";
 import { guardRoute } from "../jobs/extract/crawl";
 import { assertPublicUrl } from "../net/ssrf";
 import { chooseStudioBrain, codexWeeklyPctSeen, isCodexLimitError, mimoAtPct, mimoAuth, MIMO_DEFAULT_MODEL, type StudioBrain } from "./brain";
@@ -50,6 +54,7 @@ import { type StudioEventRow, StudioEventMapper, finalReply, parseChildLine, use
 import { finalizeDelivery, posterFrame, probeMedia, ratioOf } from "./media";
 import { changedComposition, packProject, pickDelivered, unpackProject, videoFiles } from "./project";
 import { livePublisher } from "./live";
+import { linkBrowserCache } from "./browser-cache";
 import { type TurnTimer, turnTimer } from "./timing";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -82,6 +87,12 @@ export function progressThrottle(write: (rows: StudioEventRow[]) => void, label:
       write([{ type: "progress", data: { pct: Math.round(p.pct), label, ...(etaSec !== undefined && p.pct < 100 ? { etaSec } : {}) } }]);
     },
   };
+}
+
+/** Time the taste rework may use: what's left of the turn minus 6 minutes for render and delivery; 0 = skip (under 4 minutes). */
+export function reworkBudgetMs(leftMs: number): number {
+  const b = leftMs - 6 * 60_000;
+  return b >= 4 * 60_000 ? b : 0;
 }
 
 export function studioTurnTimeoutMs(env: NodeJS.ProcessEnv = process.env): number {
@@ -124,6 +135,15 @@ export function friendlyError(code: string): string {
 export function createStudioTurnHandler(maxConcurrent = Number(process.env.STUDIO_MAX_CONCURRENT) || 3): JobHandler {
   const limiter = new Limiter({ maxConcurrent: Math.max(1, maxConcurrent), maxPerWindow: 10_000, windowMs: 60_000 });
   return (ctx) => limiter.run(() => studioTurn(ctx), ctx.signal);
+}
+
+/** Pure: the reply is a progress note, not a finished answer or a question ("I'm checking the roof photos so the ad..."). */
+export function stoppedMidWork(text: string): boolean {
+  const t = text.trim();
+  if (!t || /\?\s*$/.test(t)) return false;
+  const last = t.split(/(?<=[.!])\s+/).slice(-2).join(" ");
+  return /\b(I['’]m|I am|I['’]ll|I will|let me|now I|next,? I|first,? I)\b[^.!]*\b(check|checking|build|building|mak(e|ing)|work(ing)?|look(ing)?|start(ing)?|creat(e|ing)|render(ing)?|add(ing)?|pull(ing)?|set(ting)? up|put(ting)?|grab(bing)?|review(ing)?)\b/i.test(last)
+    && !/\b(here['’]s|is ready|ready to|done|finished|all set|take a look)\b/i.test(last);
 }
 
 export async function studioTurn(ctx: JobContext): Promise<unknown> {
@@ -172,6 +192,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
   const { model, thinking, edit: editTurn } = pickStudioModel({ env: process.env, hasVideo: (await db.studioRender.count({ where: { sessionId } })) > 0 });
   let sessionFile: string | null = null;
   let deliveredRel: string | null = null;
+  const musicCredits: string[] = [];
   let liveTimer: ReturnType<typeof setInterval> | undefined;
   try {
     // 1. Restore the project and the agent session.
@@ -234,8 +255,9 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       photos,
       site,
     } : null;
-    await installStudioKit(project).catch((e) => log("warn", "studio kit install failed", { error: errMsg(e) }));
-    await writeFile(join(project, "studio.md"), studioBrief({ brand, uploads: briefUploads, paid }));
+    await installStudioKit(project, brand).catch((e) => log("warn", "studio kit install failed", { error: errMsg(e) }));
+    // The recipe is picked from the whole conversation (the first message holds the brief), so "bigger text" keeps the job's recipe.
+    await writeFile(join(project, "studio.md"), studioBrief({ brand, uploads: briefUploads, paid, userText: convo.join("\n") || userMsg.content }));
     // Launch video: real recorded footage + the launch structure (./launch.md stays in the project for revisions).
     const launch = parsed.data.launch;
     if (launch) {
@@ -246,13 +268,29 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     if (await access(join(project, "launch.md")).then(() => true, () => false)) {
       await appendFile(join(project, "studio.md"), "\n## Launch video\n- This chat is a product launch video: read ./launch.md (what they shipped, the recorded footage of their product and the structure). Their recorded footage is the hero, shown inside a device or browser frame in a lit scene with depth; never full-bleed with captions over it (the site's own text clashes with yours). Your words go in clear space beside, above or below the frame, on a calm background, and only one caption at a time.\n");
     }
+    // Brand world: the director designs this brand's world, type and components once (cached per brand version).
+    let world: string | null = null;
+    if (!editTurn && bp && brand && process.env.STUDIO_CONCEPT !== "0") {
+      tm.phase("world");
+      mapper.setPhase("thinking", "Designing your brand's look");
+      const imgs = [
+        ...uploads.flatMap((u, i) => (kindOf(u.mime) === "image" && !referenceIds.has(u.id) ? [{ abs: join(project, "uploads", names[i] ?? ""), path: `../uploads/${names[i] ?? ""}` }] : [])),
+        ...(logoFile ? [{ abs: join(project, "brand", logoFile), path: logoFile, caption: "logo" }] : []),
+        ...photos.map((p) => ({ abs: join(project, "brand", "photos", p.file), path: `photos/${p.file}`, caption: p.alt ?? p.kind })),
+      ];
+      world = await ensureBrandWorld({ storage, provider: ctx.provider, project, workspaceId: session.workspaceId, brandProfileId: bp.id, version: String(bp.updatedAt.getTime()), brand, voice: typeof bp.voice === "string" ? bp.voice : null, images: imgs, usage: ctx.usage, signal: turnAbort.signal, log: (m, d) => log("warn", m, { sessionId, ...d }) });
+      log("info", "studio brand world", { sessionId, ok: Boolean(world) });
+    }
+    if (world !== null || (await access(join(project, "brand", "world.css")).then(() => true, () => false))) {
+      await appendFile(join(project, "studio.md"), `\n## This brand's world (./brand/world.css)\n- Your art director designed this brand's design system: ${world || "see the comment at the top of ./brand/world.css"}\n- Link it in index.html (<link rel="stylesheet" href="../brand/world.css">), put its .world layers (sky, mid, fg) behind every scene (they can move: drift, parallax, light shifts), and build the type and UI from its classes (.t-hero, .t-accent, .t-label, .t-body, .card, .chip, .bubble, .btn, .quote, .price, .check, .frame, .mascot, .stack). ./brand/world.html shows them all in use. Adjust sizes and layout per scene, never the look.\n`);
+    }
     // Creative direction: the strong text model writes ./concept.md for a new video (world, atmosphere, scenes, images,
     // sound); the builder follows it and the same director reviews the frames once at the end (STUDIO_CONCEPT=0 off).
     let concept: string | null = null;
     if (!editTurn && process.env.STUDIO_CONCEPT !== "0") {
       tm.phase("concept");
       mapper.setPhase("thinking", "Planning the look");
-      concept = await writeConcept(ctx.provider, { userText: convo.length > 1 ? convo.map((c, i) => (i === 0 ? c : `Then the user added: ${c}`)).join("\n\n") : userMsg.content, brand, uploads: briefUploads, launch: Boolean(parsed.data.launch) }, ctx.usage, turnAbort.signal).catch((e) => { log("warn", "studio concept failed", { error: errMsg(e) }); return null; });
+      concept = await writeConcept(ctx.provider, { userText: convo.length > 1 ? convo.map((c, i) => (i === 0 ? c : `Then the user added: ${c}`)).join("\n\n") : userMsg.content, brand, uploads: briefUploads, launch: Boolean(parsed.data.launch), ...(world ? { world } : {}) }, ctx.usage, turnAbort.signal).catch((e) => { log("warn", "studio concept failed", { error: errMsg(e) }); return null; });
       if (concept) await writeFile(join(project, "concept.md"), `${concept}\n`);
     }
     const promptFile = join(root, "prompt.txt");
@@ -266,6 +304,10 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     delete env.DATABASE_URL; delete env.POSTGRES_URL_NON_POOLING; delete env.S3_SECRET_ACCESS_KEY; delete env.STRIPE_SECRET_KEY; delete env.CODEX_AUTH_FILE;
     const browser = studioBrowserPath(process.env, await access(OPT_SHELL).then(() => true, () => false));
     if (browser) { env.HYPERFRAMES_BROWSER_PATH = browser; env.PRODUCER_HEADLESS_SHELL_PATH = browser; }
+    // The agent gets its own HOME, so Playwright (used by the QA text check) must be told where the real browsers live.
+    if (!env.PLAYWRIGHT_BROWSERS_PATH) env.PLAYWRIGHT_BROWSERS_PATH = join(homedir(), process.platform === "darwin" ? "Library/Caches/ms-playwright" : ".cache/ms-playwright");
+    // The agent's shell drops those env vars, so also put the browser where `hf snapshot` looks by default.
+    if (browser) await linkBrowserCache(home, browser).catch((e) => log("warn", "studio browser link failed", { sessionId, error: errMsg(e) }));
     const ff = await ffmpegPath();
     if (ff) env.PATH = `${dirname(ff)}${delimiter}${env.PATH ?? ""}`;
     // Brain: Codex unless its weekly window is nearly used up (then MiMo); see ./brain.ts.
@@ -333,7 +375,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     // Live preview: publish the playable composition as soon as it exists (and again when it changes, throttled).
     const live = livePublisher({ storage, workspaceId: session.workspaceId, sessionId, messageId: assistantMessageId, project, findComposition: () => changedComposition(project, turnStart), emit: (row) => ev.write([row]), now: Date.now });
     liveTimer = setInterval(() => void live.tick(), 3_000);
-    const runAgent = (promptPath: string = promptFile, sessionPath: string | null | undefined = resume) => new Promise<{ ok: boolean; error?: string; asked: boolean; usage?: { inputTokens: number; outputTokens: number; cacheRead: number } }>((resolve) => {
+    const runAgent = (promptPath: string = promptFile, sessionPath: string | null | undefined = resume, budgetMs?: number) => new Promise<{ ok: boolean; error?: string; asked: boolean; usage?: { inputTokens: number; outputTokens: number; cacheRead: number } }>((resolve) => {
       const brainArgs = brain === "mimo" ? ["--provider", "xiaomi", "--model", process.env.STUDIO_MIMO_MODEL || MIMO_DEFAULT_MODEL] : ["--model", model];
       const child = spawn(process.execPath, [RUNNER, project, promptPath, ...brainArgs, "--thinking", thinking, "--turn", String(priorUserTurns), ...(sessionPath ? ["--session", sessionPath] : [])], { cwd: project, env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
       // The agent's own preview/snapshot servers and background tasks share its process group: kill the whole group.
@@ -361,8 +403,13 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
         }
       });
       const kill = () => killGroup("SIGTERM");
+      // A spawn that fails under load (EAGAIN) fails this turn, not the whole engine.
+      child.on("error", (e) => { done = { ...done, ok: false, error: `spawn failed: ${e.message}` }; resolve(done); });
       turnAbort.signal.addEventListener("abort", kill, { once: true });
+      // An optional round (the taste rework) gets its own budget so it can't eat the time the delivery needs.
+      const budget = budgetMs ? setTimeout(() => { done = { ...done, ok: false, error: "round budget used up" }; kill(); }, budgetMs) : null;
       child.on("close", (code) => {
+        if (budget) clearTimeout(budget);
         turnAbort.signal.removeEventListener("abort", kill);
         // Leftover preview servers from this turn (so "too many preview sessions" can never build up).
         killGroup("SIGKILL");
@@ -371,7 +418,16 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       });
     });
     tm.phase("agent");
-    let result = await runAgent();
+    // The build gets the turn's time minus 5 minutes: when it runs long (e.g. still polishing after QA),
+    // the composition it has so far is delivered instead of the whole turn timing out with nothing.
+    const buildBudget = Math.max(60_000, studioTurnTimeoutMs() - 5 * 60_000 - (Date.now() - started));
+    let result = await runAgent(promptFile, resume, buildBudget);
+    let outOfTime = false;
+    if (!result.ok && result.error === "round budget used up" && !turnAbort.signal.aborted && (await changedComposition(project, turnStart))) {
+      log("warn", "studio build ran long: delivering the composition so far", { sessionId });
+      result = { ok: true, asked: false, ...(result.usage ? { usage: result.usage } : {}) };
+      outOfTime = true;
+    }
     // Codex hit its plan limit mid-turn: put the session back as it was and run the same turn once on MiMo.
     if (!result.ok && !result.asked && brain === "codex" && mimo && !turnAbort.signal.aborted && isCodexLimitError(result.error)) {
       log("warn", "studio turn: Codex limit, retrying on MiMo", { sessionId, error: (result.error ?? "").slice(0, 200) });
@@ -380,22 +436,69 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       await useMimo();
       result = await runAgent();
     }
+    // The agent sometimes ends its turn with a progress note ("I'm checking the photos so...") and no video, or crashes
+    // right after starting the canvas (only placeholder content): send it back once.
+    const startedComp = await changedComposition(project, turnStart);
+    const onlyPlaceholder = startedComp ? placeholderComposition(await readFile(join(startedComp, "index.html"), "utf8").catch(() => "")) : false;
+    if (!result.asked && mapper.questions.length === 0 && !turnAbort.signal.aborted && sessionFile && process.env.STUDIO_CONTINUE !== "0"
+      && ((result.ok && stoppedMidWork(mapper.finalText()) && !startedComp) || onlyPlaceholder)) {
+      log("warn", "studio agent stopped mid-work, continuing", { sessionId, text: mapper.finalText().slice(-200) });
+      const contFile = join(root, "continue.txt");
+      await writeFile(contFile, "[Automatic] You stopped before the video was built. Keep going now: finish the whole composition, check it with stills as studio.md says, then reply to the user in one or two plain lines. Don't stop to report progress.");
+      const again = await runAgent(contFile, sessionFile);
+      if (again.ok || again.asked) result = again;
+    }
     // Taste check: the director looks at 10 frames of the finished composition against the concept; one rework round.
-    if (concept && result.ok && !result.asked && mapper.questions.length === 0 && !turnAbort.signal.aborted && sessionFile && process.env.STUDIO_TASTE !== "0") {
+    // Revisions get it too (STUDIO_EDIT_TASTE=0 off): did the requested change land, is anything broken. They rework only for that.
+    const editReview = editTurn && process.env.STUDIO_EDIT_TASTE !== "0";
+    if (editReview) concept = await readFile(join(project, "concept.md"), "utf8").catch(() => null);
+    if ((concept || editReview) && result.ok && !outOfTime && !result.asked && mapper.questions.length === 0 && !turnAbort.signal.aborted && sessionFile && process.env.STUDIO_TASTE !== "0") {
       tm.phase("taste");
-      const compPath = await changedComposition(project, turnStart);
-      const html = compPath ? await readFile(join(compPath, "index.html"), "utf8").catch(() => "") : "";
-      const dur = Number(/data-duration="([\d.]+)"/.exec(html)?.[1] ?? 0);
-      const sheet = compPath && dur > 0 ? await compositionSheet(compPath, dur, turnAbort.signal).catch(() => null) : null;
-      const taste = sheet ? await tasteCheck(ctx.provider, { sheet, concept, userText: convo.join("\n\n") || userMsg.content }, ctx.usage, turnAbort.signal) : null;
-      log("info", "studio taste", { sessionId, score: taste?.score ?? null, templated: taste?.templated ?? null, broken: taste?.broken.length ?? null, rework: taste ? needsRework(taste) : false });
-      if (taste && needsRework(taste) && !turnAbort.signal.aborted) {
+      // Director loop: review -> rework, up to STUDIO_TASTE_ROUNDS times for a new video (revisions: once), keeping
+      // whichever version the director scored best. STUDIO_TASTE_BAR is the score that ends the loop (default 7).
+      const rounds = editReview ? 1 : Math.max(1, Math.min(4, Number(process.env.STUDIO_TASTE_ROUNDS) || 1));
+      const bar = Number(process.env.STUDIO_TASTE_BAR) || 7;
+      let best: { score: number; html: string } | null = null;
+      for (let round = 0; round <= rounds && !turnAbort.signal.aborted; round++) {
+        const compPath = await changedComposition(project, turnStart);
+        const html = compPath ? await readFile(join(compPath, "index.html"), "utf8").catch(() => "") : "";
+        const dur = Number(/data-duration="([\d.]+)"/.exec(html)?.[1] ?? 0);
+        const sheet = compPath && dur > 0 ? await compositionSheet(compPath, dur, turnAbort.signal).catch(() => null) : null;
+        const taste = sheet ? await tasteCheck(ctx.provider, { sheet, concept, userText: convo.join("\n\n") || userMsg.content, ...(editReview ? { latest: userMsg.content } : {}) }, ctx.usage, turnAbort.signal) : null;
+        if (taste && html && compPath) {
+          if (best && taste.score < best.score) {
+            // The last rework made it worse: put the better version back and stop.
+            log("info", "studio taste: kept the earlier version", { sessionId, round, score: taste.score, best: best.score });
+            await writeFile(join(compPath, "index.html"), best.html);
+            break;
+          }
+          if (!best || taste.score >= best.score) best = { score: taste.score, html };
+        }
+        const rework = taste ? needsRework(taste, editReview) || (!editReview && taste.score < bar) : false;
+        log("info", "studio taste", { sessionId, round, edit: editReview, score: taste?.score ?? null, templated: taste?.templated ?? null, broken: taste?.broken.length ?? null, requestDone: taste?.requestDone ?? null, rework });
+        if (round === rounds || !taste || !rework || !compPath) break;
+        // The rework must leave time to render and deliver; a run that is cut short puts the checked composition back.
+        const reworkBudget = reworkBudgetMs(studioTurnTimeoutMs() - (Date.now() - started));
+        if (reworkBudget <= 0) { log("info", "studio rework skipped: no time left", { sessionId, round }); break; }
         mapper.setPhase("building", "Polishing the details");
-        const reworkFile = join(root, "rework.txt");
-        await writeFile(reworkFile, reworkPrompt(taste));
-        const again = await runAgent(reworkFile, sessionFile);
+        const reworkFile = join(root, `rework-${round}.txt`);
+        await writeFile(reworkFile, editReview ? editReworkPrompt(taste) : reworkPrompt(taste));
+        let again = await runAgent(reworkFile, sessionFile, reworkBudget);
+        // A long build session can outgrow the model's request limit ("Bad Request"): redo the rework in a fresh session.
+        if (!again.ok && !turnAbort.signal.aborted && /bad request|context|too long|maximum|too large/i.test(again.error ?? "")) {
+          log("warn", "studio rework: fresh session", { sessionId, error: (again.error ?? "").slice(0, 120) });
+          if (html) await writeFile(join(compPath, "index.html"), html);
+          const fresh = join(root, `rework-fresh-${round}.txt`);
+          await writeFile(fresh, `Read ./studio.md and ./concept.md first. The video's composition is ${relative(project, compPath)}/index.html (already built; keep its structure, words and assets).\n\n${editReview ? editReworkPrompt(taste) : reworkPrompt(taste)}`);
+          const left = reworkBudgetMs(studioTurnTimeoutMs() - (Date.now() - started));
+          if (left > 0) again = await runAgent(fresh, null, left);
+        }
         if (again.ok) result = again;
-        else log("warn", "studio rework failed", { sessionId, error: (again.error ?? "").slice(0, 200) });
+        else {
+          log("warn", "studio rework failed", { sessionId, error: (again.error ?? "").slice(0, 200) });
+          if (!turnAbort.signal.aborted && html) await writeFile(join(compPath, "index.html"), html);
+          break;
+        }
       }
     }
     tm.phase("agent_after");
@@ -425,10 +528,17 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       const comp = (await changedComposition(project, turnStart)) ?? (rerender ? await changedComposition(project, 0) : null);
       const compMtime = comp ? (await stat(join(comp, "index.html")).catch(() => null))?.mtimeMs ?? 0 : 0;
       let source: string | null = null;
+      if (comp) musicCredits.push(...(await compositionMusicCredits(await readFile(join(comp, "index.html"), "utf8").catch(() => "")).catch(() => [])));
       // The engine owns the final render; an agent MP4 wins only as a footage-only edit newer than any composition.
-      if (agentRel && (!comp || agentMtime > compMtime)) {
+      // ...but not a clip the composition itself uses, nor a scratch cut much shorter than the composition (a 3 s trim once shipped as the ad).
+      const agentIsFinal = agentRel && comp ? await agentCutIsFinal(join(project, agentRel), comp, turnAbort.signal) : true;
+      if (agentRel && agentIsFinal && (!comp || agentMtime > compMtime)) {
         deliveredRel = agentRel;
         source = join(project, agentRel);
+      } else if (comp && placeholderComposition(await readFile(join(comp, "index.html"), "utf8").catch(() => ""))) {
+        // Never deliver the starter canvas or the sample ad as the user's video.
+        log("warn", "studio: composition still placeholder, not delivering", { sessionId });
+        renderFailed = true;
       } else if (comp) {
         tm.phase("render");
         mapper.setPhase("rendering", "Rendering your video");
@@ -458,9 +568,16 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
           if (process.env.STUDIO_MUSIC_FALLBACK !== "0") {
             const info = await probe(out, turnAbort.signal).catch(() => null);
             const withMusic = info ? await ensureMusic({ video: out, workDir: root, userText: userMsg.content, durationSec: info.durationSec, salt: sessionId, signal: turnAbort.signal }).catch((e) => { log("warn", "studio music fallback failed", { error: errMsg(e) }); return null; }) : null;
-            if (withMusic) { source = withMusic.file; log("info", "studio music fallback", { sessionId, style: withMusic.style }); }
+            if (withMusic) { source = withMusic.file; if (withMusic.credit) musicCredits.push(withMusic.credit); log("info", "studio music fallback", { sessionId, style: withMusic.style, track: withMusic.trackId ?? null }); }
           }
-          prog.emit({ pct: 100, stage: "done" }, true);
+          // Flash safety (WCAG 2.3.1): soften failing seconds; still flashing -> not delivered (handled as a failed render).
+          if (process.env.STUDIO_FLASH_CHECK !== "0") {
+            const fs = await flashSafe(source, { ffmpeg: (await ffmpegPath()) ?? undefined, signal: turnAbort.signal }).catch(() => null);
+            if (fs) log(fs.ok ? "info" : "warn", "studio flash check", { sessionId, ok: fs.ok, windows: fs.windows, softened: fs.softened, ms: fs.ms });
+            if (fs && !fs.ok) source = null;
+            else if (fs?.file) source = fs.file;
+          }
+          if (source) prog.emit({ pct: 100, stage: "done" }, true);
         }
         else log("warn", "studio render failed", { error: (rr.stderr || rr.stdout).slice(-300) });
         // An older agent MP4 is only an intermediate (often a raw footage cut): never pass it off as the finished video.
@@ -502,6 +619,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     for (const q of mapper.questions) attachments.push({ question: q });
     let content = finalReply(mapper.finalText(), { delivered: Boolean(delivered), asked });
     if (!content && delivered) content = "Here's your video.";
+    if (delivered && musicCredits.length) content = withMusicCredit(content, musicCredits);
     mapper.setPhase("done", "Done");
     await db.studioMessage.update({ where: { id: assistantMessageId }, data: { status: "done", content, attachments } });
     await db.studioSession.update({ where: { id: sessionId }, data: { ...update, status: asked ? "awaiting_user" : "idle", lastActivityAt: new Date() } });
@@ -589,4 +707,20 @@ async function nameSession(ctx: JobContext, sessionId: string, userText: string,
   ctx.usage.push(r.usage);
   const title = r.text.trim().replace(/^["'“]+|["'”.]+$/g, "").split(/\s+/).slice(0, 6).join(" ").slice(0, 60);
   if (title) await ctx.db.studioSession.updateMany({ where: { id: sessionId, title: "New video" }, data: { title } });
+}
+
+/** An agent-written MP4 counts as the finished video only if the composition doesn't use it and it's about as long as the composition. */
+export async function agentCutIsFinal(file: string, comp: string, signal: AbortSignal): Promise<boolean> {
+  const html = await readFile(join(comp, "index.html"), "utf8").catch(() => "");
+  if (!html) return true;
+  if (html.includes(basename(file))) return false;
+  const dur = Number(/data-duration="([\d.]+)"/.exec(html)?.[1] ?? 0);
+  if (!(dur > 0)) return true;
+  const info = await probe(file, signal).catch(() => null);
+  return !info?.durationSec || info.durationSec >= dur * 0.7;
+}
+
+/** Pure: is this still the kit's starter content (the blank canvas placeholder or an unrewritten sample ad)? */
+export function placeholderComposition(html: string): boolean {
+  return />line here\.<|Northside Bikes|Quillo\b|Studio Rue|Priya R\./.test(html);
 }

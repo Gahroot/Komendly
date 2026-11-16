@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// EZ Motion score synth: render a beat-locked music bed and sound effects from
+// Score synth: render a beat-locked music bed and sound effects from
 // a small JSON score, fully offline and deterministic (same score + seed =>
 // identical audio). No samples, no API keys, no licensing questions.
 //
@@ -1286,7 +1286,7 @@ function balance(music, musicGain, effects, effectsGain, hits) {
 const MUD_BAND = [100, 300];
 const MUD_WINDOW = 0.5;
 // The share is spectral, so a louder mix is not a muddier one. Measured on
-// EZ's own scores (4 styles x 6 keys/seeds x 70/100/128 bpm, 16 s with four
+// The studio's own scores (4 styles x 6 keys/seeds x 70/100/128 bpm, 16 s with four
 // sections and ten typical hits; 72 renders, 2304 windows): window share
 // median 0.079, p95 0.203, p99 0.308, max 0.401 (lofi in B minor); by style
 // max pulse 0.305, cinematic 0.368, minimal 0.332, lofi 0.401; whole-mix

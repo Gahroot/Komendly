@@ -185,6 +185,8 @@ export async function runMotionAgent(input: MotionRenderInput, ratios: Ratio[], 
       resolve({ code: code ?? -1, stdout, stderr });
     };
     child.on("close", settle);
+    // A spawn that fails under load (EAGAIN) must fail this job, not crash the whole engine.
+    child.on("error", (e) => { stderr += `\nspawn failed: ${e.message}`; settle(-1); });
     // Leftover grandchildren can hold the pipes open after the agent exits: reap them and stop waiting.
     child.on("exit", (code) => { killTree(child.pid); setTimeout(() => { child.stdout?.destroy(); child.stderr?.destroy(); settle(code); }, 5_000); });
   });

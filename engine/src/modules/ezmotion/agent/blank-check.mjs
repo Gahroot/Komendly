@@ -80,7 +80,7 @@ export const MUSIC_FIX_PROMPT = "[Studio QA, automatic] The video has no music o
 
 /** Pure: real layout problems from `hyperframes inspect --json` issues (overlapping/stacked text, covered text). */
 export function layoutProblems(issues) {
-  // Decorative glyphs (quote marks, bullets) don't count; a fix round needs 3+ distinct real problems.
+  // Decorative glyphs (quote marks, bullets) don't count; a fix round needs 2+ distinct real problems (one stray hit is often noise).
   const bad = (issues || []).filter((i) => ((i.code === "text_occluded" && i.severity === "error") || (i.code === "content_overlap" && i.severity === "warning")) && String(i.text ?? "").replace(/[^\p{L}\p{N}]/gu, "").length >= 3);
   const seen = new Set();
   const out = [];
@@ -91,7 +91,7 @@ export function layoutProblems(issues) {
     out.push(`${Number(i.time ?? 0).toFixed(1)}s ${i.code === "text_occluded" ? "text covered by another element" : "elements overlapping"}${i.text ? `: "${String(i.text).slice(0, 40)}"` : ""}`);
     if (out.length >= 8) break;
   }
-  return out.length >= 3 ? out : [];
+  return out.length >= 2 ? out : [];
 }
 
 /** Overlap/covered-text problems in the newest composition ([] on any tooling problem: never block). */
@@ -109,9 +109,45 @@ export async function findLayoutProblems(projectDir, { sinceMs = 0 } = {}) {
   }
 }
 
+/** Contrast below this is unreadable for anyone (WCAG AA is 4.5, large text 3). */
+export const UNREADABLE_CONTRAST = 2;
+
+/** Pure: text nobody can read, from `hyperframes validate --json` contrast samples. The same text must be low at 2+
+ * sample times, so a word caught mid-fade doesn't count. Returns one line per text. */
+export function unreadableText(entries) {
+  const low = new Map();
+  for (const e of entries || []) {
+    const text = String(e?.text ?? "").replace(/\s+/g, " ").trim();
+    if (!(Number(e?.ratio) < UNREADABLE_CONTRAST) || text.replace(/[^\p{L}\p{N}]/gu, "").length < 3) continue;
+    const key = `${e.selector}|${text.slice(0, 40)}`;
+    const cur = low.get(key) ?? { text, times: [], ratio: Number(e.ratio) };
+    cur.times.push(Number(e.time ?? 0));
+    cur.ratio = Math.min(cur.ratio, Number(e.ratio));
+    low.set(key, cur);
+  }
+  return [...low.values()].filter((v) => v.times.length >= 2).slice(0, 6).map((v) => `${v.times[0]}s "${v.text.slice(0, 40)}" (contrast ${v.ratio.toFixed(1)}:1)`);
+}
+
+/** Unreadable text in the newest composition ([] on any tooling problem: never block). */
+export async function findUnreadableText(projectDir, { sinceMs = 0 } = {}) {
+  const comp = await newestComposition(projectDir);
+  if (!comp || comp.m < sinceMs) return [];
+  const entry = hyperframesEntry();
+  if (!entry) return [];
+  const r = await run(process.execPath, [entry, "validate", comp.d, "--json", "--timeout", "5000"], { timeoutMs: 90_000, env: process.env });
+  const text = r.stdout.toString();
+  try {
+    return unreadableText(JSON.parse(text.slice(text.indexOf("{"))).contrast);
+  } catch {
+    return [];
+  }
+}
+
 /** One combined fix prompt for everything the QA found (one extra agent round at most). */
-export function qaFixPrompt({ blank = [], sparse = [], empty = [], layout = [], music = false, missing = [], prices = [] }) {
+export function qaFixPrompt({ blank = [], sparse = [], empty = [], layout = [], music = false, missing = [], prices = [], unreadable = [], pixel = [], advice = [], again = false }) {
   const parts = [];
+  parts.push(...pixel);
+  if (unreadable.length) parts.push(`- Text nobody can read (its colour almost matches what's behind it):\n${unreadable.map((l) => `  - ${l}`).join("\n")}\n  Change the text colour (or put a solid panel or scrim behind it) so it reads clearly against its background. A huge faint word meant only as background texture can stay.`);
   if (empty.length) parts.push(`- Nothing readable on screen at ${empty.map((t) => `${t}s`).join(", ")}: just background (maybe a speck or a line). The main content (words, logo, product, pictures) never shows or is far too small/faint. Make it big, bright and on screen for most of the video.`);
   if (prices.length) parts.push(`- The offer is wrong: the user's price${prices.length > 1 ? "s" : ""} ${prices.join(", ")} ${prices.length > 1 ? "don't" : "doesn't"} appear in the video (a shell command probably ate the dollar sign and digits). Fix the text so it shows exactly ${prices.join(", ")}, and write files with your file tool, never with echo or an unquoted heredoc.`);
   if (missing.length) parts.push(`- These files are used in index.html but don't exist, so they show as empty spaces: ${missing.join(", ")}. Point each one at a file that exists (check with ls: kit/illustrations, kit/icons, brand/photos, brand/site, uploads) or remove it and fill the space.`);
@@ -119,7 +155,8 @@ export function qaFixPrompt({ blank = [], sparse = [], empty = [], layout = [], 
   if (blank.length) parts.push(`- Blank frames (one flat colour, nothing readable) at ${blank.map((t) => `${t}s`).join(", ")}: those scenes don't show. Find why (hidden elements, a wipe/overlay left covering the frame, elements never animated in, wrong timing) and fix it.`);
   if (layout.length) parts.push(`- Layout problems (text from different scenes stacked on top of each other, or text covered by other elements):\n${layout.map((l) => `  - ${l}`).join("\n")}\n  Make sure each scene's text is fully hidden before the next scene's text appears (animate it out or set autoAlpha 0 at the cut), and nothing covers text that should be read.`);
   if (music) parts.push("- No music or sound: follow the Sound rule in ./studio.md (write ./audio/score.json for THIS business and mood, run `node kit/bin/score-synth.mjs audio/score.json audio/`, add audio/music.wav and audio/sfx.wav as <audio> elements spanning the whole video).");
-  return `[Studio QA, automatic] The finished video has these problems:\n${parts.join("\n")}\nFix them in index.html, keep everything else the same, check the fixed times with \`hf snapshot --at\` and look at the images. Then reply to the user again in one or two plain lines about the video (don't mention this check).`;
+  if (parts.length && advice.length) parts.push(`Also worth improving while you are there:\n${advice.join("\n")}`);
+  return `[Studio QA, automatic] ${again ? "Still not fixed after your last change. Look at the stills this time, the problems are real. " : ""}The finished video has these problems:\n${parts.join("\n")}\nFix them in index.html, keep everything else the same, check the fixed times with \`hf snapshot --at\` and look at the images. Then reply to the user again in one or two plain lines about the video (don't mention this check).`;
 }
 
 function hyperframesEntry() {
@@ -177,6 +214,12 @@ export async function newestCompositionHtml(projectDir, sinceMs = 0) {
   if (!comp || comp.m < sinceMs) return null;
   const { readFile } = await import("node:fs/promises");
   return readFile(join(comp.d, "index.html"), "utf8").catch(() => null);
+}
+
+/** Directory of the newest composition changed since `sinceMs`, or null. */
+export async function newestCompositionDir(projectDir, sinceMs = 0) {
+  const comp = await newestComposition(projectDir);
+  return comp && comp.m >= sinceMs ? comp.d : null;
 }
 
 function compositionDuration(html) {
@@ -271,7 +314,7 @@ async function frameStats(projectDir, { sinceMs = 0, ffmpeg = "ffmpeg" } = {}) {
     const sparseTimes = times.filter((t, i) => !blank.includes(t) && half[2 * i] && half[2 * i + 1]);
     // Nothing on screen (a plain or vignetted background, maybe a speck): flag when 4+ of the 10 check times are bare.
     const emptyTimes = times.filter((t, i) => !blank.includes(t) && bare[2 * i] && bare[2 * i + 1]);
-    return { blank, sparse: sparseTimes.length >= 3 ? sparseTimes : [], empty: emptyTimes.length >= 4 ? emptyTimes : [] };
+    return { blank, sparse: sparseTimes.length >= 2 ? sparseTimes : [], empty: emptyTimes.length >= 4 ? emptyTimes : [] };
   } finally {
     await rm(outDir, { recursive: true, force: true }).catch(() => undefined);
   }

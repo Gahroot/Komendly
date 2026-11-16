@@ -12,23 +12,25 @@ import { ffmpegPath, run } from "../modules/ezmotion/runtime";
 
 export const CONCEPT_SYSTEM = `You are the creative director of a small, award-winning motion studio. A fast junior motion designer will build your concept as an HTML/GSAP motion-graphics video (HyperFrames: real web layout, CSS, SVG, canvas, GSAP timelines, images, video, generated images). Your job is to make it feel ALIVE: atmosphere, emotion, a point of view. Never a template.
 
-Write a concept the junior can build in one go. Plain markdown, max 380 words, these sections exactly:
+Write a concept the junior can build in one go. Plain markdown, max 380 words for the first seven sections plus the Build spec (max 600 words), these sections exactly:
 # Concept
 **Big idea:** one sentence (the feeling and the hook, not a layout).
-**World & atmosphere:** the visual world in concrete terms: lighting (e.g. warm low sun, neon rim light, soft window light), background with depth (layered gradients, haze, grain, light leaks, bokeh, textures, a generated backdrop photo), colour grade, texture. Never a flat solid background, never cards floating on a blank colour.
-**Type & motion language:** typeface personality, how words move (kinetic, masked reveals, per-letter, slow drift), camera moves (push-in, parallax between 3 depth layers, rack-focus blur, whip pans), easing, rhythm with the music.
-**Scenes:** 3-6 numbered scenes with seconds, what we SEE (composition, foreground/midground/background), how it MOVES, the exact on-screen words (use the user's facts and offer exactly; never invent prices, claims or reviews), and the transition into the next scene.
+**World & atmosphere:** one ownable signature world drawn from THEIR visual language (the art style of their mascot or illustrations, their logo shapes, their site imagery, their footage), built in layers (backdrop, mid-ground shapes, foreground details) that persist and evolve from scene to scene, in concrete terms: lighting (e.g. warm low sun, neon rim light, soft window light), background with depth (layered gradients, haze, grain, light leaks, bokeh, textures, a generated backdrop photo), colour grade, texture. Never a flat solid background, never cards floating on a blank colour.
+**Type & motion language:** typefaces: THEIR brand fonts when given (they are part of the look), else pick from the installed ones (Fraunces, Newsreader, Young Serif, Gloock serifs; Bricolage Grotesque, Mona Sans, Hubot Sans, Schibsted Grotesk, Host Grotesk, Funnel Display, Sora, Unbounded, Archivo, Big Shoulders, Anybody sans; Doto pixel; Martian Mono; Short Stack, Finger Paint hand); nothing else is installed. Typeface personality, how words move (kinetic, masked reveals, per-letter, word swaps, counters), how the subject acts (poured, opened, tapped, assembled, used), camera moves (push-in, parallax between 3 depth layers, rack-focus blur, whip pans), easing, rhythm with the music.
+**Scenes:** 3-6 numbered scenes with seconds, what we SEE (composition, foreground/midground/background), its ACTION BEATS with times (2-4 per scene, something new happens at least every second: words build or swap, a number counts, the product is used, a cursor taps, an element is carried into the next scene; a slow zoom or drift alone is never a beat), the exact on-screen words (use the user's facts and offer exactly; never invent prices, claims or reviews), and the transition into the next scene.
 **Images:** which of the provided assets to use where, and 2-3 images to GENERATE (exact prompt each, photographic unless the user asked otherwise, aspect) when real imagery is missing or weak: different shots, not crops of one picture. Prefer real/generated photographic imagery over clip-art icons.
 **Sound:** music style (pulse/cinematic/minimal/lofi), bpm, key or chords, energy curve, and 2-4 hits synced to moments.
 **Avoid:** 3 concrete template traps for THIS video.
+**Build spec:** the junior copies your design decisions exactly, so make them for it. Frame size in px. For each scene (with seconds): every element on screen as one line: what it is (headline, accent word, mascot, UI card, photo, chip, button...), its exact words or asset file, position and size in px for this frame (x, y, width; centred is fine), font (display sans / italic serif / text) and size in px, colour (accent, accent-2, ink, paper or a hex), and its move with a time (punch.js helpers: slam, pop, rise, stack, type, counter, swap, strike, click, whipIn/whipOut, out, fly, pixelWipe, glow, burst, ring, bob, drift, shake, wiggle). Big type: on 1080x1920 the main words are 140-300 px and nothing anyone must read is under 44 px; on 1920x1080 headlines 110-160 px. Fill the frame: the main element of each scene spans most of the width. Compose on the centre axis by default (hero words centred, big, in the middle band; the subject under or behind them); use a left-aligned grid only when the design truly calls for it, never a small headline in a top corner. Say which layers of the world sit behind each scene and how the next scene's first element arrives before the last one leaves.
 
-Rules: match the requested length and aspect. Scenes must look different from each other (a new shot, image, framing or layout per scene: close-up, wide, detail, overhead, type-only); one background for the whole video is a slideshow. Every element you describe has a job; no decorative props that could cover the subject or the words. If the user says the video is for someone else (a client, not their business), ignore the brand assets listed. If it is a remix of a reference ad, the builder copies the reference's structure and pacing: your concept sets the world, atmosphere, imagery and emotion only. If it is a launch video, their recorded product footage is the hero; give it a cinematic treatment (device frames in a lit scene, depth, zooms on the key UI). Write for a builder, not a client: no fluff.`;
+Rules: match the requested length and aspect. Frame 0 already shows the hook words and subject (it is the thumbnail in a muted feed). For software, apps and websites the hero is their REAL product (their site screenshots or recordings), never stock monitors; when the user asks to show a flow with no recording available (a chat, pasting a URL, an edit landing), have it rebuilt as a clean stylized UI in their brand. Their site may show example work for THEIR clients: never let those examples read as the advertised business. With their footage, design around it: type and shapes that interact with the shots, punch-ins on the beat, split screens. Ads and promos end on a card with their name/logo, the next step, and their website or phone when known; other videos (stories, celebrations, explainers, edits) end however the piece should. A mascot or character in their assets is the guide: it appears, reacts and acts through the video. Anything the viewer must read (UI, chat, screenshots, example work) is shown big, at least 60% of the frame width, zoomed to the part that matters. When the request asks to show several examples, show genuinely different ones. No empty moments: each beat arrives while the last leaves. Scenes must look different from each other (a new shot, image, framing or layout per scene: close-up, wide, detail, overhead, type-only); one background for the whole video is a slideshow. Every element you describe has a job; no decorative props that could cover the subject or the words. If the user says the video is for someone else (a client, not their business), ignore the brand assets listed. If it is a remix of a reference ad, the builder copies the reference's structure and pacing: your concept sets the world, atmosphere, imagery and emotion only. If it is a launch video, their recorded product footage is the hero; give it a cinematic treatment (device frames in a lit scene, depth, zooms on the key UI). Write for a builder, not a client: no fluff.`;
 
 export interface ConceptInput {
   userText: string;
-  brand?: { name?: string | null; url?: string | null; colors?: Array<{ hex: string; role?: string | undefined }>; photos?: Array<{ file: string; caption?: string | null }>; site?: Array<{ file: string; kind: string; label: string }> } | null;
+  brand?: { name?: string | null; url?: string | null; colors?: Array<{ hex: string; role?: string | undefined }>; fonts?: Array<{ family: string; role?: string | undefined }>; photos?: Array<{ file: string; caption?: string | null }>; site?: Array<{ file: string; kind: string; label: string }> } | null;
   uploads?: Array<{ file: string; kind: string; reference?: boolean }>;
   launch?: boolean;
+  world?: string;
 }
 
 /** Pure: the concept request the creative director sees. */
@@ -36,11 +38,12 @@ export function conceptPrompt(o: ConceptInput): string {
   const lines = [`The request:\n${o.userText.trim().slice(0, 2000)}`];
   const b = o.brand;
   if (b) {
-    lines.push("", `Their brand (from their website${b.url ? ` ${b.url}` : ""}): ${b.name ?? "unnamed"}${b.colors?.length ? `; colours ${b.colors.map((c) => `${c.hex}${c.role ? ` (${c.role})` : ""}`).join(", ")}` : ""}.`);
+    lines.push("", `Their brand (from their website${b.url ? ` ${b.url}` : ""}): ${b.name ?? "unnamed"}${b.colors?.length ? `; colours ${b.colors.map((c) => `${c.hex}${c.role ? ` (${c.role})` : ""}`).join(", ")}` : ""}${b.fonts?.length ? `; fonts ${b.fonts.map((f) => `${f.family}${f.role ? ` (${f.role})` : ""}`).join(", ")}` : ""}.`);
     if (b.photos?.length) lines.push(`Their real photos: ${b.photos.map((p) => `brand/photos/${p.file}${p.caption ? ` (${p.caption})` : ""}`).join("; ")}.`);
     if (b.site?.length) lines.push(`Pieces of their real website (screenshots): ${b.site.map((s) => `brand/site/${s.file} (${s.kind}: ${s.label.slice(0, 50)})`).join("; ")}.`);
   } else lines.push("", "No brand on file: invent a fitting look.");
   if (o.uploads?.length) lines.push(`Files the user uploaded: ${o.uploads.map((u) => `uploads/${u.file} (${u.reference ? "REFERENCE AD to remix" : u.kind})`).join("; ")}.`);
+  if (o.world) lines.push(`Their brand world is already designed (./brand/world.css: world layers .world-sky/.world-mid/.world-fg, type .t-hero/.t-accent/.t-label/.t-body, components .card .chip .bubble .btn .quote .price .check .frame .mascot .stack): ${o.world} Set your scenes IN this world and name its classes in the Build spec; don't invent a different look.`);
   if (o.launch) lines.push("This is a launch video from their recorded product footage (see uploads).");
   return lines.join("\n");
 }
@@ -50,22 +53,34 @@ export async function writeConcept(provider: AIProvider, input: ConceptInput, us
   const r = await provider.text({ system: CONCEPT_SYSTEM, prompt: conceptPrompt(input), reasoning: "medium", ...(signal ? { signal } : {}) });
   usage.push(r.usage);
   const text = r.text.trim();
-  return text.length > 200 ? text.slice(0, 6000) : null;
+  return text.length > 200 ? text.slice(0, 12000) : null;
 }
 
 export const TasteOut = z.object({
   score: z.number().int().min(1).max(10).describe("1-10: would a top motion studio ship this as is? 8+ = yes"),
   templated: z.boolean().describe("true if it looks like a generic template: flat backgrounds, cards on blank colour, clip-art, no atmosphere"),
-  broken: z.array(z.string()).max(6).describe("objective defects with the second: overlapping or cut-off text, stray shapes or props covering the subject or words, text over images that hurts reading, unreadable contrast, empty or half-built frames, missing logo/offer, misspelled or wrong offer, the same shot for most of the video"),
+  broken: z.array(z.string()).max(6).describe("objective defects with the second: overlapping or cut-off text, stray shapes or props covering the subject or words, text over images that hurts reading, unreadable contrast, empty or half-built frames, missing logo/offer, misspelled or wrong offer, the same shot for most of the video, a scene that only holds or drifts slowly for 2+ seconds"),
   notes: z.array(z.string()).max(5).describe("the most impactful concrete changes to make it feel alive and match the concept (what to change, where, how)"),
+  requestDone: z.boolean().describe("true if the frames clearly show what the user's latest message asked for"),
+  missed: z.string().describe("if requestDone is false: what the latest message asked that the video still doesn't show (one line); else empty"),
 });
 export type Taste = z.infer<typeof TasteOut>;
 
 export const TASTE_SYSTEM = `You are the creative director reviewing a junior's motion-graphics video against your concept. You see a contact sheet of 10 frames in time order (left to right, top to bottom; the prompt lists each tile's second). Judge like a top studio would: atmosphere and life (depth, lighting, texture, motion implied between frames, emotion), craft (type hierarchy, composition, contrast, nothing overlapping or cut off, nothing half-built), and whether it delivers the concept and the user's exact message. Be specific and brief. Reply with JSON only.`;
 
-/** Pure: does this review need a rework round? */
-export function needsRework(t: Taste): boolean {
+export const EDIT_TASTE_SYSTEM = `You are the creative director checking a revision of a finished motion-graphics video. The user asked for a change; a junior made it. You see a contact sheet of 10 frames in time order (left to right, top to bottom; the prompt lists each tile's second). Check three things: (1) the change the user's LATEST message asked for is clearly visible and done well; (2) nothing is broken (overlapping or cut-off text, unreadable contrast, empty or half-built frames, stray shapes covering words, missing logo/offer, wrong offer); (3) the rest of the video still holds up. The user chose this look: do not ask to redesign it. Notes only about the requested change or real defects. Reply with JSON only.`;
+
+/** Pure: does this review need a rework round? Edits rework only for real defects or a request that wasn't done
+ * (the user picked the look, so a score or a template feel alone never reworks a revision). */
+export function needsRework(t: Taste, edit = false): boolean {
+  if (edit) return t.broken.length > 0 || t.requestDone === false;
   return t.broken.length > 0 || t.score < 7 || (t.templated && t.score < 8);
+}
+
+/** Pure: the rework prompt for a revision (one round): fix only these, keep everything else. */
+export function editReworkPrompt(t: Taste): string {
+  const items = [...(t.requestDone === false && t.missed ? [`- NOT DONE YET: ${t.missed}`] : []), ...t.broken.map((b) => `- FIX: ${b}`), ...t.notes.map((n) => `- ${n}`)];
+  return `[Creative director review, automatic] The revision isn't right yet:\n${items.join("\n")}\nFix only these. Keep everything else exactly as it is (look, copy, music, timing). Check the changed moments with \`hf snapshot --at\` and look at the images before you finish. Then reply to the user again in one or two plain lines about the change (don't mention this review).`;
 }
 
 /** Pure: the rework prompt sent to the builder (one round). */
@@ -113,11 +128,19 @@ export async function compositionSheet(compDir: string, durationSec: number, sig
   }
 }
 
+/** Pure: what the director reads next to the contact sheet (first video, or a revision when `latest` is set). */
+export function tastePrompt(o: { sheet: { times: number[] }; concept: string | null; userText: string; latest?: string }): string {
+  const tiles = `Tiles in order are the frames at ${o.sheet.times.map((t) => `${t}s`).join(", ")}.`;
+  const concept = o.concept ? `\n\nThe original concept:\n${o.concept.slice(0, 7000)}` : "";
+  if (o.latest) return `The whole conversation so far (user messages, oldest first):\n${o.userText.slice(-2500)}\n\nThe user's LATEST message (the change to check):\n${o.latest.slice(0, 1000)}${concept}\n\nReview the contact sheet of the revised video. ${tiles}`;
+  return `The user's request:\n${o.userText.slice(0, 1500)}${concept}\n\nReview the contact sheet. ${tiles}`;
+}
+
 /** Sol looks at the finished frames once. Null on any failure (never blocks delivery). */
-export async function tasteCheck(provider: AIProvider, o: { sheet: { jpeg: Buffer; times: number[] }; concept: string; userText: string }, usage: UsageMeter[], signal?: AbortSignal): Promise<Taste | null> {
+export async function tasteCheck(provider: AIProvider, o: { sheet: { jpeg: Buffer; times: number[] }; concept: string | null; userText: string; latest?: string }, usage: UsageMeter[], signal?: AbortSignal): Promise<Taste | null> {
   return structured(provider, TasteOut, {
-    system: TASTE_SYSTEM,
-    prompt: `The user's request:\n${o.userText.slice(0, 1500)}\n\nYour concept:\n${o.concept.slice(0, 4000)}\n\nReview the contact sheet. Tiles in order are the frames at ${o.sheet.times.map((t) => `${t}s`).join(", ")}.`,
+    system: o.latest ? EDIT_TASTE_SYSTEM : TASTE_SYSTEM,
+    prompt: tastePrompt(o),
     images: [{ mediaType: "image/jpeg", base64: o.sheet.jpeg.toString("base64") }],
     reasoning: "medium",
     ...(signal ? { signal } : {}),

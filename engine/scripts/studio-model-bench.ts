@@ -4,7 +4,9 @@
 // Jobs are inserted already locked by this script, so no other worker can claim them. Everything it creates is deleted.
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { STUDIO_TURN_JOB_TYPE } from "../../src/lib/studio/contracts";
+import { STUDIO_TURN_JOB_TYPE, studioKeys } from "../../src/lib/studio/contracts";
+import { basename } from "node:path";
+import { randomUUID } from "node:crypto";
 import { loadConfig } from "../src/config";
 import { createDb } from "../src/db";
 import type { JobContext } from "../src/jobs/context";
@@ -18,8 +20,11 @@ const arg = (n: string) => { const i = process.argv.indexOf(`--${n}`); const v =
 if (!/komendly-dev|localhost|dev/i.test(process.env.DATABASE_URL ?? "") && !process.env.BENCH_ALLOW) throw new Error("refusing: DATABASE_URL does not look like dev (set BENCH_ALLOW=1 if it is)");
 const prompt = (await readFile(arg("prompt-file"), "utf8")).trim();
 const outDir = arg("out");
-const editIdx = process.argv.indexOf("--edit");
-const editText = editIdx >= 0 ? process.argv[editIdx + 1] : undefined;
+// --edit "<text>" (repeatable) or --edits-file f (one edit per line): revisions after the first video.
+const all = (n: string) => process.argv.flatMap((a, i) => (a === `--${n}` && process.argv[i + 1] ? [process.argv[i + 1]!] : []));
+const editTexts = [...all("edit"), ...(await Promise.all(all("edits-file").map((f) => readFile(f, "utf8")))).flatMap((t) => t.split("\n").map((l) => l.trim()).filter(Boolean))];
+// --upload <file> (repeatable): their footage/photos on the first message; --reference <file>: a reference ad (remix).
+const uploadFiles = all("upload"), referenceFiles = all("reference");
 const model = `${process.env.STUDIO_AGENT_MODEL ?? "default"} / edit ${process.env.STUDIO_EDIT_MODEL ?? "default"}`;
 await mkdir(outDir, { recursive: true });
 const db = createDb();
@@ -40,8 +45,31 @@ if (brandIdx >= 0) {
 }
 const session = await db.studioSession.create({ data: { workspaceId: ws.id, userId: user.id, model, thinking: process.env.STUDIO_AGENT_THINKING ?? "high" } });
 
+async function attach(): Promise<object[]> {
+  const out: object[] = [];
+  for (const [f, reference] of [...uploadFiles.map((f) => [f, false] as const), ...referenceFiles.map((f) => [f, true] as const)]) {
+    const id = randomUUID().replace(/-/g, ""), name = basename(f), ext = name.split(".").pop()!.toLowerCase();
+    const mime = ({ mp4: "video/mp4", mov: "video/quicktime", webm: "video/webm", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" } as Record<string, string>)[ext] ?? "application/octet-stream";
+    const body = await readFile(f), key = studioKeys.upload(ws.id, id, name);
+    await storage.put(key, body, mime);
+    let durationSec: number | null = null, width: number | null = null, height: number | null = null;
+    if (mime.startsWith("video/")) {
+      const ff = await ffmpegPath();
+      const probe = ff ? await run(ff, ["-hide_banner", "-i", f]) : { stderr: "" };
+      const d = /Duration: (\d+):(\d+):([\d.]+)/.exec(probe.stderr ?? ""); if (d) durationSec = +d[1]! * 3600 + +d[2]! * 60 + +d[3]!;
+      const wh = /, (\d{2,5})x(\d{2,5})/.exec(probe.stderr ?? ""); if (wh) { width = +wh[1]!; height = +wh[2]!; }
+    }
+    await db.studioUpload.create({ data: { id, workspaceId: ws.id, userId: user.id, sessionId: session.id, key, filename: name, mime, bytes: body.length, durationSec, width, height, status: "ready" } });
+    out.push(reference ? { uploadId: id, reference: true } : { uploadId: id });
+  }
+  return out;
+}
+
+let firstMessage = true;
 async function turn(text: string) {
-  await db.studioMessage.create({ data: { sessionId: session.id, role: "user", content: text } });
+  const attachments = firstMessage ? await attach() : [];
+  firstMessage = false;
+  await db.studioMessage.create({ data: { sessionId: session.id, role: "user", content: text, ...(attachments.length ? { attachments } : {}) } as never });
   const um = await db.studioMessage.findFirstOrThrow({ where: { sessionId: session.id, role: "user" }, orderBy: { createdAt: "desc" } });
   const am = await db.studioMessage.create({ data: { sessionId: session.id, role: "assistant", status: "queued" } });
   const payload = { sessionId: session.id, userMessageId: um.id, assistantMessageId: am.id };
@@ -61,7 +89,7 @@ try {
   turns.push(await turn(prompt));
   for (let i = 0; i < 2 && turns.at(-1)?.result.asked; i++) turns.push(await turn("Your call: go with what you recommend and make it now."));
   const firstCount = turns.length;
-  if (editText) turns.push(await turn(editText));
+  for (const e of editTexts) turns.push(await turn(e));
   out.perTurn = turns.map((t, i) => ({ kind: i < firstCount ? "first" : "edit", ms: t.ms, timing: (t.result as { timing?: unknown }).timing, status: t.status, input: t.usage.reduce((a, u) => a + (u.inputTokens ?? 0), 0), output: t.usage.reduce((a, u) => a + (u.outputTokens ?? 0), 0), reply: t.reply.slice(0, 300) }));
   out.totalMs = turns.reduce((a, t) => a + t.ms, 0);
   out.inputTokens = turns.flatMap((t) => t.usage).reduce((a, u) => a + (u.inputTokens ?? 0), 0);
@@ -79,6 +107,7 @@ try {
 } finally {
   await writeFile(join(outDir, "result.json"), JSON.stringify(out, null, 1));
   await db.studioEvent.deleteMany({ where: { sessionId: session.id } }).catch(() => undefined);
+  await db.studioUpload.deleteMany({ where: { workspaceId: ws.id } }).catch(() => undefined);
   await db.studioRender.deleteMany({ where: { sessionId: session.id } }).catch(() => undefined);
   await db.studioMessage.deleteMany({ where: { sessionId: session.id } }).catch(() => undefined);
   await db.studioSession.deleteMany({ where: { id: session.id } }).catch(() => undefined);

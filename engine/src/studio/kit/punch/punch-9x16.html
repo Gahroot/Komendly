@@ -1,0 +1,230 @@
+<!doctype html>
+<!-- Reference: 9:16, 15 s, local service business (bike repair). Built with kit/punch.js + kit/patterns.md.
+     Beats: hook 0-2.8 (problem slam -> answer slam) | UI demo 2.8-6.5 | quote 6.5-9.5 | offer 9.5-12.3 | end card 12.3-15 -->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1080, height=1920" />
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script src="kit/punch.js"></script>
+<style>
+  @font-face { font-family: "Fraunces"; src: url("kit/fonts/fraunces-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; }
+  @font-face { font-family: "Fraunces"; src: url("kit/fonts/fraunces-italic.woff2") format("woff2"); font-weight: 100 900; font-style: italic; }
+  @font-face { font-family: "Bricolage Grotesque"; src: url("kit/fonts/bricolage-grotesque-normal.woff2") format("woff2"); font-weight: 200 800; }
+  @font-face { font-family: "Host Grotesk"; src: url("kit/fonts/host-grotesk-normal.woff2") format("woff2"); font-weight: 300 800; }
+  :root { --ink: #0f1d24; --ink-2: #182c36; --paper: #f6f1e7; --accent: #ff6b35; --accent-2: #2bb3a3; --muted: #7d8e95;
+    --display: "Bricolage Grotesque", sans-serif; --serif: "Fraunces", serif; --text: "Host Grotesk", sans-serif; }
+  html, body { margin: 0; width: 1080px; height: 1920px; background: var(--ink); overflow: hidden; }
+  #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; font-family: var(--text); color: var(--paper);
+    background: radial-gradient(90% 45% at 50% 0%, #1f4250 0%, transparent 70%), radial-gradient(80% 40% at 50% 100%, #3a2018 0%, transparent 70%), var(--ink); }
+  .layer, .scene { position: absolute; inset: 0; }
+  .scene { visibility: hidden; opacity: 0; }
+  #s1 { visibility: visible; opacity: 1; }
+  #grain { z-index: 60; opacity: .07; mix-blend-mode: overlay; pointer-events: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+  .ln { position: absolute; left: 80px; width: 920px; text-align: center; white-space: nowrap; line-height: 1; }
+  .ln > .t { display: inline-block; position: relative; transform-origin: 50% 60%; line-height: 1.02; padding: 0 .04em; }
+  .d { font-family: var(--display); font-weight: 800; letter-spacing: -.035em; }
+  .i { font-family: var(--serif); font-style: italic; font-weight: 500; color: var(--accent); letter-spacing: -.02em; }
+  .mono { font: 700 34px/1 var(--text); letter-spacing: .16em; text-transform: uppercase; }
+  .chip { position: absolute; padding: 26px 40px; border-radius: 26px; background: var(--paper); color: var(--ink); font: 700 54px/1 var(--display); white-space: nowrap; box-shadow: 0 24px 50px -18px #000c; }
+  .chip b { color: var(--accent); margin-right: 18px; }
+  .pill { position: absolute; left: 0; right: 0; margin: auto; width: max-content; padding: 22px 40px; border-radius: 999px; background: var(--accent); color: var(--ink); font: 800 46px/1 var(--display); box-shadow: 0 20px 50px -14px var(--accent); }
+  /* app card */
+  #app { position: absolute; left: 130px; top: 470px; width: 820px; height: 1060px; border-radius: 48px; background: var(--paper); color: var(--ink); box-shadow: 0 60px 120px -40px #000, 0 0 0 10px #ffffff10; overflow: hidden; }
+  #app .bar { height: 120px; display: flex; align-items: center; gap: 22px; padding: 0 44px; background: var(--ink-2); color: var(--paper); font: 800 44px/1 var(--display); }
+  #app .bar i { width: 56px; height: 56px; border-radius: 16px; background: var(--accent); display: block; }
+  #app .lab { margin: 36px 44px 14px; font: 700 28px/1 var(--text); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+  .svc { margin: 0 44px 16px; height: 108px; border-radius: 26px; border: 3px solid #0f1d2418; display: flex; align-items: center; padding: 0 32px; font: 700 46px/1 var(--display); }
+  .svc span { margin-left: auto; font: 600 40px/1 var(--text); color: var(--muted); }
+  .slots { position: relative; margin: 0 44px; height: 240px; }
+  .slot { position: absolute; width: 228px; height: 96px; border-radius: 22px; background: #0f1d240d; border: 3px solid #0f1d2418; font: 700 38px/90px var(--text); text-align: center; }
+  #book { position: absolute; left: 44px; right: 44px; bottom: 44px; height: 130px; border-radius: 34px; background: var(--ink); color: var(--paper); font: 800 52px/130px var(--display); text-align: center; }
+  #toast { position: absolute; left: 110px; top: 1580px; width: 860px; padding: 30px 36px; border-radius: 30px; background: var(--accent-2); color: var(--ink); font: 700 40px/1.2 var(--text); box-shadow: 0 30px 60px -24px #000; display: flex; gap: 22px; align-items: center; }
+  #toast b { width: 64px; height: 64px; border-radius: 50%; background: var(--ink); color: var(--accent-2); font: 800 40px/64px var(--display); text-align: center; flex: none; }
+  /* quote */
+  #qcard { position: absolute; left: 90px; top: 760px; width: 900px; }
+  #ava { position: absolute; left: 90px; top: 540px; width: 150px; height: 150px; border-radius: 50%; background: var(--accent-2); color: var(--ink); font: 800 64px/150px var(--display); text-align: center; }
+  #starsRow { position: absolute; left: 270px; top: 585px; display: flex; gap: 12px; }
+  #starsRow i { width: 54px; height: 54px; background: var(--accent); clip-path: polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%); display: block; }
+  #q { font: 500 104px/1.08 var(--serif); letter-spacing: -.025em; margin: 0; }
+  #q .key { color: var(--accent-2); font-style: italic; }
+  #qmark { position: absolute; right: 60px; top: 300px; font: 500 640px/1 var(--serif); color: #ff6b3530; }
+  #who { position: absolute; left: 90px; top: 1460px; font: 600 44px/1.3 var(--text); color: var(--muted); }
+  #who b { color: var(--paper); }
+  /* offer */
+  #price { position: absolute; left: 0; right: 0; top: 640px; text-align: center; font: 800 440px/1 var(--display); letter-spacing: -.05em; color: var(--accent); }
+  #was { position: absolute; left: 0; right: 0; top: 1110px; text-align: center; }
+  #was .t { display: inline-block; position: relative; font: 600 96px/1 var(--display); color: var(--paper); }
+  .inc { position: absolute; left: 230px; font: 600 48px/1 var(--text); display: flex; gap: 22px; align-items: center; }
+  .inc i { width: 50px; height: 50px; border-radius: 50%; background: var(--accent-2); display: block; }
+  /* end card */
+  #s5 { background: var(--accent); color: var(--ink); }
+  #s5 .i { color: var(--paper); }
+  #logo { position: absolute; left: 0; right: 0; top: 300px; margin: auto; width: max-content; display: flex; align-items: center; gap: 24px; font: 800 64px/1 var(--display); letter-spacing: -.03em; }
+  #logo i { width: 84px; height: 84px; border-radius: 24px; background: var(--ink); display: block; }
+  #btn { position: absolute; left: 140px; top: 1090px; width: 800px; height: 170px; border-radius: 48px; background: var(--ink); color: var(--paper); font: 800 76px/170px var(--display); text-align: center; box-shadow: 0 34px 80px -24px #000a; }
+  #url { position: absolute; left: 0; right: 0; top: 1330px; text-align: center; font: 700 50px/1 var(--text); }
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-width="1080" data-height="1920" data-duration="15">
+  <div id="bg" class="layer"></div>
+
+  <div id="s1" class="scene">
+    <div class="ln" id="h1" style="top:230px"><span class="t d" style="font-size:150px">Bike making</span></div>
+    <div class="ln" id="h2" style="top:400px"><span class="t i" style="font-size:230px">that noise?</span></div>
+    <div class="chip" id="k1" style="left:150px;top:900px"><b>●</b>Squeak</div>
+    <div class="chip" id="k2" style="left:520px;top:1060px"><b>●</b>Click-click</div>
+    <div class="chip" id="k3" style="left:220px;top:1220px"><b>●</b>Grinding</div>
+    <div class="ln" id="h3" style="top:330px"><span class="t d" style="font-size:170px">Fixed by</span></div>
+    <div class="ln" id="h4" style="top:520px"><span class="t i" style="font-size:270px">Saturday.</span></div>
+    <div class="pill" id="sticker" style="top:960px">Book in 30 seconds</div>
+  </div>
+
+  <div id="s2" class="scene">
+    <div class="ln" id="c1" style="top:230px"><span class="t d" style="font-size:150px">Pick a fix.</span></div>
+    <div class="ln" id="c2" style="top:230px"><span class="t d" style="font-size:150px">Pick a time.</span></div>
+    <div class="ln" id="c3" style="top:230px"><span class="t i" style="font-size:190px">Done.</span></div>
+    <div id="app">
+      <div class="bar"><i></i>Northside Bikes</div>
+      <div class="lab">Service</div>
+      <div class="svc" id="v1">Flat fix<span>$15</span></div>
+      <div class="svc" id="v2">Full tune-up<span>$49</span></div>
+      <div class="svc" id="v3">Brake bleed<span>$35</span></div>
+      <div class="lab">Saturday</div>
+      <div class="slots">
+        <div class="slot" style="left:0;top:0">8:00</div><div class="slot" style="left:252px;top:0">9:30</div><div class="slot" style="left:504px;top:0">11:00</div>
+        <div class="slot" style="left:0;top:120px">12:30</div><div class="slot" style="left:252px;top:120px">2:00</div><div class="slot" style="left:504px;top:120px">3:30</div>
+      </div>
+      <div id="book">Book it</div>
+    </div>
+    <div id="toast"><b>✓</b><span>Sat 9:30 · Full tune-up · confirmed</span></div>
+  </div>
+
+  <div id="s3" class="scene">
+    <div id="qmark">“</div><div id="ava">PR</div>
+    <div id="starsRow"><i></i><i></i><i></i><i></i><i></i></div>
+    <div id="qcard"><p id="q">“Dropped it off at 9, <span class="key">riding by lunch.</span> Best shop in town.”</p></div>
+    <div id="who"><b>Priya R.</b> · weekend commuter</div>
+  </div>
+
+  <div id="s4" class="scene">
+    <div class="ln" id="o0" style="top:250px"><span class="t mono" style="color:var(--accent-2)">This month only</span></div>
+    <div class="ln" id="o1" style="top:340px"><span class="t d" style="font-size:150px">Full tune-up</span></div>
+    <div id="price">$49</div>
+    <div id="was"><span class="t">was $79</span></div>
+    <div class="inc" style="top:1280px"><i></i>Gears indexed</div>
+    <div class="inc" style="top:1370px"><i></i>Brakes tuned</div>
+    <div class="inc" style="top:1460px"><i></i>Free safety check</div>
+  </div>
+
+  <div id="s5" class="scene">
+    <div id="logo"><i></i>Northside Bikes</div>
+    <div class="ln" id="e1" style="top:540px"><span class="t d" style="font-size:150px">Book your fix</span></div>
+    <div class="ln" id="e2" style="top:710px"><span class="t i" style="font-size:180px">in 30 seconds.</span></div>
+    <div id="btn">Book now</div>
+    <div id="url"><span id="urlt"></span><span id="car" style="display:inline-block;width:6px;height:52px;background:var(--ink);margin-left:6px;vertical-align:-8px"></span></div>
+  </div>
+
+  <div id="grain" class="layer"></div>
+</div>
+<script>
+(function () {
+  function build() {
+    const tl = gsap.timeline({ paused: true });
+    const P = Punch(tl, { seed: 11 });
+    P.fit(".ln > .t");
+    P.stars("#bg", { n: 56, until: 15, top: 0.7 });
+    const cur = P.cursor("#root", { x: 980, y: 1900 });
+
+    // ---------- HOOK 0-2.78: problem -> clear -> answer ----------
+    P.slam("#h1 .t", 0.0, { from: 1.4 });
+    P.slam("#h2 .t", 0.18, { from: 1.9, r0: -4 });
+    P.stack(["#k1", "#k2", "#k3"], 0.3, { stagger: 0.16, r: [-4, 3, -2] });
+    P.shake(["#k1", "#k2", "#k3"], 0.95, { amp: 14 });
+    P.wiggle("#h2 .t", 0.85, { deg: 3, n: 3 });
+    P.out("#h1 .t", 1.25, { y: -260 });
+    P.whipOut("#h2 .t", 1.25, { dir: "left", r: -8 });
+    P.fly(["#k1", "#k2", "#k3"], 1.22, { y: 1500, r: -24, stagger: 0.04 });
+    P.glow("#s1", 1.4, { x: 540, y: 560, size: 1200 });
+    P.slam("#h3 .t", 1.4, { from: 1.7 });
+    P.slam("#h4 .t", 1.55, { from: 2.0, r0: -4 });
+    P.pop("#sticker", 1.85, { from: 0.4, r0: -12, r: -3 });
+    P.bob("#sticker", 2.2, { amp: 16, period: 0.14, until: 2.8 });
+    const m1 = P.pixelWipe("#root", 2.45, { seed: 5 });
+    P.hide("#s1", m1); P.show("#s2", m1);
+
+    // ---------- UI DEMO 2.78-6.5: pick, pick, book ----------
+    P.slam("#c1 .t", m1 + 0.04, { from: 1.4 });
+    P.rise("#app", m1 + 0.02, { y: 260, d: 0.5 });
+    P.rise(".svc", m1 + 0.2, { y: 50, stagger: 0.07, d: 0.35 });
+    P.rise(".slot", m1 + 0.35, { y: 30, stagger: 0.04, d: 0.3 });
+    let t = P.click(cur, 3.35, { x: 560, y: 820, target: "#v2" });
+    tl.to("#v2", { backgroundColor: "#ff6b3522", borderColor: "#ff6b35", duration: 0.12 }, t - 0.28);
+    P.out("#c1 .t", 4.1, { y: -80, d: 0.16 });
+    P.slam("#c2 .t", 4.25, { from: 1.4 });
+    t = P.click(cur, 4.15, { x: 520, y: 1150, target: ".slot:nth-child(2)", move: 0.4 });
+    tl.to(".slot:nth-child(2)", { backgroundColor: "#2bb3a3", borderColor: "#2bb3a3", color: "#0f1d24", duration: 0.12 }, t - 0.28);
+    t = P.click(cur, 4.95, { x: 640, y: 1440, target: "#book", move: 0.35 });
+    P.swap("#book", t - 0.28, "Booked ✓");
+    tl.to("#book", { backgroundColor: "#2bb3a3", color: "#0f1d24", duration: 0.12 }, t - 0.28);
+    P.burst("#root", 540, 1440, t - 0.26, { n: 14, r: 380 });
+    P.punch("#app", t - 0.26, { s: 1.04, r: -1.2 });
+    P.out("#c2 .t", 5.3, { y: -80, d: 0.16 });
+    P.pop("#c3 .t", 5.45, { from: 0.3, r0: -8 });
+    P.whipIn("#toast", 5.55, { dir: "right" });
+    tl.to(cur, { x: 1200, y: 2000, duration: 0.4, ease: "power2.in" }, 5.7);
+    P.wiggle("#c3 .t", 5.9, { deg: 4, n: 3 });
+    P.through("#app", 6.2, { s: 2.6 });
+    P.out(["#c3 .t", "#toast"], 6.2, { y: 120 });
+    P.hide("#s2", 6.5); P.show("#s3", 6.45);
+
+    // ---------- QUOTE 6.45-9.5: proof in their words ----------
+    P.drift("#s3", 6.45, 3.1, { scale: 1.04, y: -20 });
+    P.pop("#ava", 6.5, { from: 0.3 });
+    P.pop("#starsRow i", 6.6, { from: 0.2 }); tl.fromTo("#starsRow i", { rotation: -40 }, { rotation: 0, duration: 0.4, stagger: 0.06, ease: "back.out(3)" }, 6.6);
+    P.lines("#q", 6.7, { stagger: 0.05 });
+    P.highlight("#q .key", 7.55, { d: 0.55, color: "var(--accent-2)", h: "70%" });
+    P.rise("#who", 7.9, { y: 30 });
+    tl.to("#q .key", { color: "#0f1d24", duration: 0.15 }, 7.6);
+    P.pop("#qmark", 6.5, { from: 1.6, d: 0.5, ease: "expo.out" }); P.drift("#qmark", 7.0, 2.5, { scale: 1.15, x: 40 });
+    P.punch("#qcard", 8.45, { s: 1.03, r: -0.8 });
+    P.punch("#qcard", 8.95, { s: 1.03, r: 0.8 });
+    P.out(["#qmark", "#ava", "#starsRow", "#qcard", "#who"], 9.25, { y: -140, stagger: 0.03 });
+    P.hide("#s3", 9.5); P.show("#s4", 9.45);
+
+    // ---------- OFFER 9.45-12.3: price lands, old price struck ----------
+    P.rise("#o0 .t", 9.5, { y: 30 });
+    P.slam("#o1 .t", 9.55, { from: 1.5 });
+    P.pop("#price", 9.7, { from: 0.4, d: 0.4 });
+    P.counter("#price", 9.75, { from: 0, to: 49, d: 0.7, fmt: (v) => "$" + v });
+    P.shake("#price", 10.45, { amp: 16 });
+    P.pop("#was .t", 10.5, { from: 0.5 });
+    P.strike("#was .t", 10.8, { r: -4 });
+    P.rise(".inc", 11.0, { x: -60, y: 0, stagger: 0.12, d: 0.35 });
+    P.punch("#price", 11.5, { s: 1.08, r: -2 });
+    P.whipOut(["#o0 .t", "#o1 .t", "#price", "#was", ".inc"], 12.05, { dir: "left", d: 0.2 });
+
+    // ---------- END CARD 12.25-15 ----------
+    P.show("#s5", 12.25);
+    P.wipe("#s5", 12.25, { dir: "up", d: 0.4 });
+    P.pop("#logo i", 12.45, { from: 0.2, r0: -30 }); P.rise("#logo", 12.45, { y: -40, d: 0.4 });
+    P.slam("#e1 .t", 12.55, { from: 1.5 });
+    P.slam("#e2 .t", 12.75, { from: 1.9, r0: -5 });
+    P.pop("#btn", 13.0, { from: 0.45, d: 0.5, ease: "back.out(1.9)" });
+    P.burst("#s5", 540, 1175, 13.05, { n: 16, r: 460 });
+    P.ring("#btn", 13.1); P.ring("#btn", 14.0);
+    P.type("#urlt", "northsidebikes.com", 13.3, { cps: 30, caret: "#car" });
+    P.bob("#btn", 13.9, { amp: 10, period: 0.25, until: 15 });
+    P.wiggle("#e2 .t", 14.3, { deg: 2, n: 3, d: 0.12 });
+
+    tl.set({}, {}, 15);
+    window.__timelines = window.__timelines || {};
+    window.__timelines["main"] = tl;
+  }
+  Promise.all(["800 100px 'Bricolage Grotesque'", "italic 500 100px Fraunces", "500 100px Fraunces", "600 40px 'Host Grotesk'"].map((f) => document.fonts.load(f)))
+    .then(() => document.fonts.ready).then(build);
+})();
+</script>
+</body>
+</html>

@@ -51,7 +51,8 @@ describe("layout gate", () => {
     expect(layoutProblems([{ code: "text_occluded", severity: "info", time: 1 }])).toEqual([]);
     const bad = Array.from({ length: 5 }, (_, i) => ({ code: "text_occluded", severity: "error", time: i, text: `line ${i}` }));
     expect(layoutProblems(bad)).toHaveLength(5);
-    expect(layoutProblems(bad.slice(0, 2))).toEqual([]);
+    expect(layoutProblems(bad.slice(0, 2))).toHaveLength(2);
+    expect(layoutProblems(bad.slice(0, 1))).toEqual([]);
     expect(layoutProblems(Array.from({ length: 5 }, (_, i) => ({ code: "text_occluded", severity: "error", time: i, text: "“" })))).toEqual([]);
   });
   it("one combined fix prompt", () => {
@@ -118,5 +119,35 @@ describe("lopsided frames", () => {
   });
   it("centred content with empty top and bottom is fine", () => {
     expect(lopsided(Uint8Array.from({ length: w * h }, (_, i) => { const y = Math.floor(i / w); return y >= 16 && y < 48 ? busy(i) : 10; }), w)).toBe(false);
+  });
+});
+
+describe("unreadable text (contrast)", async () => {
+  // @ts-expect-error plain .mjs helper shared with the agent child process
+  const { unreadableText, layoutProblems, qaFixPrompt } = await import("../src/modules/ezmotion/agent/blank-check.mjs");
+  it("flags text that stays unreadable across samples, ignores fades and readable text", () => {
+    const e = [
+      { time: 14, selector: "h1", text: "More time for your actual work.", ratio: 1.43 },
+      { time: 18, selector: "h1", text: "More time for your actual work.", ratio: 1.43 },
+      { time: 6, selector: "div.sub", text: "Fading in once", ratio: 1.2 },
+      { time: 2, selector: "div.hello", text: "Tuesday, 14 May", ratio: 3.76 },
+      { time: 6, selector: "div.hello", text: "Tuesday, 14 May", ratio: 3.76 },
+      { time: 6, selector: "i", text: "•", ratio: 1.1 },
+      { time: 10, selector: "i", text: "•", ratio: 1.1 },
+    ];
+    const out = unreadableText(e);
+    expect(out).toHaveLength(1);
+    expect(out[0]).toContain("More time for your actual work.");
+    expect(out[0]).toContain("1.4:1");
+    expect(qaFixPrompt({ unreadable: out })).toContain("Text nobody can read");
+    expect(qaFixPrompt({ unreadable: out, again: true })).toContain("Still not fixed");
+  });
+  it("acts on two distinct stacked-text problems", () => {
+    const two = [
+      { code: "content_overlap", severity: "warning", time: 13, text: "＋ New invoice" },
+      { code: "content_overlap", severity: "warning", time: 13, text: "Gently remind clients" },
+    ];
+    expect(layoutProblems(two)).toHaveLength(2);
+    expect(layoutProblems(two.slice(0, 1))).toHaveLength(0);
   });
 });

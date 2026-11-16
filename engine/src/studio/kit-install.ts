@@ -2,9 +2,10 @@
 // copied into every project as ./kit/ so cheaper models compose polished parts instead of drawing from scratch.
 import { copyFile, cp, mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { VENDOR_DIR } from "../modules/ezmotion/fonts";
+import { type BrandInput, writeBrandLook } from "./brand-tokens";
 
 export const KIT_DIR = fileURLToPath(new URL("./kit/", import.meta.url));
 /** Vendored OFL fonts the starters' @font-face rules point at (./kit/fonts/<file>). */
@@ -31,8 +32,21 @@ async function installIcons(dest: string): Promise<void> {
   await copyFile(join(LUCIDE_DIR, "LICENSE"), join(dest, "LICENSE.txt"));
 }
 
-/** Copy (or refresh) ./kit into a project. Overwrites kit files only; the agent's own files are untouched. */
-export async function installStudioKit(project: string): Promise<void> {
+/** Motion technique library (looks + seek-safe pieces that read look tokens): ./kit/library + ./kit/bin/library.mjs. */
+export const LIBRARY_DIR = join(VENDOR_DIR, "library");
+
+/** Copy every file under `src` to `dest` in parallel (fs.cp walks files one by one). */
+async function copyTree(src: string, dest: string): Promise<void> {
+  const files = (await readdir(src, { recursive: true, withFileTypes: true })).filter((e) => e.isFile()).map((e) => relative(src, join(e.parentPath, e.name)));
+  await Promise.all([...new Set(files.map((f) => dirname(f)))].map((d) => mkdir(join(dest, d), { recursive: true })));
+  for (let i = 0; i < files.length; i += 256) await Promise.all(files.slice(i, i + 256).map((f) => copyFile(join(src, f), join(dest, f))));
+}
+
+/**
+ * Copy (or refresh) ./kit into a project. Overwrites kit files only; the agent's own files are untouched.
+ * With a brand, also writes ./brand/look.css (.look-brand tokens) for `node kit/bin/library.mjs look . brand`.
+ */
+export async function installStudioKit(project: string, brand?: BrandInput | null): Promise<void> {
   const dest = join(project, "kit");
   await cp(KIT_DIR, dest, { recursive: true, force: true });
   await mkdir(join(dest, "fonts"), { recursive: true });
@@ -40,7 +54,16 @@ export async function installStudioKit(project: string): Promise<void> {
   await Promise.all([
     // Music + sound effects maker (offline, no licensing questions): node kit/bin/score-synth.mjs score.json audio/
     copyFile(join(VENDOR_DIR, "bin", "score-synth.mjs"), join(dest, "bin", "score-synth.mjs")),
+    ...["reference-study.mjs", "motion-check.mjs", "media-binaries.mjs"].map((f) => copyFile(join(VENDOR_DIR, "bin", f), join(dest, "bin", f))),
     ...KIT_FONTS.map((f) => copyFile(join(VENDOR_DIR, "fonts", f), join(dest, "fonts", f.split("/").pop() ?? f))),
     installIcons(join(dest, "icons")),
+    // Technique library: node kit/bin/library.mjs search|show|look|add|kit (fonts for looks come from ./kit/fonts/<family>/).
+    copyTree(LIBRARY_DIR, join(dest, "library")),
+    copyFile(join(VENDOR_DIR, "bin", "library.mjs"), join(dest, "bin", "library.mjs")),
+    // Licensed music library (CC-BY tracks, credits in tracks.json): node kit/bin/music.mjs search|use
+    copyTree(join(VENDOR_DIR, "music"), join(dest, "music")),
+    copyFile(join(VENDOR_DIR, "bin", "music.mjs"), join(dest, "bin", "music.mjs")),
+    copyTree(join(VENDOR_DIR, "fonts"), join(dest, "fonts")),
+    ...(brand ? [writeBrandLook(project, brand)] : []),
   ]);
 }
