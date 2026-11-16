@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import { Suspense } from "react";
 import { MetaPixel } from "@/components/analytics/meta-pixel";
+import { metaPixelSnippet } from "@/lib/analytics/meta-pixel-id";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { resolveAuthor } from "@/lib/authors";
@@ -109,6 +110,8 @@ export default function RootLayout({
         <meta httpEquiv="x-ua-compatible" content="ie=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
+        {/* In <head>, not after hydration: ad clicks that leave while the JS loads still count as landing page views */}
+        <script dangerouslySetInnerHTML={{ __html: metaPixelSnippet() }} />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-THCR5EQWY2"
           strategy="lazyOnload"

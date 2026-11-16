@@ -17,7 +17,8 @@ import { claimOutboundGift } from "@/lib/kly/gift-claim";
 import { ANON_ID_COOKIE, EXP_COOKIE, parseAssignments } from "@/lib/analytics/experiments";
 
 const BodySchema = z.object({
-  name: z.string().trim().min(1).max(100),
+  /** Optional: the landing sign-up asks only for email + password. Emails greet "Hi there" without it. */
+  name: z.string().trim().max(100).optional().transform((v) => v || null),
   email: z.string().trim().email().max(254),
   password: z.string().min(8).max(200),
   /** Referral code from the landing URL (?ref=), used when the kmd_ref cookie is missing. */
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       throw new AdsHttpError(429, "rate_limited", "Too many sign-ups from this network. Try again later.");
     }
     const parsed = BodySchema.safeParse(await request.json().catch(() => null));
-    if (!parsed.success) throw new AdsHttpError(400, "invalid_input", "Enter your name, a valid email and a password of at least 8 characters.");
+    if (!parsed.success) throw new AdsHttpError(400, "invalid_input", "Enter a valid email and a password of at least 8 characters.");
     if (await getUserByEmail(parsed.data.email)) throw new AdsHttpError(409, "email_taken", "An account with this email already exists. Sign in instead.");
     const user = await createUser({ name: parsed.data.name, email: parsed.data.email, password: parsed.data.password });
     const workspace = await getOrCreateWorkspace(user);

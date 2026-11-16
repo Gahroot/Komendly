@@ -136,7 +136,7 @@ export async function getUserByEmail(email: string) {
 export async function createUser(data: {
   email: string;
   password: string;
-  name: string;
+  name: string | null;
 }) {
   const hashedPassword = await hashPassword(data.password);
 

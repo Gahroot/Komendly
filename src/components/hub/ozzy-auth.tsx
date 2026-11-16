@@ -9,6 +9,7 @@ import { TrackOnMount } from "@/components/analytics/track-on-mount";
 import { postJson } from "@/lib/ads/run-client";
 import { track } from "@/lib/analytics/track";
 import { safeAppNext } from "@/lib/hub/safe-next";
+import { pendingRunDomain } from "@/lib/ads/url-submit";
 import { loadDraft } from "@/lib/testimonial-draft";
 
 /**
@@ -24,6 +25,8 @@ export function OzzyAuth({ mode, referrerName, freeStatic = 10, defaultEmail, gi
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const isSignup = mode === "signup";
+  // Came from a "paste your website" form (e.g. the /free-ads Meta landing): ask only for what delivers the ads.
+  const site = isSignup && !giftFor && !referrerName ? pendingRunDomain(next) : null;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,9 +48,11 @@ export function OzzyAuth({ mode, referrerName, freeStatic = 10, defaultEmail, gi
 
   const q = params.get("next") ? `?next=${encodeURIComponent(next)}` : "";
   const other = isSignup ? `/login${q}` : `/register${q}`;
-  const title = isSignup ? (giftFor ? `Your 10 free ads for ${giftFor}` : referrerName ? `${referrerName} sent you free ads` : "Meet Ozzy") : "Welcome back";
+  const title = isSignup ? (site ? "Where should we send your free ads?" : giftFor ? `Your 10 free ads for ${giftFor}` : referrerName ? `${referrerName} sent you free ads` : "Meet Ozzy") : "Welcome back";
   const description = isSignup
-    ? giftFor
+    ? site
+      ? `${freeStatic} ads + 1 video ad for ${site}. We'll email you when they're ready. No card needed.`
+      : giftFor
       ? `${freeStatic} more ads + 1 animated ad from your website, free. Your gifted ads are already waiting inside. No card needed.`
       : referrerName
       ? `${freeStatic} static ads + 1 animated ad from your website, free. No card needed.`
@@ -65,7 +70,7 @@ export function OzzyAuth({ mode, referrerName, freeStatic = 10, defaultEmail, gi
     >
       {isSignup ? <TrackOnMount event="signup_view" params={{ has_pending_run: next.startsWith("/ads/start") }} /> : null}
       <form onSubmit={submit} className="space-y-4">
-        {isSignup ? <AuthField id="name" label="Your name" autoComplete="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} disabled={busy} /> : null}
+        {isSignup && !site ? <AuthField id="name" label="Your name" autoComplete="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} disabled={busy} /> : null}
         <AuthField id="email" label="Email" type="email" autoComplete="email" inputMode="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} disabled={busy} />
         <AuthField
           id="password"
@@ -81,7 +86,7 @@ export function OzzyAuth({ mode, referrerName, freeStatic = 10, defaultEmail, gi
         />
         <button type="submit" disabled={busy} className="spellbar__cta inline-flex h-12 w-full items-center justify-center rounded-2xl text-base font-semibold disabled:opacity-70">
           {busy ? <Loader2 aria-hidden className="mr-2 size-5 animate-spin" /> : null}
-          {isSignup ? "Create my free account" : "Sign in"}
+          {isSignup ? (site ? "Make my free ads" : "Create my free account") : "Sign in"}
         </button>
         <p className="text-center text-sm text-muted-foreground">
           {isSignup ? "Already have an account? " : "New here? "}

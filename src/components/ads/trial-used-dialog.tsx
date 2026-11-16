@@ -5,22 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { TrackOnMount } from "@/components/analytics/track-on-mount";
 
-/** Ask the server whether this website already used its free pack. Fails open (false) on any error or after 2.5 s. */
-export async function checkTrialDomain(url: string): Promise<{ used: boolean; domain: string | null }> {
-  try {
-    const res = await fetch("/api/ads/trial-check", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ url }),
-      signal: AbortSignal.timeout(2500),
-    });
-    if (!res.ok) return { used: false, domain: null };
-    const d = (await res.json()) as { used?: boolean; domain?: string | null };
-    return { used: d.used === true, domain: d.domain ?? null };
-  } catch {
-    return { used: false, domain: null };
-  }
-}
+export { checkTrialDomain } from "@/lib/ads/trial-check-client";
 
 /** Shown before sign-up when someone at this company already got the free ad pack for this website. */
 export function TrialUsedDialog({ domain, next, onClose }: { domain: string | null; next: string; onClose: () => void }) {

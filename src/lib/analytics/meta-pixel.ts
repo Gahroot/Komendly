@@ -3,7 +3,7 @@
 import type { FunnelEvent } from "./funnel-events";
 
 /** Meta Pixel (browser). Server CAPI events reuse the same event_id (see src/lib/ads/meta-forward.ts). */
-export const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || "2076490092891007";
+export { META_PIXEL_ID } from "./meta-pixel-id";
 
 type Params = Record<string, string | number | boolean | undefined>;
 type Fbq = (...args: unknown[]) => void;
