@@ -336,7 +336,9 @@ export async function assignLeads(db: Db, mailboxIds: string[], now: Date, follo
       taken.add(r.lead.id);
     }
   }
-  const fresh = ready.filter((r) => !r.lead.mailboxId && !taken.has(r.lead.id));
+  // Safest addresses first (Nov 16): checker-"valid" before catch-all before unknown, to keep bounces low on new domains.
+  const checkRank = (c: string | null) => (c === "valid" ? 0 : c === "catch_all" ? 1 : 2);
+  const fresh = ready.filter((r) => !r.lead.mailboxId && !taken.has(r.lead.id)).sort((a, b) => checkRank(a.lead.emailCheck) - checkRank(b.lead.emailCheck));
   for (const id of mailboxIds) {
     if (out.has(id)) continue;
     const r = fresh.shift();

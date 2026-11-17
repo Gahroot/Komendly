@@ -211,3 +211,23 @@ describe("warm-up skips blocklisted / spam-check-paused domains (Nov 15)", () =>
     expect(sent.some((m) => JSON.stringify(m).includes("kommendly.com"))).toBe(false);
   });
 });
+
+describe("whole-domain warm-up ceiling (Nov 16)", () => {
+  it("grows with domain age and caps", async () => {
+    const { domainWarmupCap } = await import("../src/warmup");
+    const now = new Date("2026-11-16T15:00:00Z");
+    expect(domainWarmupCap(now, now)).toBe(10);
+    expect(domainWarmupCap(new Date(now.getTime() - 86_400_000 * 3), now)).toBeGreaterThanOrEqual(30);
+    expect(domainWarmupCap(new Date(now.getTime() - 86_400_000 * 90), now)).toBe(200);
+  });
+  it("a brand-new domain with 50 mailboxes sends at most its day-1 total", async () => {
+    const now = new Date("2026-11-16T18:30:00Z");
+    const boxes = [...Array.from({ length: 50 }, (_, i) => box(`n${i}`, "joinkomendly.com")), box("g", "getkomendly.com", "gmail")];
+    for (const b of boxes) (b.row as { warmupSince: Date | null }).warmupSince = new Date("2026-01-01T00:00:00Z");
+    const sent: unknown[] = [];
+    const f = fakeDb({ klyWarmupMessage: { groupBy: () => [] }, outboundDomain: { findMany: (a) => ((a as { where: { paused?: boolean } }).where.paused ? [] : [{ domain: "joinkomendly.com", createdAt: now }]) } });
+    await warmupSendTick({ db: f.db, settings: S, boxes, transport: () => async (m) => void sent.push(m), now, rng: seededRng(1), secret: SECRET, rt: { lastHealthAt: 0 } });
+    expect(sent.length).toBeGreaterThan(0);
+    expect(sent.length).toBeLessThanOrEqual(10);
+  });
+});

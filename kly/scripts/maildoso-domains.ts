@@ -33,8 +33,12 @@ const listed = async (): Promise<Dom[]> => {
   return Array.isArray(r) ? r : (r.items ?? []);
 };
 if (cmd === "add") {
-  const domains = args.map((d) => d.trim().toLowerCase()).filter(Boolean);
+  const domains = args.filter((a) => !a.startsWith("--")).map((d) => d.trim().toLowerCase()).filter(Boolean);
   if (!domains.length) throw new Error("usage: add <domain...>");
+  // Never again (Nov 14-16): misspellings / tiny affixes of the brand got Spamhaus DBL-listed as typosquats.
+  const { lookalikeReason } = await import("../src/domains");
+  const bad = domains.map((d) => [d, lookalikeReason(d)] as const).filter(([, r]) => r);
+  if (bad.length && !args.includes("--force")) throw new Error(`refusing look-alike domains: ${bad.map(([d, r]) => `${d} (${r})`).join(", ")}`);
   const r = await call("POST", "/v1/user/domains/external", { domains, providers: domains.map(() => "maildoso"), redirect_to: domains.map(() => "https://www.komendly.com") });
   console.log(JSON.stringify({ added: ((r as { results?: Array<{ name: string; result: string }> } | null)?.results ?? []).map((x) => `${x.name}:${x.result}`) }));
 }

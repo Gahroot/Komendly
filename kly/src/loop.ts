@@ -71,9 +71,12 @@ export function giftHeadroom(sendingLive: boolean, dailyVolume: number, unsent: 
   return Math.max(0, (sendingLive ? dailyVolume * BUFFER_DAYS : IDLE_GIFT_STOCK) - unsent);
 }
 
-/** Leads to discover now so the buffer holds ~BUFFER_DAYS of sending capacity. */
-export function discoveryNeed(dailyVolume: number, buffered: number, perTick = MAX_FIND_PER_TICK): number {
-  return Math.max(0, Math.min(perTick, dailyVolume * BUFFER_DAYS - buffered));
+/** Standing lead stock (Nov 16): discovery keeps at least this many sendable leads waiting even while today's volume
+ * is small, so the jump when rented mailboxes go live (and each +30% domain step) never waits on discovery. */
+export const LEAD_FLOOR = 2000;
+/** Leads to discover now so the buffer holds ~BUFFER_DAYS of sending capacity (never below `floor`). */
+export function discoveryNeed(dailyVolume: number, buffered: number, perTick = MAX_FIND_PER_TICK, floor = 0): number {
+  return Math.max(0, Math.min(perTick, Math.max(dailyVolume * BUFFER_DAYS, floor) - buffered));
 }
 
 // ---------------------------------------------------------------------------
@@ -98,6 +101,8 @@ export interface LoopState {
   lastStop: string | null;
   killSwitch: string | null;
   dailyVolume: number | null;
+  /** Health alerts: KlyDecision pause rows up to this time were already emailed (null = start from boot). */
+  alertedUntil: Date | null;
   errors: Array<{ step: string; error: string; at: string }>;
   /** Lead-source runtime: geocode cache, endpoint throttles, search-engine blocks (not persisted beyond blocks). */
   sources: SourceRuntime;
@@ -107,7 +112,23 @@ export interface LoopState {
 }
 
 export function newLoopState(): LoopState {
-  return { ticks: 0, lastTickAt: null, lastTickMs: null, lastImapAt: 0, lastRetentionDay: null, codexPct: null, codexPctAt: 0, lastStop: null, killSwitch: null, dailyVolume: null, errors: [], sources: createSourceRuntime(), mail: createMailRuntime(), verify: createVerifyRuntime() };
+  return { ticks: 0, lastTickAt: null, lastTickMs: null, lastImapAt: 0, lastRetentionDay: null, codexPct: null, codexPctAt: 0, lastStop: null, killSwitch: null, dailyVolume: null, alertedUntil: null, errors: [], sources: createSourceRuntime(), mail: createMailRuntime(), verify: createVerifyRuntime() };
+}
+
+/** Kinds of KlyDecision that mean something stopped (a domain/mailbox paused, warm-up off, spend stop). */
+export const ALERT_KINDS = ["pause", "budget"];
+/** Email the founder (ADS_ALERT_EMAIL) every new pause decision, batched, so problems surface while nobody watches. */
+export async function healthAlerts(db: Db, alert: AlertFn, state: Pick<LoopState, "alertedUntil">, now: Date): Promise<number> {
+  if (!state.alertedUntil) {
+    state.alertedUntil = now;
+    return 0;
+  }
+  const rows = await db.klyDecision.findMany({ where: { kind: { in: ALERT_KINDS }, createdAt: { gt: state.alertedUntil, lte: now } }, orderBy: { createdAt: "asc" }, take: 50 });
+  state.alertedUntil = now;
+  if (!rows.length) return 0;
+  const text = `${rows.map((r) => `- ${r.createdAt.toISOString().slice(0, 16).replace("T", " ")} UTC: ${r.summary}`).join("\n")}\n\nKly handles these itself (auto-pauses lift when the cause clears). Details: https://www.komendly.com/admin/ads/outbound`;
+  await alert(`Kly paused something (${rows.length})`, text);
+  return rows.length;
 }
 
 /** Claim and process one pending OutboundRun (admin/CLI lead-finding request). */
@@ -229,7 +250,7 @@ export async function runTick(d: LoopDeps, state: LoopState): Promise<void> {
 
   if (!kill) {
     await step(state, "runs", () => processRunRequest(db, (n) => qualifierFor(d.ai, n), s.minLeadScore, { sources: s.sources, rt: state.sources, ai: d.ai, codexSearchCalls: s.codexSearchPerTick, allowPhoneOnly: s.voiceEnabled }));
-    if (!stop) await step(state, "discovery", async () => discover(db, d.ai, s, discoveryNeed(supplyVolume(volume, s), await leadBuffer(db, s.voiceEnabled), discoveryPerTick(s)), rng, state.sources));
+    if (!stop) await step(state, "discovery", async () => discover(db, d.ai, s, discoveryNeed(supplyVolume(volume, s), await leadBuffer(db, s.voiceEnabled), discoveryPerTick(s), sendingLive ? LEAD_FLOOR : 0), rng, state.sources));
     await step(state, "gifts", async () => {
       // AI gift runs started today (on-click gift pages without a run yet cost nothing).
       const giftsToday = await db.adsGift.count({ where: { source: OUTBOUND_GIFT_SOURCE, runId: { not: null }, createdAt: { gte: dayStart(now) } } });
@@ -327,6 +348,7 @@ export async function runTick(d: LoopDeps, state: LoopState): Promise<void> {
   }
   await step(state, "daily", () => upsertDaily(db, now));
   state.ticks++;
+  await step(state, "health alerts", () => healthAlerts(db, d.alert, state, now));
   state.lastTickAt = now;
   state.lastTickMs = Date.now() - started;
 }

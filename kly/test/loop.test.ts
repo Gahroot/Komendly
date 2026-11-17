@@ -49,3 +49,22 @@ describe("giftHeadroom", () => {
     expect(giftHeadroom(true, 10, 30)).toBe(0);
   });
 });
+
+describe("Nov 16 walk-away safeguards", () => {
+  it("keeps a standing lead stock when sending is live", async () => {
+    const { discoveryNeed, LEAD_FLOOR } = await import("../src/loop");
+    expect(discoveryNeed(40, 1100, 10, LEAD_FLOOR)).toBe(10);
+    expect(discoveryNeed(40, LEAD_FLOOR, 10, LEAD_FLOOR)).toBe(0);
+    expect(discoveryNeed(40, 1100)).toBe(0);
+  });
+  it("emails new pause decisions once, not history from before boot", async () => {
+    const { healthAlerts } = await import("../src/loop");
+    const sent: string[] = [];
+    const rows = [{ createdAt: new Date("2026-11-16T16:00:00Z"), summary: "Paused every mailbox on x.com: listed on Spamhaus DBL." }];
+    const db = { klyDecision: { findMany: async () => rows } } as never;
+    const state = { alertedUntil: null as Date | null };
+    expect(await healthAlerts(db, async (s, t) => void sent.push(s + t), state, new Date("2026-11-16T15:00:00Z"))).toBe(0);
+    expect(await healthAlerts(db, async (s, t) => void sent.push(s + t), state, new Date("2026-11-16T16:01:00Z"))).toBe(1);
+    expect(sent[0]).toContain("Spamhaus DBL");
+  });
+});

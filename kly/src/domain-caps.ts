@@ -9,6 +9,12 @@ export const CAP_FLOOR = 20;
 export const CAP_STEP = 1.3;
 export const CAP_CUT = 0.6;
 export const CAP_MIN_SAMPLE = 30;
+/** Hard top per domain per day (env KLY_DOMAIN_CAP_MAX). Blocklists judge whole domains, so volume is spread across
+ * more domains instead of pushing a few hard. Read per call (not a module constant). */
+export function domainCapMax(env: NodeJS.ProcessEnv = process.env): number {
+  const v = Number(env.KLY_DOMAIN_CAP_MAX);
+  return Number.isFinite(v) && v >= CAP_FLOOR ? Math.floor(v) : 750;
+}
 const DAY_MS = 86_400_000;
 
 export interface CapStats {
@@ -61,7 +67,7 @@ export async function domainCapTick(db: Db, boxes: readonly Box[], now: Date): P
       db.klyWarmupMessage.count({ where: { senderDomain: d.domain, sentAt: { gte: since }, placement: "inbox" } }),
       db.klyWarmupMessage.count({ where: { senderDomain: d.domain, sentAt: { gte: since }, placement: "spam" } }),
     ]);
-    const ceiling = mine.filter((b) => !b.row.paused).reduce((a, b) => a + b.row.dailyCap, 0);
+    const ceiling = Math.min(domainCapMax(), mine.filter((b) => !b.row.paused).reduce((a, b) => a + b.row.dailyCap, 0));
     const next = nextDomainCap({ cap: d.dailyCap, ceiling, sends7d, bounces7d, complaints7d, sentYesterday, warmupInbox: wIn, warmupSpam: wSpam });
     await db.outboundDomain.update({ where: { domain: d.domain }, data: { capCheckedAt: now, ...(next ? { dailyCap: next.cap } : {}) } });
     if (next) {

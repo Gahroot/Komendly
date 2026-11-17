@@ -117,6 +117,17 @@ export function rampedTarget(perDay: number, since: Date | null, now: Date): num
   return Math.min(dailyTarget(perDay), WARMUP_RAMP_START + WARMUP_RAMP_STEP * (day - 1));
 }
 
+/** Whole-domain warm-up ceiling by domain age (Nov 16, after comendly/kommendly got DBL-listed): per-mailbox ramps
+ * still add up to a flood when 50 boxes on a day-old domain ramp together, and blocklists judge the DOMAIN. Day 1 the
+ * whole domain sends WARMUP_DOMAIN_START, +WARMUP_DOMAIN_STEP each day of its age, never above WARMUP_DOMAIN_MAX. */
+export const WARMUP_DOMAIN_START = 10;
+export const WARMUP_DOMAIN_STEP = 10;
+export const WARMUP_DOMAIN_MAX = 200;
+export function domainWarmupCap(since: Date | null, now: Date): number {
+  const day = Math.max(1, warmupDays(since, now));
+  return Math.min(WARMUP_DOMAIN_MAX, WARMUP_DOMAIN_START + WARMUP_DOMAIN_STEP * (day - 1));
+}
+
 /** Delivery canary: warm-up mail between rented boxes that no receiver ever finds is pure one-way bulk mail (the
  * Nov 14 incident: 0 of 32.8k found). Judged on mail 6-48h old; below CANARY_MIN_SEEN of a CANARY_MIN_SAMPLE sample,
  * warm-up switches itself off with a KlyDecision (an operator turns it back on after fixing delivery). */
@@ -363,6 +374,25 @@ export async function warmupSendTick(d: WarmupDeps): Promise<{ sent: number; rep
   const sentToday = new Map(sentG.map((g) => [g.senderId, g._count._all]));
   const recvToday = new Map(recvG.map((g) => [g.recipientId, g._count._all]));
   const quota = new Map(senders.map((b) => [b.id, Math.min(WARMUP_PER_MAILBOX_PER_TICK, dueByNow(rampedTarget(s.warmupPerDay, b.row.warmupSince, now), now, tieRank(day.toISOString(), b.id) / 2 ** 32) - (sentToday.get(b.id) ?? 0))]));
+  // Domain ceiling: trim per-mailbox quotas so a whole domain never exceeds its age-based daily warm-up total.
+  const senderDomains = [...new Set(senders.map((b) => b.domain))];
+  const [domRows, domSent] = await Promise.all([
+    db.outboundDomain.findMany({ where: { domain: { in: senderDomains } }, select: { domain: true, createdAt: true } }),
+    db.klyWarmupMessage.groupBy({ by: ["senderDomain"], where: { senderDomain: { in: senderDomains }, sentAt: { gte: day } }, _count: { _all: true } }),
+  ]);
+  const bornAt = new Map(domRows.filter((r) => r.createdAt instanceof Date).map((r) => [r.domain, r.createdAt as Date]));
+  const domLeft = new Map(senderDomains.map((dn) => {
+    // No domain row yet = brand new domain (day 1). Otherwise its age decides.
+    const since = bornAt.get(dn) ?? senders.filter((b) => b.domain === dn).map((b) => b.row.warmupSince).filter((x): x is Date => x instanceof Date).sort((x, y) => x.getTime() - y.getTime())[0] ?? null;
+    const used = (domSent as Array<{ senderDomain: string; _count: { _all: number } }>).find((g) => g.senderDomain === dn)?._count._all ?? 0;
+    return [dn, domainWarmupCap(since, now) - used] as const;
+  }));
+  for (const b of [...senders].sort((x, y) => tieRank(day.toISOString(), x.id) - tieRank(day.toISOString(), y.id))) {
+    const left = Math.max(0, domLeft.get(b.domain) ?? 0);
+    const q = Math.max(0, Math.min(quota.get(b.id) ?? 0, left));
+    quota.set(b.id, q);
+    domLeft.set(b.domain, left - q);
+  }
 
   const out: Outgoing[] = [];
   // Replies the receivers decided on (engagement pass), oldest first, within each replier's quota.
