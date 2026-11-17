@@ -18,8 +18,8 @@ const MAP: Partial<Record<FunnelEvent, Mapping>> = {
   run_started: { events: ["StartTrial"], cookieId: true, onlyWithCookie: true }, // cookie only set for trial runs
   run_completed: { events: ["TrialCompleted"], custom: true, when: (p) => p.is_trial === true, eventId: (p) => (p.run_id ? `TrialCompleted:${p.run_id}` : undefined) },
   begin_checkout: { events: ["InitiateCheckout"], cookieId: true },
-  // Needs the checkout session id (explicit event ids); Subscribe only for subscription checkouts.
-  purchase: { events: ["Purchase", "Subscribe"], when: (p) => p.source === "ads_billing" && typeof p.meta_event_id_Purchase === "string" },
+  // Subscription checkouts only (one-off packs would teach Meta to find add-on buyers); needs the session id for dedup.
+  purchase: { events: ["Purchase", "Subscribe"], when: (p) => p.source === "ads_billing" && p.meta_subscription === true && typeof p.meta_event_id_Purchase === "string" },
 };
 
 function readCookie(name: string): string | undefined {
@@ -44,7 +44,6 @@ export function trackMetaPixel(event: FunnelEvent, params: Params): void {
     const m = MAP[event];
     if (!m || (m.when && !m.when(params))) return;
     for (const name of m.events) {
-      if (name === "Subscribe" && event === "purchase" && params.meta_subscription !== true) continue;
       const explicit = params[`meta_event_id_${name}`];
       if (typeof explicit === "string" || !m.cookieId) {
         send(name, Boolean(m.custom), params, typeof explicit === "string" ? explicit : m.eventId?.(params));

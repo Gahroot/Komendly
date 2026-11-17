@@ -11,13 +11,19 @@ export const ADS_TO_META: Readonly<Record<string, readonly MetaEventName[]>> = {
   trial_started: ["StartTrial"],
   run_completed: ["TrialCompleted"],
   checkout_started: ["InitiateCheckout"],
-  // Purchase (+ Subscribe for subscriptions) per paid Stripe checkout session; paid_converted stays DB-only.
+  // Purchase + Subscribe per paid subscription checkout only (see metaEventsFor); paid_converted stays DB-only.
   purchased: ["Purchase", "Subscribe"],
   renewed: ["Renewal"],
   // Ozzy Studio: first delivered video (custom event, once per workspace). The engine writes studio_first_render
   // directly; the web forwards it when it sees one (studio checkout is a checkout_started with props.app = "studio").
   studio_first_render: ["StudioFirstVideo"],
 };
+
+/** Meta events for one AdsEvent. One-off payments (unlock pack, top-ups, unlimited week) send nothing: ads optimise for subscribers. */
+export function metaEventsFor(name: string, props?: Record<string, unknown>): readonly MetaEventName[] {
+  const events = ADS_TO_META[name] ?? [];
+  return name === "purchased" && props?.mode !== "subscription" ? [] : events;
+}
 
 /** Deterministic event_id per funnel step, shared with the browser (see metaEventIdCookie / success page). */
 export function metaEventId(event: MetaEventName, d: { workspaceId?: string; userId?: string; runId?: string; props?: Record<string, unknown> }, now: Date): string {
@@ -116,9 +122,8 @@ export async function forwardAdsEventToMeta(
   name: string,
   d: { workspaceId?: string; userId?: string; runId?: string; props?: Record<string, unknown> },
 ): Promise<MetaAttribution | null> {
-  const events = ADS_TO_META[name];
-  if (!events) return null;
-  const selected = name === "purchased" && d.props?.mode !== "subscription" ? events.filter((e) => e !== "Subscribe") : events;
+  const selected = metaEventsFor(name, d.props);
+  if (!selected.length) return null;
   try {
     const now = new Date();
     const ctx = await requestContext();

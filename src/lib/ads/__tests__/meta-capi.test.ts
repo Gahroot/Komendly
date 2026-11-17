@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildMetaEvent, sha256 } from "@/lib/ads/meta-capi";
-import { ADS_TO_META, metaEventId } from "@/lib/ads/meta-forward";
+import { ADS_TO_META, metaEventId, metaEventsFor } from "@/lib/ads/meta-forward";
 import { fbcFromFbclid, firstTouchFromUrl, parseFirstTouch, serializeFirstTouch } from "@/lib/analytics/first-touch";
 
 const now = new Date("2026-11-07T10:00:00Z");
@@ -18,6 +18,13 @@ describe("meta capi", () => {
     expect(ADS_TO_META.extraction_shown).toBeUndefined();
     expect(metaEventId("TrialCompleted", { runId: "r1", workspaceId: "w1" }, now)).toBe("TrialCompleted:r1");
     expect(metaEventId("Purchase", { workspaceId: "w1" }, now)).toBe("Purchase:w1");
+  });
+  it("sends Purchase/Subscribe for subscription checkouts only, never one-off payments", () => {
+    expect(metaEventsFor("purchased", { mode: "subscription" })).toEqual(["Purchase", "Subscribe"]);
+    expect(metaEventsFor("purchased", { mode: "payment", key: "unlock_pack" })).toEqual([]);
+    expect(metaEventsFor("purchased", {})).toEqual([]);
+    expect(metaEventsFor("signed_up")).toEqual(["CompleteRegistration"]);
+    expect(metaEventsFor("paid_converted")).toEqual([]);
   });
 });
 

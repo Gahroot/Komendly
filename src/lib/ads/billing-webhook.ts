@@ -34,7 +34,7 @@ async function trackOncePer(name: "purchased" | "renewed", key: "checkoutSession
 async function onCheckoutCompleted(s: Stripe.Checkout.Session) {
   const ws = await findWorkspace(s.metadata, idOf(s.customer));
   if (!ws) return;
-  // Every paid checkout (plan, Launch Quarter offer, credit pack) = one Meta Purchase, event_id Purchase:<sessionId>.
+  // Every paid checkout is a "purchased" AdsEvent; only subscription checkouts reach Meta (Purchase:<sessionId>).
   if (s.payment_status === "paid") {
     await trackOncePer("purchased", "checkoutSessionId", {
       workspaceId: ws.id,

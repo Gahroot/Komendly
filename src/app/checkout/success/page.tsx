@@ -8,7 +8,7 @@ import { OzzyPerch, type OzzyMood } from "@/components/testimonials/ozzy-perch";
 import { trackOnce } from "@/lib/analytics/track";
 import { PLAN_CONFIG, type PlanKey } from "@/lib/stripe-config";
 import { loadDraft } from "@/lib/testimonial-draft";
-import { FIRST_VIDEO_OFFER, GUARANTEE, VIDEO_PACK_OFFER, videosLabel } from "@/lib/first-video-offer";
+import { GUARANTEE, videosLabel } from "@/lib/first-video-offer";
 
 interface VerifiedUser {
   id: string;
@@ -68,7 +68,8 @@ function CheckoutSuccessContent() {
           currency: "USD",
           transaction_id: sessionId,
         });
-        fetch("/api/facebook-capi", {
+        // Meta Purchase only for subscriptions: one-time packs would train ads toward cheap one-off buyers.
+        if (!purchase) fetch("/api/facebook-capi", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -77,7 +78,7 @@ function CheckoutSuccessContent() {
             value,
             currency: "USD",
             transactionId: sessionId,
-            contentName: purchase ? (purchase.offer === FIRST_VIDEO_OFFER.key ? FIRST_VIDEO_OFFER.name : purchase.offer === VIDEO_PACK_OFFER.key ? VIDEO_PACK_OFFER.name : "Video pack") : `${user.plan} Plan`,
+            contentName: `${user.plan} Plan`,
             sourceUrl: window.location.href,
             fbc: getCookie("_fbc"),
             fbp: getCookie("_fbp"),
