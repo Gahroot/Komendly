@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Headless EZ Motion agent run (the same agent as EZ Coder's Motion mode, from @prestyj/cli).
-// Usage: node run-motion-agent.mjs <projectDir> <briefFile> [--model gpt-6.1-sol] [--thinking medium]
+// Usage: node run-motion-agent.mjs <projectDir> <briefFile> [--model gpt-6.2-sol] [--thinking medium]
 // Auth: the openai entry of $HOME/.ezcoder/auth.json (the caller writes a per-run HOME).
 // Writes a JSON line per tool call to stderr; prints {"ok":true} or {"ok":false,"error"} last on stdout.
 import { readFile } from "node:fs/promises";
@@ -32,7 +32,7 @@ let session;
 try {
   session = await createMotionAgentSession({
     provider: "openai",
-    model: opt("--model", "gpt-6.1-sol"),
+    model: opt("--model", "gpt-6.2-sol"),
     thinkingLevel: opt("--thinking", "medium"),
     cwd: resolve(projectDir),
     signal: ac.signal,

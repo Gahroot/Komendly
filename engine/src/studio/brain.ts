@@ -1,4 +1,4 @@
-// Which model runs an Ozzy Studio turn: Codex (gpt-6.1-sol, the owner's ChatGPT subscription) by default, Xiaomi MiMo
+// Which model runs an Ozzy Studio turn: Codex (gpt-6.2-sol, the owner's ChatGPT subscription) by default, Xiaomi MiMo
 // (mimo-v2.6-pro on the owner's MiMo Token Plan) as the automatic fallback (owner decision 2026-11-13):
 //  - before the turn, when the Codex weekly window is at/above STUDIO_MIMO_AT_PCT (default 90; read from Kly's
 //    heartbeat, which checks it every 15 min) so customers' ad jobs keep the rest of the Codex week;

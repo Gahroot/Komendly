@@ -1,7 +1,7 @@
 // Ozzy plans (one credit wallet for Ad Packs + Ozzy Studio; Scale/Agency include testimonial videos: src/lib/hub/money-model.ts) and top-up packs (pricing v3, 2026-11-07). Rationale: goal folder PRICING.md;
 // reproduce with `npx tsx scripts/ads-pricing-sim.ts`.
 // Priced to survive without the Codex subscription: at OpenAI API list prices (gpt-image-2 medium $0.053
-// + prompt + 4 reference images per call, gpt-6.1-sol text, vision QC, retries, Railway share) the p90 cost
+// + prompt + 4 reference images per call, gpt-6.2-sol text, vision QC, retries, Railway share) the p90 cost
 // is $0.53 per credit (p50 $0.27), from 46 real dev-DB runs. Every plan and pack keeps >= 70% gross margin
 // at that p90 cost with all credits used, after Stripe 2.9% + 30c (tested in __tests__/billing-config.test.ts).
 // Prices come from a seeded Van Westendorp + Gabor-Granger Monte Carlo panel (5 segments anchored on 2026

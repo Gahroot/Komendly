@@ -225,8 +225,8 @@ if (arg("out")) {
         startedAt: new Date(batchStarted).toISOString(),
         wallSec: sec(Date.now() - batchStarted),
         provider: config.aiProvider,
-        textModel: process.env.CODEX_TEXT_MODEL ?? "gpt-6.1-sol",
-        motionAgentModel: process.env.EZMOTION_AGENT_MODEL ?? "gpt-6.1-sol",
+        textModel: process.env.CODEX_TEXT_MODEL ?? "gpt-6.2-sol",
+        motionAgentModel: process.env.EZMOTION_AGENT_MODEL ?? "gpt-6.2-sol",
         batch,
         codexUsage: { before: usageBefore, after: usageAfter },
         calls: { ...meter, motionJobs: results.reduce((a, r) => a + r.stages.render_motion.n, 0) },
@@ -245,7 +245,7 @@ process.exit(0);
 /** Provider call totals for this process (text by model, images by quality); motion-agent child calls are not seen here, only via job costMicros. */
 type Meter = { text: Record<string, { calls: number; inputTokens: number; outputTokens: number; costMicros: number }>; image: Record<string, { calls: number; references: number; costMicros: number }>; errors: number };
 function meteredProvider(base: AIProvider, meter: Meter): AIProvider {
-  const model = process.env.CODEX_TEXT_MODEL ?? "gpt-6.1-sol";
+  const model = process.env.CODEX_TEXT_MODEL ?? "gpt-6.2-sol";
   const p = Object.create(base) as AIProvider;
   p.text = async (req) => {
     try {

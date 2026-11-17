@@ -3,7 +3,7 @@ import { pickStudioModel } from "../src/studio/model-choice";
 
 describe("pickStudioModel", () => {
   it("first video on Sol high, edits on Luna high", () => {
-    expect(pickStudioModel({ env: {}, hasVideo: false })).toEqual({ model: "gpt-6.1-sol", thinking: "high", edit: false });
+    expect(pickStudioModel({ env: {}, hasVideo: false })).toEqual({ model: "gpt-6.2-sol", thinking: "high", edit: false });
     expect(pickStudioModel({ env: {}, hasVideo: true })).toEqual({ model: "gpt-6-luna", thinking: "high", edit: true });
   });
   it("env overrides, and STUDIO_EDIT_MODEL=same keeps one model", () => {

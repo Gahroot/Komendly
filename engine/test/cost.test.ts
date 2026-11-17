@@ -6,7 +6,7 @@ import { technicalChecks } from "../src/jobs/qc";
 
 describe("cost meter", () => {
   it("prices text per token and images per quality", () => {
-    expect(textCostMicros(DEFAULT_PRICES, "gpt-6.1-sol", 1_000_000, 100_000)).toBe(3_000_000);
+    expect(textCostMicros(DEFAULT_PRICES, "gpt-6.2-sol", 1_000_000, 100_000)).toBe(3_000_000);
     expect(textCostMicros(DEFAULT_PRICES, "unknown-model", 1000, 0)).toBe(2000);
     expect(imageCostMicros(DEFAULT_PRICES, "medium", 2)).toBe(113_500);
     expect(imageCostMicros(DEFAULT_PRICES, "medium", 1, 4)).toBe(124_500);

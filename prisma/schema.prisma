@@ -1050,7 +1050,7 @@ model StudioSession {
   userId         String
   title          String    @default("New video")
   status         String    @default("idle") // idle | queued | working | awaiting_user | error
-  model          String    @default("gpt-6.1-sol")
+  model          String    @default("gpt-6.2-sol")
   thinking       String    @default("high")
   projectKey     String? // S3 key of the project snapshot (tar.gz) after the last turn
   agentStateKey  String? // S3 key of the serialized agent session after the last turn

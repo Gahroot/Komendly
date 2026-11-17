@@ -68,7 +68,7 @@ Each call is `codex exec --skip-git-repo-check --ephemeral --sandbox read-only -
 | BING_API_KEY | yes | Bing Webmaster Tools API key |
 | TZ | | `America/New_York` |
 | LLM_PROVIDER_ORDER | | `codex` (the default and the only supported value) |
-| CODEX_MODEL / CODEX_REASONING_EFFORT | | `gpt-6.1-sol` / `high` |
+| CODEX_MODEL / CODEX_REASONING_EFFORT | | `gpt-6.2-sol` / `high` |
 | CODEX_MAX_CALLS_PER_WEEK | | default 120 |
 | CODEX_ANYTIME, CODEX_NIGHT_START, CODEX_NIGHT_END, CODEX_TIMEOUT_MS | | optional |
 | AUTO_PUBLISH | | `true` (default). `false` = the engine never merges; `/approve` only approves |

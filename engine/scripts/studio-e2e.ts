@@ -45,7 +45,7 @@ if (!ff) throw new Error("ffmpeg missing");
 const clip = join(tmpdir(), `studio-e2e-${process.pid}.mp4`);
 const g = await run(ff, ["-y", "-v", "error", "-f", "lavfi", "-i", "testsrc2=size=1920x1080:rate=30:duration=12", "-f", "lavfi", "-i", "sine=frequency=330:duration=12", "-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", clip]);
 if (g.code !== 0) throw new Error(g.stderr);
-const session = await db.studioSession.create({ data: { workspaceId: ws.id, userId: user.id, model: "gpt-6.1-sol", thinking: "high" } });
+const session = await db.studioSession.create({ data: { workspaceId: ws.id, userId: user.id, model: "gpt-6.2-sol", thinking: "high" } });
 const upload = await db.studioUpload.create({ data: { workspaceId: ws.id, userId: user.id, sessionId: session.id, key: `pending-${session.id}`, filename: "Product Demo Clip.mp4", mime: "video/mp4", bytes: 0, status: "uploaded" } });
 const key = studioKeys.upload(ws.id, upload.id, upload.filename);
 const body = await readFile(clip);

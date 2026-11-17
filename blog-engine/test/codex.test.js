@@ -9,7 +9,7 @@ import { codexOnly, DeferError } from '../src/mode.js';
 import * as aiVis from '../src/jobs/aiVisibility.js';
 import { memDb } from './helpers.js';
 
-const ENV = { LLM_PROVIDER_ORDER: 'codex', CODEX_MODEL: 'gpt-6.1-sol', CODEX_REASONING_EFFORT: 'high' };
+const ENV = { LLM_PROVIDER_ORDER: 'codex', CODEX_MODEL: 'gpt-6.2-sol', CODEX_REASONING_EFFORT: 'high' };
 const NIGHT = new Date('2026-11-07T07:00:00Z'); // 2:00 EST
 const DAY = new Date('2026-11-07T17:00:00Z');   // 12:00 EST
 const quiet = { log() {}, error() {} };
@@ -37,7 +37,7 @@ test('codex-only is the default; args carry model + reasoning effort; cap 120', 
   assert.equal(codexOnly({ LLM_PROVIDER_ORDER: 'codex,anthropic' }), false);
   assert.equal(llmConfigured({}), true);
   const a = codexArgs(ENV, '/tmp/o', '/tmp/c');
-  assert.deepEqual(a.slice(a.indexOf('-m'), a.indexOf('-m') + 2), ['-m', 'gpt-6.1-sol']);
+  assert.deepEqual(a.slice(a.indexOf('-m'), a.indexOf('-m') + 2), ['-m', 'gpt-6.2-sol']);
   assert.ok(a.includes('model_reasoning_effort="high"'));
   assert.ok(codexArgs(ENV, '/o', '/c', { search: true }).includes('web_search="live"'));
   assert.ok(!codexArgs({ CODEX_REASONING_EFFORT: 'high"; rm -rf' }, '/o', '/c').some((x) => /rm -rf/.test(x)));

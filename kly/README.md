@@ -16,7 +16,7 @@ Komendly only through Postgres. Each tick (~60s, never overlapping, restart-safe
    champions/retirements), runs the daily AI strategist, autoscales volume, purges PII after 180 days, upserts `KlyDaily`.
 
 Every autonomous change is logged to `KlyDecision`. All AI goes through the owner's Codex subscription via
-`engine/src/providers` (default model `gpt-6.1-sol`, reasoning medium). `/healthz` returns JSON status; the
+`engine/src/providers` (default model `gpt-6.2-sol`, reasoning medium). `/healthz` returns JSON status; the
 `EngineHeartbeat` row `kly` is refreshed every 30s (its `meta` feeds /admin/ads/outbound).
 
 ## Env vars

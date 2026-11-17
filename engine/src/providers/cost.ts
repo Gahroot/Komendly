@@ -1,6 +1,6 @@
 // Cost meter. Converts usage into estimated USD micros at OpenAI API list prices.
 // Sources (checked 2026-11-07; override with ENGINE_PRICES_JSON, same shape as DEFAULT_PRICES):
-// - Text, https://developers.openai.com/api/docs/pricing : gpt-6.1-sol $2 in / $10 out per 1M,
+// - Text, https://developers.openai.com/api/docs/pricing : gpt-6.2-sol (and 6.1) $2 in / $10 out per 1M,
 //   gpt-6-luna $0.10 / $0.50, gpt-6-astra $10 / $50. Unknown models fall back to "default".
 // - gpt-image-2, same page + https://developers.openai.com/api/docs/guides/image-generation :
 //   image out $30/1M tokens, image in $8/1M, text in $5/1M. Output per 1024x1024 image ~= $0.006 low,
@@ -20,6 +20,7 @@ export interface PriceTable {
 export const DEFAULT_PRICES: PriceTable = {
   text: {
     default: { inPerM: 2, outPerM: 10 },
+    "gpt-6.2-sol": { inPerM: 2, outPerM: 10 },
     "gpt-6.1-sol": { inPerM: 2, outPerM: 10 },
     "gpt-6-luna": { inPerM: 0.1, outPerM: 0.5 },
     "gpt-6-astra": { inPerM: 10, outPerM: 50 },

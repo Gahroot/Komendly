@@ -12,7 +12,7 @@ import { structured } from "../../engine/src/providers/structured";
 import type { AIProvider, TextRequest, UsageMeter } from "../../engine/src/providers/types";
 
 export type { AIProvider } from "../../engine/src/providers/types";
-export const DEFAULT_MODEL = "gpt-6.1-sol";
+export const DEFAULT_MODEL = "gpt-6.2-sol";
 
 export interface KlyAI {
   provider: AIProvider;

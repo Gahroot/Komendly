@@ -163,8 +163,8 @@ export async function runMotionAgent(input: MotionRenderInput, ratios: Ratio[], 
   const briefOf = (review: boolean) => agentBrief({ url: input.siteUrl, brandName: brand.brandName, audience: input.brief?.audience, ratios, seconds, facts: facts.length > 0, review, music: !!music });
   await writeFile(join(root, "brief.txt"), briefOf(!!input.qcFeedback));
   const runner = join(HERE, "agent", "run-motion-agent.mjs");
-  // User's choice: GPT-6.1 Sol on high thinking.
-  const model = process.env.EZMOTION_AGENT_MODEL ?? "gpt-6.1-sol";
+  // User's choice: GPT-6.2 Sol on high thinking.
+  const model = process.env.EZMOTION_AGENT_MODEL ?? "gpt-6.2-sol";
   const thinking = process.env.EZMOTION_AGENT_THINKING ?? "high";
   const spawnAgent = (briefFile: string) => new Promise<{ code: number; stdout: string; stderr: string }>((resolve) => {
     const child = spawn(process.execPath, [runner, project, briefFile, "--model", model, "--thinking", thinking], { cwd: project, env, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] });

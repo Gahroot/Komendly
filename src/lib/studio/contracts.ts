@@ -19,7 +19,7 @@ export const STUDIO_INGEST_JOB_TYPE = "studio_ingest";
 export const STUDIO_CAPTURE_JOB_TYPE = "studio_capture";
 
 /** Default AI: the engine's ChatGPT (Codex) subscription login. */
-export const STUDIO_DEFAULT_MODEL = "gpt-6.1-sol";
+export const STUDIO_DEFAULT_MODEL = "gpt-6.2-sol";
 export const STUDIO_DEFAULT_THINKING = "high";
 
 export const StudioTurnPayloadSchema = z.object({

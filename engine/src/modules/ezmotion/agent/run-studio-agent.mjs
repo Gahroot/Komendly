@@ -59,7 +59,7 @@ try {
   session = await createMotionAgentSession({
     // --provider xiaomi: MiMo fallback when the Codex weekly window is nearly used up (studio/brain.ts).
     provider: opt("--provider", "openai"),
-    model: opt("--model", "gpt-6.1-sol"),
+    model: opt("--model", "gpt-6.2-sol"),
     thinkingLevel: opt("--thinking", "high"),
     cwd: resolve(projectDir),
     signal: ac.signal,
