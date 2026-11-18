@@ -523,12 +523,24 @@ export function buildRecoveryRows(inp: {
   return out;
 }
 
+/** A checkout whose user no longer exists (merged/deleted account) follows its workspace's current owner. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function remapToWorkspaceOwners(db: any, checkouts: StartedCheckout[]): Promise<StartedCheckout[]> {
+  const ids = [...new Set(checkouts.map((c) => c.userId))];
+  const found = new Set(((await db.user.findMany({ where: { id: { in: ids } }, select: { id: true } })) as Array<{ id: string }>).map((u) => u.id));
+  const orphanWs = [...new Set(checkouts.filter((c) => !found.has(c.userId) && c.workspaceId).map((c) => c.workspaceId as string))];
+  if (!orphanWs.length) return checkouts;
+  const owners = new Map(((await db.adsWorkspace.findMany({ where: { id: { in: orphanWs } }, select: { id: true, ownerId: true } })) as Array<{ id: string; ownerId: string }>).map((w) => [w.id, w.ownerId]));
+  return checkouts.map((c) => (!found.has(c.userId) && c.workspaceId && owners.get(c.workspaceId) ? { ...c, userId: owners.get(c.workspaceId)! } : c));
+}
+
 /** Loads everything buildRecoveryRows needs (Prisma client of web or engine). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function loadRecoveryRows(db: any, since: Date): Promise<RecoveryRow[]> {
   const rows = (await db.adsEvent.findMany({ where: { name: "checkout_started", createdAt: { gte: since }, userId: { not: null } }, select: { id: true, userId: true, workspaceId: true, props: true, createdAt: true } })) as Array<{ id: string; userId: string | null; workspaceId: string | null; props: unknown; createdAt: Date }>;
-  const checkouts = rows.map(checkoutFromEvent).filter((c): c is StartedCheckout => Boolean(c));
+  let checkouts = rows.map(checkoutFromEvent).filter((c): c is StartedCheckout => Boolean(c));
   if (!checkouts.length) return [];
+  checkouts = await remapToWorkspaceOwners(db, checkouts);
   const uids = [...new Set(checkouts.map((c) => c.userId))];
   const wids = [...new Set(checkouts.map((c) => c.workspaceId).filter((w): w is string => Boolean(w)))];
   const [users, events, packs, workspaces] = await Promise.all([
