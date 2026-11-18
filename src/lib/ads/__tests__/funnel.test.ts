@@ -85,3 +85,17 @@ describe("adEconomics", () => {
     expect(rows.map((r) => [r.adId, r.signedUp, r.costPerSignupCents])).toEqual([["9", 1, 1000], ["8", 1, 0]]);
   });
 });
+
+describe("legacyBurstBots (pre-ipNet Meta ad-review bursts)", () => {
+  it("drops legacy landings in a burst hour, keeps sparse legacy and all ipNet rows", async () => {
+    const { legacyBurstBots, LEGACY_BURST_PER_HOUR } = await import("@/lib/ads/funnel");
+    const at = (iso: string) => new Date(iso);
+    const burst = Array.from({ length: 500 }, (_, i) => ({ props: { anonId: `b${i}`, firstTouch: { fbclid: `f${i}` } }, createdAt: at(`2026-11-08T18:${String(i % 60).padStart(2, "0")}:00Z`) }));
+    const sparse = [{ props: { anonId: "h1" }, createdAt: at("2026-11-08T16:10:00Z") }];
+    const modern = Array.from({ length: LEGACY_BURST_PER_HOUR + 5 }, (_, i) => ({ props: { anonId: `m${i}`, ipNet: "1.2.3.0/24" }, createdAt: at("2026-11-16T14:00:00Z") }));
+    const rows = [...burst, ...sparse, ...modern];
+    const bots = legacyBurstBots(rows);
+    expect(bots.size).toBe(500);
+    expect(rows.filter((_, i) => !bots.has(i)).length).toBe(1 + modern.length);
+  });
+});

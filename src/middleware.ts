@@ -49,6 +49,7 @@ const publicPrefixes = [
   "/api/ads/email-img/",   // Signed (HMAC, ~30 days) ad thumbnails in lifecycle emails
   "/api/ads/email-unsubscribe", // Signed one-click unsubscribe from lifecycle emails
   "/api/ads/email-click/", // Signed click-tracking redirect in lifecycle emails (app-relative paths only)
+  "/api/inbound/",         // Resend inbound email webhook (Svix-signed)
   "/api/outbound/",       // Cold outbound claim-link redirect + one-click unsubscribe (token-checked)
   "/g/",                   // Kly short claim link (same as /api/outbound/c/)
   "/u/",                   // Kly short unsubscribe link (same as /api/outbound/unsubscribe)

@@ -10,6 +10,7 @@ import {
   offerCreditsFor,
   offerFromPriceId,
   offerSavingsCents,
+  withOfferExtension,
 } from "../billing-config";
 import { marginAt, P90_PER_CREDIT } from "../../../../scripts/ads-pricing-sim";
 
@@ -87,5 +88,20 @@ describe("offer UI waits for the server's Launch Quarter state (regression: run 
     const open = isLaunchOfferOpen(at, new Date("2026-11-11T15:21:11Z"));
     expect(open).toBe(true);
     expect(trialOfferStage({ trialUnpaid: true, readyAds: 10, minReady: 3, launchOpen: open, launchDismissed: false, bonusLocked: true, unlockAvailable: true })).toBe("launch_quarter");
+  });
+});
+
+describe("founder offer extension", () => {
+  const now = new Date("2026-11-18T17:00:00Z");
+  const closed = { open: false, expiresAt: new Date("2026-11-15T22:00:00Z") };
+  it("reopens an expired offer until the extension date", () => {
+    const until = new Date("2026-11-21T17:00:00Z");
+    expect(withOfferExtension(closed, until, now)).toEqual({ open: true, expiresAt: until });
+  });
+  it("ignores missing or past extensions and never shortens an open window", () => {
+    expect(withOfferExtension(closed, null, now)).toBe(closed);
+    expect(withOfferExtension(closed, new Date("2026-11-18T16:00:00Z"), now)).toBe(closed);
+    const open = { open: true, expiresAt: new Date("2026-11-20T00:00:00Z") };
+    expect(withOfferExtension(open, new Date("2026-11-19T00:00:00Z"), now)).toBe(open);
   });
 });

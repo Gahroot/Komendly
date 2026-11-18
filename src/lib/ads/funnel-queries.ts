@@ -2,7 +2,7 @@
 import { loadInternalIds } from "@/lib/internal-accounts";
 import { prisma } from "@/lib/prisma";
 import { parseFirstTouch, serializeFirstTouch, type FirstTouch } from "@/lib/analytics/first-touch";
-import { campaignEconomics, cohortsByWeek, funnelBySource, funnelTotal, isBotVisit, isFunnelTestEmail, revenuePayments, studioFunnel, sumRevenueCents, type GroupBy, type SignupRow, type StudioWorkspaceFacts, adEconomics } from "./funnel";
+import { campaignEconomics, cohortsByWeek, funnelBySource, funnelTotal, isBotVisit, isFunnelTestEmail, legacyBurstBots, revenuePayments, studioFunnel, sumRevenueCents, type GroupBy, type SignupRow, type StudioWorkspaceFacts, adEconomics } from "./funnel";
 import { isTestEmail } from "./signups";
 import { PRICING_FUNNEL_EVENTS, pricingDropoff } from "./pricing-funnel";
 import { loadMetaAdSpend, loadMetaCampaignSpend } from "./meta-insights";
@@ -62,7 +62,8 @@ export async function loadSourceFunnel(from: Date, to: Date, by: GroupBy, now: D
   // Landed excludes bot-flagged visits (Meta ad review); engaged = same anonId sent the engagement beacon that UTC day.
   const anonDay = (props: unknown, at: Date) => `${String((props as { anonId?: unknown } | null)?.anonId ?? "")}|${at.toISOString().slice(0, 10)}`;
   const engaged = new Set(engagedEvents.filter((e) => !isBotVisit(e.props)).map((e) => anonDay(e.props, e.createdAt)));
-  const visits = landed.filter((l) => !isBotVisit(l.props)).map((l) => ({ touch: touchOf(l.props), engaged: engaged.has(anonDay(l.props, l.createdAt)) }));
+  const bursts = legacyBurstBots(landed);
+  const visits = landed.filter((l, i) => !isBotVisit(l.props) && !bursts.has(i)).map((l) => ({ touch: touchOf(l.props), engaged: engaged.has(anonDay(l.props, l.createdAt)) }));
   const botVisits = landed.length - visits.length;
   const funnel = funnelBySource(visits, rows, by, now);
   const day = (d: Date) => d.toISOString().slice(0, 10);

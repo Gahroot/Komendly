@@ -5,7 +5,7 @@ import { homedir } from "node:os";
 // rendered (watermark + length cap by the engine) -> charge in one transaction -> persist the session.
 import { spawn } from "node:child_process";
 import { dropMissingAudio, isMissingAudioError } from "./missing-audio";
-import { access, appendFile, copyFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { access, appendFile, copyFile, mkdir, readFile, rm, rmdir, stat, writeFile } from "node:fs/promises";
 import { basename, delimiter, dirname, extname, join, relative } from "node:path";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
@@ -23,6 +23,8 @@ import { errMsg, log } from "../log";
 import { agentUsage } from "../modules/ezmotion/agent";
 // @ts-expect-error plain .mjs helper shared with the agent child process
 import { flashSafe } from "../modules/ezmotion/agent/pixel-qa.mjs";
+import { isRenderOverload, renderWithRetries } from "./render-retry";
+import { isLatestReply, studioWorkdir, waitForEarlierTurns } from "./turn-order";
 import { type RenderProgress, ffmpegPath, probe, renderComposition } from "../modules/ezmotion/runtime";
 import { Limiter } from "../providers/limiter";
 import { pickStudioModel } from "./model-choice";
@@ -132,6 +134,13 @@ export function friendlyError(code: string): string {
   }
 }
 
+/** Pure: the text saved on a failed turn. Never empty (an empty bubble reads as Ozzy ignoring the user). */
+export function errorReply(code: string, streamed: string): string {
+  if (code === "render") return friendlyError(code);
+  const clean = userFacingText(streamed);
+  return clean ? `${clean}\n\n${friendlyError(code)}` : friendlyError(code);
+}
+
 export function createStudioTurnHandler(maxConcurrent = Number(process.env.STUDIO_MAX_CONCURRENT) || 3): JobHandler {
   const limiter = new Limiter({ maxConcurrent: Math.max(1, maxConcurrent), maxPerWindow: 10_000, windowMs: 60_000 });
   return (ctx) => limiter.run(() => studioTurn(ctx), ctx.signal);
@@ -151,8 +160,12 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
   if (!parsed.success) throw new PermanentJobError("bad studio_turn payload");
   const { sessionId, userMessageId, assistantMessageId } = parsed.data;
   const { db, storage } = ctx;
-  const session = await db.studioSession.findUnique({ where: { id: sessionId } });
   const userMsg = await db.studioMessage.findUnique({ where: { id: userMessageId } });
+  // The previous turn may still be winding down (just cancelled): let it save first, then read the session.
+  if (userMsg && !(await waitForEarlierTurns(db, { sessionId, jobId: ctx.job.id, createdAt: userMsg.createdAt, signal: ctx.signal }))) {
+    log("warn", "studio turn: earlier turn still running, going ahead", { sessionId });
+  }
+  const session = await db.studioSession.findUnique({ where: { id: sessionId } });
   const asstMsg = await db.studioMessage.findUnique({ where: { id: assistantMessageId } });
   if (!session || !userMsg || !asstMsg) throw new PermanentJobError("studio session or message not found");
   if (asstMsg.status === "cancelled" || asstMsg.status === "done") return { skipped: asstMsg.status };
@@ -166,7 +179,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
   await db.studioSession.update({ where: { id: sessionId }, data: { status: "working", lastActivityAt: new Date() } });
   mapper.setPhase("thinking", "Thinking");
 
-  const root = join(ctx.config.scratchDir, "studio", sessionId);
+  const root = studioWorkdir(ctx.config.scratchDir, sessionId, ctx.job.id);
   const home = join(root, "home");
   const project = join(root, "project");
   const motionSessions = join(home, ".ezcoder", "motion-sessions", "studio");
@@ -547,15 +560,11 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
         prog.emit({ pct: 0, stage: "start" }, true);
         const fixedUrls = await fixCompositionScripts(comp).catch(() => 0);
         if (fixedUrls) log("warn", "studio render: repaired library URLs", { sessionId, fixed: fixedUrls });
-        let rr = await renderComposition(comp, out, { fps: 30, signal: turnAbort.signal, timeoutMs: 10 * 60_000, onProgress: (p) => prog.emit(p) });
-        // Two retries with backoff: a background ffmpeg cut can still be landing, or the box is briefly out of
-        // Chrome capacity; the last try uses one Chrome worker so it fits on a busy machine.
-        for (const [i, waitMs] of [[1, 3_000], [2, 20_000]] as const) {
-          if (rr.code === 0 || turnAbort.signal.aborted) break;
-          log("warn", "studio render retry", { attempt: i, error: (rr.stderr || rr.stdout).slice(-300) });
-          await new Promise((r) => setTimeout(r, waitMs));
-          rr = await renderComposition(comp, out, { fps: 30, signal: turnAbort.signal, timeoutMs: 10 * 60_000, onProgress: (p) => prog.emit(p, p.pct === 0), ...(i === 2 ? { workers: 1 } : {}) });
-        }
+        // Retries with backoff (longer when the box is out of threads/Chrome slots); later tries use one Chrome worker.
+        let rr = await renderWithRetries(
+          ({ attempt, workers1 }) => renderComposition(comp, out, { fps: 30, signal: turnAbort.signal, timeoutMs: 10 * 60_000, onProgress: (p) => prog.emit(p, attempt > 0 && p.pct === 0), ...(workers1 ? { workers: 1 } : {}) }),
+          { signal: turnAbort.signal, onRetry: (attempt, r) => log("warn", "studio render retry", { sessionId, attempt, overload: isRenderOverload(r), error: (r.stderr || r.stdout).slice(-300) }) },
+        );
         // A dangling music/audio reference blocks the whole render: drop it and render once more.
         if (rr.code !== 0 && !turnAbort.signal.aborted && isMissingAudioError(rr.stderr || rr.stdout) && (await dropMissingAudio(comp)) > 0) {
           log("warn", "studio render: dropped missing audio, rendering again", {});
@@ -610,7 +619,8 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
       const code = reason === "cancelled" ? "cancelled" : "timeout";
       ev.write([{ type: "error", data: { message: friendlyError(code), code } }]);
       await db.studioMessage.update({ where: { id: assistantMessageId }, data: { status: code === "cancelled" ? "cancelled" : "error", content: userFacingText(mapper.finalText()), error: code, attachments } });
-      await db.studioSession.update({ where: { id: sessionId }, data: { ...update, status: code === "cancelled" ? "idle" : "error", lastActivityAt: new Date() } });
+      // A newer turn already owns the session (the user moved on): keep its status and project.
+      if (await isLatestReply(db, sessionId, assistantMessageId)) await db.studioSession.update({ where: { id: sessionId }, data: { ...update, status: code === "cancelled" ? "idle" : "error", lastActivityAt: new Date() } });
       ev.write([{ type: "done", data: { messageId: assistantMessageId } }]);
       await ev.drain();
       return { ok: false, code };
@@ -636,9 +646,9 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     mapper.flush();
     ev.write([{ type: "status", data: { phase: "error" satisfies StudioPhase, label: "Something went wrong" } }, { type: "error", data: { message: friendlyError(code), code } }, { type: "done", data: { messageId: assistantMessageId } }]);
     // A failed render must not leave Ozzy's "it's ready" text standing as the answer.
-    const content = code === "render" ? friendlyError(code) : userFacingText(mapper.finalText());
+    const content = errorReply(code, mapper.finalText());
     await db.studioMessage.update({ where: { id: assistantMessageId }, data: { status: "error", error: errMsg(e).slice(0, 500), content } }).catch(() => undefined);
-    await db.studioSession.update({ where: { id: sessionId }, data: { status: "error", lastActivityAt: new Date() } }).catch(() => undefined);
+    if (await isLatestReply(db, sessionId, assistantMessageId).catch(() => true)) await db.studioSession.update({ where: { id: sessionId }, data: { status: "error", lastActivityAt: new Date() } }).catch(() => undefined);
     await ev.drain();
     return { ok: false, error: errMsg(e).slice(0, 300) };
   } finally {
@@ -647,7 +657,10 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     clearInterval(tick);
     clearInterval(liveTimer);
     ctx.signal.removeEventListener("abort", onShutdown);
-    if (!process.env.STUDIO_KEEP_WORKDIR) await rm(root, { recursive: true, force: true }).catch(() => undefined);
+    if (!process.env.STUDIO_KEEP_WORKDIR) {
+      await rm(root, { recursive: true, force: true }).catch(() => undefined);
+      await rmdir(dirname(root)).catch(() => undefined); // only when no other turn of this session is using it
+    }
   }
 }
 

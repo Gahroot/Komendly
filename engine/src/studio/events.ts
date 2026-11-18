@@ -197,10 +197,13 @@ export function userFacingText(text: string): string {
 export const NO_VIDEO_REPLY = "I couldn't finish a video this time, and nothing was charged. Tell me what you'd like (or just say \"try again\") and I'll make it now.";
 const CLAIMS_VIDEO = /\b(is ready|are ready|ready to (watch|go|post)|here'?s your|here is your|your (new |\d+-second |short )?(video|ad|animation|clip) is|i (made|built|finished|rendered|created)|finished|all done)\b/i;
 
+/** Said above Ozzy's question cards when the agent asked without any words of its own. */
+export const ASK_INTRO = "A few quick questions before I start:";
+
 /** Final reply for a turn: technical sentences out; without a video, any "it's ready" claim becomes an honest line. */
 export function finalReply(text: string, o: { delivered: boolean; asked: boolean }): string {
   const clean = userFacingText(text);
-  if (o.delivered || o.asked) return clean || (o.delivered ? "Here's your video." : clean);
+  if (o.delivered || o.asked) return clean || (o.delivered ? "Here's your video." : ASK_INTRO);
   if (!clean || CLAIMS_VIDEO.test(clean)) return NO_VIDEO_REPLY;
   return clean;
 }

@@ -44,6 +44,8 @@ export interface StudioDropCandidate {
   /** Uses testimonials (legacy plan or pack): copy angle. */
   testimonialsUser: boolean;
   unsubscribed: boolean;
+  /** Replied to one of our emails: only transactional Studio emails (studio_ready, invite reward) still go out. */
+  replied?: boolean;
   suspended: boolean;
   workspaceId: string | null;
   studioSessions: number;
@@ -139,6 +141,7 @@ export function dueStudioEmail(c: StudioDropCandidate, now: Date, start: Date, e
   for (const rw of [...c.rewards].sort((a, b) => a.rewardedAt.getTime() - b.rewardedAt.getTime() || a.inviteId.localeCompare(b.inviteId))) {
     if (rw.rewardedAt.getTime() >= since && rw.rewardedAt <= now && !c.sent.some((s) => s.kind === "studio_invite_reward" && s.inviteId === rw.inviteId)) return { kind: "studio_invite_reward", inviteId: rw.inviteId };
   }
+  if (c.replied) return null;
   // Studio launch-offer deadline: never while the LQ window is open (one offer at a time; LQ wins), never on an LQ
   // offer day; like the trial's last_chance it is a real deadline, so the 24h cap does not hold it back.
   if (recentVideo && !c.paidWorkspace && !sentAt(c, "studio_last24") && inWin(now, r + offerWin - 24 * H, r + offerWin - 2 * H)) {
@@ -406,7 +409,8 @@ export async function loadStudioDropCandidates(db: RawQueryDb, now: Date, userId
     await db.$queryRawUnsafe(
       `SELECT u.id, u.email, u.name, u."createdAt", u."emailVerifiedAt", u.plan::text AS plan, u."subscriptionStatus"::text AS "subStatus",
               EXISTS (SELECT 1 FROM "CreditPurchase" c WHERE c."userId" = u.id AND c."amountPaid" > 0) AS "boughtTesti",
-              w.id AS "workspaceId", w."adsPlan", w."subscriptionStatus" AS "wsStatus", w."suspendedAt", w."studioFreeVideos", w."studioOfferReadyAt"
+              w.id AS "workspaceId", w."adsPlan", w."subscriptionStatus" AS "wsStatus", w."suspendedAt", w."studioFreeVideos", w."studioOfferReadyAt",
+              EXISTS (SELECT 1 FROM "AdsEvent" r WHERE r.name = 'email_replied' AND r."userId" = u.id) AS replied
          FROM "User" u
          LEFT JOIN LATERAL (SELECT * FROM "AdsWorkspace" x WHERE x."ownerId" = u.id ORDER BY x."createdAt" ASC LIMIT 1) w ON true
         WHERE ($1::text[] IS NULL OR u.id = ANY($1::text[]))
@@ -479,6 +483,7 @@ export async function loadStudioDropCandidates(db: RawQueryDb, now: Date, userId
       paidWorkspace,
       testimonialsUser,
       unsubscribed: false,
+      replied: Boolean(u.replied),
       suspended: Boolean(u.suspendedAt),
       workspaceId: wid,
       studioSessions: nSessions.get(id) ?? 0,

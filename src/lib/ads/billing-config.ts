@@ -410,6 +410,12 @@ export function launchOfferExpiresAt(readyAt: Date | null | undefined, offer: Ad
   return readyAt ? new Date(readyAt.getTime() + offer.windowHours * 3_600_000) : null;
 }
 
+/** Founder-granted extension (AdsEvent offer_extended): reopens the launch offer until `until`, never shortens it. */
+export function withOfferExtension(base: { open: boolean; expiresAt: Date | null }, until: Date | null | undefined, now: Date): { open: boolean; expiresAt: Date | null } {
+  if (!until || until <= now || (base.expiresAt && base.expiresAt >= until)) return base;
+  return { open: true, expiresAt: until };
+}
+
 export function isLaunchOfferOpen(readyAt: Date | null | undefined, now: Date, offer: AdsLaunchOffer = LAUNCH_QUARTER): boolean {
   const expires = launchOfferExpiresAt(readyAt, offer);
   return expires !== null && now.getTime() >= (readyAt?.getTime() ?? 0) && now < expires;

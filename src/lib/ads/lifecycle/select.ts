@@ -31,6 +31,8 @@ export interface LifecycleCandidate {
   emailVerifiedAt: Date | null;
   paid: boolean;
   unsubscribed: boolean;
+  /** Replied to one of our emails (email_replied event): talking to a human now, marketing drips stop. */
+  replied?: boolean;
   trialRunId: string | null;
   /** Any non-gift run was ever started in the workspace (even one that failed or is still running). */
   startedRun?: boolean;
@@ -196,9 +198,11 @@ export function offerWindowStart(c: Pick<LifecycleCandidate, "offerReadyAt" | "t
 }
 
 /** Why this user gets no email of `kind` (null = eligible). */
-export function suppressedFor(c: LifecycleCandidate, kind: string): "test_user" | "paid" | "unsubscribed" | null {
+export function suppressedFor(c: LifecycleCandidate, kind: string): "test_user" | "paid" | "unsubscribed" | "replied" | null {
   const why = suppressedReason(c);
-  return why === "paid" && PAID_OK.has(kind) ? (c.unsubscribed ? "unsubscribed" : null) : why;
+  const base = why === "paid" && PAID_OK.has(kind) ? (c.unsubscribed ? "unsubscribed" : null) : why;
+  // Replied: only transactional emails (verify codes...) keep going.
+  return base ?? (c.replied && !TRANSACTIONAL_KINDS.has(kind) ? "replied" : null);
 }
 
 /** The one email to send now, or null. */
@@ -237,7 +241,7 @@ export function scheduleStatus(c: LifecycleCandidate, now: Date, start: Date = f
 
 /** refreshed_pack: one per run. */
 export function refreshedPackAllowed(c: LifecycleCandidate, runId: string): boolean {
-  return !suppressedReason(c) && !c.sent.some((s) => s.kind === "refreshed_pack" && s.runId === runId);
+  return !suppressedReason(c) && !c.replied && !c.sent.some((s) => s.kind === "refreshed_pack" && s.runId === runId);
 }
 
 /** Kinds built around the user's own best ready ad (hero image at the top). */

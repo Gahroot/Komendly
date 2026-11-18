@@ -53,7 +53,7 @@ export async function loadLifecycleCandidates(db: RawQueryDb, now: Date, userIds
     db.$queryRawUnsafe(
       `SELECT name, "userId", "workspaceId", "runId", props, "createdAt" FROM "AdsEvent"
         WHERE ("userId" = ANY($1::text[]) OR "workspaceId" = ANY($2::text[]))
-          AND name IN ('email_sent', 'email_unsubscribed', 'purchased', 'paid_converted', 'signed_up', 'trial_blocked')`,
+          AND name IN ('email_sent', 'email_unsubscribed', 'purchased', 'paid_converted', 'signed_up', 'trial_blocked', 'email_replied')`,
       uids,
       wids,
     ),
@@ -102,6 +102,7 @@ export async function loadLifecycleCandidates(db: RawQueryDb, now: Date, userIds
       emailVerifiedAt: date(u.emailVerifiedAt),
       paid: paidWs || mine.some((e) => e.name === "purchased" || e.name === "paid_converted"),
       unsubscribed: mine.some((e) => e.name === "email_unsubscribed" && e.userId === id),
+      replied: mine.some((e) => e.name === "email_replied" && e.userId === id),
       trialRunId: run ? String(run.id) : null,
       startedRun: startedWs.has(wid),
       trialBlocked: mine.some((e) => e.name === "trial_blocked"),

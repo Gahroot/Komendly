@@ -30,6 +30,8 @@ export type AdsEventName =
   | "offer_modal_shown"
   | "offer_dismissed"
   | "offer_clicked"
+  // Founder reopened the launch offer for this workspace (props.until ISO, props.reason)
+  | "offer_extended"
   | "locked_bonus_shown"
   | "locked_asset_refused"
   // engine: trial bonus ads finished after the run completed

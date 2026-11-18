@@ -22,6 +22,7 @@ const TABS = [
   { href: "/admin/ads/engine", label: "Engine" },
   { href: "/admin/ads/flags", label: "Flags" },
   { href: "/admin/ads/emails", label: "Emails" },
+  { href: "/admin/ads/inbox", label: "Inbox" },
 ];
 
 export function AdminAdsNav() {

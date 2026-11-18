@@ -49,6 +49,22 @@ export function isBotVisit(props: unknown): boolean {
   return typeof b === "string" && b.length > 0;
 }
 
+/**
+ * Landings recorded before /api/ads/landed stored `ipNet` (Meta-IP bot detection shipped 2026-11-09) can't be IP-checked.
+ * Meta ad review crawled every new ad link in bursts (2026-11-08: ~1,000 landings in 2 h, one fresh fbclid each), so a
+ * legacy landing in a UTC hour with >= LEGACY_BURST_PER_HOUR legacy landings is treated as a bot. Rows with `ipNet` are untouched.
+ */
+export const LEGACY_BURST_PER_HOUR = 10;
+export function legacyBurstBots(rows: readonly { props: unknown; createdAt: Date }[]): Set<number> {
+  const legacy = (p: unknown) => !p || typeof p !== "object" || !("ipNet" in p);
+  const hour = (d: Date) => d.toISOString().slice(0, 13);
+  const perHour = new Map<string, number>();
+  rows.forEach((r) => { if (legacy(r.props)) perHour.set(hour(r.createdAt), (perHour.get(hour(r.createdAt)) ?? 0) + 1); });
+  const out = new Set<number>();
+  rows.forEach((r, i) => { if (legacy(r.props) && (perHour.get(hour(r.createdAt)) ?? 0) >= LEGACY_BURST_PER_HOUR) out.add(i); });
+  return out;
+}
+
 export type PaymentEvent = { name: string; props: unknown; createdAt: Date };
 const amountOf = (props: unknown): number => {
   const a = (props as { amountCents?: unknown } | null)?.amountCents;
