@@ -20,7 +20,7 @@ export async function claimToolJobs(db: Pick<Db, "$queryRaw">, worker: string, l
     UPDATE "FreeToolJob" SET status = 'running', "lockedBy" = ${worker}, "claimedAt" = now(), attempts = attempts + 1
     WHERE id IN (
       SELECT id FROM "FreeToolJob"
-      WHERE status = 'queued' AND "createdAt" > now() - make_interval(mins => ${QUEUE_TTL_MIN})
+      WHERE status = 'queued' AND "createdAt" > now() - make_interval(mins => ${QUEUE_TTL_MIN}::int)
       ORDER BY "createdAt" ASC LIMIT ${limit}
       FOR UPDATE SKIP LOCKED
     )
@@ -31,8 +31,8 @@ export async function claimToolJobs(db: Pick<Db, "$queryRaw">, worker: string, l
 export async function reapToolJobs(db: Pick<Db, "$executeRaw">): Promise<void> {
   await db.$executeRaw`
     UPDATE "FreeToolJob" SET status = 'failed', error = 'expired', "finishedAt" = now()
-    WHERE (status = 'queued' AND "createdAt" <= now() - make_interval(mins => ${QUEUE_TTL_MIN}))
-       OR (status = 'running' AND "claimedAt" <= now() - make_interval(mins => ${RUNNING_TTL_MIN}))`;
+    WHERE (status = 'queued' AND "createdAt" <= now() - make_interval(mins => ${QUEUE_TTL_MIN}::int))
+       OR (status = 'running' AND "claimedAt" <= now() - make_interval(mins => ${RUNNING_TTL_MIN}::int))`;
 }
 
 /** Pure-ish: run one job through the provider; returns the validated result or throws. */
