@@ -25,6 +25,7 @@ import { warmupSecretOf, warmupTick } from "./warmup";
 import { createVerifyRuntime, verifyEnabled, verifyTick, type VerifyRuntime } from "./verify";
 import { createSourceRuntime, type SourceRuntime } from "./sources";
 import { cycleDue, KLY_SYSTEMS, SYSTEM_EVENTS, type KlySystem } from "./growth";
+import { systemEnabled } from "../../src/lib/growth/systems";
 import { reviewGiftsCycle } from "./review-gifts";
 import { createNewBizRuntime, newBusinessCycle, type NewBizRuntime } from "./new-business";
 import { dayStart, decide, getSettings, killSwitchReason, overBudget, upsertDaily, type KlySettingsRow } from "./settings";
@@ -280,6 +281,11 @@ export async function runTick(d: LoopDeps, state: LoopState): Promise<void> {
   await step(state, "encore costs", () => syncEncoreCosts(db, now));
   // Growth systems (own kill switch sys_<key> + cadence; they share Kly's sending capacity and every Kly gate).
   for (const key of KLY_SYSTEMS) {
+    // Systems switched off since the last cycle start over when turned back on (no stale "already ran").
+    if (!(await systemEnabled(db, key))) {
+      delete state.growth.lastAt[key];
+      continue;
+    }
     if (!cycleDue(key, state.growth.lastAt[key], now.getTime())) continue;
     await step(state, key, async () => {
       const since = new Date(state.growth.lastAt[key] ?? now.getTime() - 3_600_000);
