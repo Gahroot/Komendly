@@ -21,6 +21,7 @@ import { log } from "../log";
 import { renderedBody } from "../render/composed/prompt";
 import { BONUS_PRIORITY, bonusKindOf, fallbackOf, isLocked } from "./trial-fill";
 import { onBonusTerminal, storyFrame } from "./bonus";
+import { brandingFor } from "../growth/viral-branding";
 
 /** Templates show body copy only up to this length (shortBody); longer bodies are shortened, not dropped. */
 export const BODY_FIT_MAX = 70;
@@ -262,10 +263,13 @@ export async function renderJob(ctx: JobContext): Promise<unknown> {
     const version = `v${ad.qcAttempts + 1}-${job.attempts}`;
     const rows: Array<{ adId: string; ratio: string; storageKey: string; mime: string; width: number; height: number; bytes: number; expiresAt: Date }> = [];
     const tUpload = Date.now();
+    // viral_branding: decide the "Made with Komendly" mark now, but upload UNMARKED files: the mark is applied only
+    // after vision QC passes (qc.ts -> markDeliveredAssets), so QC never sees or judges it. Stories reuse a marked source.
+    const brandPlan = ad.kind === "static" && bonusKind !== "story" ? await brandingFor(db, run, now) : { required: false, code: "" };
     for (const f of files) {
       const ext = f.mime === "video/mp4" ? "mp4" : f.mime === "image/jpeg" ? "jpg" : "png";
       const key = runKey(run.workspaceId, run.id, "ads", ad.id, `${f.ratio.replace(":", "x")}-${version}.${ext}`);
-      const body = await readFile(f.path);
+      const body: Buffer = await readFile(f.path);
       await storage.put(key, body, f.mime);
       rows.push({ adId: ad.id, ratio: f.ratio, storageKey: key, mime: f.mime, width: f.width, height: f.height, bytes: body.length, expiresAt });
     }
@@ -303,7 +307,7 @@ export async function renderJob(ctx: JobContext): Promise<unknown> {
         data: {
           // Bonus stories reuse copy + design that already passed QC: technical output only, no second review.
           status: bonusKind === "story" ? "ready" : "qc",
-          visualBrief: { ...freshBrief, ...(palette ? { palette } : {}), ...(renderMeta ? { render: renderMeta } : {}) } as unknown as Prisma.InputJsonValue,
+          visualBrief: { ...freshBrief, ...(palette ? { palette } : {}), ...(renderMeta ? { render: renderMeta } : {}), branding: { required: brandPlan.required, applied: false, code: brandPlan.code || null } } as unknown as Prisma.InputJsonValue,
           costMicros: { increment: BigInt(Math.round(cost)) }, durationMs: Date.now() - started },
       });
       if (bonusKind === "story") return true;

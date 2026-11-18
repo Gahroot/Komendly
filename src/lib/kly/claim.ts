@@ -1,4 +1,5 @@
 // Kly signup attribution: the claim link sets kmd_kly = lead.claimToken; signup links the lead. Pure helpers, no DB.
+import { withSystemUtm } from "@/lib/growth/systems";
 
 export const KLY_COOKIE = "kmd_kly";
 export const KLY_COOKIE_MAX_AGE = 60 * 60 * 24 * 90;
@@ -13,6 +14,13 @@ export function isKlyClaimToken(v: string | null | undefined): v is string {
 export function claimGiftPath(giftToken: string, campaign: string, claimToken: string): string {
   const utm = new URLSearchParams({ utm_source: "outbound", utm_medium: "email", utm_campaign: campaign, utm_content: claimToken });
   return `/gift/${giftToken}?${utm.toString()}`;
+}
+
+/** Growth-system lead (review_gifts | new_business): its gift page with that system's first-touch UTMs (utm_content = claim token). */
+export function systemGiftPath(system: "review_gifts" | "new_business", giftToken: string, campaign: string, claimToken: string): string {
+  const page = system === "review_gifts" ? `/gift/review/${giftToken}` : `/gift/${giftToken}`;
+  const u = new URL(withSystemUtm(`https://www.komendly.com${page}`, system, { medium: "email", campaign, content: claimToken }));
+  return `${u.pathname}${u.search}`;
 }
 
 /** Kly prospects clicked a link we sent to this exact inbox, so signing up with that address proves they own it. */

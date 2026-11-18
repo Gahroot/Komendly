@@ -41,13 +41,13 @@ export function CtaButton({ href, children }: { href: string; children: React.Re
 }
 
 /** Closing CTA card with Ozzy. `campaign` = industry slug or "hub"; utm_content = position. */
-export function CtaBlock({ title, campaign, content, label }: { title: string; campaign: string; content: string; label: string }) {
+export function CtaBlock({ title, campaign, content, label, href }: { title: string; campaign: string; content: string; label: string; href?: string }) {
   return (
     <section className="studio-frame mx-auto flex max-w-3xl flex-col items-center gap-4 rounded-2xl px-5 py-10 text-center sm:px-10" aria-label="Make your own ads">
       <Image src="/brand/ozzy-creator-focused.png" alt="" width={88} height={88} unoptimized className="[image-rendering:pixelated]" />
       <h2 className="font-display text-balance text-3xl font-medium tracking-[-0.02em] sm:text-4xl">{title}</h2>
       <p className="max-w-xl text-muted-foreground">Paste your website and Ozzy makes 10 ready-to-run Facebook &amp; Instagram ads plus an animated one, from your own brand and offers.</p>
-      <CtaButton href={galleryCtaHref(campaign, content)}>{label}</CtaButton>
+      <CtaButton href={href ?? galleryCtaHref(campaign, content)}>{label}</CtaButton>
       <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
         {["No card needed", "Ready in minutes", "Your brand, your photos"].map((t) => (
           <li key={t} className="inline-flex items-center gap-1.5"><Check className="size-3.5 text-[var(--studio-gold)]" aria-hidden />{t}</li>

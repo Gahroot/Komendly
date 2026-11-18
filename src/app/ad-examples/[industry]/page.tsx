@@ -12,6 +12,10 @@ import { getBlogPosts, tagSlug, type BlogPostMeta } from "@/lib/blog";
 import { loadGalleryAds, summarizeIndustries } from "@/lib/ads/gallery";
 import { MIN_INDEXABLE_INDUSTRY_ADS, getIndustry, industryGuide, industryTagSlugs, relatedIndustries, type Industry } from "@/lib/ads/industries";
 import { absoluteUrl } from "@/lib/site";
+import { MakeYoursUrlBox } from "@/components/ad-examples/url-box";
+import { galleryCtaHref } from "@/lib/ads/industries";
+import { MIN_INDEXABLE_SAMPLES, type SampleAd } from "@/lib/growth/industry-examples";
+import { loadIndustryExample } from "@/lib/growth/industry-examples-server";
 import { breadcrumbJsonLd, faqJsonLd, galleryPageJsonLd, graph } from "@/lib/seo/jsonld";
 import "@/components/studio/studio.css";
 
@@ -36,7 +40,31 @@ async function load(slug: string) {
   const all = await loadGalleryAds();
   const ads = all.filter((a) => a.industry === industry.slug);
   const available = new Set(summarizeIndustries(all).map((x) => x.industry.slug));
-  return { industry, ads, available };
+  const content = await loadIndustryExample(industry.slug);
+  return { industry, ads, available, content };
+}
+
+/** Indexable with enough real consented ads, or enough engine-written samples + tips. */
+function indexable(ads: number, samples: number): boolean {
+  return ads >= MIN_INDEXABLE_INDUSTRY_ADS || samples >= MIN_INDEXABLE_SAMPLES;
+}
+
+function SampleAdCard({ ad }: { ad: SampleAd }) {
+  return (
+    <li className="studio-frame flex flex-col gap-3 rounded-xl p-5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate font-medium">{ad.business} <span className="text-muted-foreground">· {ad.city}</span></p>
+        <span className="shrink-0 rounded-full border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Sample</span>
+      </div>
+      <p className="text-sm italic text-foreground/80">{ad.hook}</p>
+      <p className="whitespace-pre-line text-[15px] leading-relaxed text-foreground/90">{ad.primaryText}</p>
+      <div className="mt-auto flex items-center justify-between gap-3 rounded-lg bg-white/5 px-3 py-2">
+        <p className="text-sm font-semibold">{ad.headline}</p>
+        <span className="shrink-0 rounded-md bg-white/10 px-2.5 py-1 text-xs font-medium">{ad.cta}</span>
+      </div>
+      <p className="text-sm text-muted-foreground"><span className="font-medium text-foreground/80">Why it works: </span>{ad.angle}</p>
+    </li>
+  );
 }
 
 function description(i: Industry, count: number): string {
@@ -58,7 +86,7 @@ function relatedPosts(i: Industry): BlogPostMeta[] {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const data = await load((await params).industry);
   if (!data) return {};
-  const { industry: i, ads } = data;
+  const { industry: i, ads, content } = data;
   const path = `/ad-examples/${i.slug}`;
   const title = `Facebook Ad Examples for ${titleCase(i.plural)}${ads.length ? ` (${ads.length} real ${ads.length === 1 ? "ad" : "ads"})` : ""}`;
   const first = ads[0];
@@ -68,14 +96,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: { canonical: path },
     openGraph: { title, description: description(i, ads.length), url: path, ...(first ? { images: [{ url: absoluteUrl(first.src), width: first.width, height: first.height, alt: `${first.brandName} ad` }] } : {}) },
     twitter: { card: "summary_large_image", title, ...(first ? { images: [absoluteUrl(first.src)] } : {}) },
-    ...(ads.length < MIN_INDEXABLE_INDUSTRY_ADS ? { robots: { index: false, follow: true } } : {}),
+    ...(!indexable(ads.length, content?.samples.length ?? 0) ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
 export default async function IndustryPage({ params }: PageProps) {
   const data = await load((await params).industry);
   if (!data) notFound();
-  const { industry: i, ads, available } = data;
+  const { industry: i, ads, available, content } = data;
   const guide = industryGuide(i);
   const path = `/ad-examples/${i.slug}`;
   const related = relatedIndustries(i, available);
@@ -118,6 +146,30 @@ export default async function IndustryPage({ params }: PageProps) {
               <p className="mt-4 text-muted-foreground">No {i.singular} ads shared yet. Yours could be the first.</p>
             </div>
           )}
+        </section>
+
+        {content && (
+          <section className="mx-auto mt-20 max-w-5xl px-4 sm:px-6" aria-labelledby="works-title">
+            <h2 id="works-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-4xl">What works in {i.singular} ads</h2>
+            <p className="mt-4 max-w-3xl text-muted-foreground">{content.intro}</p>
+            <ul className="mt-8 grid gap-5 sm:grid-cols-2">
+              {content.whatWorks.map((w) => (
+                <li key={w.title} className="rounded-xl border border-border p-5"><h3 className="font-semibold">{w.title}</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{w.detail}</p></li>
+              ))}
+            </ul>
+            <h2 className="font-display mt-16 text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Sample {i.singular} ads to adapt</h2>
+            <p className="mt-3 text-sm text-muted-foreground">Written by Ozzy, Komendly&apos;s AI ad wizard, for <strong>fictional demo businesses</strong>. Not real companies or customer ads; swap in your own offer and photos.</p>
+            <ul className="mt-6 grid gap-5 sm:grid-cols-2">
+              {content.samples.map((a) => <SampleAdCard key={a.business} ad={a} />)}
+            </ul>
+          </section>
+        )}
+
+        <section className="mx-auto mt-16 max-w-3xl px-4 text-center sm:px-6" aria-labelledby="url-title">
+          <h2 id="url-title" className="font-display text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Make yours from your website</h2>
+          <p className="mt-3 text-muted-foreground">Paste your {i.singular} website. Ozzy reads it and makes 10 free ads with your brand, offers and photos.</p>
+          <div className="mt-6"><MakeYoursUrlBox href={galleryCtaHref(i.slug, "url_box")} /></div>
+          <p className="mt-4 text-sm text-muted-foreground">Or try the free <Link href="/tools/ad-headline-generator" className="text-[var(--studio-gold)] hover:underline">ad headline generator</Link> and <Link href="/tools/ad-copy-grader" className="text-[var(--studio-gold)] hover:underline">ad copy grader</Link>.</p>
         </section>
 
         <div className="mt-16 px-4 sm:px-6">

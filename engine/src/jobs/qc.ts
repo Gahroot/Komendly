@@ -21,6 +21,7 @@ import { isFreeRun, isGiftRun } from "./gift-policy";
 import { BONUS_PRIORITY, countTypeAds, hedgeEnabled, isLocked, maxTypeAds, READY_MILESTONE, retryConcept, typographicSpec } from "./trial-fill";
 import { log } from "../log";
 import { onBonusTerminal } from "./bonus";
+import { markDeliveredAssets } from "../growth/viral-branding";
 
 /** Intended copy for the vision check; says so when the layout omits the body by design (no false "body missing"). */
 export function intendedCopy(spec: { headline: string; body?: string; cta?: string }, visualBrief: unknown): string {
@@ -178,6 +179,8 @@ export async function qcJob(ctx: JobContext): Promise<unknown> {
   const cost = BigInt(Math.round(ctx.usage.reduce((a, u) => a + u.costMicros, 0)));
 
   if (pass) {
+    // viral_branding: mark the delivered files only now, after QC judged the unmarked render.
+    await markDeliveredAssets(db, storage, ad.id);
     await db.ad.update({ where: { id: ad.id }, data: { status: "ready", qcReport: report, costMicros: { increment: cost } } });
     if (!isLocked(ad.visualBrief)) await logReadyMilestone(db, run, now);
     const first = await db.adRun.updateMany({ where: { id: run.id, firstAdAt: null }, data: { firstAdAt: now } });

@@ -5,6 +5,8 @@ import { getCookieUser, getSessionToken } from "@/lib/auth";
 import { getOrCreateWorkspace } from "@/lib/ads/workspace";
 import { TTL, originFromHeaders, signConsent } from "@/lib/oauth/core";
 import { checkAuthorizeRequest } from "@/lib/oauth/authorize";
+import { connectionAllowed, CONNECTIONS_PAUSED_MESSAGE } from "@/lib/agent-keys/assistant";
+import { assistantLink } from "@/lib/oauth/assistant-touch";
 import { fraunces } from "@/components/studio/fonts";
 import { StudioPose } from "@/components/studio/studio-pose";
 import { StudioRoot } from "@/components/studio/studio-spell";
@@ -53,13 +55,29 @@ export default async function AuthorizePage({ searchParams }: { searchParams: Se
 
   const user = await getCookieUser();
   const sessionToken = await getSessionToken();
+  // Kill switch sys_ai_assistant: refuse NEW connections politely (someone who already connected this app may re-authorize).
+  if (!(await connectionAllowed(user?.id ?? null, check.client.id))) {
+    return (
+      <Shell>
+        <StudioPose form="developer" expression="neutral" size={88} />
+        <div className="studio-frame mt-6 w-full rounded-2xl p-6 text-center">
+          <h1 className="font-display text-2xl font-medium">New connections are paused</h1>
+          <p className="mt-3 text-sm text-muted-foreground">{CONNECTIONS_PAUSED_MESSAGE}</p>
+        </div>
+      </Shell>
+    );
+  }
   if (!user || !sessionToken) {
     const qs = new URLSearchParams();
     for (const k of PARAMS) {
       const v = get(k);
       if (v !== null) qs.set(k, v);
     }
-    redirect(`/login?next=${encodeURIComponent(`/oauth/authorize?${qs.toString()}`)}`);
+    // Most people arriving from an assistant are new: open sign-up (it links to sign-in), tagged utm_source=ai_assistant.
+    const next = `/oauth/authorize?${qs.toString()}`;
+    const signup = new URL(assistantLink(`${origin}/ads/signup`, check.client.name, "oauth"));
+    signup.searchParams.set("next", next);
+    redirect(`${signup.pathname}${signup.search}`);
   }
   const workspace = await getOrCreateWorkspace(user);
   const payload: Record<string, string> = { user_id: user.id };

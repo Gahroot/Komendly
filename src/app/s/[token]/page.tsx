@@ -4,6 +4,12 @@ import { notFound } from "next/navigation";
 import { OzzyLazy } from "@/components/ozzy";
 import { loadShare } from "@/lib/studio/share";
 import { trackStudioShareView } from "@/lib/studio/analytics";
+import { headers } from "next/headers";
+import { MadeWithCta } from "@/components/growth/made-with-cta";
+import { trackAdsEvent } from "@/lib/ads/events";
+import { prisma } from "@/lib/prisma";
+import { systemEnabled } from "@/lib/growth/systems";
+import { isExternalReferrer, VIRAL_KEY } from "@/lib/growth/viral-branding";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +18,7 @@ type Props = { params: Promise<{ token: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const share = await loadShare((await params).token).catch(() => null);
   const title = share ? `${share.title}: made with Ozzy` : "Made with Ozzy";
-  return { title, description: "A video made by chatting with Ozzy, the dingo wizard. Make yours free.", robots: { index: false, follow: true }, openGraph: { title, type: "video.other" } };
+  return { title, description: "A video made by chatting with Ozzy, the dingo wizard. Make yours free.", robots: { index: false, follow: true }, openGraph: { title, type: "video.other", siteName: "Komendly" }, twitter: { card: "summary_large_image", title, description: "Made with Komendly. Make your own free ads from your website." } };
 }
 
 /** Public share page for a Studio render: autoplay, then the viral CTA. */
@@ -21,6 +27,8 @@ export default async function SharePage({ params }: Props) {
   const share = await loadShare(token, { countView: true });
   if (!share) notFound();
   await trackStudioShareView(token);
+  const referrer = (await headers()).get("referer");
+  if (isExternalReferrer(referrer) && (await systemEnabled(prisma, VIRAL_KEY))) await trackAdsEvent("branded_share_visit", { props: { system: VIRAL_KEY, surface: "studio_share", token, referrer: referrer?.slice(0, 200) ?? null } });
   const portrait = share.ratio === "9:16" || share.ratio === "4:5";
   const [w, h] = share.ratio.split(":").map(Number);
   const cta = `/ads/signup?next=/studio&utm_source=studio_share&utm_medium=share&utm_campaign=${encodeURIComponent(token)}`;
@@ -36,6 +44,7 @@ export default async function SharePage({ params }: Props) {
         <p className="mt-3 text-[15px] text-[oklch(0.86_0.03_80)]">This video was made just by chatting with Ozzy, the dingo wizard. Tell him what you want and he makes it.</p>
         <Link href={cta} className="spellbar__cta mt-6 inline-flex h-12 items-center rounded-xl px-7 text-base font-semibold">Make yours free with Ozzy</Link>
         <p className="mt-3 text-xs text-[oklch(0.75_0.03_290)]">Your first video is free. No card needed.</p>
+        <MadeWithCta surface="studio_share" contentId={token} className="mt-6 md:text-left" />
       </div>
     </main>
   );

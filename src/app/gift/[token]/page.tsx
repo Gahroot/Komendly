@@ -13,6 +13,7 @@ import { prisma } from "@/lib/prisma";
 import { startHref } from "@/lib/ads/url-submit";
 import "@/components/studio/studio.css";
 import { BrandMark } from "@/components/brand-mark";
+import { MadeWithCta } from "@/components/growth/made-with-cta";
 import { StudioSky } from "@/components/studio/studio-sky";
 import { OzzyLazy } from "@/components/ozzy/OzzyLazy";
 
@@ -80,6 +81,7 @@ export default async function GiftPage({ params }: Props) {
           {!hasAccount && <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">{["No card", "Ready in minutes", "Yours to keep"].map((t) => <li key={t} className="inline-flex items-center gap-1"><Check className="size-3.5 text-[var(--studio-gold)]" />{t}</li>)}</ul>}
         </section>
         <GiftPassOn token={token} link={passOnLink} />
+        <MadeWithCta surface="gift" contentId={token} className="mt-10" />
       </main>
     </StudioRoot>
   );

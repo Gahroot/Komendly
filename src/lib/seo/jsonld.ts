@@ -260,3 +260,18 @@ export function galleryPageJsonLd(opts: {
 export function graph(...nodes: Array<JsonLd | null>): JsonLd {
   return { '@context': 'https://schema.org', '@graph': nodes.filter((n): n is JsonLd => n !== null) }
 }
+
+/** Free no-sign-up web tool (/tools/<slug>). */
+export function freeToolJsonLd(opts: { name: string; description: string; path: string }): JsonLd {
+  return {
+    '@type': 'WebApplication',
+    '@id': `${absoluteUrl(opts.path)}#app`,
+    name: opts.name,
+    description: opts.description,
+    url: absoluteUrl(opts.path),
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Any (web browser)',
+    isAccessibleForFree: true,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  }
+}

@@ -2,11 +2,14 @@
 // plus Meta spend economics per campaign. Callers pass rows + an explicit `now`.
 import { isInternalEmail } from "@/lib/internal-email";
 import type { FirstTouch } from "@/lib/analytics/first-touch";
+import { systemForTouch, type SystemKey } from "@/lib/growth/systems";
 
 const DAY_MS = 24 * 3600 * 1000;
 const META_SOURCES = new Set(["facebook", "instagram", "meta", "fb", "ig", "messenger"]);
 
-export type Channel = "meta_paid" | "blog" | "ref_link" | "gift" | "partner" | "referral" | "campaign" | "direct";
+/** `kly_email`: Kly cold email (utm_source=outbound). `sys_<key>`: an autopilot growth system (src/lib/growth/systems.ts). */
+export type Channel = "meta_paid" | "blog" | "ref_link" | "gift" | "partner" | "referral" | "campaign" | "direct" | "kly_email" | `sys_${SystemKey}`;
+export const KLY_UTM_SOURCE = "outbound";
 /** Growth loops: /r/<code> redirects with utm_source=referral and utm_medium referral | gift | partner. */
 function loopChannel(t: FirstTouch): Channel | null {
   const src = t.utm_source?.toLowerCase();
@@ -26,6 +29,8 @@ export function classifyTouch(t: FirstTouch | null | undefined): SourceKey {
   const content = t?.utm_content ?? "(none)";
   let channel: Channel = "direct";
   if (t?.fbclid || (t?.utm_source && META_SOURCES.has(t.utm_source.toLowerCase()))) channel = "meta_paid";
+  else if (t && systemForTouch(t)) channel = `sys_${systemForTouch(t)}` as Channel;
+  else if (t?.utm_source?.toLowerCase() === KLY_UTM_SOURCE) channel = "kly_email";
   else if (t && loopChannel(t)) channel = loopChannel(t) ?? "campaign";
   else if (t?.utm_source === "blog" || t?.utm_medium === "blog" || t?.landing?.startsWith("/blog")) channel = "blog";
   else if (t?.utm_source || t?.utm_campaign) channel = "campaign";

@@ -9,6 +9,9 @@ import { commissionsForStripeEvent } from "./commissions";
 import { isTrialStartInvoice, recordFreeMonthClaim, statusAfterCheckout } from "./referral-billing";
 import { STUDIO_LAUNCH_OFFER } from "@/lib/hub/money-model";
 import { grantPlanTestimonials, planTestimonialsFor } from "@/lib/hub/plan-testimonials";
+import { recordCheckoutRecovered } from "@/lib/growth/checkout-recovery";
+import { recordCheckoutSession } from "@/lib/growth/checkout-recovery-server";
+import { recordPaymentFailed, recordWinbackPayment } from "@/lib/growth/winback";
 
 
 type Meta = Stripe.Metadata | null | undefined;
@@ -41,6 +44,10 @@ async function onCheckoutCompleted(s: Stripe.Checkout.Session) {
       userId: ws.ownerId,
       props: { checkoutSessionId: s.id, kind: s.metadata?.kind ?? s.mode, key: s.metadata?.offer ?? s.metadata?.plan ?? s.metadata?.topup, mode: s.mode, amountCents: s.amount_total ?? 0, currency: s.currency ?? "usd" },
     });
+    // Abandoned-checkout recovery: a payment within 14 days of a recovery email = checkout_recovered (once per checkout).
+    await recordCheckoutRecovered(prisma, { userId: ws.ownerId, workspaceId: ws.id, billing: "ads", amountCents: s.amount_total ?? 0, ref: s.id });
+    // Win-back: a churned customer paying again within 60 days of a winback email = winback_recovered (once per churn).
+    await recordWinbackPayment(prisma, { userId: ws.ownerId, workspaceId: ws.id, billing: "ads", amountCents: s.amount_total ?? 0, ref: s.id });
   }
   const customer = idOf(s.customer);
   if (customer && !ws.stripeCustomerId) await prisma.adsWorkspace.update({ where: { id: ws.id }, data: { stripeCustomerId: customer } });
@@ -117,6 +124,8 @@ async function onInvoicePaid(inv: Stripe.Invoice) {
   const planKey = offer?.plan ?? invoicePlanKey(inv);
   const plan = planKey ? getPlan(planKey) : undefined;
   if (!ws || !plan) return;
+  // Win-back: a previously failed invoice now paid (payment_recovered after a winback email). Never throws.
+  if (inv.amount_paid > 0) await recordWinbackPayment(prisma, { userId: ws.ownerId, workspaceId: ws.id, billing: "ads", invoiceId: inv.id, amountCents: inv.amount_paid, ref: inv.id });
   // Credits on new periods (create/cycle). stripeRef = invoice id keeps it idempotent.
   // Launch Quarter: 60 credits per quarter, +5 bonus on the first invoice. Annual prepay: all 12 months of credits
   // on each yearly invoice (unused ones expire at the next renewal).
@@ -220,6 +229,24 @@ export async function handleAdsStripeEvent(event: Stripe.Event): Promise<boolean
       if (event.data.object.metadata?.product !== "ads") return false;
       await onCheckoutCompleted(event.data.object);
       return true;
+    case "checkout.session.expired": {
+      // Abandoned checkout (recovery): make sure the start is recorded (owner of the workspace in its metadata).
+      const x = event.data.object;
+      if (x.metadata?.product !== "ads") return false;
+      const ws = await findWorkspace(x.metadata, idOf(x.customer));
+      if (ws) await recordCheckoutSession(prisma, x, { userId: ws.ownerId, workspaceId: ws.id }, "expired");
+      return true;
+    }
+    case "invoice.payment_failed": {
+      // Win-back: payment_failed once per invoice (the engine sends the update-your-card sequence).
+      const inv = event.data.object;
+      const sub = inv.parent?.subscription_details;
+      if (!sub || !inv.id) return false;
+      const ws = await findWorkspace(sub.metadata, idOf(inv.customer));
+      if (!ws) return false;
+      await recordPaymentFailed(prisma, { userId: ws.ownerId, workspaceId: ws.id, billing: "ads", invoiceId: inv.id, subscriptionId: idOf(sub.subscription), amountCents: inv.amount_due, plan: invoicePlanKey(inv) ?? ws.adsPlan });
+      return true;
+    }
     case "invoice.paid":
       await onInvoicePaid(event.data.object);
       return true;

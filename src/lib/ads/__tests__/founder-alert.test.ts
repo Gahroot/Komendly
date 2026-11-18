@@ -22,3 +22,10 @@ describe("founder alert", () => {
     expect(m.subject).toBe("[Komendly] Free pack refused: jo@yahoo.com");
   });
 });
+
+describe("alertMessage: PAID source system", () => {
+  it("names the billing and source system", () => {
+    const m = alertMessage({ event: "purchased", email: "a@b.co", name: null, website: null, source: "recovery / convert", props: { key: "starter", amountCents: 4900 }, adminUrl: "u", billing: "Testimonials", system: "sys_checkout_recovery" });
+    expect(m.text).toContain("Source system: sys_checkout_recovery (billing: Testimonials)");
+  });
+});

@@ -56,7 +56,7 @@ const nextConfig: NextConfig = {
       },
       {
         // Public marketing pages only: never cache API, account or admin responses
-        source: "/((?!api|ads|admin|dashboard|checkout|oauth|\\.well-known|login|register|ozzy-lab|verify-email|test-video|r/|g/|u/|gift/|partners/apply|studio|s/|_next).+)",
+        source: "/((?!api|ads|admin|dashboard|checkout|oauth|\\.well-known|login|register|ozzy-lab|verify-email|test-video|r/|g/|u/|m/|gift/|partners/apply|studio|s/|_next).+)",
         headers: [
           {
             key: "Cache-Control",
@@ -96,6 +96,11 @@ const nextConfig: NextConfig = {
       {
         // Referral share links set the kmd_ref cookie: never cache
         source: "/r/:code",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        // "Made with Komendly" mark short links: per-visit tracking redirect, never cache
+        source: "/m/:code",
         headers: [{ key: "Cache-Control", value: "private, no-store" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {

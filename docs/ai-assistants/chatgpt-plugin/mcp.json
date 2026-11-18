@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "komendly": {
+      "type": "streamable-http",
+      "url": "https://www.komendly.com/api/mcp",
+      "extensions": { "com.openai": { "auth": { "type": "oauth", "client": { "mode": "dcr" } } } }
+    }
+  }
+}

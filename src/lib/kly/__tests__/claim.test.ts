@@ -43,3 +43,13 @@ describe("sameInbox", () => {
     expect(sameInbox("", "")).toBe(false);
   });
 });
+
+describe("systemGiftPath", () => {
+  it("tags growth-system gift links with the system's utm_source", async () => {
+    const { systemGiftPath } = await import("../claim");
+    const r = new URL(systemGiftPath("review_gifts", "tok", "plumber", "claim123"), "https://x.com");
+    expect(r.pathname).toBe("/gift/review/tok");
+    expect(Object.fromEntries(r.searchParams)).toEqual({ utm_source: "review_gift", utm_medium: "email", utm_campaign: "plumber", utm_content: "claim123" });
+    expect(new URL(systemGiftPath("new_business", "t2", "x", "c"), "https://x.com").searchParams.get("utm_source")).toBe("new_business");
+  });
+});

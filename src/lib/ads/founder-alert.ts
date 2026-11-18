@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { isTestEmail as isLifecycleTestEmail } from "./lifecycle/select";
 import { isInternalEmail } from "@/lib/internal-email";
 import { sendAdsMail } from "./mailer";
+import { classifyTouch } from "./funnel";
+import { parseFirstTouch, serializeFirstTouch, type FirstTouch } from "@/lib/analytics/first-touch";
 
 export const ALERT_EVENTS = ["signed_up", "trial_blocked", "export_downloaded", "checkout_started", "purchased", "churned"] as const;
 export type AlertEvent = (typeof ALERT_EVENTS)[number];
@@ -29,6 +31,9 @@ export interface AlertFacts {
   source: string | null;
   props: Record<string, unknown>;
   adminUrl: string;
+  /** PAID alerts: which billing system took the money and which acquisition channel/system brought them. */
+  billing?: string | null;
+  system?: string | null;
 }
 
 const money = (cents: unknown) => (typeof cents === "number" ? `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}` : null);
@@ -50,6 +55,7 @@ export function alertMessage(f: AlertFacts): { subject: string; text: string } {
     `Who: ${f.name ? `${f.name} <${f.email}>` : f.email}`,
     f.website ? `Website: ${f.website}` : null,
     `Came from: ${f.source ?? "unknown"}`,
+    f.event === "purchased" ? `Source system: ${f.system ?? "direct"}${f.billing ? ` (billing: ${f.billing})` : ""}` : null,
     "",
     f.event === "export_downloaded" || f.event === "trial_blocked" ? "Good moment for a personal note: email them directly." : null,
     `Admin: ${f.adminUrl}`,
@@ -76,12 +82,49 @@ export async function founderAlert(name: string, data: { userId?: string; worksp
     const source = ft ? [ft.utm_source, ft.utm_medium].filter(Boolean).join(" / ") || (typeof ft.referrer === "string" ? ft.referrer : null) : null;
     const base = (process.env.NEXT_PUBLIC_APP_URL || "https://www.komendly.com").replace(/\/$/, "");
     const website = run?.url ?? (typeof data.props?.domain === "string" ? data.props.domain : null);
-    const { subject, text } = alertMessage({ event: name, email: user.email, name: user.name, website, source, props: data.props ?? {}, adminUrl: `${base}/admin/ads/signups` });
+    const system = channelOf(ft);
+    const { subject, text } = alertMessage({ event: name, email: user.email, name: user.name, website, source, props: data.props ?? {}, adminUrl: `${base}/admin/ads/signups`, billing: "Website2ads", system });
     await Promise.race([
       sendAdsMail({ to, subject, text, html: `<pre style="font:14px/1.5 -apple-system,Segoe UI,sans-serif;white-space:pre-wrap">${text.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</pre>` }),
       new Promise((r) => setTimeout(r, 4000)),
     ]);
   } catch (e) {
     console.warn("[founder-alert] failed", e instanceof Error ? e.message : e);
+  }
+}
+
+/** Channel / growth system of a stored first touch (funnel.ts mapping: meta_paid, kly_email, sys_<key>...). */
+function channelOf(ft: Record<string, unknown> | null): string {
+  const t = ft ? parseFirstTouch(serializeFirstTouch(ft as FirstTouch)) : null;
+  return classifyTouch(t).channel;
+}
+
+/** Marker event: one per testimonial Stripe payment (also the dashboard's testimonial revenue record). */
+export const TESTIMONIAL_PAID_EVENT = "testimonial_paid";
+
+/**
+ * Testimonials billing PAID alert (subscription start or credit pack). Idempotent per Stripe payment via an AdsEvent
+ * `testimonial_paid` {paymentId}; never throws. Test/internal users get the marker but no email.
+ */
+export async function testimonialPaidAlert(p: { userId: string; paymentId: string; amountCents: number | null; what: string; kind: "subscription" | "pack" }): Promise<void> {
+  try {
+    const prior = await prisma.adsEvent.findFirst({ where: { name: TESTIMONIAL_PAID_EVENT, props: { path: ["paymentId"], equals: p.paymentId } }, select: { id: true } });
+    if (prior) return;
+    await prisma.adsEvent.create({ data: { name: TESTIMONIAL_PAID_EVENT, userId: p.userId, props: { paymentId: p.paymentId, amountCents: p.amountCents, what: p.what, kind: p.kind } } });
+    const to = process.env.ADS_ALERT_EMAIL;
+    if (!to) return;
+    const user = await prisma.user.findUnique({ where: { id: p.userId }, select: { email: true, name: true } });
+    if (!user?.email || isLifecycleTestEmail(user.email) || isInternalEmail(user.email)) return;
+    const signup = await prisma.adsEvent.findFirst({ where: { name: "signed_up", userId: p.userId }, orderBy: { createdAt: "asc" }, select: { props: true } });
+    const ft = ((signup?.props as Record<string, unknown> | null)?.firstTouch ?? null) as Record<string, unknown> | null;
+    const source = ft ? [ft.utm_source, ft.utm_medium].filter(Boolean).join(" / ") || null : null;
+    const base = (process.env.NEXT_PUBLIC_APP_URL || "https://www.komendly.com").replace(/\/$/, "");
+    const { subject, text } = alertMessage({ event: "purchased", email: user.email, name: user.name, website: null, source, props: { key: p.what, amountCents: p.amountCents ?? undefined }, adminUrl: `${base}/admin/money`, billing: "Testimonials", system: channelOf(ft) });
+    await Promise.race([
+      sendAdsMail({ to, subject, text, html: `<pre style="font:14px/1.5 -apple-system,Segoe UI,sans-serif;white-space:pre-wrap">${text.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</pre>` }),
+      new Promise((r) => setTimeout(r, 4000)),
+    ]);
+  } catch (e) {
+    console.warn("[founder-alert] testimonial paid alert failed", e instanceof Error ? e.message : e);
   }
 }

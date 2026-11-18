@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2 } from "lucide-react";
@@ -23,6 +23,11 @@ export function FreeAdsUrlForm({ id, cta = "Get my free ads" }: { id: string; ct
   const [state, setState] = useState<"idle" | "valid" | "invalid" | "cast">("idle");
   const [usedDomain, setUsedDomain] = useState<string | null>(null);
   const focusedOnce = useRef(false);
+  // Prefill from ?url= (URL boxes on /ad-examples/<industry> and /tools submit here).
+  useEffect(() => {
+    const u = new URLSearchParams(window.location.search).get("url");
+    if (u) setUrl(u.slice(0, 300));
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();

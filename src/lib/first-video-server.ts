@@ -16,7 +16,7 @@ export async function findOfferUser(userId: string): Promise<OfferUser | null> {
   return prisma.user.findUnique({ where: { id: userId }, select: OFFER_USER_SELECT });
 }
 
-export function startFirstVideoCheckout(user: OfferUser, origin: string, cancelPath: string) {
+export function startFirstVideoCheckout(user: OfferUser, origin: string, cancelPath: string, extra: { coupon?: string | null; metadata?: Record<string, string> } = {}) {
   return createFirstVideoCheckout(
     {
       countPurchases: (userId) => prisma.creditPurchase.count({ where: { userId } }),
@@ -27,6 +27,6 @@ export function startFirstVideoCheckout(user: OfferUser, origin: string, cancelP
       priceId: process.env.STRIPE_FIRST_VIDEO_PRICE_ID || undefined,
     },
     user,
-    { origin, cancelPath },
+    { origin, cancelPath, ...extra },
   );
 }

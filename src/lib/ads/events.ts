@@ -4,6 +4,9 @@ import { founderAlert } from "@/lib/ads/founder-alert";
 
 export type AdsEventName =
   | "signed_up"
+  // AI assistants (growth system ai_assistant): MCP tool call over an OAuth connection / a user allowed a new app connection
+  | "assistant_tool_called"
+  | "assistant_connected"
   | "trial_started"
   | "extraction_shown"
   | "extraction_retried"
@@ -93,7 +96,26 @@ export type AdsEventName =
   | "self_refund"
   // Komendly for agents: personal API keys (props: { via: "mcp"|"cli"|"api", keyId }; api_used once per key per day)
   | "api_key_created"
-  | "api_used";
+  | "api_used"
+  // viral_branding: visit via a "Made with Komendly" mark (/m/<code>) or a public share page from an external referrer (props.system, surface)
+  | "branded_share_visit"
+  // Autopilot free tools (/tools): one per use (props.system = "free_tools", tool)
+  | "free_tool_used"
+  // Abandoned-checkout recovery (props.system = "checkout_recovery"; rows written directly by engine/webhooks/resume route)
+  | "recovery_email_sent"
+  | "recovery_clicked"
+  | "checkout_recovered"
+  // Churn & failed-payment win-back (props.system = "winback"; rows written directly by engine/webhooks/link route)
+  | "payment_failed"
+  | "winback_email_sent"
+  | "winback_clicked"
+  | "payment_recovered"
+  | "winback_recovered"
+  | "churn_reason"
+  // Shopify App Store (props.system = "shopify", shop)
+  | "shopify_installed"
+  | "shopify_uninstalled"
+  | "shopify_charge_activated";
 
 /** Fire-and-forget funnel event. Never throws. */
 export async function trackAdsEvent(

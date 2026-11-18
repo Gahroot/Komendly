@@ -3,7 +3,7 @@ import type { z } from "zod";
 import { OutboundRunSchema, type OutboundAction } from "./server-schema";
 import { prisma } from "@/lib/prisma";
 import { emailDomain, isStopped } from "./policy";
-import { claimGiftPath } from "@/lib/kly/claim";
+import { claimGiftPath, systemGiftPath } from "@/lib/kly/claim";
 import { KLY_SETTINGS_ID } from "@/lib/kly/settings";
 
 export { OutboundActionSchema, OutboundRunSchema, type OutboundAction } from "./server-schema";
@@ -21,8 +21,10 @@ export function nicheCampaign(niche: string): string {
  * (utm_content = claim token) plus the claim token for the kmd_kly attribution cookie. */
 export async function claimRedirect(token: string, _ua?: string | null): Promise<{ path: string; claimToken: string } | null> {
   if (!isLeadToken(token)) return null;
-  const lead = await prisma.outboundLead.findUnique({ where: { claimToken: token }, select: { id: true, giftToken: true, niche: true, status: true, clickedAt: true } });
+  const lead = await prisma.outboundLead.findUnique({ where: { claimToken: token }, select: { id: true, giftToken: true, niche: true, status: true, clickedAt: true, system: true } });
   if (!lead?.giftToken) return null;
+  // Growth-system leads (Kly review_gifts / new_business) carry their own utm_source for first-touch attribution.
+  if (lead.system === "review_gifts" || lead.system === "new_business") return { path: systemGiftPath(lead.system, lead.giftToken, nicheCampaign(lead.niche), token), claimToken: token };
   // No click is recorded here: mail scanners follow every link within seconds of delivery (often with browser UAs).
   // The click counts when the gift page's JS beacon fires (recordHumanClick), which scanners don't run.
   return { path: claimGiftPath(lead.giftToken, nicheCampaign(lead.niche), token), claimToken: token };
@@ -30,10 +32,12 @@ export async function claimRedirect(token: string, _ua?: string | null): Promise
 
 /** A real person opened the outbound gift page (JS view beacon): that's the click. Idempotent. */
 export async function recordHumanClick(giftToken: string, now: Date = new Date()): Promise<boolean> {
-  const lead = await prisma.outboundLead.findUnique({ where: { giftToken }, select: { id: true, status: true, clickedAt: true } });
+  const lead = await prisma.outboundLead.findUnique({ where: { giftToken }, select: { id: true, status: true, clickedAt: true, system: true } });
   if (!lead || lead.clickedAt) return false;
   const promote = ["ad_made", "queued", "sent", "opened"].includes(lead.status);
   const r = await prisma.outboundLead.updateMany({ where: { id: lead.id, clickedAt: null }, data: { clickedAt: now, ...(promote ? { status: "clicked" } : {}) } });
+  // Growth systems run by Kly count "gift viewed" as an AdsEvent (props.system) for the dashboard.
+  if (r.count === 1 && lead.system) await prisma.adsEvent.create({ data: { name: "system_gift_viewed", props: { system: lead.system, leadId: lead.id } } }).catch(() => undefined);
   return r.count === 1;
 }
 

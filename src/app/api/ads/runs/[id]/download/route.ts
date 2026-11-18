@@ -8,6 +8,8 @@ import { isBonusUnlocked } from "@/lib/ads/bonus-unlock";
 import { assertCanDownload } from "@/lib/ads/download-gate-server";
 import { extensionForMime, getObjectStream } from "@/lib/ads/storage";
 import { adsErrorResponse, AdsHttpError, requireWorkspaceMember } from "@/lib/ads/workspace";
+import { systemEnabled } from "@/lib/growth/systems";
+import { MADE_WITH_CTA, madeWithCtaUrl, shouldBrand, VIRAL_KEY } from "@/lib/growth/viral-branding";
 
 /** "Download all": streams every ready asset of the run as one ZIP. */
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -31,9 +33,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const files = perAd.flatMap((p) => p.files);
     if (files.length === 0) throw new AdsHttpError(404, "no_assets", "No finished ads to download yet.");
     const signal = request.signal;
+    // viral_branding: free downloads carry the share CTA (paid workspaces don't, unless they kept the mark).
+    const removeBranding = (await prisma.adsBrandingSetting.findUnique({ where: { workspaceId: workspace.id }, select: { removeBranding: true } }).catch(() => null))?.removeBranding ?? null;
+    const madeWith = shouldBrand({ systemOn: await systemEnabled(prisma, VIRAL_KEY), workspace, removeBranding })
+      ? `Made with Komendly.\n${MADE_WITH_CTA}: ${madeWithCtaUrl("download", id)}\n`
+      : null;
     async function* entries() {
       const brand = (run.extraction as { brandName?: string } | null)?.brandName ?? domainOf(run.url);
       yield { name: "ad-text.txt", input: adTextFile(brand, perAd.map((p) => ({ files: p.files.map((f) => f.name), headline: p.ad.headline, body: p.ad.body, cta: p.ad.cta }))) };
+      if (madeWith) yield { name: "made-with-komendly.txt", input: madeWith };
       for (const file of files) yield { name: file.name, input: await getObjectStream(file.key, signal) };
     }
     await trackAdsEvent("export_downloaded", { workspaceId: workspace.id, userId: user.id, runId: id, props: { kind: "zip", files: files.length } });

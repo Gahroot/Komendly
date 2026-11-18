@@ -154,7 +154,7 @@ export async function revokeToken(client: OAuthClient, token: string, now = new 
   else await prisma.oAuthToken.updateMany({ where: { id: row.id, revokedAt: null }, data: { revokedAt: now } });
 }
 
-export type AccessResult = { ok: true; user: User; keyId: string; workspaceId: string } | { ok: false; reason: "invalid" | "rate_limited" };
+export type AccessResult = { ok: true; user: User; keyId: string; workspaceId: string; clientName: string } | { ok: false; reason: "invalid" | "rate_limited" };
 
 /** kmo_ access token -> user. The grant id is the agent keyId, so per-key limits and api_used reuse the API key paths. */
 export async function resolveAccessToken(raw: string, opts: { via: ApiVia; now?: Date }): Promise<AccessResult> {
@@ -165,7 +165,7 @@ export async function resolveAccessToken(raw: string, opts: { via: ApiVia; now?:
   const grant = row.grant;
   if (!(await rateLimit(`apikey:${grant.id}`, API_KEY_LIMITS.perMinute, 60))) return { ok: false, reason: "rate_limited" };
   await touchGrant(grant.id, grant.userId, grant.workspaceId, opts.via, now);
-  return { ok: true, user: grant.user, keyId: grant.id, workspaceId: grant.workspaceId };
+  return { ok: true, user: grant.user, keyId: grant.id, workspaceId: grant.workspaceId, clientName: grant.clientName };
 }
 
 async function touchGrant(grantId: string, userId: string, workspaceId: string, via: ApiVia, now: Date): Promise<void> {

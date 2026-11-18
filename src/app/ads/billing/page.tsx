@@ -31,6 +31,8 @@ import { trackAdsEvent } from "@/lib/ads/events";
 import { getSelfRefundEligibility } from "@/lib/ads/self-refund";
 import { LaunchGuideCard } from "@/components/ads/launch-guide-card";
 import { SelfRefundButton } from "./_components/self-refund-button";
+import { BrandingCard } from "./_components/branding-card";
+import { isPaidForBranding } from "@/lib/growth/viral-branding";
 
 export const metadata: Metadata = { title: "Plan & billing", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -97,6 +99,7 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
         {checkout === "canceled" && declined && !paid && !ws.suspendedAt && configured && <CheckoutDownsell declined={declined.slice(0, 40)} unlockPack={downsellUnlock} />}
         {!configured && <Notice tone="warn">Billing isn&apos;t configured yet, so plans can&apos;t be bought right now. Your free trial still works.</Notice>}
         {ws.suspendedAt && <Notice tone="warn">This workspace is suspended. Contact support.</Notice>}
+        <BrandingCard paid={isPaidForBranding(ws, now)} removeBranding={(await prisma.adsBrandingSetting.findUnique({ where: { workspaceId: ws.id }, select: { removeBranding: true } }))?.removeBranding ?? true} />
 
         {offer === STUDIO_LAUNCH_OFFER.key && !launchOpen && <Notice tone="muted">{paid ? "You're already on a plan, so the Studio launch offer doesn't apply." : "The Studio launch offer has ended. The plans below are still here, with the same 30-day guarantee."}</Notice>}
         {launchOpen && growth && ws.studioOfferReadyAt && (

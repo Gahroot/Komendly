@@ -1,4 +1,5 @@
 // Small-business industries for the /ad-examples SEO gallery. Pure and deterministic: classify a run's extraction by keyword rules.
+import { withSystemUtm } from "../growth/systems";
 
 export type IndustryKind = "local-service" | "local-venue" | "shop" | "professional" | "online";
 
@@ -204,6 +205,7 @@ export function relatedIndustries(i: Industry, available: ReadonlySet<string>, l
 }
 
 export function galleryCtaHref(slug: string, content = "page"): string {
-  const q = new URLSearchParams({ utm_source: "seo", utm_medium: "gallery", utm_campaign: slug, utm_content: content });
-  return `/free-ads?${q.toString()}`;
+  // Growth system industry_examples (utm_source=examples): first touch from /ad-examples traces to it.
+  const u = new URL(withSystemUtm("https://www.komendly.com/free-ads", "industry_examples", { campaign: slug, content, medium: "gallery" }));
+  return `${u.pathname}${u.search}`;
 }

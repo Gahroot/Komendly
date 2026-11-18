@@ -1,0 +1,11 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Gahroot/komendly",
+  "title": "Komendly (Ozzy): ads and videos from your website",
+  "description": "Make ad creatives from any website and promo videos with Ozzy. Free first Ad Pack. OAuth sign-in.",
+  "websiteUrl": "https://www.komendly.com/agents?utm_source=ai_assistant&utm_medium=acquire&utm_campaign=mcp-registry",
+  "repository": { "url": "https://github.com/Gahroot/Komendly", "source": "github" },
+  "version": "1.0.0",
+  "icons": [{ "src": "https://www.komendly.com/brand/komendly-mark-256.png", "mimeType": "image/png", "sizes": ["256x256"] }],
+  "remotes": [{ "type": "streamable-http", "url": "https://www.komendly.com/api/mcp" }]
+}

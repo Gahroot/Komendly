@@ -50,7 +50,7 @@ export class CodexProvider implements AIProvider {
       try {
         res = await stream({
           provider: "openai",
-          model: this.o.textModel,
+          model: req.model ?? this.o.textModel,
           apiKey: accessToken,
           accountId,
           messages: [

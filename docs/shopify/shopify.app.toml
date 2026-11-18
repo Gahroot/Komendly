@@ -1,0 +1,30 @@
+# Template: copy to the folder you run `npx @shopify/cli@latest app deploy` from (see SUBMIT.md), then replace client_id.
+client_id = "PASTE_CLIENT_ID_FROM_DEV_DASHBOARD"
+name = "Komendly: Ad Creatives"
+application_url = "https://www.komendly.com/shopify"
+embedded = true
+
+[access_scopes]
+scopes = "read_products"
+use_legacy_install_flow = false
+
+[auth]
+redirect_urls = ["https://www.komendly.com/shopify"]
+
+[webhooks]
+api_version = "2026-10"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled", "app_subscriptions/update"]
+  uri = "https://www.komendly.com/api/shopify/webhooks"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+  uri = "https://www.komendly.com/api/shopify/webhooks"
+
+[pos]
+embedded = false
+
+[build]
+automatically_update_urls_on_dev = false
+include_config_on_deploy = true

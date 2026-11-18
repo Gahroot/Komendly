@@ -9,6 +9,7 @@ import { StudioNav } from "@/components/studio/studio-nav";
 import { StudioRoot } from "@/components/studio/studio-spell";
 import { loadGalleryAds, summarizeIndustries } from "@/lib/ads/gallery";
 import { galleryCtaHref } from "@/lib/ads/industries";
+import { loadIndexableIndustryLinks } from "@/lib/growth/industry-examples-server";
 import { breadcrumbJsonLd, galleryPageJsonLd, graph } from "@/lib/seo/jsonld";
 import "@/components/studio/studio.css";
 
@@ -27,6 +28,8 @@ export const metadata: Metadata = {
 export default async function AdExamplesHub() {
   const industries = summarizeIndustries(await loadGalleryAds());
   const total = industries.reduce((n, x) => n + x.count, 0);
+  const withAds = new Set(industries.map((x) => x.industry.slug));
+  const guides = (await loadIndexableIndustryLinks()).filter((g) => !withAds.has(g.slug));
   return (
     <StudioRoot className={`${fraunces.variable} min-h-screen bg-[#0c0820]`}>
       <JsonLd
@@ -79,6 +82,19 @@ export default async function AdExamplesHub() {
             <p className="mt-4 text-muted-foreground">Ozzy is collecting the first examples. Make your ads and share your favourite to be featured here.</p>
           </section>
         )}
+
+        {guides.length > 0 && (
+          <section className="mx-auto mt-16 max-w-5xl px-4 sm:px-6" aria-labelledby="guides-title">
+            <h2 id="guides-title" className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">What works by industry, with sample ads</h2>
+            <ul className="mt-4 flex flex-wrap gap-2">
+              {guides.map((g) => (
+                <li key={g.slug}><Link href={`/ad-examples/${g.slug}`} className="inline-flex rounded-full border border-border px-3.5 py-1.5 text-sm capitalize text-muted-foreground transition-colors hover:border-[var(--studio-gold)] hover:text-foreground">{g.plural}</Link></li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <p className="mx-auto mt-12 max-w-xl px-4 text-center text-sm text-muted-foreground">Writing your own? Try the free <Link href="/tools" className="text-[var(--studio-gold)] hover:underline">ad tools</Link>: headline generator, copy grader, size checker and more.</p>
 
         <div className="px-4 py-20 sm:px-6">
           <CtaBlock title="Get 10 free ads for your business" campaign="hub" content="end" label="Make yours free" />

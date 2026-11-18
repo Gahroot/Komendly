@@ -89,7 +89,7 @@ function trackBlock(b: LinkBlock, link: (path: string) => string): NonNullable<L
 
 const strOf = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
 
-async function brandContext(db: Db, runId: string | null) {
+export async function brandContext(db: Db, runId: string | null) {
   if (!runId) return { brandName: null, offer: null, audience: null, agencyLike: false, lockedLabel: null as string | null, pains: [] as string[], headlines: [] as string[], thumbs: [] as Array<{ assetId: string; alt: string; expiresAt: Date | null }> };
   const run = await db.adRun.findUnique({ where: { id: runId }, select: { extraction: true, brandProfile: { select: { name: true, mainOffer: true, audience: true, pains: true } } } });
   const ex = (run?.extraction && typeof run.extraction === "object" ? run.extraction : {}) as Record<string, unknown>;

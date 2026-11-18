@@ -21,7 +21,7 @@ export const GIFT_PRIORITY = -5;
 export const STUCK_MS = 2 * 60 * 60_000;
 export const ASSET_KEEP_MS = 60 * 86_400_000;
 
-function domainHash(domain: string, env: NodeJS.ProcessEnv): string {
+export function domainHash(domain: string, env: NodeJS.ProcessEnv): string {
   const salt = env.ADS_HASH_SALT;
   if (!salt) throw new Error("ADS_HASH_SALT is not set");
   return createHmac("sha256", salt).update(`domain:${domain}`).digest("hex");

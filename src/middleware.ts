@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { FBC_COOKIE, FIRST_TOUCH_COOKIE, FIRST_TOUCH_MAX_AGE, LAST_TOUCH_COOKIE, firstTouchFromUrl, serializeFirstTouch } from "@/lib/analytics/first-touch";
 import { ROUTE_HEADER, isRefusedForApiKey, parseBearer } from "@/lib/agent-keys/policy";
+import { assistantTouchUrl } from "@/lib/oauth/assistant-touch";
 import { ANON_ID_COOKIE, EXP_COOKIE, EXP_COOKIE_MAX_AGE, applyOverride, completeAssignments, parseAssignments, serializeAssignments } from "@/lib/analytics/experiments";
 
 /** Give every page visitor a stable anon id + A/B assignments, visible to this same request's server render. */
@@ -15,7 +16,8 @@ function withExperiments(request: NextRequest): NextResponse {
   const serialized = serializeAssignments(assignments);
   // First-touch attribution (e.g. a blog CTA's UTM params): recorded once, read at ads sign-up.
   // Last touch is overwritten by every attributed visit (UTM, fbclid or external referrer); first touch only once.
-  const touch = firstTouchFromUrl(request.nextUrl, new Date(), request.headers.get("referer"));
+  // The OAuth consent page counts as an ai_assistant touch (ChatGPT/Claude opened it), so the sign-up after it is traced.
+  const touch = firstTouchFromUrl(assistantTouchUrl(request.nextUrl), new Date(), request.headers.get("referer"));
   const firstTouch = request.cookies.has(FIRST_TOUCH_COOKIE) ? null : touch;
   if (!isNew && serialized === before && !touch) return NextResponse.next();
   request.cookies.set(ANON_ID_COOKIE, anonId);
@@ -56,7 +58,10 @@ const publicPrefixes = [
   "/api/ads/gift-public/", // Gift pack page beacon + token-checked ad images (public /gift/<token>)
   "/api/ad-of-the-week/",  // Public images of consented ads only (Ad of the week, /ad-examples)
   "/api/ads-billing/webhook", // Stripe webhook for ads billing (signature-verified)
+  "/api/winback/go",       // Win-back: signed, expiring links (update card portal, churn reason, come-back checkout)
+  "/api/recovery/resume",  // Abandoned-checkout recovery: signed, expiring resume-checkout link (token-bound to user + item)
   "/s/",                   // Ozzy Studio public share pages (/s/<token>)
+  "/m/",                   // "Made with Komendly" mark short link (/m/<code>, viral_branding)
   "/api/studio/share/",    // Public share data (token-checked)
   "/api/studio/live/",     // Live preview files for the sandboxed player (per-version capability token; the entry needs a session)
   "/studio/invite/",       // Ozzy Studio invite landing ("2 free videos")
@@ -64,8 +69,12 @@ const publicPrefixes = [
   "/api/mcp",              // Hosted Ozzy MCP server: authenticates its own OAuth token or API key
   "/.well-known/oauth-",   // OAuth discovery metadata (RFC 9728 / RFC 8414) for MCP clients
   "/.well-known/openid-configuration",
+  "/.well-known/openai-apps-challenge", // ChatGPT plugin domain verification (token from OPENAI_APPS_CHALLENGE)
   "/api/oauth/",           // OAuth register/token/revoke (client-authenticated) + consent POST (session + signed form)
   "/oauth/",               // Consent page (sends signed-out visitors to /login itself)
+  "/api/free-tools",       // Free /tools (no sign-up): AI job queue + poll + usage beacon (rate-limited, daily cap, kill switch sys_free_tools)
+  "/shopify",              // Embedded Shopify admin app (App Bridge session token, no cookies; sys_shopify)
+  "/api/shopify/",         // Shopify app API (session-token auth), HMAC-verified webhooks, health, signed open link
   "/api/testimonials/price-survey", // Van Westendorp survey: anonymous /pricing visitors answer too (rate-limited)
 ];
 

@@ -99,3 +99,12 @@ describe("legacyBurstBots (pre-ipNet Meta ad-review bursts)", () => {
     expect(rows.filter((_, i) => !bots.has(i)).length).toBe(1 + modern.length);
   });
 });
+
+describe("classifyTouch: growth systems + Kly", () => {
+  it("gives every registry system and Kly cold email its own channel", () => {
+    expect(classifyTouch({ utm_source: "recovery" }).channel).toBe("sys_checkout_recovery");
+    expect(classifyTouch({ utm_source: "free_tool", utm_medium: "acquire" }).channel).toBe("sys_free_tools");
+    expect(classifyTouch({ utm_source: "outbound", utm_medium: "email" }).channel).toBe("kly_email");
+    expect(classifyTouch({ utm_source: "facebook" }).channel).toBe("meta_paid");
+  });
+});

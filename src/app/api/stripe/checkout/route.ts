@@ -9,6 +9,7 @@ import { createSession, setSessionCookie } from "@/lib/auth";
 import { fulfilCreditPurchase } from "@/lib/credit-fulfilment";
 import { FIRST_VIDEO_OFFER, isLegacyTestimonialSubscriber } from "@/lib/first-video-offer";
 import { findOfferUser, startFirstVideoCheckout } from "@/lib/first-video-server";
+import { recordCheckoutSession } from "@/lib/growth/checkout-recovery-server";
 
 const OFFER_ERRORS = {
   has_subscription: "You already have a plan, so the first-video offer doesn't apply. Top up minutes from Billing instead.",
@@ -31,6 +32,8 @@ async function postFirstVideo(request: NextRequest, userId: unknown, email: unkn
   if (!result.ok) {
     return NextResponse.json({ error: OFFER_ERRORS[result.reason], reason: result.reason }, { status: 409 });
   }
+  // Abandoned-checkout recovery: remember the start (followed up if no payment arrives within ~1h).
+  await recordCheckoutSession(prisma, { id: result.sessionId, created: Math.floor(Date.now() / 1000), metadata: { offer: FIRST_VIDEO_OFFER.key, userId: user.id } }, { userId: user.id });
   return NextResponse.json({ url: result.url, sessionId: result.sessionId });
 }
 
@@ -131,6 +134,7 @@ export async function POST(request: NextRequest) {
       ...(launchCredit ? { discounts: [{ coupon: launchCredit }] } : { allow_promotion_codes: true }),
     });
 
+    await recordCheckoutSession(prisma, { id: session.id, created: session.created, metadata: session.metadata as Record<string, string> }, { userId });
     return NextResponse.json({
       url: session.url,
       sessionId: session.id,

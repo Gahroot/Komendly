@@ -28,6 +28,7 @@ import { loadAutopilot, saveAutopilot } from "@/lib/ads/autopilot-server";
 import { currentAgent } from "./context";
 import { callRoute, type RouteResult } from "./internal-call";
 import { UPGRADE_URL } from "./policy";
+import { instrumentTools, linkForAgent, upgradeUrlForAgent } from "./assistant";
 import { checkJobLimit, JOB_LIMIT_MESSAGE } from "./resolve";
 import { creativeFilename, metaCtaFor, placementsFor, SHARE_LINK_SECONDS, suggestAdCopy, type AdCopy } from "./meta-kit";
 
@@ -54,6 +55,7 @@ function ok(text: string, data: Structured): ToolResult {
 }
 
 function fail(message: string, extra: Structured = {}): ToolResult {
+  if (extra.upgrade_url) extra = { ...extra, upgrade_url: upgradeUrlForAgent() };
   const data = { error: message, ...extra };
   const text = extra.upgrade_url ? `${message} Upgrade or top up: ${String(extra.upgrade_url)}` : message;
   return { content: [{ type: "text", text }], structuredContent: data, isError: true };
@@ -144,7 +146,7 @@ const LINK_FAILED_HINT =
   "Some sites block server downloads (YouTube often does). Ask the user for the video file or a direct .mp4 link, add it with upload_media, then call studio_remix with that upload_id. Or try a TikTok, Instagram or Meta Ad Library link to the same ad.";
 
 function viewUrl(info: McpRequestInfo, path: string): string {
-  return new URL(path, info.origin).toString();
+  return linkForAgent(new URL(path, info.origin).toString());
 }
 
 /** Autopilot view with absolute links (agents can't follow "/ads/runs/..."), plus the run_id for ads_get_run / campaign_kit. */
@@ -368,7 +370,7 @@ async function runOut(info: McpRequestInfo, runId: string) {
     progress: { ready, total, ...(failed ? { failed } : {}) },
     ...(view.error ? { error: "This pack ran into a problem. Open it on Komendly to retry." } : {}),
     ...(gated && ready > 0 ? { download_note: DOWNLOAD_GATE_MESSAGE } : {}),
-    ...(view.ads.some((a) => a.locked) ? { upgrade_url: UPGRADE_URL } : {}),
+    ...(view.ads.some((a) => a.locked) ? { upgrade_url: upgradeUrlForAgent() } : {}),
     links_expire_at: expiresAt(),
     ads,
     view_url: viewUrl(info, `/ads/runs/${view.id}`),
@@ -499,6 +501,7 @@ async function campaignKit(info: McpRequestInfo, runId: string | undefined, sess
 /** One stateless server per HTTP request. Must run inside runAsAgent(). */
 export function buildOzzyServer(info: McpRequestInfo): McpServer {
   const server = new McpServer({ name: "ozzy", title: "Ozzy by Komendly", version: "1.0.0" }, { instructions: MCP_INSTRUCTIONS });
+  instrumentTools(server);
 
   server.registerTool("get_account", { title: "Account", description: "Plan, credit balance (or usage_left_percent on 20x/50x plans), free Ozzy Studio videos left and whether the free Ad Pack was used.", inputSchema: {}, annotations: { readOnlyHint: true } }, () =>
     run(async () => {
@@ -512,7 +515,7 @@ export function buildOzzyServer(info: McpRequestInfo): McpServer {
         ...(unlimitedPassActive(workspace) && workspace.unlimitedUntil ? { unlimited_until: workspace.unlimitedUntil.toISOString() } : {}),
         free_studio_videos_left: paid ? 0 : workspace.studioFreeVideos,
         free_pack_used: paid || workspace.trialUsedAt !== null,
-        upgrade_url: UPGRADE_URL,
+        upgrade_url: upgradeUrlForAgent(),
       };
       return ok(`Plan: ${data.plan}. Credits: ${data.credits}. Free Ozzy videos left: ${data.free_studio_videos_left}.`, data);
     }),
@@ -691,7 +694,7 @@ export function buildOzzyServer(info: McpRequestInfo): McpServer {
 
   server.registerTool(
     "ads_create_pack",
-    { title: "Make an Ad Pack", description: "Turn a website into an Ad Pack of static ads (plus an animated ad when animated=true on paid plans). Uses the free pack or credits like the web app.", inputSchema: { website_url: z.string().min(3).max(2048), animated: z.boolean().optional() } },
+    { title: "Make an Ad Pack", description: "Use this when the user asks to make, create or design ads (Facebook, Instagram, Meta or other social ads, ad creatives, ad images) for a business, product or website. Give the business's website URL: Komendly reads the site and makes an Ad Pack of ready-to-run static ads (image, headline and ad copy in the brand's style), plus an animated ad when animated=true on paid plans. New accounts get one free Ad Pack; after that it uses credits. Ads take a few minutes: follow with ads_get_run, which returns the ad images and a link to view them on Komendly.", inputSchema: { website_url: z.string().min(3).max(2048), animated: z.boolean().optional() } },
     ({ website_url, animated }) =>
       run(async () => {
         await requireJobSlot();

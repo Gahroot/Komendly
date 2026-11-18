@@ -4,6 +4,10 @@ import { stripe, mapStripeStatus, minutesForStoredPlan, resolveSubscriptionPlan 
 import { prisma } from "@/lib/prisma";
 import { isAdsStripeObject } from "@/lib/ads/billing-stripe";
 import { fulfilCreditPurchase } from "@/lib/credit-fulfilment";
+import { testimonialPaidAlert } from "@/lib/ads/founder-alert";
+import { recordCheckoutRecovered } from "@/lib/growth/checkout-recovery";
+import { recordCheckoutSession } from "@/lib/growth/checkout-recovery-server";
+import { recordPaymentFailed, recordTestimonialChurn, recordWinbackPayment } from "@/lib/growth/winback";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -41,6 +45,12 @@ export async function POST(request: NextRequest) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         await handleCheckoutCompleted(session);
+        break;
+      }
+
+      // Abandoned checkout (recovery): make sure the start is recorded, with the email Stripe captured.
+      case "checkout.session.expired": {
+        await recordCheckoutSession(prisma, event.data.object as Stripe.Checkout.Session, {}, "expired");
         break;
       }
 
@@ -142,6 +152,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   });
 
   console.log(`User ${userId} upgraded to ${plan} with ${minutesLimit} minutes/month`);
+  // Founder PAID alert (never throws; once per subscription via the testimonial_paid marker).
+  await recordCheckoutRecovered(prisma, { userId, billing: "testimonials", amountCents: session.amount_total ?? null, ref: `sub:${subscriptionId}` });
+  await recordWinbackPayment(prisma, { userId, billing: "testimonials", amountCents: session.amount_total ?? null, ref: `sub:${subscriptionId}` });
+  await testimonialPaidAlert({ userId, paymentId: `sub:${subscriptionId}`, amountCents: session.amount_total ?? null, what: `testimonials ${plan}`, kind: "subscription" });
 }
 
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
@@ -212,10 +226,17 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     },
   });
 
+  // Win-back: churned AdsEvent (billing testimonials), once per subscription.
+  await recordTestimonialChurn(prisma, { userId: user.id, subscriptionId: subscription.id, plan: user.plan });
   console.log(`Subscription deleted for user ${user.id}`);
 }
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
+  // Win-back: a previously failed invoice now paid (any billing reason). Never throws.
+  if (invoice.id && invoice.amount_paid > 0) {
+    const payer = await prisma.user.findUnique({ where: { stripeCustomerId: invoice.customer as string }, select: { id: true } });
+    if (payer) await recordWinbackPayment(prisma, { userId: payer.id, billing: "testimonials", invoiceId: invoice.id, amountCents: invoice.amount_paid, ref: invoice.id });
+  }
   if (invoice.billing_reason !== "subscription_cycle") {
     return; // Only handle subscription renewals
   }
@@ -262,6 +283,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     },
   });
 
+  if (invoice.id) await recordPaymentFailed(prisma, { userId: user.id, billing: "testimonials", invoiceId: invoice.id, subscriptionId: invoice.parent?.subscription_details?.subscription ? String(typeof invoice.parent.subscription_details.subscription === "string" ? invoice.parent.subscription_details.subscription : invoice.parent.subscription_details.subscription.id) : null, amountCents: invoice.amount_due, plan: user.plan });
   console.log(`Payment failed for user ${user.id}`);
 }
 
@@ -281,6 +303,10 @@ async function handleCreditPurchase(paymentIntent: Stripe.PaymentIntent) {
     minutes,
     amountPaid: paymentIntent.amount,
   });
+  // Founder PAID alert, also when the success-page sync fulfilled first (idempotent per PaymentIntent; never throws).
+  await recordCheckoutRecovered(prisma, { userId, billing: "testimonials", amountCents: paymentIntent.amount, ref: paymentIntent.id });
+  await recordWinbackPayment(prisma, { userId, billing: "testimonials", amountCents: paymentIntent.amount, ref: paymentIntent.id });
+  await testimonialPaidAlert({ userId, paymentId: paymentIntent.id, amountCents: paymentIntent.amount, what: `testimonials ${paymentIntent.metadata?.offer ?? "credit pack"} (${minutes} min)`, kind: "pack" });
   if (result.status !== "fulfilled") {
     console.log(`Credit purchase ${paymentIntent.id} already fulfilled (${result.status})`);
     return;

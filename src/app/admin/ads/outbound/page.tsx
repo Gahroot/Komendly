@@ -12,6 +12,7 @@ import { KlyChart } from "./_components/kly-chart";
 import { KlySettingsDrawer } from "./_components/kly-settings-drawer";
 import { KlyStage } from "./_components/kly-stage";
 import { KlySocialPanel } from "./_components/kly-social-panel";
+import { KlySystemsPanel } from "./_components/kly-systems-panel";
 import { loadSocialPanel } from "@/lib/kly/social-connect";
 
 export const dynamic = "force-dynamic";
@@ -231,6 +232,8 @@ export default async function KlyPage({ searchParams }: { searchParams: Promise<
           </Panel>
 
           <KlySocialPanel d={social} notice={sp.social} />
+
+          <KlySystemsPanel now={d.now} />
 
           <Panel kicker="Recent activity" title="Who Kly is talking to">
             {d.activity.length === 0 ? <Empty>Nothing yet. Sends, replies, signups and payments will show up here as they happen.</Empty> : (

@@ -7,6 +7,11 @@ export interface AgentContext {
   user: User;
   keyId: string;
   via: ApiVia;
+  /** "oauth" = an app connected through sign-in + Allow (ChatGPT, Claude...); "key" = a kmd_ personal API key (CLI). */
+  auth?: "oauth" | "key";
+  /** OAuth client name (e.g. "ChatGPT"), when known. */
+  clientName?: string | null;
+  workspaceId?: string;
 }
 
 const storage = new AsyncLocalStorage<AgentContext>();

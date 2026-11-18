@@ -24,6 +24,9 @@ import { voiceTick } from "./voice";
 import { warmupSecretOf, warmupTick } from "./warmup";
 import { createVerifyRuntime, verifyEnabled, verifyTick, type VerifyRuntime } from "./verify";
 import { createSourceRuntime, type SourceRuntime } from "./sources";
+import { cycleDue, KLY_SYSTEMS, SYSTEM_EVENTS, type KlySystem } from "./growth";
+import { reviewGiftsCycle } from "./review-gifts";
+import { createNewBizRuntime, newBusinessCycle, type NewBizRuntime } from "./new-business";
 import { dayStart, decide, getSettings, killSwitchReason, overBudget, upsertDaily, type KlySettingsRow } from "./settings";
 
 export const TICK_MS = 60_000;
@@ -109,10 +112,12 @@ export interface LoopState {
   /** Pooled SMTP transports + Maildoso sync timing (mailboxes.ts). */
   mail: MailRuntime;
   verify: VerifyRuntime;
+  /** Growth systems run by Kly (review_gifts, new_business): last cycle time + CT cursor. */
+  growth: { lastAt: Partial<Record<KlySystem, number>>; newBiz: NewBizRuntime };
 }
 
 export function newLoopState(): LoopState {
-  return { ticks: 0, lastTickAt: null, lastTickMs: null, lastImapAt: 0, lastRetentionDay: null, codexPct: null, codexPctAt: 0, lastStop: null, killSwitch: null, dailyVolume: null, alertedUntil: null, errors: [], sources: createSourceRuntime(), mail: createMailRuntime(), verify: createVerifyRuntime() };
+  return { ticks: 0, lastTickAt: null, lastTickMs: null, lastImapAt: 0, lastRetentionDay: null, codexPct: null, codexPctAt: 0, lastStop: null, killSwitch: null, dailyVolume: null, alertedUntil: null, errors: [], sources: createSourceRuntime(), mail: createMailRuntime(), verify: createVerifyRuntime(), growth: { lastAt: {}, newBiz: createNewBizRuntime() } };
 }
 
 /** Kinds of KlyDecision that mean something stopped (a domain/mailbox paused, warm-up off, spend stop). */
@@ -273,6 +278,19 @@ export async function runTick(d: LoopDeps, state: LoopState): Promise<void> {
     if (r.made || r.rejected || r.retried || r.failed) log("info", "kly gifts", r);
   });
   await step(state, "encore costs", () => syncEncoreCosts(db, now));
+  // Growth systems (own kill switch sys_<key> + cadence; they share Kly's sending capacity and every Kly gate).
+  for (const key of KLY_SYSTEMS) {
+    if (!cycleDue(key, state.growth.lastAt[key], now.getTime())) continue;
+    await step(state, key, async () => {
+      const since = new Date(state.growth.lastAt[key] ?? now.getTime() - 3_600_000);
+      state.growth.lastAt[key] = now.getTime();
+      const sent = await db.adsEvent.count({ where: { name: SYSTEM_EVENTS.sent, createdAt: { gt: since }, props: { path: ["system"], equals: key } } });
+      const r = key === "review_gifts"
+        ? await reviewGiftsCycle({ db, env, now, sendingLive, stop: kill ?? stop, minScore: s.minLeadScore }, sent)
+        : await newBusinessCycle({ db, env, now, stop: kill ?? stop, minScore: s.minLeadScore, senderName: cfg.senderName, qualify: (n) => qualifierFor(d.ai, n) }, state.growth.newBiz, sent);
+      if (r) log("info", `kly ${key}`, { ...r, sent });
+    });
+  }
   if (sendingLive) {
     await step(state, "sender", async () => {
       const sent = await senderTick({ db, provider, env, rng, dailyVolume: volume, followUpDays: s.followUpDays, maxSteps: s.maxSteps, explorationPct: s.explorationPct, now: clock, mailboxes: boxes, transport: state.mail.pool.transport, warmup: s, probeSecret: warmupSecretOf(env) || undefined });

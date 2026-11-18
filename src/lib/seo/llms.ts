@@ -2,6 +2,7 @@ import { ADS_GUARANTEE, ADS_TOPUPS, FOUNDING_TERMS, PLANS_FOR_SALE, planUsageLin
 import { CATEGORIES, type BlogPostMeta } from '@/lib/blog'
 import { stripFootnotes } from '@/lib/blog-content'
 import { SITE_URL } from '@/lib/site'
+import { FREE_TOOLS } from '@/lib/growth/free-tools'
 import { STUDIO_MAX_SECONDS, STUDIO_PRICE } from '@/lib/studio/contracts'
 
 const usd = (cents: number) => `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`
@@ -42,6 +43,8 @@ export interface GalleryLink {
   slug: string
   plural: string
   count: number
+  /** Engine-written sample ads for fictional demo businesses (clearly labelled on the page). */
+  samples?: number
 }
 
 export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryLink[] = []): string {
@@ -69,7 +72,9 @@ export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryL
     `- [Ad of the week](${SITE_URL}/ad-of-the-week): real customer ads made with Komendly, featured weekly`,
     `- [Examples](${SITE_URL}/examples): Ozzy Studio animated ads, Ad Pack static ads and a video testimonial, all made with Komendly`,
     `- [Ozzy for AI agents](${SITE_URL}/agents): let Claude, Cursor, ChatGPT or scripts make Studio videos and ad packs via the Komendly MCP server (https://www.komendly.com/api/mcp; add it as a connector and sign in) or the \`komendly\` CLI (personal API key), on the same plan and credits`,
-    `- [Facebook ad examples by industry](${SITE_URL}/ad-examples): real customer ads made with Komendly, shared with permission`,
+    `- [Facebook ad examples by industry](${SITE_URL}/ad-examples): real customer ads made with Komendly, shared with permission, plus what works per industry`,
+    `- [Free ad tools](${SITE_URL}/tools): free, no-sign-up tools for small-business ads`,
+    ...FREE_TOOLS.map((t) => `- [${t.name}](${SITE_URL}/tools/${t.slug}): ${t.description}`),
     `- [AI video testimonials](${SITE_URL}/testimonials): turn text reviews into AI-avatar videos`,
     `- [Blog](${SITE_URL}/blog): ad creative, Meta ads and small business marketing`,
     `- [Full blog digest](${SITE_URL}/llms-full.txt): answer and key facts for every post`,
@@ -81,7 +86,7 @@ export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryL
     ...studioFacts().map((f) => `- ${f}`),
     '',
     ...(galleries.length
-      ? ['## Ad examples by industry', '', ...galleries.map((g) => `- [Facebook ad examples for ${g.plural}](${SITE_URL}/ad-examples/${g.slug}): ${g.count} real customer ads`), '']
+      ? ['## Ad examples by industry', '', ...galleries.map((g) => `- [Facebook ad examples for ${g.plural}](${SITE_URL}/ad-examples/${g.slug}): ${[g.count ? `${g.count} real customer ads` : '', g.samples ? `${g.samples} sample ads and what works` : ''].filter(Boolean).join(', ')}`), '']
       : []),
     ...sections.flatMap((s) => [s, '']),
   ].join('\n')

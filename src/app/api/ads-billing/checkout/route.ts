@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       success_url: `${appUrl()}/ads/billing?checkout=success${kind === "topup" && key === UNLOCK_PACK.key ? `&bought=${UNLOCK_PACK.key}` : ""}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl()}/ads/billing?checkout=canceled${kind === "topup" || freeMonth ? "" : `&declined=${encodeURIComponent(key)}`}`,
     });
-    await trackAdsEvent("checkout_started", { workspaceId: ws.id, userId: user.id, props: { kind, key, ...(studioLaunch ? { offer: STUDIO_LAUNCH_OFFER.key, app: "studio", amountCents: item.priceCents, currency: "USD" } : {}), ...(annual ? { interval: "year" } : {}), ...(placement ? { placement } : {}), ...(unlockCredit ? { coupon: "unlock_pack_credit" } : {}) } });
+    await trackAdsEvent("checkout_started", { workspaceId: ws.id, userId: user.id, props: { kind, key, sessionId: session.id, ...(studioLaunch ? { offer: STUDIO_LAUNCH_OFFER.key, app: "studio", amountCents: item.priceCents, currency: "USD" } : {}), ...(annual ? { interval: "year" } : {}), ...(placement ? { placement } : {}), ...(unlockCredit ? { coupon: "unlock_pack_credit" } : {}) } });
     if (studioLaunch) await trackAdsEvent("studio_checkout_started", { workspaceId: ws.id, userId: user.id, props: { offer: STUDIO_LAUNCH_OFFER.key, plan: key, amountCents: item.priceCents } });
     const downsell = placement === "downsell" || placement === "unlock_pack";
     if (kind === "offer" || studioLaunch || (placement && !downsell)) await trackAdsEvent("upsell_accepted", { workspaceId: ws.id, userId: user.id, props: { kind, key, ...(placement ? { placement } : {}) } });

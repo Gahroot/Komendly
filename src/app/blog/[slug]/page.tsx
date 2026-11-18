@@ -140,6 +140,10 @@ export default async function BlogPostPage({ params }: PageProps) {
         {post.sources.length > 0 && <SourcesList sources={post.sources} />}
 
         <AuthorCard author={author} />
+
+        <p className="mt-10 text-sm text-muted-foreground">
+          Free tools: <Link href="/tools/ad-headline-generator" className="underline hover:text-foreground">ad headline generator</Link>, <Link href="/tools/ad-copy-grader" className="underline hover:text-foreground">ad copy grader</Link>, <Link href="/tools/ad-size-checker" className="underline hover:text-foreground">ad size checker</Link> · <Link href="/ad-examples" className="underline hover:text-foreground">ad examples by industry</Link>
+        </p>
       </article>
 
       {relatedPosts.length > 0 && (

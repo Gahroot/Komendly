@@ -45,7 +45,7 @@ export function firstVideoLineItem(priceId?: string): Stripe.Checkout.SessionCre
 export async function createFirstVideoCheckout(
   deps: OfferDeps,
   user: OfferUser,
-  urls: { origin: string; cancelPath: string },
+  urls: { origin: string; cancelPath: string; /** Recovery: one-time coupon instead of promo codes. */ coupon?: string | null; /** Extra session metadata (e.g. recoveryKey). */ metadata?: Record<string, string> },
 ): Promise<OfferCheckoutResult> {
   const eligibility = checkFirstVideoEligibility({
     plan: user.plan,
@@ -62,7 +62,7 @@ export async function createFirstVideoCheckout(
     await deps.saveCustomerId(user.id, customerId);
   }
 
-  const metadata = { type: "credit_purchase", offer: FIRST_VIDEO_OFFER.key, userId: user.id, minutes: String(FIRST_VIDEO_OFFER.minutes) };
+  const metadata = { ...(urls.metadata ?? {}), type: "credit_purchase", offer: FIRST_VIDEO_OFFER.key, userId: user.id, minutes: String(FIRST_VIDEO_OFFER.minutes) };
   const session = await deps.stripe.checkout.sessions.create({
     ...komendlyCheckoutText("testimonials"),
     customer: customerId,
@@ -72,7 +72,7 @@ export async function createFirstVideoCheckout(
     metadata,
     success_url: `${urls.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}&offer=${FIRST_VIDEO_OFFER.key}`,
     cancel_url: `${urls.origin}${urls.cancelPath}`,
-    allow_promotion_codes: true,
+    ...(urls.coupon ? { discounts: [{ coupon: urls.coupon }] } : { allow_promotion_codes: true }),
   });
   return { ok: true, url: session.url, sessionId: session.id };
 }

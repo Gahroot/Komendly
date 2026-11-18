@@ -31,6 +31,8 @@ function kindStats(events: Array<{ name: string; createdAt: Date; props: unknown
   return [...kinds.entries()];
 }
 import { AdminAdsShell } from "../_components/admin-ads-shell";
+import { RecoverySection } from "./recovery-section";
+import { WinbackSection } from "./winback-section";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +67,8 @@ async function Emails() {
           <CardDescription>Flag <span className="font-mono">lifecycle_email</span> (Flags tab). Engine env <span className="font-mono">LIFECYCLE_DRY_RUN=1</span> logs instead of sending. The loop runs every 10 minutes.</CardDescription>
         </CardHeader>
       </Card>
+      <RecoverySection />
+      <WinbackSection />
       <Card>
         <CardHeader><CardTitle>Sent and clicked per kind</CardTitle><CardDescription>Clicks come from the tracked links (/api/ads/email-click). Opens are not tracked.</CardDescription></CardHeader>
         <CardContent>

@@ -1,7 +1,8 @@
 import type { MetadataRoute } from 'next'
 import { AUTHORS } from '@/lib/authors'
 import { CATEGORIES, MIN_INDEXABLE_TAG_POSTS, getAllTags, getBlogPosts, getBlogPostsByTag, tagSlug } from '@/lib/blog'
-import { loadIndexableIndustries } from '@/lib/ads/gallery'
+import { loadIndexableIndustryLinks } from '@/lib/growth/industry-examples-server'
+import { FREE_TOOLS } from '@/lib/growth/free-tools'
 import { SITE_URL } from '@/lib/site'
 
 function latest(dates: string[]): string | undefined {
@@ -24,6 +25,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/examples`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${SITE_URL}/agents`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${SITE_URL}/ad-examples`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${SITE_URL}/tools`, changeFrequency: 'monthly', priority: 0.8 },
+    ...FREE_TOOLS.map((t) => ({ url: `${SITE_URL}/tools/${t.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
     { url: `${SITE_URL}/ad-of-the-week`, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${SITE_URL}/testimonials`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${SITE_URL}/pricing`, changeFrequency: 'monthly', priority: 0.6 },
@@ -59,8 +62,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   })
 
   // Industry galleries: only those with enough consented ads to be indexable
-  const galleryPages: MetadataRoute.Sitemap = (await loadIndexableIndustries()).map((x) => ({
-    url: `${SITE_URL}/ad-examples/${x.industry.slug}`,
+  const galleryPages: MetadataRoute.Sitemap = (await loadIndexableIndustryLinks()).map((x) => ({
+    url: `${SITE_URL}/ad-examples/${x.slug}`,
+    lastModified: x.updatedAt,
     changeFrequency: 'weekly' as const,
     priority: 0.6,
   }))

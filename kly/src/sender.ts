@@ -19,6 +19,7 @@ import { addCost, type KlySettingsRow } from "./settings";
 import { warmupGates, type WarmupSettings } from "./warmup";
 import { maybeProbe } from "./probe";
 import { verifyEnabled } from "./verify";
+import { leadSystemAllowed, isKlySystem, SYSTEM_EVENTS, systemEvent, systemVariant } from "./growth";
 
 /** Voice call outcomes that end the cold email sequence (no follow-up after the phone call settled it). */
 export const VOICE_STOP_STATUSES = ["gift_yes", "info_requested", "not_interested", "opt_out"] as const;
@@ -114,6 +115,14 @@ export async function composeFor(db: Db, _provider: AIProvider | null, cfg: Outb
     variant: arms.variant,
     firstSubject: first?.subject ?? null,
   };
+  // Growth-system leads (review_gifts, new_business) use their own fixed copy, plain text, no fallback to the classic copy.
+  const sys = systemVariant(lead);
+  if (sys) {
+    const sctx = { ...ctx, variant: sys };
+    const smail = buildOutboundEmail(sctx);
+    const serr = checkOutboundEmail(smail, sctx) ?? (step === 1 && !lead.giftToken ? "no gift page" : null);
+    return { ctx: sctx, subject: smail.subject, text: smail.text, html: null, source: "fallback", error: serr, costMicros: 0 };
+  }
   let used = ctx;
   let mail = buildOutboundEmail(ctx);
   let error = checkOutboundEmail(mail, ctx);
@@ -310,12 +319,15 @@ async function mailboxHealth(db: Db, b: StoredMailbox, now: Date): Promise<strin
  * fresh lead nobody else has claimed. Business hours, suppression and the voice stop list still apply.
  */
 export async function assignLeads(db: Db, mailboxIds: string[], now: Date, followUpDays: number, maxSteps: number): Promise<Map<string, { lead: LeadRow; step: 1 | 2 }>> {
-  const candidates = await db.outboundLead.findMany({
-    // First emails go only to addresses our own checker passed (kly/src/verify.ts), unless checking is switched off.
-    where: { purgedAt: null, email: { not: "" }, OR: [{ status: { in: ["ad_made", "queued"] }, step: 0, ...(verifyEnabled() ? { emailCheck: { in: ["valid", "catch_all", "unknown"] } } : {}), OR: [{ mailboxId: null }, { mailboxId: { in: mailboxIds } }] }, { status: "sent", step: 1, mailboxId: { in: mailboxIds } }], AND: [{ OR: [{ voiceStatus: null }, { voiceStatus: { notIn: [...VOICE_STOP_STATUSES] } }] }] },
-    orderBy: [{ step: "desc" }, { createdAt: "asc" }],
-    take: Math.max(200, mailboxIds.length * 20),
-  });
+  // First emails go only to addresses our own checker passed (kly/src/verify.ts), unless checking is switched off.
+  const where = { purgedAt: null, email: { not: "" }, OR: [{ status: { in: ["ad_made", "queued"] }, step: 0, ...(verifyEnabled() ? { emailCheck: { in: ["valid", "catch_all", "unknown"] } } : {}), OR: [{ mailboxId: null }, { mailboxId: { in: mailboxIds } }] }, { status: "sent", step: 1, mailboxId: { in: mailboxIds } }], AND: [{ OR: [{ voiceStatus: null }, { voiceStatus: { notIn: [...VOICE_STOP_STATUSES] } }] }] };
+  // Growth-system leads (time-sensitive: new sites, ready review videos) first, then the oldest classic leads.
+  const [sysLeads, classic] = await Promise.all([
+    db.outboundLead.findMany({ where: { ...where, system: { not: null } }, orderBy: [{ step: "desc" }, { createdAt: "desc" }], take: 50 }),
+    db.outboundLead.findMany({ where, orderBy: [{ step: "desc" }, { createdAt: "asc" }], take: Math.max(200, mailboxIds.length * 20) }),
+  ]);
+  const seenIds = new Set<string>();
+  const candidates = [...(sysLeads ?? []), ...(classic ?? [])].filter((l) => !seenIds.has(l.id) && Boolean(seenIds.add(l.id)));
   const sup = new Set((await db.outboundSuppression.findMany({ where: { value: { in: [...new Set(candidates.flatMap((l) => [l.email.toLowerCase(), l.domain]))] } }, select: { value: true } })).map((s) => s.value));
   const out = new Map<string, { lead: LeadRow; step: 1 | 2 }>();
   const taken = new Set<string>();
@@ -338,7 +350,7 @@ export async function assignLeads(db: Db, mailboxIds: string[], now: Date, follo
   }
   // Safest addresses first (Nov 16): checker-"valid" before catch-all before unknown, to keep bounces low on new domains.
   const checkRank = (c: string | null) => (c === "valid" ? 0 : c === "catch_all" ? 1 : 2);
-  const fresh = ready.filter((r) => !r.lead.mailboxId && !taken.has(r.lead.id)).sort((a, b) => checkRank(a.lead.emailCheck) - checkRank(b.lead.emailCheck));
+  const fresh = ready.filter((r) => !r.lead.mailboxId && !taken.has(r.lead.id)).sort((a, b) => (a.lead.system ? 0 : 1) - (b.lead.system ? 0 : 1) || checkRank(a.lead.emailCheck) - checkRank(b.lead.emailCheck));
   for (const id of mailboxIds) {
     if (out.has(id)) continue;
     const r = fresh.shift();
@@ -350,9 +362,11 @@ export async function assignLeads(db: Db, mailboxIds: string[], now: Date, follo
 
 async function sendOne(deps: SenderDeps, cfg: OutboundEnv, m: StoredMailbox, mailboxId: string, lead: LeadRow, step: 1 | 2, now: Date, all: readonly StoredMailbox[] = []): Promise<string> {
   const { db } = deps;
+  // Growth-system kill switch (sys_<key>) on top of Kly's own gates; the lead just waits while it is off.
+  if (!(await leadSystemAllowed(db, lead.system))) return `system ${lead.system} off`;
   const arms = await copyArms(db, lead, deps.rng, deps.explorationPct);
   // Claim the lead for this mailbox (sticky: the follow-up comes from the same person) and pin its arms.
-  const claimed = await db.outboundLead.updateMany({ where: { id: lead.id, step: lead.step, OR: [{ mailboxId: null }, { mailboxId }] }, data: { mailboxId, armIds: arms.armIds, status: step === 1 ? "queued" : lead.status } });
+  const claimed = await db.outboundLead.updateMany({ where: { id: lead.id, step: lead.step, OR: [{ mailboxId: null }, { mailboxId }] }, data: { mailboxId, armIds: lead.system ? lead.armIds : arms.armIds, status: step === 1 ? "queued" : lead.status } });
   if (claimed.count !== 1) return "lead taken";
   const c = await composeFor(db, deps.provider, cfg, lead, step, m.name, arms);
   await addCost(db, lead.id, c.costMicros, now);
@@ -369,7 +383,8 @@ async function sendOne(deps: SenderDeps, cfg: OutboundEnv, m: StoredMailbox, mai
     await db.outboundLead.update({ where: { id: lead.id }, data: { error: `smtp: ${errMsg(e).slice(0, 300)}` } });
     return `smtp error: ${errMsg(e)}`;
   }
-  const sendArms = step === 1 ? [arms.used.subject, arms.used.body, arms.used.format] : [arms.used.followup, arms.used.format];
+  // Growth-system emails use fixed copy: they don't count toward the copy experiments.
+  const sendArms = lead.system ? [] : step === 1 ? [arms.used.subject, arms.used.body, arms.used.format] : [arms.used.followup, arms.used.format];
   await db.$transaction([
     db.outboundSend.create({ data: { leadId: lead.id, mailboxId, step, messageId, toEmail: lead.email, subject: c.subject, body: c.text, copySource: c.source, sentAt: now, kind: "sequence", armIds: sendArms.filter((x): x is string => Boolean(x)) } }),
     db.outboundLead.update({ where: { id: lead.id }, data: { step, status: lead.status === "clicked" ? "clicked" : "sent", lastSentAt: now, error: null } }),
@@ -378,6 +393,7 @@ async function sendOne(deps: SenderDeps, cfg: OutboundEnv, m: StoredMailbox, mai
     db.outboundMailbox.updateMany({ where: { id: mailboxId, coldStartedAt: null }, data: { coldStartedAt: now } }),
   ]);
   await extendAssets(db, lead.adId, now);
+  if (isKlySystem(lead.system)) await systemEvent(db, SYSTEM_EVENTS.sent, lead.system, { leadId: lead.id, step });
   if (deps.probeSecret) {
     const to = await maybeProbe(db, { from: m, boxes: all, mail: { subject: c.subject, text: c.text, html: c.html, headers }, format: c.html ? "html" : "plain", secret: deps.probeSecret, send: deps.transport ?? smtpTransport, rng: deps.rng, now }).catch((e: unknown) => (log("warn", "kly probe failed", { mailbox: m.address, error: errMsg(e).slice(0, 200) }), null));
     if (to) log("info", "kly probe", { from: m.address, to });

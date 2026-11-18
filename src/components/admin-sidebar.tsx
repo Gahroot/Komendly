@@ -21,6 +21,7 @@ import {
   Gift,
   RotateCcw,
   TrendingDown,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -35,6 +36,7 @@ const navGroups = [
     label: "HQ",
     items: [
       { label: "Ozzy HQ", href: "/admin", icon: LayoutDashboard },
+      { label: "Money", href: "/admin/money", icon: DollarSign },
       { label: "Users", href: "/admin/users", icon: Users },
     ],
   },

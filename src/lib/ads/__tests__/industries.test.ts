@@ -58,7 +58,7 @@ describe("industry data", () => {
     expect(g.sections).toHaveLength(3);
     expect(JSON.stringify(g)).not.toMatch(/\d+%/);
     expect(relatedIndustries(bakery, new Set(["roofers"]))[0]?.slug).toBe("roofers");
-    expect(galleryCtaHref("bakeries", "end")).toBe("/free-ads?utm_source=seo&utm_medium=gallery&utm_campaign=bakeries&utm_content=end");
+    expect(galleryCtaHref("bakeries", "end")).toBe("/free-ads?utm_source=examples&utm_medium=gallery&utm_campaign=bakeries&utm_content=end");
   });
 
   it("explains why an ad works from its own fields", () => {

@@ -40,6 +40,17 @@ COPY src/lib/ads/coach/contracts.ts src/lib/ads/coach/contracts.ts
 COPY src/lib/ads/coach/table.ts src/lib/ads/coach/table.ts
 COPY src/lib/ads/coach/assess.ts src/lib/ads/coach/assess.ts
 COPY src/lib/ads/coach/match.ts src/lib/ads/coach/match.ts
+COPY src/lib/growth/systems.ts src/lib/growth/systems.ts
+COPY src/lib/kly/review-video.ts src/lib/kly/review-video.ts
+COPY src/lib/growth/checkout-recovery.ts src/lib/growth/checkout-recovery.ts
+COPY src/lib/growth/winback.ts src/lib/growth/winback.ts
+COPY src/lib/first-video-offer.ts src/lib/first-video-offer.ts
+COPY src/lib/growth/free-tools.ts src/lib/growth/free-tools.ts
+COPY src/lib/growth/industry-examples.ts src/lib/growth/industry-examples.ts
+COPY src/lib/ads/industries.ts src/lib/ads/industries.ts
+COPY src/lib/growth/monitor.ts src/lib/growth/monitor.ts
+COPY src/lib/growth/viral-branding.ts src/lib/growth/viral-branding.ts
+COPY src/lib/ads/billing-gates.ts src/lib/ads/billing-gates.ts
 COPY engine/package.json engine/package-lock.json engine/
 COPY engine/scripts/prisma-generate.mjs engine/scripts/prisma-generate.mjs
 

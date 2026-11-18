@@ -6,6 +6,7 @@ import { CLIENT_HEADER, parseBearer, UPGRADE_URL } from "./policy";
 import { RATE_LIMIT_MESSAGE, resolveApiKey } from "./resolve";
 import { originOf, parseOAuthBearer, wwwAuthenticate } from "@/lib/oauth/core";
 import { resolveAccessToken } from "@/lib/oauth/store";
+import { isProbeBody, PROBE_CLIENT } from "./assistant";
 
 function rpcError(status: number, message: string, extra: Record<string, unknown> = {}, headers: Record<string, string> = {}): Response {
   return Response.json({ jsonrpc: "2.0", error: { code: -32001, message, data: extra }, id: null }, { status, headers: { "Cache-Control": "no-store", ...headers } });
@@ -23,6 +24,10 @@ export async function handleMcp(request: Request, pathKey: string | null): Promi
   // The komendly CLI stdio bridge says so (X-Komendly-Client: cli); every other MCP client counts as "mcp".
   const via = request.headers.get(CLIENT_HEADER) === "cli" ? "cli" : "mcp";
   if (!oauthToken && !raw) {
+    // Health probe / directory scan: initialize + tools/list only, no account (see engine growth/ai-assistant).
+    if (request.method === "POST" && request.headers.get(CLIENT_HEADER) === PROBE_CLIENT && isProbeBody(await request.clone().json().catch(() => null))) {
+      return serve(request, { origin, headers: request.headers });
+    }
     return rpcError(401, "Sign in to connect: add https://www.komendly.com/api/mcp as a connector in your app, then sign in to Komendly.", {}, { "WWW-Authenticate": wwwAuthenticate(origin) });
   }
   const resolved = oauthToken ? await resolveAccessToken(oauthToken, { via }) : await resolveApiKey(raw ?? "", { via });
@@ -32,14 +37,17 @@ export async function handleMcp(request: Request, pathKey: string | null): Promi
     return rpcError(401, "This API key isn't valid or was revoked. Create a new one at https://www.komendly.com/dashboard/api.", {}, { "WWW-Authenticate": wwwAuthenticate(origin, "invalid_token") });
   }
   const info = { origin, headers: request.headers };
-  return runAsAgent({ user: resolved.user, keyId: resolved.keyId, via }, async () => {
-    const server = buildOzzyServer(info);
-    const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
-    await server.connect(transport);
-    try {
-      return await transport.handleRequest(request);
-    } finally {
-      await server.close().catch(() => undefined);
-    }
-  });
+  const assistant = oauthToken && "clientName" in resolved ? { auth: "oauth" as const, clientName: String(resolved.clientName) } : { auth: "key" as const };
+  return runAsAgent({ user: resolved.user, keyId: resolved.keyId, via, workspaceId: resolved.workspaceId, ...assistant }, () => serve(request, info));
+}
+
+async function serve(request: Request, info: { origin: string; headers: Headers }): Promise<Response> {
+  const server = buildOzzyServer(info);
+  const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
+  await server.connect(transport);
+  try {
+    return await transport.handleRequest(request);
+  } finally {
+    await server.close().catch(() => undefined);
+  }
 }

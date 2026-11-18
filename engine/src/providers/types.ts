@@ -18,6 +18,8 @@ export interface TextRequest {
   images?: Array<{ mediaType: string; base64: string }>; // vision input (e.g. QC on rendered ad)
   reasoning?: "low" | "medium" | "high";
   signal?: AbortSignal;
+  /** Per-call text model override (Codex only, e.g. Luna for small jobs); default = the provider's textModel. */
+  model?: string;
 }
 
 export interface ImageRequest {

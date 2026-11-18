@@ -1317,6 +1317,9 @@ model OutboundLead {
   voiceDeliveredAt  DateTime? // gift link delivered after the call (exactly once)
   voiceDeliveredVia String? // sms | email
   voiceSmsFailedAt  DateTime? // first failed SMS attempt (retried for 24 h when no email fallback)
+  // --- autopilot: review_gifts / new_business --- growth system that owns this lead (null = classic Kly) + its data
+  system        String?
+  systemData    Json?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -1642,5 +1645,134 @@ model KlySocialPost {
   updatedAt  DateTime @updatedAt
 
   @@unique([day, platform])
+  @@index([createdAt])
+}
+
+// --- autopilot: viral_branding ---
+/// "Made with Komendly" mark setting per workspace (missing row = plan default: free output marked, paid not).
+/// removeBranding is a paid-only switch; false = a paid workspace chose to keep the mark.
+model AdsBrandingSetting {
+  workspaceId    String   @id
+  removeBranding Boolean  @default(true)
+  updatedAt      DateTime @updatedAt
+}
+
+// --- autopilot: free_tools ---
+// AI free-tool request from a public /tools page; the engine claims queued rows (FOR UPDATE SKIP LOCKED) and answers with Codex.
+model FreeToolJob {
+  id         String    @id @default(cuid())
+  tool       String // ad-headline-generator | review-to-ad
+  input      Json
+  status     String    @default("queued") // queued | running | done | failed
+  result     Json?
+  error      String?
+  ipHash     String?
+  attempts   Int       @default(0)
+  lockedBy   String?
+  claimedAt  DateTime?
+  finishedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+}
+
+// --- autopilot: industry_examples ---
+// Engine-written (Codex Sol) "what works" tips + sample ads for fictional demo businesses, one row per industry slug.
+model IndustryExample {
+  id          String    @id @default(cuid())
+  industry    String    @unique
+  content     Json
+  model       String?
+  generatedAt DateTime  @default(now())
+  indexNowAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// --- autopilot: review_gifts ---
+/// Kly review-video gift: one real review published on the lead's own website, read by an AI presenter (testimonial pipeline).
+model KlyReviewGift {
+  id           String    @id @default(cuid())
+  leadId       String    @unique
+  token        String    @unique // public /gift/review/<token>; also OutboundLead.giftToken
+  businessName String
+  reviewerName String // as published
+  reviewText   String // verbatim excerpt spoken in the video
+  fullReview   String // the published review
+  rating       Int?
+  sourceUrl    String // page on the business's own site it was published on
+  status       String    @default("pending") // pending | generating | ready | failed
+  reviewId     String?
+  kind         String    @default("quote") // quote ($0 engine-rendered quote video) | presenter (paid AI presenter, capped)
+  videoId      String? // FalCompositeVideo id (presenter)
+  videoUrl     String? // presenter: vendor URL
+  videoKey     String? // quote: S3 key (served via presigned redirect)
+  jobId        String? // AdJob that renders it
+  brandColor   String? // theme-color from their site
+  costMicros   BigInt    @default(0)
+  startedAt    DateTime?
+  readyAt      DateTime?
+  viewedAt     DateTime?
+  viewCount    Int       @default(0)
+  error        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([status])
+  @@index([startedAt])
+}
+
+
+// --- autopilot: shopify ---
+/// Shopify App Store install: one row per shop (myshopify domain), linked to the Komendly user + ads workspace it created.
+model ShopifyShop {
+  id              String    @id @default(cuid())
+  shopDomain      String    @unique // <handle>.myshopify.com
+  name            String?
+  email           String?
+  storeUrl        String? // primary domain URL (where ads are made from)
+  userId          String
+  workspaceId     String
+  accessTokenEnc  String? // expiring offline token, AES-GCM (ADS_TOKEN_KEY)
+  refreshTokenEnc String?
+  tokenExpiresAt  DateTime?
+  scopes          String?
+  installedAt     DateTime  @default(now())
+  uninstalledAt   DateTime?
+  redactedAt      DateTime? // shop/redact (GDPR) processed
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([installedAt])
+  @@index([workspaceId])
+}
+
+/// Shopify Billing API recurring app subscription mapped onto an ads plan. Credits: CreditLedger.stripeRef "shopify:<chargeId>:<period>".
+model ShopifyCharge {
+  id          String    @id @default(cuid())
+  chargeId    String    @unique // AppSubscription GID
+  shopDomain  String
+  workspaceId String
+  planKey     String
+  priceCents  Int
+  status      String    @default("PENDING") // PENDING | ACTIVE | CANCELLED | DECLINED | EXPIRED | FROZEN
+  test        Boolean   @default(false)
+  activatedAt DateTime?
+  periodEnd   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([shopDomain])
+  @@index([activatedAt])
+}
+
+/// Processed Shopify webhook deliveries (X-Shopify-Webhook-Id) for idempotency.
+model ShopifyWebhookEvent {
+  id         String   @id // X-Shopify-Webhook-Id
+  topic      String
+  shopDomain String
+  createdAt  DateTime @default(now())
+
   @@index([createdAt])
 }

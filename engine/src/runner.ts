@@ -33,6 +33,8 @@ import { studioCaptureJob } from "./studio/capture";
 import { createStudioTurnHandler, studioIngestJob, studioProbeJob } from "./studio/index";
 import { COACH_JOB_TYPE } from "../../src/lib/ads/coach/contracts";
 import { coachReviewJob, onCoachDead } from "./coach/job";
+import { REVIEW_QUOTE_JOB_TYPE } from "../../src/lib/kly/review-video";
+import { reviewQuoteJob } from "./growth/review-video";
 
 export const HANDLERS: Record<string, JobHandler> = {
   extract: (c) => extractJob(c),
@@ -51,11 +53,12 @@ export const HANDLERS: Record<string, JobHandler> = {
   [STUDIO_INGEST_JOB_TYPE]: studioIngestJob,
   [STUDIO_CAPTURE_JOB_TYPE]: studioCaptureJob,
   [COACH_JOB_TYPE]: coachReviewJob,
+  [REVIEW_QUOTE_JOB_TYPE]: reviewQuoteJob,
 };
 /** Job types that need the AI provider. */
 export const AI_TYPES = ["extract", "plan", "render_static", "render_motion", "qc", "bonus", BONUS_JOB_TYPE, STUDIO_TURN_JOB_TYPE, COACH_JOB_TYPE];
 // Testimonial jobs degrade to the free template without Codex, so they never wait on provider health.
-export const NON_AI_TYPES = ["cleanup", "publish_meta", TESTIMONIAL_JOB_TYPE, TESTIMONIAL_RECOMMEND_JOB_TYPE, STUDIO_PROBE_JOB_TYPE, STUDIO_INGEST_JOB_TYPE, STUDIO_CAPTURE_JOB_TYPE];
+export const NON_AI_TYPES = ["cleanup", "publish_meta", TESTIMONIAL_JOB_TYPE, TESTIMONIAL_RECOMMEND_JOB_TYPE, STUDIO_PROBE_JOB_TYPE, STUDIO_INGEST_JOB_TYPE, STUDIO_CAPTURE_JOB_TYPE, REVIEW_QUOTE_JOB_TYPE];
 const START_TYPES = new Set(DEFAULT_FAIRNESS.start);
 
 export interface RunnerDeps {
