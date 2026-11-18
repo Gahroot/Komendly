@@ -10,6 +10,8 @@ import { StudioRoot } from "@/components/studio/studio-spell";
 import { loadGalleryAds, summarizeIndustries } from "@/lib/ads/gallery";
 import { galleryCtaHref } from "@/lib/ads/industries";
 import { loadIndexableIndustryLinks } from "@/lib/growth/industry-examples-server";
+import { KIND_LABEL } from "@/components/ad-examples/gallery-landing";
+import { GALLERY_PAGES } from "@/lib/growth/ad-pages";
 import { breadcrumbJsonLd, galleryPageJsonLd, graph } from "@/lib/seo/jsonld";
 import "@/components/studio/studio.css";
 
@@ -93,6 +95,19 @@ export default async function AdExamplesHub() {
             </ul>
           </section>
         )}
+
+        <section className="mx-auto mt-16 grid max-w-5xl gap-8 px-4 sm:grid-cols-2 sm:px-6" aria-label="Browse ad examples by platform, format and occasion">
+          {(["platform", "format", "occasion", "combo"] as const).map((k) => (
+            <div key={k}>
+              <h2 className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">{KIND_LABEL[k]}</h2>
+              <ul className="mt-4 flex flex-wrap gap-2">
+                {GALLERY_PAGES.filter((p) => p.kind === k).map((p) => (
+                  <li key={p.key}><Link href={p.path} className="inline-flex rounded-full border border-border px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:border-[var(--studio-gold)] hover:text-foreground">{p.entry.h1}</Link></li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
 
         <p className="mx-auto mt-12 max-w-xl px-4 text-center text-sm text-muted-foreground">Writing your own? Try the free <Link href="/tools" className="text-[var(--studio-gold)] hover:underline">ad tools</Link>: headline generator, copy grader, size checker and more.</p>
 

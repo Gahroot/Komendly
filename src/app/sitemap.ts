@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next'
 import { AUTHORS } from '@/lib/authors'
 import { CATEGORIES, MIN_INDEXABLE_TAG_POSTS, getAllTags, getBlogPosts, getBlogPostsByTag, tagSlug } from '@/lib/blog'
 import { loadIndexableIndustryLinks } from '@/lib/growth/industry-examples-server'
+import { loadAllGalleryPageStates } from '@/lib/growth/ad-pages-server'
 import { FREE_TOOLS } from '@/lib/growth/free-tools'
 import { SITE_URL } from '@/lib/site'
 
@@ -69,5 +70,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
-  return [...staticPages, ...postPages, ...categoryPages, ...authorPages, ...tagPages, ...galleryPages]
+  // Intent pages (platform/format/occasion/facebook-ads-for-<industry>): only once they have substance
+  const intentPages: MetadataRoute.Sitemap = (await loadAllGalleryPageStates()).filter((x) => x.indexable).map((x) => ({
+    url: `${SITE_URL}${x.page.path}`,
+    lastModified: x.updatedAt,
+    changeFrequency: 'weekly' as const,
+    priority: 0.6,
+  }))
+
+  return [...staticPages, ...postPages, ...categoryPages, ...authorPages, ...tagPages, ...galleryPages, ...intentPages]
 }

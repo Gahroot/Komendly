@@ -27,7 +27,7 @@ export const INDUSTRIES: readonly Industry[] = [
   I("hvac", "HVAC company", "HVAC companies", "local-service", "heating and cooling repair", ["hvac", "air conditioning", "heating and cooling", "furnace", "heat pump", "ac repair", "ductwork"]),
   I("electricians", "electrician", "electricians", "local-service", "electrical repairs and installs", ["electrician", "electricians", "electrical", "wiring", "panel upgrade", "ev charger", "lighting installation", "outdoor lighting", "landscape lighting"]),
   I("landscapers", "landscaper", "landscapers", "local-service", "lawn care and landscape design", ["landscaping", "landscape design", "landscaper", "lawn", "lawn care", "grounds maintenance", "hardscape", "hardscaping", "garden design", "tree service", "irrigation"]),
-  I("cleaning-services", "cleaning service", "cleaning services", "local-service", "home and office cleaning", ["cleaning", "cleaners", "maid", "house cleaning", "janitorial", "carpet cleaning", "pressure washing", "deep clean"]),
+  I("cleaning-services", "cleaning service", "cleaning services", "local-service", "home and office cleaning", ["cleaning", "cleaners", "maid", "house cleaning", "janitorial", "carpet cleaning", "deep clean"]),
   I("dentists", "dentist", "dentists", "local-venue", "dental care for the whole family", ["dentist", "dentists", "dental", "dentistry", "orthodontist", "orthodontics", "teeth", "invisalign", "smile"]),
   I("chiropractors", "chiropractor", "chiropractors", "local-venue", "chiropractic care and pain relief", ["chiropractor", "chiropractic", "spinal", "adjustment", "back pain", "physical therapy", "physiotherapy"]),
   I("med-spas", "med spa", "med spas", "local-venue", "aesthetic treatments", ["med spa", "medspa", "medical spa", "botox", "fillers", "aesthetics", "laser hair removal", "facials", "microneedling"]),
@@ -42,7 +42,7 @@ export const INDUSTRIES: readonly Industry[] = [
   I("florists", "florist", "florists", "shop", "fresh flowers and arrangements", ["florist", "flowers", "floral", "bouquet", "bouquets", "flower delivery", "cut flower"]),
   I("pet-groomers", "pet groomer", "pet groomers", "local-service", "grooming for dogs and cats", ["pet grooming", "dog grooming", "groomer", "grooming", "pet", "pets", "dog", "dogs", "doggy daycare", "veterinary", "vet"]),
   I("auto-repair", "auto repair shop", "auto repair shops", "local-service", "car repair and maintenance", ["auto repair", "mechanic", "car repair", "oil change", "brakes", "tires", "auto body", "collision", "transmission"]),
-  I("contractors", "contractor", "contractors", "local-service", "remodels and home improvement", ["contractor", "general contractor", "remodel", "remodeling", "renovation", "home improvement", "construction", "kitchen remodel", "bathroom remodel", "handyman", "windows", "siding", "decks"]),
+  I("contractors", "contractor", "contractors", "local-service", "remodels and home improvement", ["contractor", "general contractor", "remodel", "remodeling", "renovation", "home improvement", "construction", "kitchen remodel", "bathroom remodel", "windows", "siding", "decks"]),
   I("interior-designers", "interior designer", "interior designers", "professional", "interior design and decor", ["interior design", "interior designer", "decor", "home staging", "window treatments", "blinds", "shades", "shutters", "drapery", "furniture"]),
   I("wedding-venues", "wedding venue", "wedding venues", "local-venue", "a place to celebrate", ["wedding venue", "venue", "event venue", "banquet", "receptions", "ballroom", "barn weddings"]),
   I("skincare-brands", "skincare brand", "skincare and e-commerce brands", "online", "products people order online", ["skincare", "skin care", "serum", "moisturizer", "cosmetics", "makeup", "beauty products", "online store", "e-commerce", "ecommerce", "shop online", "free shipping"]),
@@ -60,6 +60,13 @@ export const INDUSTRIES: readonly Industry[] = [
   I("mortgage-brokers", "mortgage broker", "mortgage brokers", "professional", "home loans and refinancing", ["mortgage", "mortgages", "home loan", "home loans", "refinance", "refinancing", "loan officer", "pre-approval", "lender"]),
   I("travel-agencies", "travel agency", "travel agencies", "professional", "trips planned for you", ["travel agency", "travel agent", "vacation", "vacations", "cruise", "cruises", "tours", "honeymoon", "itinerary", "travel"]),
   I("event-planners", "event planner", "event planners", "professional", "events planned end to end", ["event planner", "event planning", "wedding planner", "party planning", "corporate events", "event coordination"]),
+  // Added from ad-vocabulary research (Google autocomplete demand, 18 Nov 2026).
+  I("pressure-washing", "pressure washing business", "pressure washing businesses", "local-service", "pressure washing for driveways, houses and decks", ["pressure washing", "power washing", "soft washing", "soft wash", "driveway cleaning", "house washing", "roof soft wash"]),
+  I("mobile-detailing", "mobile detailer", "mobile detailers", "local-service", "car detailing at your home or office", ["mobile detailing", "auto detailing", "car detailing", "detailing", "ceramic coating", "paint correction", "interior detailing"]),
+  I("handyman", "handyman", "handymen", "local-service", "small repairs and odd jobs around the house", ["handyman", "handyman services", "odd jobs", "honey do", "small repairs", "drywall repair", "furniture assembly", "tv mounting"]),
+  I("food-trucks", "food truck", "food trucks", "local-venue", "street food from a truck near you", ["food truck", "food trucks", "street food", "food trailer", "truck schedule", "mobile kitchen"]),
+  I("tattoo-shops", "tattoo shop", "tattoo shops", "local-venue", "custom tattoos and piercings", ["tattoo", "tattoos", "tattoo shop", "tattoo studio", "tattoo artist", "piercing", "piercings", "flash tattoo"]),
+  I("churches", "church", "churches", "local-venue", "a welcoming church community", ["church", "churches", "worship", "sunday service", "ministry", "congregation", "pastor", "sermon", "bible study"]),
 ];
 
 export const INDUSTRY_BY_SLUG: ReadonlyMap<string, Industry> = new Map(INDUSTRIES.map((i) => [i.slug, i]));

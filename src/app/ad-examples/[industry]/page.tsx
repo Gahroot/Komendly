@@ -16,6 +16,8 @@ import { MakeYoursUrlBox } from "@/components/ad-examples/url-box";
 import { galleryCtaHref } from "@/lib/ads/industries";
 import { MIN_INDEXABLE_SAMPLES, type SampleAd } from "@/lib/growth/industry-examples";
 import { loadIndustryExample } from "@/lib/growth/industry-examples-server";
+import { comboForIndustry, galleryPage } from "@/lib/growth/ad-pages";
+import { anchorText } from "@/lib/growth/vocabulary";
 import { breadcrumbJsonLd, faqJsonLd, galleryPageJsonLd, graph } from "@/lib/seo/jsonld";
 import "@/components/studio/studio.css";
 
@@ -169,7 +171,7 @@ export default async function IndustryPage({ params }: PageProps) {
           <h2 id="url-title" className="font-display text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Make yours from your website</h2>
           <p className="mt-3 text-muted-foreground">Paste your {i.singular} website. Ozzy reads it and makes 10 free ads with your brand, offers and photos.</p>
           <div className="mt-6"><MakeYoursUrlBox href={galleryCtaHref(i.slug, "url_box")} /></div>
-          <p className="mt-4 text-sm text-muted-foreground">Or try the free <Link href="/tools/ad-headline-generator" className="text-[var(--studio-gold)] hover:underline">ad headline generator</Link> and <Link href="/tools/ad-copy-grader" className="text-[var(--studio-gold)] hover:underline">ad copy grader</Link>.</p>
+          <p className="mt-4 text-sm text-muted-foreground">Or try the free <Link href="/tools/ad-copy-generator" className="text-[var(--studio-gold)] hover:underline">ad copy generator</Link> and <Link href="/tools/ad-copy-grader" className="text-[var(--studio-gold)] hover:underline">ad copy grader</Link>.</p>
         </section>
 
         <div className="mt-16 px-4 sm:px-6">
@@ -203,6 +205,14 @@ export default async function IndustryPage({ params }: PageProps) {
             ))}
           </div>
         </section>
+
+        <nav className="mx-auto mt-16 max-w-5xl px-4 sm:px-6" aria-label="Related ad guides">
+          <ul className="flex flex-wrap gap-2">
+            {[comboForIndustry(i.slug), galleryPage("platform:instagram"), galleryPage("platform:nextdoor"), galleryPage("occasion:grand-opening")].flatMap((p) => (p ? [p] : [])).map((p) => (
+              <li key={p.key}><Link href={p.path} className="inline-flex rounded-full border border-border px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:border-[var(--studio-gold)] hover:text-foreground">{anchorText(p.key, `industry:${i.slug}`)}</Link></li>
+            ))}
+          </ul>
+        </nav>
 
         {(related.length > 0 || posts.length > 0) && (
           <section className="mx-auto mt-20 grid max-w-5xl gap-10 px-4 sm:px-6 md:grid-cols-2" aria-label="Keep exploring">

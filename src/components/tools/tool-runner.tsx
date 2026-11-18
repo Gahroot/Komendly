@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy, Loader2, X } from "lucide-react";
-import { checkAdSize, gradeAdCopy, type FreeToolSlug, type Grade, type HeadlineOutput, type ReviewOutput } from "@/lib/growth/free-tools";
+import { AI_TOOL_FIELDS, AI_TOOL_SECTIONS, CTA_GOALS, CTA_PLATFORMS, PLATFORM_LIMITS, budgetMath, buildHashtags, checkAdSize, checkLength, gradeAdCopy, isAiTool, pickCta, type AiToolSlug, type CtaGoal, type FreeToolSlug, type Grade, type ReviewOutput } from "@/lib/growth/free-tools";
 
 const field = "w-full rounded-xl border border-border bg-white/5 px-4 py-3 text-base outline-none focus:border-[var(--studio-gold)]";
 const btn = "inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[var(--studio-gold)] px-6 font-semibold text-[#2a0f10] transition hover:brightness-105 disabled:opacity-60";
@@ -44,40 +44,16 @@ function useAiJob(tool: FreeToolSlug) {
   return { state, run };
 }
 
-function HeadlineTool() {
-  const { state, run } = useAiJob("ad-headline-generator");
-  const [business, setBusiness] = useState("");
-  const [audience, setAudience] = useState("");
-  const out = state.phase === "done" ? (state.result as HeadlineOutput) : null;
-  return (
-    <div className="space-y-6">
-      <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void run({ business, ...(audience.trim() ? { audience } : {}) }); }}>
-        <label className="block text-sm font-medium" htmlFor="biz">What does your business sell, and to whom?</label>
-        <textarea id="biz" required minLength={15} maxLength={1200} rows={4} value={business} onChange={(e) => setBusiness(e.target.value)} placeholder="Family-run bakery in Leeds. Sourdough, custom birthday cakes, same-day pickup." className={field} />
-        <input aria-label="Audience (optional)" maxLength={200} value={audience} onChange={(e) => setAudience(e.target.value)} placeholder="Audience (optional): busy parents nearby" className={field} />
-        <button className={btn} disabled={state.phase === "working"}>{state.phase === "working" ? <><Loader2 className="size-4 animate-spin" /> Ozzy is writing…</> : "Write my ad copy"}</button>
-      </form>
-      {state.phase === "error" && <p role="alert" className="text-sm text-red-300">{state.error}</p>}
-      {out && (
-        <div className="space-y-6">
-          <Section title="Headlines" items={out.headlines} />
-          <Section title="Primary text" items={out.primaryTexts} />
-          <Section title="Scroll-stopping hooks" items={out.hooks} />
-        </div>
-      )}
-    </div>
-  );
-}
-
 function ReviewTool() {
-  const { state, run } = useAiJob("review-to-ad");
+  const { state, run } = useAiJob("testimonial-generator");
   const [review, setReview] = useState("");
   const [business, setBusiness] = useState("");
   const out = state.phase === "done" ? (state.result as ReviewOutput) : null;
   return (
     <div className="space-y-6">
       <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void run({ review, ...(business.trim() ? { business } : {}) }); }}>
-        <label className="block text-sm font-medium" htmlFor="rev">Paste a real customer review</label>
+        <label className="block text-sm font-medium" htmlFor="rev">Paste a review a real customer wrote</label>
+        <p className="text-xs text-muted-foreground">Real reviews only: the tool trims your customer's words, it never invents praise.</p>
         <textarea id="rev" required minLength={30} maxLength={2000} rows={5} value={review} onChange={(e) => setReview(e.target.value)} placeholder="We called on a Sunday with a burst pipe and they were here in an hour…" className={field} />
         <input aria-label="Business name (optional)" maxLength={120} value={business} onChange={(e) => setBusiness(e.target.value)} placeholder="Business name (optional)" className={field} />
         <button className={btn} disabled={state.phase === "working"}>{state.phase === "working" ? <><Loader2 className="size-4 animate-spin" /> Ozzy is reading…</> : "Turn it into an ad"}</button>
@@ -138,7 +114,7 @@ function SizeTool() {
     if (!f) return;
     const url = URL.createObjectURL(f);
     const el = new window.Image();
-    el.onload = () => { setImg({ url, w: el.naturalWidth, h: el.naturalHeight, bytes: f.size }); beacon("ad-size-checker"); };
+    el.onload = () => { setImg({ url, w: el.naturalWidth, h: el.naturalHeight, bytes: f.size }); beacon("ad-size-guide"); };
     el.src = url;
   }
   return (
@@ -174,9 +150,181 @@ function SizeTool() {
   );
 }
 
+function GenericAiTool({ tool }: { tool: AiToolSlug }) {
+  const { state, run } = useAiJob(tool);
+  const fields = AI_TOOL_FIELDS[tool] ?? [];
+  const [values, setValues] = useState<Record<string, string>>(() => Object.fromEntries(fields.filter((f) => f.options).map((f) => [f.name, f.options![0][0]])));
+  const out = state.phase === "done" ? (state.result as Record<string, unknown>) : null;
+  return (
+    <div className="space-y-6">
+      <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void run(Object.fromEntries(Object.entries(values).filter(([, v]) => v.trim()))); }}>
+        {fields.map((f) => (
+          <div key={f.name} className="space-y-1.5">
+            <label className="block text-sm font-medium" htmlFor={`f-${f.name}`}>{f.label}</label>
+            {f.options ? (
+              <select id={`f-${f.name}`} value={values[f.name] ?? ""} onChange={(e) => setValues({ ...values, [f.name]: e.target.value })} className={field}>
+                {f.options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+            ) : f.multiline ? (
+              <textarea id={`f-${f.name}`} required={f.required} rows={4} maxLength={2000} value={values[f.name] ?? ""} onChange={(e) => setValues({ ...values, [f.name]: e.target.value })} placeholder={f.placeholder} className={field} />
+            ) : (
+              <input id={`f-${f.name}`} required={f.required} maxLength={200} value={values[f.name] ?? ""} onChange={(e) => setValues({ ...values, [f.name]: e.target.value })} placeholder={f.placeholder} className={field} />
+            )}
+          </div>
+        ))}
+        <button className={btn} disabled={state.phase === "working"}>{state.phase === "working" ? <><Loader2 className="size-4 animate-spin" /> Ozzy is writing…</> : "Write it for me"}</button>
+      </form>
+      {state.phase === "error" && <p role="alert" className="text-sm text-red-300">{state.error}</p>}
+      {out && (
+        <div className="space-y-6">
+          {AI_TOOL_SECTIONS[tool].map(([key, label]) => {
+            const v = out[key];
+            const items = Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : typeof v === "string" ? [v] : [];
+            return items.length ? <Section key={key} title={label} items={items} /> : null;
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Num({ label, value, onChange, step = "any" }: { label: string; value: string; onChange: (v: string) => void; step?: string }) {
+  return (
+    <label className="block space-y-1.5 text-sm font-medium">{label}
+      <input type="number" inputMode="decimal" min="0" step={step} value={value} onChange={(e) => onChange(e.target.value)} className={field} />
+    </label>
+  );
+}
+
+function BudgetTool() {
+  const [v, setV] = useState({ dailyBudget: "20", cpc: "0.80", conversionRatePct: "3", orderValue: "45", marginPct: "40", days: "30" });
+  const r = budgetMath(Object.fromEntries(Object.entries(v).map(([k, x]) => [k, Number(x)])) as unknown as Parameters<typeof budgetMath>[0]);
+  const used = useRef(false);
+  const set = (k: keyof typeof v) => (x: string) => { setV({ ...v, [k]: x }); if (!used.current) { used.current = true; beacon("ad-budget-calculator"); } };
+  const money = (n: number) => n.toLocaleString(undefined, { style: "currency", currency: "USD" });
+  const stats: Array<[string, string]> = [["Spend", money(r.spend)], ["Clicks", r.clicks.toLocaleString()], ["Sales / leads", r.conversions.toLocaleString()], ["Revenue", money(r.revenue)], ["ROAS", `${r.roas}x`], ["Break-even ROAS", `${r.breakEvenRoas}x`], ["Cost per sale (CPA)", money(r.cpa)], ["Break-even CPA", money(r.breakEvenCpa)], ["Profit after ads", money(r.profit)]];
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Num label="Daily budget ($)" value={v.dailyBudget} onChange={set("dailyBudget")} />
+        <Num label="Days" value={v.days} onChange={set("days")} step="1" />
+        <Num label="Cost per click ($)" value={v.cpc} onChange={set("cpc")} />
+        <Num label="Conversion rate (%)" value={v.conversionRatePct} onChange={set("conversionRatePct")} />
+        <Num label="Average order value ($)" value={v.orderValue} onChange={set("orderValue")} />
+        <Num label="Profit margin (%)" value={v.marginPct} onChange={set("marginPct")} />
+      </div>
+      <ul className="grid gap-3 sm:grid-cols-3">
+        {stats.map(([k, x]) => <li key={k} className="rounded-xl border border-border p-4"><p className="text-xs text-muted-foreground">{k}</p><p className="mt-1 text-xl font-semibold">{x}</p></li>)}
+      </ul>
+      <p className={`text-sm ${r.roas >= r.breakEvenRoas && r.spend > 0 ? "text-emerald-400" : "text-amber-300"}`}>
+        {r.spend === 0 ? "Enter a budget to see results." : r.roas >= r.breakEvenRoas ? "These numbers are profitable: ROAS is above your break-even." : "At these numbers the ads lose money: raise conversion rate or order value, or lower your cost per click."}
+      </p>
+    </div>
+  );
+}
+
+function CounterTool() {
+  const [platform, setPlatform] = useState(PLATFORM_LIMITS[0].id);
+  const [texts, setTexts] = useState<Record<string, string>>({});
+  const used = useRef(false);
+  const p = PLATFORM_LIMITS.find((x) => x.id === platform) ?? PLATFORM_LIMITS[0];
+  return (
+    <div className="space-y-5">
+      <select aria-label="Platform" value={platform} onChange={(e) => setPlatform(e.target.value)} className={field}>
+        {PLATFORM_LIMITS.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+      </select>
+      {p.fields.map((f) => {
+        const key = `${p.id}:${f.id}`;
+        const text = texts[key] ?? "";
+        const r = checkLength(text, f);
+        const onChange = (x: string) => { setTexts({ ...texts, [key]: x }); if (!used.current) { used.current = true; beacon("ad-character-counter"); } };
+        return (
+          <div key={key} className="space-y-1.5">
+            <div className="flex items-baseline justify-between text-sm"><label htmlFor={key} className="font-medium">{f.label}</label><span className={r.status === "over" ? "text-red-300" : r.status === "truncated" ? "text-amber-300" : "text-muted-foreground"}>{r.count}{f.max !== null ? ` / ${f.max}` : ""}{f.visible !== null ? ` (shows ${f.visible})` : ""}</span></div>
+            {f.multiline ? <textarea id={key} rows={4} value={text} onChange={(e) => onChange(e.target.value)} className={field} /> : <input id={key} value={text} onChange={(e) => onChange(e.target.value)} className={field} />}
+            {r.note && <p className={`text-xs ${r.status === "over" ? "text-red-300" : r.status === "truncated" ? "text-amber-300" : "text-emerald-400"}`}>{r.note}</p>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function CtaTool() {
+  const [goal, setGoal] = useState<CtaGoal>("book");
+  const [platform, setPlatform] = useState("meta");
+  const used = useRef(false);
+  const r = pickCta(goal, platform);
+  const touch = () => { if (!used.current) { used.current = true; beacon("cta-generator"); } };
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <select aria-label="Goal" value={goal} onChange={(e) => { setGoal(e.target.value as CtaGoal); touch(); }} className={field}>{CTA_GOALS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+        <select aria-label="Platform" value={platform} onChange={(e) => { setPlatform(e.target.value); touch(); }} className={field}>{CTA_PLATFORMS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+      </div>
+      <Section title="Button to choose" items={r.buttons} />
+      <Section title="Call-to-action lines for your text" items={r.phrases} />
+      <p className="text-sm text-muted-foreground">{r.tip}</p>
+    </div>
+  );
+}
+
+function HashtagTool() {
+  const [v, setV] = useState({ business: "", city: "", keywords: "" });
+  const [out, setOut] = useState<ReturnType<typeof buildHashtags> | null>(null);
+  return (
+    <div className="space-y-6">
+      <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); setOut(buildHashtags(v)); beacon("hashtag-generator"); }}>
+        <input aria-label="Business type" required value={v.business} onChange={(e) => setV({ ...v, business: e.target.value })} placeholder="Business type: bakery" className={field} />
+        <input aria-label="Town or city (optional)" value={v.city} onChange={(e) => setV({ ...v, city: e.target.value })} placeholder="Town or city (optional): Leeds" className={field} />
+        <input aria-label="Topics (optional)" value={v.keywords} onChange={(e) => setV({ ...v, keywords: e.target.value })} placeholder="Topics, comma separated: sourdough, birthday cakes" className={field} />
+        <button className={btn}>Get hashtags</button>
+      </form>
+      {out && (
+        <div className="space-y-6">
+          <Section title="Use these 3-5" items={[out.suggested.join(" ")]} />
+          {out.local.length > 0 && <Section title="Local" items={[out.local.join(" ")]} />}
+          {out.niche.length > 0 && <Section title="Niche" items={[out.niche.join(" ")]} />}
+          <Section title="Broad (use sparingly)" items={[out.broad.join(" ")]} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MakerTool() {
+  const [url, setUrl] = useState("");
+  const [err, setErr] = useState("");
+  return (
+    <form className="space-y-3" onSubmit={(e) => {
+      e.preventDefault();
+      const raw = url.trim();
+      let host = "";
+      try { host = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`).hostname; } catch { /* invalid */ }
+      if (!host.includes(".")) return setErr("Enter your website, like yourbusiness.com");
+      beacon("ad-maker");
+      const q = new URLSearchParams({ url: raw, utm_source: "free_tool", utm_medium: "acquire", utm_campaign: "ad-maker", utm_content: "runner" });
+      window.location.href = `/free-ads?${q.toString()}`;
+    }}>
+      <label className="block text-sm font-medium" htmlFor="site">Your website</label>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <input id="site" type="text" inputMode="url" autoComplete="url" required value={url} onChange={(e) => { setUrl(e.target.value); setErr(""); }} placeholder="yourbusiness.com" className={field} />
+        <button className={`${btn} shrink-0`}>Make my free ads</button>
+      </div>
+      {err && <p role="alert" className="text-sm text-red-300">{err}</p>}
+      <p className="text-xs text-muted-foreground">10 image ads + 1 animated ad, no watermark, no card.</p>
+    </form>
+  );
+}
+
 export function ToolRunner({ slug }: { slug: FreeToolSlug }) {
-  if (slug === "ad-headline-generator") return <HeadlineTool />;
-  if (slug === "review-to-ad") return <ReviewTool />;
+  if (slug === "ad-maker") return <MakerTool />;
+  if (slug === "testimonial-generator") return <ReviewTool />;
   if (slug === "ad-copy-grader") return <GraderTool />;
-  return <SizeTool />;
+  if (slug === "ad-size-guide") return <SizeTool />;
+  if (slug === "ad-budget-calculator") return <BudgetTool />;
+  if (slug === "ad-character-counter") return <CounterTool />;
+  if (slug === "cta-generator") return <CtaTool />;
+  if (slug === "hashtag-generator") return <HashtagTool />;
+  return isAiTool(slug) ? <GenericAiTool tool={slug} /> : null;
 }

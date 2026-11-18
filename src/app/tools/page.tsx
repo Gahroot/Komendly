@@ -7,7 +7,7 @@ import { fraunces } from "@/components/studio/fonts";
 import { StudioFooter } from "@/components/studio/studio-footer";
 import { StudioNav } from "@/components/studio/studio-nav";
 import { StudioRoot } from "@/components/studio/studio-spell";
-import { FREE_TOOLS } from "@/lib/growth/free-tools";
+import { FREE_TOOLS, TOOL_GROUPS } from "@/lib/growth/free-tools";
 import { toolCtaHref } from "@/lib/growth/free-tools-links";
 import { freeToolsEnabled } from "@/lib/growth/free-tools-server";
 import { breadcrumbJsonLd, freeToolJsonLd, graph } from "@/lib/seo/jsonld";
@@ -16,7 +16,7 @@ import "@/components/studio/studio.css";
 // Public, cacheable (ISR 5 min so the sys_free_tools kill switch shows quickly). No cookies read here.
 export const revalidate = 300;
 
-const DESCRIPTION = "Free, no-sign-up ad tools for small businesses: write Facebook ad headlines and copy, turn reviews into ads, grade your ad text and check image sizes.";
+const DESCRIPTION = "Free, no-sign-up ad tools for small businesses: a free ad maker, ad copy, hook, caption and slogan generators, ad size guide, budget calculator, review reply and testimonial tools.";
 
 export const metadata: Metadata = {
   title: "Free Facebook & Instagram Ad Tools for Small Businesses",
@@ -38,8 +38,12 @@ export default async function ToolsHub() {
           <p className="mx-auto mt-5 max-w-2xl text-muted-foreground sm:text-lg">No sign-up, no card. Real results right on the page.</p>
         </header>
         {on ? (
-          <ul className="mx-auto mt-12 grid max-w-4xl gap-5 sm:grid-cols-2">
-            {FREE_TOOLS.map((t) => (
+          <div className="mx-auto mt-12 max-w-4xl space-y-12">
+          {TOOL_GROUPS.map(([group, label]) => (
+          <section key={group} aria-labelledby={`g-${group}`}>
+          <h2 id={`g-${group}`} className="font-display text-2xl font-medium">{label}</h2>
+          <ul className="mt-5 grid gap-5 sm:grid-cols-2">
+            {FREE_TOOLS.filter((t) => t.group === group).map((t) => (
               <li key={t.slug}>
                 <Link href={`/tools/${t.slug}`} className="studio-frame block h-full rounded-xl p-6 transition hover:brightness-110">
                   <p className="font-display text-xl font-medium">{t.name}</p>
@@ -49,6 +53,9 @@ export default async function ToolsHub() {
               </li>
             ))}
           </ul>
+          </section>
+          ))}
+          </div>
         ) : (
           <p className="mx-auto mt-12 max-w-xl text-center text-muted-foreground">Our free tools are taking a short break. Back soon! Meanwhile, Ozzy can still make you 10 free ads from your website.</p>
         )}

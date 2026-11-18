@@ -12,7 +12,7 @@ describe("free tools engine", () => {
   it("claims with FOR UPDATE SKIP LOCKED and a limit", async () => {
     let sql = "";
     let values: unknown[] = [];
-    const db = { $queryRaw: async (s: TemplateStringsArray, ...v: unknown[]) => { sql = s.join("?"); values = v; return [{ id: "j1", tool: "review-to-ad", input: {} }]; } };
+    const db = { $queryRaw: async (s: TemplateStringsArray, ...v: unknown[]) => { sql = s.join("?"); values = v; return [{ id: "j1", tool: "testimonial-generator", input: {} }]; } };
     const jobs = await claimToolJobs(db as never, "w1", 4);
     expect(jobs).toHaveLength(1);
     expect(sql).toContain("FOR UPDATE SKIP LOCKED");
@@ -22,7 +22,7 @@ describe("free tools engine", () => {
   });
   it("runs a job through the provider and validates output", async () => {
     const out = { headlines: ["Fresh bread by 7am", "Sourdough, done right", "Cakes for any day"], primaryTexts: ["Warm loaves every morning. Order now.", "Custom cakes in 48 hours. Book today."], hooks: ["Still buying sliced bread?", "Need a cake by Friday?"] };
-    await expect(runToolJob(fakeProvider(out), { id: "1", tool: "ad-headline-generator", input: { business: "Bakery in Leeds with sourdough" } })).resolves.toEqual(out);
+    await expect(runToolJob(fakeProvider(out), { id: "1", tool: "ad-copy-generator", input: { business: "Bakery in Leeds with sourdough" } })).resolves.toEqual(out);
     await expect(runToolJob(fakeProvider({}), { id: "1", tool: "nope", input: {} })).rejects.toThrow();
   });
 });

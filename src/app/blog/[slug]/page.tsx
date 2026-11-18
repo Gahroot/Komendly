@@ -142,7 +142,7 @@ export default async function BlogPostPage({ params }: PageProps) {
         <AuthorCard author={author} />
 
         <p className="mt-10 text-sm text-muted-foreground">
-          Free tools: <Link href="/tools/ad-headline-generator" className="underline hover:text-foreground">ad headline generator</Link>, <Link href="/tools/ad-copy-grader" className="underline hover:text-foreground">ad copy grader</Link>, <Link href="/tools/ad-size-checker" className="underline hover:text-foreground">ad size checker</Link> · <Link href="/ad-examples" className="underline hover:text-foreground">ad examples by industry</Link>
+          Free tools: <Link href="/tools/ad-copy-generator" className="underline hover:text-foreground">ad copy generator</Link>, <Link href="/tools/ad-copy-grader" className="underline hover:text-foreground">ad copy grader</Link>, <Link href="/tools/ad-size-guide" className="underline hover:text-foreground">ad size guide</Link> · <Link href="/ad-examples" className="underline hover:text-foreground">ad examples by industry</Link>
         </p>
       </article>
 

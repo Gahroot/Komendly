@@ -47,6 +47,8 @@ COPY src/lib/growth/winback.ts src/lib/growth/winback.ts
 COPY src/lib/first-video-offer.ts src/lib/first-video-offer.ts
 COPY src/lib/growth/free-tools.ts src/lib/growth/free-tools.ts
 COPY src/lib/growth/industry-examples.ts src/lib/growth/industry-examples.ts
+COPY src/lib/growth/ad-pages.ts src/lib/growth/ad-pages.ts
+COPY src/lib/growth/vocabulary.ts src/lib/growth/vocabulary.ts
 COPY src/lib/ads/industries.ts src/lib/ads/industries.ts
 COPY src/lib/growth/monitor.ts src/lib/growth/monitor.ts
 COPY src/lib/growth/viral-branding.ts src/lib/growth/viral-branding.ts

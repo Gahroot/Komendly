@@ -3,6 +3,7 @@
 // Kill switch sys_industry_examples; heartbeat every cycle (outputs = pages added/updated).
 import { INDUSTRIES } from "../../../src/lib/ads/industries";
 import { INDUSTRY_CONTENT, indexNowBody, industryCycleConfig, industryPrompt, pickIndustriesForCycle, validateIndustryContent } from "../../../src/lib/growth/industry-examples";
+import { GALLERY_PAGES, contentText, galleryCycleConfig, galleryPage, galleryPagePrompt, pickGalleryPages, siblingKeys, tooSimilar } from "../../../src/lib/growth/ad-pages";
 import { parseBeat, recordSystemRun, systemEnabled, systemHeartbeatId } from "../../../src/lib/growth/systems";
 import type { ZodType } from "zod";
 import type { Db } from "../db";
@@ -55,6 +56,46 @@ export async function industryExamplesCycle(db: Db, provider: AIProvider, now: D
   return { written: written.length, errors };
 }
 
+/**
+ * Intent pages (platform/format/occasion/combo): a few page keys per cycle within GALLERY_PAGES_DAILY_CAP. Content is
+ * validated, then checked against same-kind siblings; a near-duplicate is regenerated once, then rejected.
+ */
+export async function galleryPagesCycle(db: Db, provider: AIProvider, now: Date, env: NodeJS.ProcessEnv, model: string, fetchFn: typeof fetch = fetch): Promise<{ written: number; errors: string[] }> {
+  const cfg = galleryCycleConfig(env);
+  const existing = await db.galleryPage.findMany({ select: { key: true, generatedAt: true, content: true } });
+  const keys = pickGalleryPages(GALLERY_PAGES.map((p) => p.key), existing, cfg, now);
+  const texts = new Map(existing.flatMap((e) => { const v = validateIndustryContent(e.content); return v.ok ? [[e.key, contentText(v.content)] as const] : []; }));
+  const written: string[] = [];
+  const errors: string[] = [];
+  for (const key of keys) {
+    const page = galleryPage(key)!;
+    try {
+      const siblings = siblingKeys(page).flatMap((k) => { const t = texts.get(k); return t ? [{ key: k, text: t }] : []; });
+      let avoid: string | undefined;
+      let content = null;
+      for (let attempt = 0; attempt < 2 && !content; attempt++) {
+        const { system, prompt } = galleryPagePrompt(page, avoid);
+        const v = validateIndustryContent(await structured(provider, INDUSTRY_CONTENT as unknown as ZodType, { system, prompt, reasoning: "medium" }, [] as UsageMeter[]));
+        if (!v.ok) throw new Error(`content rejected: ${v.error}`);
+        const dup = tooSimilar(contentText(v.content), siblings);
+        if (!dup) content = v.content;
+        else if (attempt === 1) throw new Error(`near-duplicate of ${dup.key} (${dup.score.toFixed(2)})`);
+        else avoid = siblings.find((x) => x.key === dup.key)?.text;
+      }
+      await db.galleryPage.upsert({ where: { key }, create: { key, content: content as object, model, generatedAt: now }, update: { content: content as object, model, generatedAt: now } });
+      texts.set(key, contentText(content!));
+      written.push(key);
+    } catch (e) {
+      errors.push(`${key}: ${errMsg(e)}`);
+    }
+  }
+  if (written.length) {
+    const urls = written.map((k) => `${SITE}${galleryPage(k)!.path}`);
+    if (await pingIndexNow(urls, fetchFn)) await db.galleryPage.updateMany({ where: { key: { in: written } }, data: { indexNowAt: now } });
+  }
+  return { written: written.length, errors };
+}
+
 /** Hourly check; runs a cycle when the last one is older than INDUSTRY_EXAMPLES_INTERVAL_HOURS (default 24). */
 export function startIndustryExamplesLoop(opts: { db: Db; env?: NodeJS.ProcessEnv }): () => void {
   const env = opts.env ?? process.env;
@@ -74,7 +115,9 @@ export function startIndustryExamplesLoop(opts: { db: Db; env?: NodeJS.ProcessEn
       if (beat.lastRunAt && now.getTime() - new Date(beat.lastRunAt).getTime() < waitH * 3_600_000) return;
       provider ??= createProvider("codex", { ...env, CODEX_TEXT_MODEL: model, TEXT_BRAIN: "codex" }, { db: opts.db, by: "engine" });
       try {
-        const r = await industryExamplesCycle(opts.db, provider, now, env, model);
+        const a = await industryExamplesCycle(opts.db, provider, now, env, model);
+        const g = await galleryPagesCycle(opts.db, provider, now, env, model);
+        const r = { written: a.written + g.written, errors: [...a.errors, ...g.errors] };
         const ok = r.errors.length === 0 || r.written > 0;
         if (r.errors.length) log("warn", "industry examples errors", { errors: r.errors });
         await recordSystemRun(opts.db, "industry_examples", { ok, outputs: r.written, error: ok ? null : r.errors.join("; ") });

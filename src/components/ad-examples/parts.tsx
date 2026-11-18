@@ -5,13 +5,13 @@ import type { GalleryAd } from "@/lib/ads/gallery";
 import { AWARENESS_LABEL, galleryCtaHref, whyItWorks } from "@/lib/ads/industries";
 
 /** One real ad: image, brand, headline, awareness stage and a 'why it works' line from the ad's own fields. */
-export function AdCard({ ad, eager = false }: { ad: GalleryAd; eager?: boolean }) {
+export function AdCard({ ad, eager = false, alt }: { ad: GalleryAd; eager?: boolean; alt?: string }) {
   return (
     <li className="flex flex-col gap-3">
       <div className="studio-frame rounded-xl p-1.5 sm:p-2">
         <Image
           src={ad.src}
-          alt={`${ad.brandName} Facebook ad: ${ad.headline}`}
+          alt={alt ?? `${ad.brandName} Facebook ad: ${ad.headline}`}
           width={ad.width}
           height={ad.height}
           sizes="(min-width: 1024px) 360px, (min-width: 640px) 45vw, 92vw"
