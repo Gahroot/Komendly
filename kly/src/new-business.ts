@@ -122,6 +122,13 @@ export const defaultFetchCt: FetchCt = async (url) => {
   return Array.isArray(j) ? (j as CtRow[]) : [];
 };
 
+/** crt.sh hiccups we ride out: timeouts/aborts, network errors and 5xx/429. */
+export function isCtTransient(e: unknown): boolean {
+  const m = e instanceof Error ? `${e.name} ${e.message}` : String(e);
+  return /abort|timeout|timed out|fetch failed|ECONNRESET|ETIMEDOUT|ENOTFOUND|crt\.sh (5\d\d|429)/i.test(m);
+}
+export const CT_FAIL_STREAK_ALERT = 4;
+
 export interface NewBizDeps {
   db: Db;
   env?: NodeJS.ProcessEnv;
@@ -139,6 +146,8 @@ export interface NewBizRuntime {
   cursor: number;
   /** Domains already checked this process (CT results repeat across cycles). */
   seen: Set<string>;
+  /** Consecutive cycles where crt.sh was unavailable (alert only after CT_FAIL_STREAK_ALERT). */
+  ctFailStreak?: number;
 }
 export const createNewBizRuntime = (): NewBizRuntime => ({ cursor: 0, seen: new Set() });
 
@@ -157,7 +166,21 @@ export async function newBusinessCycle(d: NewBizDeps, rt: NewBizRuntime, sentSin
   const r: NewBizCycle = { keyword: k.kw, recent: 0, checked: 0, leads: 0, skipped: {} };
   const skip = (why: string) => (r.skipped[why] = (r.skipped[why] ?? 0) + 1);
   try {
-    if (!d.stop) await findNew(d, rt, k, r, skip);
+    if (!d.stop) {
+      try {
+        await findNew(d, rt, k, r, skip);
+      } catch (e) {
+        // crt.sh is a free public service: a slow/timed-out keyword is skipped (next cycle tries the next keyword).
+        // Only count it as a system failure when several keywords in a row fail.
+        if (!isCtTransient(e)) throw e;
+        rt.ctFailStreak = (rt.ctFailStreak ?? 0) + 1;
+        skip("ct_unavailable");
+        if (rt.ctFailStreak >= CT_FAIL_STREAK_ALERT) throw e;
+        await recordSystemRun(d.db, NEW_BIZ_SYSTEM, { ok: true, outputs: sentSinceLast }, d.now);
+        return r;
+      }
+      rt.ctFailStreak = 0;
+    }
     await recordSystemRun(d.db, NEW_BIZ_SYSTEM, { ok: true, outputs: r.leads + sentSinceLast }, d.now);
     return r;
   } catch (e) {
