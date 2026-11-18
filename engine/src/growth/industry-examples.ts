@@ -58,7 +58,7 @@ export async function industryExamplesCycle(db: Db, provider: AIProvider, now: D
 /** Hourly check; runs a cycle when the last one is older than INDUSTRY_EXAMPLES_INTERVAL_HOURS (default 24). */
 export function startIndustryExamplesLoop(opts: { db: Db; env?: NodeJS.ProcessEnv }): () => void {
   const env = opts.env ?? process.env;
-  const model = env.INDUSTRY_EXAMPLES_MODEL || "gpt-6.2-sol";
+  const model = env.INDUSTRY_EXAMPLES_MODEL || "gpt-6.1-sol"; // Sol on the ChatGPT-account Codex (gpt-6.2-sol is rejected there)
   const intervalH = Number(env.INDUSTRY_EXAMPLES_INTERVAL_HOURS) > 0 ? Number(env.INDUSTRY_EXAMPLES_INTERVAL_HOURS) : 24;
   let provider: AIProvider | null = null;
   let busy = false;
@@ -69,7 +69,9 @@ export function startIndustryExamplesLoop(opts: { db: Db; env?: NodeJS.ProcessEn
       if (!(await systemEnabled(opts.db, "industry_examples"))) return;
       const beat = parseBeat((await opts.db.engineHeartbeat.findUnique({ where: { id: systemHeartbeatId("industry_examples") } }))?.meta);
       const now = new Date();
-      if (beat.lastRunAt && now.getTime() - new Date(beat.lastRunAt).getTime() < intervalH * 3_600_000) return;
+      // A failed cycle retries after 1h instead of waiting the full interval.
+      const waitH = beat.lastError ? 1 : intervalH;
+      if (beat.lastRunAt && now.getTime() - new Date(beat.lastRunAt).getTime() < waitH * 3_600_000) return;
       provider ??= createProvider("codex", { ...env, CODEX_TEXT_MODEL: model, TEXT_BRAIN: "codex" }, { db: opts.db, by: "engine" });
       try {
         const r = await industryExamplesCycle(opts.db, provider, now, env, model);
