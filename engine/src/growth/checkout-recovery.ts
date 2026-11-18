@@ -103,7 +103,7 @@ const RecoveryCopySchema = z.object({
 /** Codex text only (never MiMo / paid OpenAI), on the small fast model. null = no AI (fallback copy). */
 function codexLuna(p: AIProvider | null, env: NodeJS.ProcessEnv): AIProvider | null {
   if (!p || p.name !== "codex") return null;
-  const model = env.RECOVERY_TEXT_MODEL || "gpt-6.2-luna";
+  const model = env.RECOVERY_TEXT_MODEL || "gpt-6-luna";
   const codexText = (p as { fallbackText?: AIProvider["text"] }).fallbackText ?? p.text.bind(p);
   return { name: "codex", text: (r: TextRequest) => codexText({ ...r, model }), image: (r) => p.image(r), health: () => p.health() };
 }

@@ -32,7 +32,7 @@ const CopySchema = z.object({ subject: z.string().min(3).max(WINBACK_MAX_SUBJECT
 
 function codexLuna(p: AIProvider | null, env: NodeJS.ProcessEnv): AIProvider | null {
   if (!p || p.name !== "codex") return null;
-  const model = env.WINBACK_TEXT_MODEL || "gpt-6.2-luna";
+  const model = env.WINBACK_TEXT_MODEL || "gpt-6-luna";
   const codexText = (p as { fallbackText?: AIProvider["text"] }).fallbackText ?? p.text.bind(p);
   return { name: "codex", text: (r: TextRequest) => codexText({ ...r, model }), image: (r) => p.image(r), health: () => p.health() };
 }

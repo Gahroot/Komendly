@@ -82,7 +82,7 @@ export function startFreeToolsLoop(opts: { db: Db; worker: string; env?: NodeJS.
     busy = true;
     try {
       if (!(await systemEnabled(opts.db, "free_tools"))) return;
-      provider ??= createProvider("codex", { ...env, CODEX_TEXT_MODEL: env.FREE_TOOLS_MODEL || "gpt-6.2-luna", TEXT_BRAIN: "codex" }, { db: opts.db, by: "engine" });
+      provider ??= createProvider("codex", { ...env, CODEX_TEXT_MODEL: env.FREE_TOOLS_MODEL || "gpt-6-luna", TEXT_BRAIN: "codex" }, { db: opts.db, by: "engine" });
       await reapToolJobs(opts.db);
       await processToolJobs(opts.db, provider, opts.worker);
       lastError = null;
