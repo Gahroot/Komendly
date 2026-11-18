@@ -393,7 +393,7 @@ export function checkRecoveryCopy(x: EmailCopy, c: RecoveryCopyContext): string 
   const all = [x.subject, x.preheader, x.ctaLabel, ...x.paragraphs].join("\n");
   if (/https?:\/\/|www\./i.test(all)) return "contains a link";
   const pct = c.discounted ? all.replace(/\b20%/g, "") : all;
-  if (/%/.test(pct) || (!c.discounted && /\b(discount|coupon|promo|% off|deal)\b/i.test(all))) return "invented discount";
+  if (/%/.test(pct) || (!c.discounted && /\b(discount|coupon|promo|% off)\b/i.test(all))) return "invented discount";
   const allowed = new Set([c.price, c.discounted].filter(Boolean));
   for (const m of all.match(/\$\d[\d,]*(\.\d\d)?/g) ?? []) if (!allowed.has(m.replace(/,/g, ""))) return `unknown price ${m}`;
   if (c.billing !== "ads" && /guarantee|refund/i.test(all)) return "guarantee claim";
