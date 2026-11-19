@@ -37,7 +37,7 @@ const SECTIONS: readonly LegalSection[] = [
         <li><strong>Account data:</strong> name, email address and a salted hash of your password (we never store the password itself).</li>
         <li><strong>What you give us to work with:</strong> website URLs, the brand details, text and images we pull from those sites, review text, scripts, uploaded images, and the ads and videos we generate for you.</li>
         <li><strong>Payment data:</strong> Stripe handles your card. We receive your plan, payment status, amounts and Stripe customer and payment ids, never your full card number.</li>
-        <li><strong>Meta connection (Ads, optional):</strong> if you connect Meta, we store an access token (encrypted at rest) and the ad account and Page ids you choose, so we can publish ads you ask us to publish and read their results.</li>
+        <li><strong>Meta connection (Ads, optional):</strong> if you connect Meta, we store an access token (encrypted at rest) and the ad account and Page ids you choose, so we can publish ads you ask us to publish.</li>
         <li><strong>Usage and device data:</strong> IP address, browser user agent, pages viewed, product events (for example sign-up, run started, checkout, purchase), A/B test variants and the cookies listed below.</li>
         <li><strong>Visit source:</strong> UTM tags, Facebook click id (fbclid), the referring website and your first landing page.</li>
       </ul>
@@ -120,6 +120,21 @@ const SECTIONS: readonly LegalSection[] = [
         <li>Sign-in sessions expire after 30 days. Cookie lifetimes are in the table above.</li>
         <li>When you ask us to delete your account, we delete or anonymise your personal data unless we must keep it by law.</li>
       </ul>
+    ),
+  },
+  {
+    id: "meta-data",
+    title: "Meta data and how to delete it",
+    body: (
+      <>
+        <p>If you connect your Meta account to publish ads, Komendly receives an access token for the permissions you approve, the names and ids of your ad accounts and Facebook Pages (to show you a picker), and the ids of the campaigns, ad sets, ads and creatives we create for you. We store only the token (encrypted at rest), the ad account and Page you choose, and the ids of what we published. We use them only to publish ads when you click Publish. We never post to your Page, read your messages or sell this data.</p>
+        <p>To delete it:</p>
+        <ul>
+          <li>Click <strong>Disconnect</strong> in the Publish to Meta dialog. We delete the token and your chosen ad account and Page right away and ask Meta to revoke our access.</li>
+          <li>Or remove Komendly in Facebook under Settings &amp; privacy &gt; Settings &gt; Business integrations. Our token stops working immediately.</li>
+          <li>To delete everything, including the record of what we published, email us from your account address and we will do it within 30 days.</li>
+        </ul>
+      </>
     ),
   },
   {

@@ -11,9 +11,14 @@ export function metaAccessFor(ws: PaidCheckWorkspace, flagEnabled: boolean): Met
   return canPublishToMeta(ws) ? "ok" : "upgrade";
 }
 
+/** Global key, plus `meta_publish:<workspaceId>` to turn it on for one workspace (live testing, App Review). */
+export function metaPublishFlagKeys(workspaceId: string): string[] {
+  return ["meta_publish", `meta_publish:${workspaceId}`];
+}
+
 export async function metaAccess(ws: AdsWorkspace): Promise<MetaAccess> {
-  const flag = await prisma.adsFeatureFlag.findUnique({ where: { key: "meta_publish" } });
-  return metaAccessFor(ws, flag?.enabled ?? false);
+  const flags = await prisma.adsFeatureFlag.findMany({ where: { key: { in: metaPublishFlagKeys(ws.id) }, enabled: true } });
+  return metaAccessFor(ws, flags.length > 0);
 }
 
 export async function requireMetaAccess(ws: AdsWorkspace): Promise<void> {

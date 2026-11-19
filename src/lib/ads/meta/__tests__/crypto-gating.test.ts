@@ -5,7 +5,8 @@ vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 vi.mock("@/lib/auth", () => ({ getCurrentUser: vi.fn() }));
 
 import { decryptToken, encryptToken, tokenKey } from "../core/crypto";
-import { metaAccessFor } from "../access";
+import { metaAccessFor, metaPublishFlagKeys } from "../access";
+import { GRAPH_SCOPES, revokeGraphToken } from "../core/oauth";
 
 describe("token encryption", () => {
   it("roundtrips and rejects tampering / wrong key", () => {
@@ -31,5 +32,26 @@ describe("paid gating", () => {
     expect(metaAccessFor(paid, false)).toBe("disabled");
     expect(metaAccessFor({ adsPlan: "trial", subscriptionStatus: "none" }, true)).toBe("upgrade");
     expect(metaAccessFor({ ...paid, suspendedAt: new Date(0) }, true)).toBe("upgrade");
+  });
+});
+
+describe("meta publish flag + scopes", () => {
+  it("checks the global flag and the per-workspace flag", () => {
+    expect(metaPublishFlagKeys("ws1")).toEqual(["meta_publish", "meta_publish:ws1"]);
+  });
+  it("does not request ads_read in graph mode", () => {
+    expect(GRAPH_SCOPES).not.toContain("ads_read");
+  });
+});
+
+describe("revokeGraphToken", () => {
+  it("DELETEs me/permissions and never throws", async () => {
+    const f = vi.fn(async (_u: URL | string, _i?: RequestInit) => new Response("{}", { status: 200 }));
+    expect(await revokeGraphToken("tok", "v21.0", f as never)).toBe(true);
+    const [url, init] = f.mock.calls[0];
+    expect(String(url)).toContain("https://graph.facebook.com/v21.0/me/permissions?access_token=tok");
+    expect(init?.method).toBe("DELETE");
+    const boom = vi.fn(async () => { throw new Error("net"); });
+    expect(await revokeGraphToken("tok", "v21.0", boom as never)).toBe(false);
   });
 });

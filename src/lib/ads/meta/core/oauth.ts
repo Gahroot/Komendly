@@ -3,7 +3,8 @@ import { createHash, randomBytes } from "node:crypto";
 import { DEFAULT_GRAPH_VERSION } from "./graph-publisher";
 import { MetaApiError, type FetchLike, type StoredMetaToken } from "./types";
 
-export const GRAPH_SCOPES = ["ads_management", "ads_read", "business_management", "pages_show_list", "pages_read_engagement"];
+// Graph mode never reads insights, so no ads_read (App Review rejects unused permissions).
+export const GRAPH_SCOPES = ["ads_management", "business_management", "pages_show_list", "pages_read_engagement", "pages_manage_ads"];
 export const MCP_SCOPES = ["ads_management", "ads_read", "business_management", "pages_show_list", "pages_manage_ads", "ads_mcp_management"];
 
 export function randomToken(bytes = 32): string {
@@ -46,6 +47,18 @@ export async function exchangeGraphCode(c: MetaAppConfig, code: string, verifier
   for (const [k, v] of Object.entries({ grant_type: "fb_exchange_token", client_id: c.appId, client_secret: c.appSecret, fb_exchange_token: short.access_token })) u2.searchParams.set(k, v);
   const long = await tokenCall(f, u2).catch(() => short);
   return { mode: "graph", accessToken: long.access_token, expiresAt: long.expires_in ? now + long.expires_in * 1000 : undefined };
+}
+
+/** Revoke the app's grant on Meta (best effort); stored ids are deleted by the caller regardless. */
+export async function revokeGraphToken(accessToken: string, graphVersion: string, f: FetchLike = fetch): Promise<boolean> {
+  const u = new URL(`https://graph.facebook.com/${graphVersion || DEFAULT_GRAPH_VERSION}/me/permissions`);
+  u.searchParams.set("access_token", accessToken);
+  try {
+    const res = await f(u, { method: "DELETE", signal: AbortSignal.timeout(5000) });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 /** Refresh an MCP OAuth token (public client, token_endpoint_auth_method=none). */

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { AdsHttpError } from "@/lib/ads/workspace";
 import { decryptToken, encryptToken } from "./core/crypto";
 import { createMetaPublisher } from "./core/factory";
-import { META_MCP_TOKEN_ENDPOINT_FALLBACK, refreshMcpToken } from "./core/oauth";
+import { META_MCP_TOKEN_ENDPOINT_FALLBACK, refreshMcpToken, revokeGraphToken } from "./core/oauth";
 import type { MetaPublisher, StoredMetaToken } from "./core/types";
 import { graphVersion, metaTokenKey } from "./config";
 
@@ -40,6 +40,15 @@ export async function publisherForWorkspace(workspaceId: string): Promise<MetaPu
 }
 
 export async function disconnectMeta(workspaceId: string): Promise<void> {
+  const conn = await prisma.metaConnection.findUnique({ where: { workspaceId } });
+  if (conn) {
+    try {
+      const token = JSON.parse(decryptToken(conn.encryptedToken, metaTokenKey())) as StoredMetaToken;
+      if (token.mode === "graph") await revokeGraphToken(token.accessToken, graphVersion());
+    } catch {
+      // Unreadable token: still delete it below.
+    }
+  }
   await prisma.metaConnection.deleteMany({ where: { workspaceId } });
   await prisma.metaOAuthState.deleteMany({ where: { workspaceId } });
 }
