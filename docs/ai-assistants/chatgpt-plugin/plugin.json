@@ -39,7 +39,7 @@
             { "description": "Unrelated request", "prompt": "What's the weather in Paris?" }
           ]
         },
-        "demo_recording_url": "REPLACE_WITH_VIDEO_URL",
+        "demo_recording_url": "https://youtu.be/2QlthjWHuoU",
         "commerce": false,
         "commerce_description": "No purchases happen in ChatGPT. When credits run out, the tool returns a link to Komendly's pricing page."
       },
