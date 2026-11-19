@@ -24,3 +24,10 @@ Note: BFS 5.1 "ads apps" (web pixels, segments) targets ad-platform/pixel apps. 
 - `run`: status + a signed 10-minute link (`/api/shopify/open`) that opens the ads in Komendly in a new tab.
 - `subscribe` / `sync`: Billing API recurring subscription (Starter, Ozzy Ad Department; same price + credits as the Stripe plans). Credits through the existing ledger, keys `shopify:<chargeGid>:p1` then `shopify:<chargeGid>:<periodEnd>`. Dev stores and `SHOPIFY_BILLING_TEST=1` use test charges (no revenue events). Renewal credits are granted when the merchant next opens the app (sync sees a later `currentPeriodEnd`).
 - Engine `engine/src/growth/shopify.ts` hourly: outputs = installs + paid activations in the last hour; synthetic check (`/api/shopify/health` 200, webhooks answer 401 to a bad HMAC); heartbeat `system:shopify`.
+
+## App Store submission (submitted 2026-11-19 ~18:45 ET)
+- Partners app 449486651393, public distribution (permanent). Status: Submitted, "assigning a reviewer". Issues are emailed to nolan@prestyj.com.
+- Pricing method: **Manual pricing (Billing API)**, matching `subscribe`/`sync`. Public plans: `free`, `starter` $49/mo, `ad-department` $197/mo (display names Free / Komendly Starter / Ozzy Ad Department). Switching to Shopify App Pricing later means removing the Billing API calls (see shopify.dev "Migrate to Shopify App Pricing").
+- Category: Marketing and conversion > Advertising > Advertising - Other. Requires Online Store. English only.
+- Media: feature image `~/Documents/Komendly-Shopify-Listing/feature-image-ads-1600x900.png` (3 real ads; the logo-only image was flagged by Shopify's AI check), screenshots in `.../screenshots/` (1-pick-product, 2-ad-pack, 3-ad-detail; the old "free ads" screenshot was flagged as pricing). Screencast: https://youtu.be/Svsh8S4coyE (unlisted).
+- Reviewer risk: "Open my ads" opens Komendly in a new tab (App Store requirement 2.2.2 asks off-platform features to stay inside the admin).
