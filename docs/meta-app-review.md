@@ -116,3 +116,19 @@ separate use case, once the product does it. Reviewers approve what the video sh
   Verification for it. Business "Home Sales TV" (850028653548456) is Verified.
 - The first recording can't be submitted: it was made while the app was still named Prestyjco. Re-record after the icon
   is set. Click Disconnect first, which revokes the grant, so the consent screen lists every permission fresh.
+
+## 8. Submitted (2026-11-19 ~15:05 ET)
+
+- Status: Review in progress (Meta says most reviews take up to 20 days). Requests: ads_management, business_management,
+  pages_show_list, pages_read_engagement, pages_manage_ads (+ public_profile renewal). App icon set to the Komendly mark.
+- Each permission has its own description and the screencast `meta komendly ad publishing.mp4` (H.264 copy:
+  `~/Desktop/komendly-meta-review.mp4`). The OAuth request asks for exactly these 5 permissions (checked live).
+- Data handling: processors Vercel Inc. and Railway Corporation (IT/cloud, United States); controller Grout Global LLC (US).
+  The other answers kept the earlier Prestyj submission's choices.
+- Reviewer account: `meta-reviewer@komendly.com` (password in `~/.config/meta-ads/reviewer.env`), Ad Department plan
+  (comped), 1,000 credits (ledger `admin:meta-app-review-2026-11-19`), `meta_publish:<ws>` flag on, finished run
+  cmwnyauy300074v2oolsn8bz5 for komendly.com (4 ads). Its files are deleted after 7 days; the instructions tell the reviewer
+  to generate a new run if needed.
+- Privacy policy: effective 19 November 2026, contact nolan@komendly.com, `#meta-data` deletion section.
+- Not requested yet: Marketing API Access Tier upgrade (currently Limited). Request it after this approval.
+- After approval: turn `meta_publish` on globally (or for each workspace) and remove the reviewer flag/credits when done.
