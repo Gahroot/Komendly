@@ -80,7 +80,7 @@ export function AdGallery({ run, offerOpen = false, remainingMs = null, unlockPa
       {groups.map(([level, ads]) => (
         <div key={level} className="space-y-4">
           <AwarenessGroupHeader level={level} count={ads.length} />
-          <div className="columns-1 gap-5 sm:columns-2 lg:columns-3 [&>*]:mb-6 [&>*]:break-inside-avoid">
+          <div className="grid items-start gap-x-5 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
             {ads.map((ad) => <AdCard key={ad.id} ad={ad} ratio={ratio} runId={run.id} />)}
           </div>
         </div>
@@ -89,7 +89,7 @@ export function AdGallery({ run, offerOpen = false, remainingMs = null, unlockPa
       {!done && missing > 0 && (
         <div className="space-y-4">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Still planning · {missing}</p>
-          <div className="columns-1 gap-5 sm:columns-2 lg:columns-3 [&>*]:mb-6 [&>*]:break-inside-avoid">
+          <div className="grid items-start gap-x-5 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: missing }, (_, i) => <AdSkeletonCard key={`s${i}`} ratio={ratio} label="Planning…" />)}
           </div>
         </div>

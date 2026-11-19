@@ -84,7 +84,7 @@ export function BonusSection({ runId, ads, bonus, ratio, offerOpen, remainingMs,
           </div>
         )}
       </div>
-      <div className="columns-1 gap-5 sm:columns-2 lg:columns-3 [&>*]:mb-6 [&>*]:break-inside-avoid">
+      <div className="grid items-start gap-x-5 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
         {readyAds.map((ad) => (ad.locked ? <LockedBonusCard key={ad.id} ad={ad} /> : <AdCard key={ad.id} ad={ad} ratio={ratio} runId={runId} />))}
         {pending.map((ad) => <AdSkeletonCard key={ad.id} ratio={ad.bonusKind === "story" ? "9:16" : "4:5"} label="Bonus rendering…" />)}
       </div>
