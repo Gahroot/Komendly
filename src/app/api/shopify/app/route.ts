@@ -62,7 +62,8 @@ export async function POST(request: NextRequest) {
       const shopifyStore = await adminGraphql<StoreDataResponse>(shopDomain, token, env, STORE_DATA_QUERY, { n: 8 })
         .then((d) => storeDataFrom(d, shop.storeUrl ?? `https://${shopDomain}`))
         .catch(() => null);
-      const r = await startRun(StartRunSchema.parse({ url: body.url }), { user, workspace, fp: fingerprintFrom(request), extractPayload: shopifyStore ? { shopifyStore } : undefined });
+      // Always re-read the store (products/prices change; also replaces any brand saved from a password page).
+      const r = await startRun(StartRunSchema.parse({ url: body.url, reextract: true }), { user, workspace, fp: fingerprintFrom(request), extractPayload: shopifyStore ? { shopifyStore } : undefined });
       return NextResponse.json({ runId: r.runId });
     }
     if (body.action === "run") {
