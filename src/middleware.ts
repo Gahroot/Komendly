@@ -69,6 +69,7 @@ const publicPrefixes = [
   "/api/mcp",              // Hosted Ozzy MCP server: authenticates its own OAuth token or API key
   "/.well-known/oauth-",   // OAuth discovery metadata (RFC 9728 / RFC 8414) for MCP clients
   "/.well-known/openid-configuration",
+  "/.well-known/mcp",      // MCP server card (/.well-known/mcp/server-card.json, /.well-known/mcp.json) for directories
   "/.well-known/openai-apps-challenge", // ChatGPT plugin domain verification (token from OPENAI_APPS_CHALLENGE)
   "/api/oauth/",           // OAuth register/token/revoke (client-authenticated) + consent POST (session + signed form)
   "/oauth/",               // Consent page (sends signed-out visitors to /login itself)

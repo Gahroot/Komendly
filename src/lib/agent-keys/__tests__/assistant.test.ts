@@ -140,3 +140,17 @@ describe("kill switch sys_ai_assistant", () => {
     expect(isRefusedForApiKey("/api/ads/runs")).toBe(false);
   });
 });
+
+describe("MCP server card (/.well-known/mcp/server-card.json)", () => {
+  it("is public and lists the same tools as the probe", async () => {
+    const { GET } = await import("@/app/.well-known/mcp/server-card.json/route");
+    const res = await GET(new Request(`${ORIGIN}/.well-known/mcp/server-card.json`));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("access-control-allow-origin")).toBe("*");
+    const card = (await res.json()) as { serverInfo: { name: string }; remotes: { url: string }[]; authentication: { required: boolean }; tools: { name: string }[] };
+    expect(card.serverInfo.name).toBe("ozzy");
+    expect(card.remotes[0].url).toBe(`${ORIGIN}/api/mcp`);
+    expect(card.authentication.required).toBe(true);
+    expect(card.tools.map((t) => t.name)).toContain("ads_create_pack");
+  });
+});
