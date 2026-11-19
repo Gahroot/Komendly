@@ -11,9 +11,9 @@
       "interface": {
         "displayName": "Komendly",
         "shortDescription": "Ads from your website",
-        "longDescription": "Komendly turns a business website into ready-to-run ads. Give it your site's address and it reads your brand, offer and audience, then makes an Ad Pack of static ads (image, headline and ad copy) sized for Facebook, Instagram and other social feeds and stories. Ozzy, Komendly's video maker, also makes short promo, launch and explainer videos from a prompt, and edits them on request (\"make it 9:16\", \"add captions\").\n\nWho it's for: small business owners, marketers and founders who need ad creatives without a designer.\n\nHow it works: connect, sign in or create a free Komendly account, then ask in chat. New accounts get one free Ad Pack and one free Ozzy video; more uses credits on a paid plan, and the app links to pricing when needed.\n\nLimits: Komendly makes the creatives and copy but does not publish ads or spend ad budget. Websites must be public. Ads take a few minutes; videos a few more.",
+        "longDescription": "Komendly turns a business website into ready-to-run ads. Give it your site's address and it reads your brand, offer and audience, then makes an Ad Pack of static ads (image, headline and ad copy) sized for Facebook, Instagram and other social feeds and stories. Ozzy, Komendly's video maker, also makes short promo, launch and explainer videos from a prompt, and edits them on request (\"make it 9:16\", \"add captions\").\n\nWho it's for: small business owners, marketers and founders who need ad creatives without a designer.\n\nHow it works: connect, sign in or create a Komendly account, then ask in chat for ads or a video. Ozzy works on Komendly's servers and returns the finished ads and videos with download links.\n\nLimits: Komendly makes the creatives and copy but does not publish ads or spend ad budget. Websites must be public. Ads take a few minutes; videos a few more.",
         "developerName": "Komendly",
-        "category": "Design",
+        "category": "Creativity",
         "capabilities": ["Make ads from a website", "Make promo videos", "Edit videos", "Write ad copy"],
         "websiteURL": "https://www.komendly.com",
         "supportURL": "https://www.komendly.com/agents",
