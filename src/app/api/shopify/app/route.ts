@@ -9,6 +9,7 @@ import { withSystemUtm } from "@/lib/growth/systems";
 import { ACTIVE_SUBS_QUERY, adminGraphql, exchangeToken, PRODUCTS_QUERY, SHOP_QUERY, SUBSCRIBE_MUTATION, type ActiveSubsData, type ProductsData, type ShopInfo, type SubscribeData } from "@/lib/shopify/admin";
 import { bearer, isOwnStoreUrl, SHOPIFY_PLAN_KEYS, shopHandle, shopifyEnv, shopifyPlan, signOpenToken, UNAVAILABLE_MESSAGE, verifySessionToken } from "@/lib/shopify/core";
 import { adminToken, applyChargeUpdate, ensureShop } from "@/lib/shopify/server";
+import { productUrl, STORE_DATA_QUERY, storeDataFrom, type StoreDataResponse } from "@/lib/shopify/store-data";
 
 export const dynamic = "force-dynamic";
 
@@ -50,12 +51,18 @@ export async function POST(request: NextRequest) {
 
     if (body.action === "products") {
       const d = await adminGraphql<ProductsData>(shopDomain, token, env, PRODUCTS_QUERY, { n: 24 });
-      return NextResponse.json({ products: d.products.nodes.filter((p) => p.onlineStoreUrl).map((p) => ({ id: p.id, title: p.title, url: p.onlineStoreUrl, image: p.featuredMedia?.preview?.image?.url ?? null })) });
+      // Password-protected storefronts (all dev stores) return onlineStoreUrl null: link /products/<handle> instead.
+      const base = shop.storeUrl ?? `https://${shopDomain}`;
+      return NextResponse.json({ products: d.products.nodes.map((p) => ({ id: p.id, title: p.title, url: productUrl(p, base), image: p.featuredMedia?.preview?.image?.url ?? null })) });
     }
     if (body.action === "start") {
       if (!isOwnStoreUrl(body.url, shopDomain, shop.storeUrl)) throw new AdsHttpError(400, "not_your_store", "Pick your store or one of its products.");
       const [user, workspace] = await Promise.all([prisma.user.findUniqueOrThrow({ where: { id: shop.userId } }), prisma.adsWorkspace.findUniqueOrThrow({ where: { id: shop.workspaceId } })]);
-      const r = await startRun(StartRunSchema.parse({ url: body.url }), { user, workspace, fp: fingerprintFrom(request) });
+      // Store content from the Admin API: the engine uses it when the storefront is behind Shopify's password page.
+      const shopifyStore = await adminGraphql<StoreDataResponse>(shopDomain, token, env, STORE_DATA_QUERY, { n: 8 })
+        .then((d) => storeDataFrom(d, shop.storeUrl ?? `https://${shopDomain}`))
+        .catch(() => null);
+      const r = await startRun(StartRunSchema.parse({ url: body.url }), { user, workspace, fp: fingerprintFrom(request), extractPayload: shopifyStore ? { shopifyStore } : undefined });
       return NextResponse.json({ runId: r.runId });
     }
     if (body.action === "run") {

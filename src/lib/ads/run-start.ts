@@ -51,7 +51,8 @@ async function safeUrl(raw: string): Promise<URL> {
   }
 }
 
-export async function startRun(input: StartRunInput, ctx: { user: User; workspace: AdsWorkspace; fp: RequestFingerprint }) {
+/** extractPayload: extra fields for the extract job (e.g. shopifyStore content for password-protected storefronts). */
+export async function startRun(input: StartRunInput, ctx: { user: User; workspace: AdsWorkspace; fp: RequestFingerprint; extractPayload?: Record<string, unknown> }) {
   const { user, workspace, fp } = ctx;
   if (workspace.suspendedAt) throw new AdsHttpError(403, "suspended", TRIAL_REASON_MESSAGES.suspended ?? "Suspended.");
   if (!(await rateLimit(`runs:${user.id}`, RUNS_PER_HOUR, 3600))) {
@@ -105,7 +106,7 @@ export async function startRun(input: StartRunInput, ctx: { user: User; workspac
         trialClaim: claimJson(trialHashes(user.email, target, fp)),
       },
     });
-    await enqueueJob({ type: "extract", runId: run.id, workspaceId: workspace.id, priority: PRIORITY.trial, payload: { url } });
+    await enqueueJob({ type: "extract", runId: run.id, workspaceId: workspace.id, priority: PRIORITY.trial, payload: { ...ctx.extractPayload, url } });
     await trackAdsEvent("trial_started", { workspaceId: workspace.id, userId: user.id, runId: run.id, props: { domain, goal } });
     await markGiftClaimed(workspace.id, user.id);
     return { runId: run.id, resumed: false };
@@ -178,7 +179,7 @@ export async function startRun(input: StartRunInput, ctx: { user: User; workspac
     runId: run.id,
     workspaceId: workspace.id,
     priority: PRIORITY.paid,
-    payload: { url, ...(input.seed ? { seed: input.seed } : {}) },
+    payload: { ...(skipExtraction ? {} : ctx.extractPayload), url, ...(input.seed ? { seed: input.seed } : {}) },
   });
   return { runId: run.id, resumed: false };
 }

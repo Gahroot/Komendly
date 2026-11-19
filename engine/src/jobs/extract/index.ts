@@ -13,6 +13,7 @@ import { brandKey, runKey } from "../../storage/keys";
 import { PermanentJobError, type JobContext } from "../context";
 import { expandToSentence, isCompleteSentence, keepGrounded } from "../grounding";
 import { crawlSite, SiteUnreachableError, type CrawlResult } from "./crawl";
+import { needsStoreData, shopifyStoreFrom, withStoreData } from "./shopify-store";
 import { llmExtract } from "./llm";
 
 const EXT: Record<string, string> = {
@@ -78,13 +79,16 @@ export async function extractJob(ctx: JobContext, crawlFn: typeof crawlSite = cr
 
   const t0 = Date.now();
   let crawl: CrawlResult;
+  const shopifyStore = shopifyStoreFrom(job.payload);
   try {
     crawl = await crawlFn(run.url, undefined, ctx.signal);
   } catch (e) {
     if (e instanceof Error && e.name === "BlockedUrlError") throw new PermanentJobError(`This address can't be used (it isn't a public website): ${e.message}`);
-    if (e instanceof SiteUnreachableError) throw new PermanentJobError(`${e.userMessage} (${e.message.slice(0, 300)})`);
-    throw e;
+    if (e instanceof SiteUnreachableError && !shopifyStore) throw new PermanentJobError(`${e.userMessage} (${e.message.slice(0, 300)})`);
+    if (!(e instanceof SiteUnreachableError)) throw e;
+    crawl = await withStoreData(null, shopifyStore!, run.url, ctx.signal);
   }
+  if (shopifyStore && needsStoreData(crawl)) crawl = await withStoreData(crawl, shopifyStore, run.url, ctx.signal);
   const crawlMs = Date.now() - t0;
   if (crawl.pages.every((p) => p.text.trim().length < 50)) throw new PermanentJobError("site returned no readable content");
 
