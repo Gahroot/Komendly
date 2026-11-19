@@ -33,15 +33,22 @@ describe("shopify password-protected stores", () => {
     const real = { ...gate, finalUrl: "https://shop.example.com/", pages: [{ ...gate.pages[0]!, url: "https://shop.example.com/", text: "x".repeat(400) }] };
     expect(needsStoreData(real)).toBe(false);
   });
-  it("builds pages and photos from the store, keeping the theme look from the gate page", async () => {
+  it("keeps the real site's logo and colours when the crawl was readable but thin", async () => {
+    const thin = { ...gate, finalUrl: "https://shop.example.com/", pages: [{ ...gate.pages[0]!, url: "https://shop.example.com/", text: "hi" }] };
+    const r = await withStoreData(thin, store, store.storeUrl, undefined, vi.fn(async () => []));
+    expect(r.logo).toBe(gate.logo);
+    expect(r.colors).toEqual(gate.colors);
+  });
+  it("builds pages and photos from the store, dropping the password page's Shopify branding", async () => {
     const download = vi.fn(async () => [{ sourceUrl: "https://cdn.shopify.com/a.jpg", width: 1000, height: 1000, alt: "The Minimal Snowboard", bytes: Buffer.from("i"), mime: "image/jpeg", thumb: Buffer.from("t") }]);
     const r = await withStoreData(gate, store, store.products[0]!.url, undefined, download);
     expect(r.finalUrl).toBe(store.products[0]!.url);
     expect(r.pages[0]!.url).toBe(store.products[0]!.url);
     expect(r.pages[0]!.text).toContain("Price: from $885.95");
     expect(r.pages.some((p) => p.text.includes("password"))).toBe(false);
-    expect(r.colors).toEqual(gate.colors);
-    expect(r.logo).toBe(gate.logo);
+    // Shopify's own logo/colours on the password page never become the store's brand.
+    expect(r.colors).toEqual([]);
+    expect(r.logo).toBeNull();
     expect(r.images).toHaveLength(1);
     expect((download.mock.calls as unknown as unknown[][])[0]![0]).toEqual([{ src: "https://cdn.shopify.com/a.jpg", w: 0, h: 0, alt: "The Minimal Snowboard" }]);
     const whole = await withStoreData(gate, store, "https://komendly-test-store.myshopify.com/", undefined, download);

@@ -1,6 +1,6 @@
 // Shopify storefronts behind the password page (every dev store, unlaunched shops): the crawl only sees the gate,
 // so the page text and product photos come from the Admin API data the web app attached to the job.
-// The gate page still carries the theme's colours, fonts and logo, so those are kept from the crawl.
+// From the gate page only the theme fonts are kept (its logo/colours are usually Shopify's own branding).
 import { isPasswordGateUrl, ShopifyStoreDataSchema, storePages, type ShopifyStoreData } from "../../../../src/lib/shopify/store-data";
 import { DEFAULT_LIMITS, downloadImages, hasReadableContent, type CrawlResult, type CrawledImage } from "./crawl";
 
@@ -27,12 +27,15 @@ export async function withStoreData(
   const pages = storePages(store, focus).map((p) => ({ ...p, og: {} as Record<string, string> }));
   const candidates = store.products.filter((p) => p.imageUrl).map((p) => ({ src: p.imageUrl!, w: 0, h: 0, alt: p.imageAlt || p.title }));
   const images: CrawledImage[] = candidates.length ? await download(candidates, DEFAULT_LIMITS, Date.now() + 20_000, signal).catch(() => []) : [];
+  // The password page is Shopify's own "Opening soon / Powered by Shopify" screen on most stores: its logo and colours
+  // are Shopify's (green #008060, the bag logo), not the merchant's, and Shopify trademarks must never land in ads.
+  const gate = !crawl || isPasswordGateUrl(crawl.finalUrl);
   return {
     finalUrl: focus ?? store.storeUrl,
     pages,
-    colors: crawl?.colors ?? [],
+    colors: gate ? [] : (crawl?.colors ?? []),
     fonts: crawl?.fonts ?? [],
-    logo: crawl?.logo ?? null,
+    logo: gate ? null : (crawl?.logo ?? null),
     images: images.length ? images : (crawl?.images ?? []),
   };
 }
