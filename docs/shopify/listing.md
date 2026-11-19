@@ -28,7 +28,7 @@ Billed by Shopify. Change or cancel any time inside the app.
 **Search terms:** ad creatives, facebook ads, instagram ads, ad generator, product ads
 
 **Privacy policy URL:** https://www.komendly.com/privacy
-**Support:** support email (founder: confirm the address in SUBMIT.md step 6), FAQ https://www.komendly.com/pricing
+**Support:** support email (founder: confirm the address in step 6 of ~/Documents/Komendly-Shopify-App-Store-Guide.md), FAQ https://www.komendly.com/pricing
 
 ## Icon and images
 - App icon 1200x1200 PNG/JPG, no text/pricing/Shopify marks: reuse `public/logo.svg` exported on a solid background.

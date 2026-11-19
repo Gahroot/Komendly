@@ -18,7 +18,7 @@ People asking ChatGPT or Claude to make ads use Komendly from inside the assista
 
 Other free directories: the official registry feeds the GitHub MCP Registry and PulseMCP automatically
 (https://github.blog/ai-and-ml/generative-ai/how-to-find-install-and-manage-mcp-servers-with-the-github-mcp-registry/).
-mcp.so and Glama take a free form submission (see SUBMIT.md, optional).
+mcp.so and Glama take a free form submission (see the founder's guide ~/Documents/Komendly-ChatGPT-Claude-Directory-Guide.md, optional).
 
 ## How it works
 - **Sign-up inside OAuth:** a signed-out visitor on `/oauth/authorize` is sent to `/ads/signup?next=<authorize URL>&utm_source=ai_assistant&utm_campaign=<client>` (it links to sign-in for existing users). Middleware also records the consent-page visit itself as an `ai_assistant` first touch, so `/api/ads/auth/signup` writes `signed_up` with `props.firstTouch.utm_source = "ai_assistant"`. Allowing a new app writes `assistant_connected` (props.system, client, newUser).
