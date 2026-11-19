@@ -83,3 +83,14 @@ Record at 1080p, English UI, add captions for each step. Show the browser addres
 
 Running, budgeting or optimizing campaigns for customers (outcome pricing). Request that after this approval, as a
 separate use case, once the product does it. Reviewers approve what the video shows, not future plans.
+
+## 7. Progress (2026-11-19)
+
+- Deployed (commit 2a32051): `ads_read` dropped; `pages_manage_ads` added next to `pages_read_engagement` (keep whichever the live test needs);
+  Disconnect now also revokes the grant (`DELETE /me/permissions`); `/privacy#meta-data` added (data deletion URL).
+- `meta_publish` can now be turned on per workspace (`AdsFeatureFlag` key `meta_publish:<workspaceId>`). On for Nolan's paid
+  workspace (cmw9fdw0d000242a5fejcaew5) and the reviewer workspace; the global flag stays off.
+- Reviewer login: `meta-reviewer@komendly.com`, password in `~/.config/meta-ads/reviewer.env` (not in git). Workspace
+  cmwnwiwri0001hx2yclsixavx, comped `ad_department`/active, no runs yet. Generate its run right before submitting:
+  run files are deleted after 7 days.
+- Prod app is Prestyjco (1118842096830576).
