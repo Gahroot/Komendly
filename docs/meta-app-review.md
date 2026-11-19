@@ -94,3 +94,12 @@ separate use case, once the product does it. Reviewers approve what the video sh
   cmwnwiwri0001hx2yclsixavx, comped `ad_department`/active, no runs yet. Generate its run right before submitting:
   run files are deleted after 7 days.
 - Prod app is Prestyjco (1118842096830576).
+- Live test passed 2026-11-19 18:49 UTC: Nolan's workspace connected (act_838454441892655, Page 1382429758290116) and
+  published 5 ads (4:5 Feed) to campaign 120251462914270262. Campaign, ad set and ads are all PAUSED; ads are in Meta's ad
+  review. The stored token is a USER token for app 1118842096830576 and is valid. It also carries older grants from this
+  app (instagram_*, publish_video...), so it can't show whether `pages_read_engagement` or `pages_manage_ads` is the one
+  that's needed. Keep both.
+- Redirect URI `https://www.komendly.com/api/ads/meta/callback` is whitelisted in Facebook Login settings.
+- **Blocker: app branding.** The app is Display name "Prestyjco", privacy policy `prestyj.com/privacy`, terms
+  `prestyj.com/tos`, site `prestyj.com`, no data deletion URL. The consent screen and the app's policies must match the
+  product in the screencast (Komendly), so the submission must not go out like this.
