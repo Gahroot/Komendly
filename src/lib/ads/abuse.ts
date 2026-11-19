@@ -43,6 +43,9 @@ const MULTI_PART_SUFFIXES = new Set([
   "co.uk", "org.uk", "ac.uk", "gov.uk", "me.uk", "com.au", "net.au", "org.au", "co.nz", "co.jp",
   "co.za", "com.br", "com.mx", "com.ar", "com.tr", "com.sg", "com.my", "co.in", "co.kr", "com.cn",
   "com.hk", "co.id", "com.ph", "com.pl", "co.il", "com.ua", "com.vn", "com.co", "com.pe", "co.th",
+  // Hosted shop/site platforms: each subdomain is a different business (shop-a.myshopify.com != shop-b.myshopify.com).
+  "myshopify.com", "wixsite.com", "squarespace.com", "webflow.io", "square.site", "godaddysites.com",
+  "bigcartel.com", "carrd.co", "wordpress.com", "blogspot.com", "github.io", "netlify.app", "vercel.app", "pages.dev",
 ]);
 
 export function registrableDomain(hostname: string): string {

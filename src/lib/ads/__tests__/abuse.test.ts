@@ -77,3 +77,13 @@ describe("same website vs shared network", () => {
     expect(decideTrial({ ...none, ip: true })).toEqual({ ok: false, reason: "ip_used" });
   });
 });
+
+describe("registrableDomain on hosted shop platforms", () => {
+  it("keeps each Shopify store separate", async () => {
+    const { registrableDomain } = await import("../abuse");
+    expect(registrableDomain("komendly-test-store.myshopify.com")).toBe("komendly-test-store.myshopify.com");
+    expect(registrableDomain("other-shop.myshopify.com")).not.toBe(registrableDomain("komendly-test-store.myshopify.com"));
+    expect(registrableDomain("www.acme.com")).toBe("acme.com");
+    expect(registrableDomain("shop.acme.co.uk")).toBe("acme.co.uk");
+  });
+});
