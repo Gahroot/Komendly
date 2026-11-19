@@ -63,7 +63,7 @@ export default async function ToolsHub() {
           <h2 id="full-title" className="font-display text-2xl font-medium sm:text-3xl">Want finished ads, not just words?</h2>
           <p className="mt-3 text-muted-foreground">Paste your website and Ozzy makes 10 ready-to-run Facebook &amp; Instagram ads plus an animated one, free.</p>
           <div className="mt-6"><MakeYoursUrlBox href={toolCtaHref("hub", "url_box")} /></div>
-          <p className="mt-6 text-sm text-muted-foreground">Need ideas first? See <Link href="/ad-examples" className="text-[var(--studio-gold)] hover:underline">ad examples by industry</Link> or our <Link href="/reports/facebook-ad-statistics" className="text-[var(--studio-gold)] hover:underline">Facebook ad statistics</Link> from real small-business ads.</p>
+          <p className="mt-6 text-sm text-muted-foreground">Need ideas first? See <Link href="/ad-examples" className="text-[var(--studio-gold)] hover:underline">ad examples by industry</Link> or our <Link href="/reports/facebook-ad-statistics" className="text-[var(--studio-gold)] hover:underline">Facebook ad statistics</Link> from real small-business ads. Prefer to work in ChatGPT, Claude or Shopify? See <Link href="/integrations" className="text-[var(--studio-gold)] hover:underline">integrations</Link>.</p>
         </section>
         <div className="flex justify-center py-16"><CtaButton href={toolCtaHref("hub", "end")}>Make my free ads</CtaButton></div>
       </main>

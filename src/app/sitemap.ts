@@ -5,6 +5,7 @@ import { loadIndexableIndustryLinks } from '@/lib/growth/industry-examples-serve
 import { loadAllGalleryPageStates } from '@/lib/growth/ad-pages-server'
 import { FREE_TOOLS } from '@/lib/growth/free-tools'
 import { SITE_URL } from '@/lib/site'
+import { INTEGRATION_PATHS } from '@/lib/integrations'
 import { REPORT_PATH } from '@/lib/growth/ad-report'
 import { loadAdReport } from '@/lib/growth/ad-report-server'
 
@@ -27,6 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/partners`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${SITE_URL}/examples`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${SITE_URL}/agents`, changeFrequency: 'monthly', priority: 0.7 },
+    ...INTEGRATION_PATHS.map((p) => ({ url: `${SITE_URL}${p}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
     { url: `${SITE_URL}/ad-examples`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${SITE_URL}/tools`, changeFrequency: 'monthly', priority: 0.8 },
     ...FREE_TOOLS.map((t) => ({ url: `${SITE_URL}/tools/${t.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 })),

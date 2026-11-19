@@ -170,7 +170,7 @@ export default function FreeAdsPage() {
         <section className="mx-auto flex max-w-3xl flex-col items-center px-4 pb-24 text-center sm:px-6" aria-labelledby="close-title">
           <h2 id="close-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-4xl">See your ads before you spend a cent</h2>
           <div id="start-bottom" className="mt-6 flex w-full justify-center"><Cta id="bottom" /></div>
-          <p className="mt-6 text-base text-foreground/80">Questions? See <Link href="/ad-examples" className="text-[var(--studio-gold)] underline-offset-4 hover:underline">more ad examples</Link> or our <Link href="/pricing" className="text-[var(--studio-gold)] underline-offset-4 hover:underline">plans</Link>.</p>
+          <p className="mt-6 text-base text-foreground/80">Questions? See <Link href="/ad-examples" className="text-[var(--studio-gold)] underline-offset-4 hover:underline">more ad examples</Link> or our <Link href="/pricing" className="text-[var(--studio-gold)] underline-offset-4 hover:underline">plans</Link>. Selling on Shopify? Read <Link href="/integrations/shopify" className="text-[var(--studio-gold)] underline-offset-4 hover:underline">ads for Shopify stores</Link>.</p>
         </section>
       </main>
       <StudioFooter />

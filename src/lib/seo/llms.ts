@@ -3,6 +3,7 @@ import { CATEGORIES, type BlogPostMeta } from '@/lib/blog'
 import { stripFootnotes } from '@/lib/blog-content'
 import { SITE_URL } from '@/lib/site'
 import { FREE_TOOLS } from '@/lib/growth/free-tools'
+import { INTEGRATIONS, statusLine } from '@/lib/integrations'
 import { STUDIO_MAX_SECONDS, STUDIO_PRICE } from '@/lib/studio/contracts'
 
 const usd = (cents: number) => `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`
@@ -78,6 +79,8 @@ export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryL
     `- [Ad of the week](${SITE_URL}/ad-of-the-week): real customer ads made with Komendly, featured weekly`,
     `- [Examples](${SITE_URL}/examples): Ozzy Studio animated ads, Ad Pack static ads and a video testimonial, all made with Komendly`,
     `- [Ozzy for AI agents](${SITE_URL}/agents): let Claude, Cursor, ChatGPT or scripts make Studio videos and ad packs via the Komendly MCP server (https://www.komendly.com/api/mcp; add it as a connector and sign in) or the \`komendly\` CLI (personal API key), on the same plan and credits`,
+    `- [Integrations](${SITE_URL}/integrations): use Komendly from ChatGPT, Claude, Cursor, the CLI or a Shopify store`,
+    ...INTEGRATIONS.map((i) => `- [${i.title}](${SITE_URL}/integrations/${i.slug}): ${i.description} ${statusLine(i.slug)}`),
     `- [Facebook ad examples by industry](${SITE_URL}/ad-examples): real customer ads made with Komendly, shared with permission, plus what works per industry`,
     ...(report ? [`- [Facebook ad creative statistics](${SITE_URL}${report.path}): original, daily-updated data on ${report.ads} ads made from ${report.sites} real small-business websites (headline length, questions, numbers and offers, CTA verbs, brand colours, image sizes), with a free CSV`] : []),
     `- [Free ad tools](${SITE_URL}/tools): free, no-sign-up tools for small-business ads`,

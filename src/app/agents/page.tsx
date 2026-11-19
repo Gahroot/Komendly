@@ -132,7 +132,7 @@ export default function AgentsPage() {
 
         <section className="mx-auto max-w-6xl px-4 py-14 sm:px-6" aria-labelledby="campaign-title">
           <h2 id="campaign-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-5xl">Run a whole campaign from ChatGPT or Claude</h2>
-          <p className="mt-4 max-w-2xl text-muted-foreground">Ozzy makes the creatives; your Meta Ads MCP puts them live. Ozzy hands over every video and ad with its link, headline, text, button and placement, so nothing gets copied by hand. You still approve the budget.</p>
+          <p className="mt-4 max-w-2xl text-muted-foreground">Step-by-step guides: <a href="/integrations/chatgpt" className="text-[var(--studio-gold)] underline-offset-4 hover:underline">ChatGPT</a>, <a href="/integrations/claude" className="text-[var(--studio-gold)] underline-offset-4 hover:underline">Claude</a>, or <a href="/integrations" className="text-[var(--studio-gold)] underline-offset-4 hover:underline">all integrations</a>. Ozzy makes the creatives; your Meta Ads MCP puts them live. Ozzy hands over every video and ad with its link, headline, text, button and placement, so nothing gets copied by hand. You still approve the budget.</p>
           <ol className="mt-8 grid gap-4 lg:grid-cols-3">
             <li className="studio-frame rounded-xl p-4">
               <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">1. Connect Ozzy</p>

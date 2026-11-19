@@ -1100,5 +1100,183 @@
       "What does ad hook mean?",
       "Why does ad hook matter?"
     ]
+  },
+  {
+    "slug": "how-to-use-chatgpt-to-create-facebook-ads",
+    "title": "How to Use ChatGPT to Create Facebook Ads (Step by Step, 2026)",
+    "type": "guide",
+    "primary_keyword": "how to use chatgpt to create facebook ads",
+    "secondary_keywords": [
+      "using chatgpt for facebook ads",
+      "can chatgpt create facebook ads",
+      "chatgpt facebook ads"
+    ],
+    "intent": "informational",
+    "funnel": "mofu",
+    "priority": 1,
+    "cta": "ads",
+    "competitors": [],
+    "angle": "Honest walkthrough: what ChatGPT does well (copy, angles, hooks) and where plain ChatGPT falls short (on-brand images, sizes, publishing). Show the prompt-only route, then the connector route where a tool like Komendly makes the finished creatives inside ChatGPT. Link /integrations/chatgpt.",
+    "questions": [
+      "Can ChatGPT create Facebook ads?",
+      "Can ChatGPT make ad images?",
+      "Can ChatGPT post ads to Facebook?"
+    ]
+  },
+  {
+    "slug": "chatgpt-prompts-for-facebook-ads",
+    "title": "ChatGPT Prompts for Facebook Ads: 30 That Actually Work",
+    "type": "listicle",
+    "primary_keyword": "chatgpt prompts for facebook ads",
+    "secondary_keywords": [
+      "chatgpt prompt for facebook ad copy",
+      "best chatgpt prompts for facebook ads",
+      "chatgpt prompts for creating facebook ads"
+    ],
+    "intent": "informational",
+    "funnel": "tofu",
+    "priority": 2,
+    "cta": "ads",
+    "competitors": [],
+    "angle": "Copy-paste prompts grouped by job (hooks, primary text, headlines, angles per awareness stage, objections, offers, UGC scripts). Each with a short why. Mention Komendly's free ad copy tools at /tools and the ChatGPT connector at /integrations/chatgpt.",
+    "questions": [
+      "What is the best ChatGPT prompt for Facebook ads?",
+      "How do I write Facebook ad copy with ChatGPT?"
+    ]
+  },
+  {
+    "slug": "connect-chatgpt-to-facebook-ads",
+    "title": "Can You Connect ChatGPT to Facebook Ads? What Works in 2026",
+    "type": "question",
+    "primary_keyword": "connect chatgpt to facebook ads",
+    "secondary_keywords": [
+      "chatgpt facebook ads mcp",
+      "chatgpt facebook ads integration",
+      "chatgpt apps for marketing"
+    ],
+    "intent": "informational",
+    "funnel": "mofu",
+    "priority": 2,
+    "cta": "ads",
+    "competitors": [],
+    "angle": "Explain ChatGPT apps/connectors and MCP in plain words, what a connector can and can't do with Facebook ads (Meta's own tools, reporting connectors, creative tools), safety (OAuth, what access you grant). Komendly's connector makes creatives; publishing to Meta happens from Komendly. Cite OpenAI and Meta docs.",
+    "questions": [
+      "Can ChatGPT run my Facebook ads?",
+      "What is a ChatGPT connector?",
+      "Is it safe to connect ChatGPT to my ad account?"
+    ]
+  },
+  {
+    "slug": "best-mcp-servers-for-marketing",
+    "title": "Best MCP Servers for Marketing in 2026 (Ads, SEO, Analytics)",
+    "type": "listicle",
+    "primary_keyword": "best mcp servers for marketing",
+    "secondary_keywords": [
+      "mcp server for marketing",
+      "claude mcp servers marketing",
+      "mcp for marketers"
+    ],
+    "intent": "commercial",
+    "funnel": "mofu",
+    "priority": 2,
+    "cta": "ads",
+    "competitors": [],
+    "angle": "Plain-language intro to MCP for marketers, then a categorised list of real, verifiable MCP servers (ads creative, analytics, SEO, CRM, email) with what each does and how to add it to Claude or ChatGPT. Include Komendly honestly in the creative category. Only list servers with a cited source.",
+    "questions": [
+      "What is an MCP server in marketing?",
+      "Which MCP servers work with Claude?",
+      "Are MCP servers free?"
+    ]
+  },
+  {
+    "slug": "can-claude-make-videos",
+    "title": "Can Claude Make Videos? What Claude Can and Can't Do (2026)",
+    "type": "question",
+    "primary_keyword": "claude video generation",
+    "secondary_keywords": [
+      "claude video",
+      "claude video editing",
+      "can claude make videos"
+    ],
+    "intent": "informational",
+    "funnel": "tofu",
+    "priority": 3,
+    "cta": "ads",
+    "competitors": [],
+    "angle": "Direct answer first: Claude itself doesn't generate video files, but with connectors/MCP it can direct tools that do. Cover code-based animation, connectors for video (Komendly's Ozzy Studio via /integrations/claude), and limits. Cite Anthropic docs.",
+    "questions": [
+      "Can Claude generate video?",
+      "Can Claude edit videos?",
+      "How do I make a video ad with Claude?"
+    ]
+  },
+  {
+    "slug": "shopify-facebook-ads-strategy",
+    "title": "Shopify Facebook Ads Strategy for Small Stores (2026 Guide)",
+    "type": "guide",
+    "primary_keyword": "shopify facebook ads strategy",
+    "secondary_keywords": [
+      "shopify facebook ads",
+      "shopify facebook ads campaign",
+      "shopify facebook and instagram ads"
+    ],
+    "intent": "informational",
+    "funnel": "mofu",
+    "priority": 1,
+    "cta": "ads",
+    "competitors": [],
+    "angle": "Practical playbook for a small Shopify store: Facebook & Instagram sales channel, pixel/CAPI basics, campaign structure, budget for testing, creative volume per awareness stage, catalog vs. static creatives. Creatives from the store URL via /free-ads and /integrations/shopify (app in review). Cite Shopify and Meta docs.",
+    "questions": [
+      "How much should a Shopify store spend on Facebook ads?",
+      "Do Facebook ads work for Shopify?",
+      "What Facebook ad creatives work for Shopify?"
+    ]
+  },
+  {
+    "slug": "ai-ad-generator-for-shopify",
+    "title": "Best AI Ad Generators for Shopify Stores (2026, Honest Picks)",
+    "type": "listicle",
+    "primary_keyword": "ai ad generator for shopify",
+    "secondary_keywords": [
+      "shopify ad creatives",
+      "shopify ad creative app",
+      "ai generator for shopify store"
+    ],
+    "intent": "commercial",
+    "funnel": "bofu",
+    "priority": 1,
+    "cta": "ads",
+    "competitors": [
+      "AdCreative.ai",
+      "Creatify",
+      "Predis.ai",
+      "Canva"
+    ],
+    "angle": "5-7 tools that make ad creatives for Shopify stores, price as of the month, Shopify integration (app vs URL), formats, who each is best for, table. Komendly: makes ads from the store URL, Shopify app in review (not on the App Store yet).",
+    "questions": [
+      "What is the best AI ad generator for Shopify?",
+      "Is there a free Shopify ad creative app?"
+    ]
+  },
+  {
+    "slug": "shopify-instagram-ads",
+    "title": "How to Run Instagram Ads for Your Shopify Store",
+    "type": "guide",
+    "primary_keyword": "shopify instagram ads",
+    "secondary_keywords": [
+      "shopify instagram ads setup",
+      "instagram ads for shopify products",
+      "shopify facebook and instagram ads"
+    ],
+    "intent": "informational",
+    "funnel": "mofu",
+    "priority": 3,
+    "cta": "ads",
+    "competitors": [],
+    "angle": "Setup through Shopify's Facebook & Instagram channel, Instagram placements and sizes (4:5, 9:16), shoppable posts vs ads, creative that works for products, testing budget. Link /ad-examples/platform pages where relevant and /free-ads.",
+    "questions": [
+      "How do I advertise my Shopify store on Instagram?",
+      "What size are Instagram ads?"
+    ]
   }
 ]
