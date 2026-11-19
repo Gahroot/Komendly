@@ -20,7 +20,7 @@ const SECTIONS: readonly LegalSection[] = [
     title: "The service",
     body: (
       <>
-        <p>Komendly (&quot;we&quot;) offers two products on komendly.com:</p>
+        <p>Komendly is operated by Grout Global LLC (&quot;Komendly&quot;, &quot;we&quot;), which offers two products on komendly.com:</p>
         <ul>
           <li><strong>Komendly Ads:</strong> reads a website you give us and uses AI to make ad creatives (images, animated ads and copy). On eligible plans it can publish ads to a Meta ad account you connect.</li>
           <li><strong>Komendly Testimonials:</strong> turns customer reviews into AI-avatar video testimonials.</li>

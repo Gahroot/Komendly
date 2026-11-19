@@ -26,7 +26,7 @@ const SECTIONS: readonly LegalSection[] = [
     id: "who",
     title: "Who we are",
     body: (
-      <p>Komendly runs komendly.com and its two products: Komendly Ads (turns your website into ad creatives and can publish them to your Meta ad account) and Komendly Testimonials (turns customer reviews into AI-avatar videos). In this policy &quot;we&quot; means Komendly, the controller of the personal data described here. To contact us about privacy, reply to any email we have sent you or write to us from the email address on your account.</p>
+      <p>Komendly runs komendly.com and its two products: Komendly Ads (turns your website into ad creatives and can publish them to your Meta ad account) and Komendly Testimonials (turns customer reviews into AI-avatar videos). Komendly is operated by Grout Global LLC. In this policy &quot;we&quot; means Komendly (Grout Global LLC), the controller of the personal data described here. To contact us about privacy, reply to any email we have sent you or write to us from the email address on your account.</p>
     ),
   },
   {
