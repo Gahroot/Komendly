@@ -1,5 +1,42 @@
 # Komendly
 
+Komendly turns a business website into ready-to-run Facebook and Instagram ads, makes promo and launch videos with
+**Ozzy**, and turns customer reviews into AI-avatar video testimonials. Use it on [komendly.com](https://www.komendly.com),
+inside your Shopify admin, or from any AI agent through the hosted MCP server.
+
+## Ozzy MCP server (Claude, ChatGPT, Cursor, coding agents)
+
+Remote, streamable HTTP, OAuth 2.1 sign-in (no API key needed):
+
+```
+https://www.komendly.com/api/mcp
+```
+
+- **Claude (claude.ai / Desktop):** Settings > Connectors > Add custom connector > paste the URL, then sign in.
+- **ChatGPT:** Settings > Apps & Connectors > Create > paste the URL, OAuth.
+- **Claude Code:** `claude mcp add --transport http ozzy https://www.komendly.com/api/mcp` then `/mcp` to sign in.
+- **Cursor / other clients:** add `{ "mcpServers": { "ozzy": { "url": "https://www.komendly.com/api/mcp" } } }`.
+- **Stdio-only clients:** `npx -y komendly mcp` with `KOMENDLY_API_KEY` (see [packages/komendly-cli](packages/komendly-cli/README.md)).
+
+New accounts get one free Ad Pack and one free Ozzy video. Server card: `https://www.komendly.com/.well-known/mcp/server-card.json`.
+Listed in the [official MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.Gahroot/komendly) as `io.github.Gahroot/komendly`.
+
+| Tool | What it does |
+|---|---|
+| `ads_create_pack` | Make an Ad Pack (static + animated Facebook/Instagram ads with copy) from any public website |
+| `ads_get_run`, `ads_list_runs` | Ad Pack status, ads and fresh download links |
+| `studio_create_video`, `studio_send_message` | Make any video with Ozzy (promo, explainer, motion graphics) and edit it in chat |
+| `studio_launch_video` | Record your live product and cut a 20-40s launch video |
+| `studio_remix` | Remix any ad you like (TikTok, Instagram, Ad Library link) for your brand |
+| `studio_ad_copy`, `campaign_kit` | Meta ad copy and a hand-off kit of every ready creative |
+| `autopilot_get`, `autopilot_set` | Weekly ads + video drop on autopilot |
+| `upload_media`, `get_download_url`, `get_account` | Footage upload, download links, plan and credits |
+
+Example prompts: "Make Facebook ads for https://example.com", "Make a 30s launch video for what we just shipped",
+"Remix this ad for my brand: <link>". Docs: [komendly.com/agents](https://www.komendly.com/agents).
+
+## Video testimonials
+
 Turn customer reviews into professional video testimonials using AI avatars. No cameras, no actors, no hassle.
 
 ## What is this?
