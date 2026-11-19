@@ -14,12 +14,12 @@ export interface LegalSection {
 }
 
 /** Static shell for /privacy and /terms: no session read, so the page is publicly cacheable. */
-export function LegalPage({ title, intro, sections }: { title: string; intro: ReactNode; sections: readonly LegalSection[] }) {
+export function LegalPage({ title, intro, sections, effectiveDate = LEGAL_EFFECTIVE_DATE }: { title: string; intro: ReactNode; sections: readonly LegalSection[]; effectiveDate?: string }) {
   return (
     <StudioRoot className={`${fraunces.variable} min-h-screen bg-[#0c0820]`}>
       <StudioNav signedIn={false} />
       <main className="mx-auto max-w-3xl px-4 pb-20 pt-10 sm:px-6 sm:pt-16">
-        <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">Effective {LEGAL_EFFECTIVE_DATE}</p>
+        <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">Effective {effectiveDate}</p>
         <h1 className="font-display mt-4 text-[2.3rem] font-medium leading-[1.05] tracking-[-0.025em] sm:text-5xl">{title}</h1>
         <div className="mt-5 text-base text-muted-foreground">{intro}</div>
         <nav aria-label="Contents" className="mt-8 rounded-xl border border-border p-5">

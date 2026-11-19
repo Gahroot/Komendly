@@ -26,7 +26,7 @@ const SECTIONS: readonly LegalSection[] = [
     id: "who",
     title: "Who we are",
     body: (
-      <p>Komendly runs komendly.com and its two products: Komendly Ads (turns your website into ad creatives and can publish them to your Meta ad account) and Komendly Testimonials (turns customer reviews into AI-avatar videos). Komendly is operated by Grout Global LLC. In this policy &quot;we&quot; means Komendly (Grout Global LLC), the controller of the personal data described here. To contact us about privacy, reply to any email we have sent you or write to us from the email address on your account.</p>
+      <p>Komendly runs komendly.com and its two products: Komendly Ads (turns your website into ad creatives and can publish them to your Meta ad account) and Komendly Testimonials (turns customer reviews into AI-avatar videos). Komendly is operated by Grout Global LLC. In this policy &quot;we&quot; means Komendly (Grout Global LLC), the controller of the personal data described here. To contact us about privacy, email <a href="mailto:nolan@komendly.com">nolan@komendly.com</a> or reply to any email we have sent you.</p>
     ),
   },
   {
@@ -132,7 +132,7 @@ const SECTIONS: readonly LegalSection[] = [
         <ul>
           <li>Click <strong>Disconnect</strong> in the Publish to Meta dialog. We delete the token and your chosen ad account and Page right away and ask Meta to revoke our access.</li>
           <li>Or remove Komendly in Facebook under Settings &amp; privacy &gt; Settings &gt; Business integrations. Our token stops working immediately.</li>
-          <li>To delete everything, including the record of what we published, email us from your account address and we will do it within 30 days.</li>
+          <li>To delete everything, including the record of what we published, email <a href="mailto:nolan@komendly.com">nolan@komendly.com</a> from your account address and we will do it within 30 days.</li>
         </ul>
       </>
     ),
@@ -142,7 +142,7 @@ const SECTIONS: readonly LegalSection[] = [
     title: "Your rights",
     body: (
       <>
-        <p>Depending on where you live (for example the EU, UK or California), you can ask us to: see the data we hold about you, correct it, delete it, export it, stop or limit some uses (including ad measurement), and withdraw consent. Email us from your account address and we will answer within 30 days. We will not treat you differently for using these rights.</p>
+        <p>Depending on where you live (for example the EU, UK or California), you can ask us to: see the data we hold about you, correct it, delete it, export it, stop or limit some uses (including ad measurement), and withdraw consent. Email <a href="mailto:nolan@komendly.com">nolan@komendly.com</a> from your account address and we will answer within 30 days. We will not treat you differently for using these rights.</p>
         <p>If you are in the EU or UK you can also complain to your data protection authority (in the UK, the ICO).</p>
       </>
     ),
@@ -175,6 +175,7 @@ export default function PrivacyPage() {
       title="Privacy Policy"
       intro={<p>Plain English: what we collect when you use Komendly, why, who helps us process it, how long we keep it and how to opt out.</p>}
       sections={SECTIONS}
+      effectiveDate="19 November 2026"
     />
   );
 }
