@@ -3,7 +3,7 @@
 // Kill switch sys_industry_examples; heartbeat every cycle (outputs = pages added/updated).
 import { INDUSTRIES } from "../../../src/lib/ads/industries";
 import { INDUSTRY_CONTENT, indexNowBody, industryCycleConfig, industryPrompt, pickIndustriesForCycle, validateIndustryContent } from "../../../src/lib/growth/industry-examples";
-import { GALLERY_PAGES, contentText, galleryCycleConfig, galleryPage, galleryPagePrompt, pickGalleryPages, siblingKeys, tooSimilar } from "../../../src/lib/growth/ad-pages";
+import { contentText, galleryGenerationOrder, galleryCycleConfig, galleryPage, galleryPagePrompt, pickGalleryPages, siblingKeys, tooSimilar } from "../../../src/lib/growth/ad-pages";
 import { parseBeat, recordSystemRun, systemEnabled, systemHeartbeatId } from "../../../src/lib/growth/systems";
 import type { ZodType } from "zod";
 import type { Db } from "../db";
@@ -63,7 +63,7 @@ export async function industryExamplesCycle(db: Db, provider: AIProvider, now: D
 export async function galleryPagesCycle(db: Db, provider: AIProvider, now: Date, env: NodeJS.ProcessEnv, model: string, fetchFn: typeof fetch = fetch): Promise<{ written: number; errors: string[] }> {
   const cfg = galleryCycleConfig(env);
   const existing = await db.galleryPage.findMany({ select: { key: true, generatedAt: true, content: true } });
-  const keys = pickGalleryPages(GALLERY_PAGES.map((p) => p.key), existing, cfg, now);
+  const keys = pickGalleryPages(galleryGenerationOrder(), existing, cfg, now);
   const texts = new Map(existing.flatMap((e) => { const v = validateIndustryContent(e.content); return v.ok ? [[e.key, contentText(v.content)] as const] : []; }));
   const written: string[] = [];
   const errors: string[] = [];

@@ -5,6 +5,8 @@ import { loadIndexableIndustryLinks } from '@/lib/growth/industry-examples-serve
 import { loadAllGalleryPageStates } from '@/lib/growth/ad-pages-server'
 import { FREE_TOOLS } from '@/lib/growth/free-tools'
 import { SITE_URL } from '@/lib/site'
+import { REPORT_PATH } from '@/lib/growth/ad-report'
+import { loadAdReport } from '@/lib/growth/ad-report-server'
 
 function latest(dates: string[]): string | undefined {
   return dates.sort().at(-1)
@@ -78,5 +80,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
-  return [...staticPages, ...postPages, ...categoryPages, ...authorPages, ...tagPages, ...galleryPages, ...intentPages]
+  // Data report: only once the sample is big enough to be indexable
+  const report = await loadAdReport()
+  const reportPages: MetadataRoute.Sitemap = report.indexable ? [{ url: `${SITE_URL}${REPORT_PATH}`, lastModified: report.to ?? undefined, changeFrequency: 'weekly' as const, priority: 0.7 }] : []
+
+  return [...reportPages, ...staticPages, ...postPages, ...categoryPages, ...authorPages, ...tagPages, ...galleryPages, ...intentPages]
 }

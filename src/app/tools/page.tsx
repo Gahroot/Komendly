@@ -16,7 +16,7 @@ import "@/components/studio/studio.css";
 // Public, cacheable (ISR 5 min so the sys_free_tools kill switch shows quickly). No cookies read here.
 export const revalidate = 300;
 
-const DESCRIPTION = "Free, no-sign-up ad tools for small businesses: a free ad maker, ad copy, hook, caption and slogan generators, ad size guide, budget calculator, review reply and testimonial tools.";
+const DESCRIPTION = "Free, no-sign-up ad tools for small businesses: a free ad maker, ad copy, hook, caption and slogan generators, ad size guide, budget calculator, ad mockup generator, UGC, YouTube and LinkedIn ad script and copy tools, a Google Ads RSA headline generator, review reply and testimonial tools.";
 
 export const metadata: Metadata = {
   title: "Free Facebook & Instagram Ad Tools for Small Businesses",
@@ -63,7 +63,7 @@ export default async function ToolsHub() {
           <h2 id="full-title" className="font-display text-2xl font-medium sm:text-3xl">Want finished ads, not just words?</h2>
           <p className="mt-3 text-muted-foreground">Paste your website and Ozzy makes 10 ready-to-run Facebook &amp; Instagram ads plus an animated one, free.</p>
           <div className="mt-6"><MakeYoursUrlBox href={toolCtaHref("hub", "url_box")} /></div>
-          <p className="mt-6 text-sm text-muted-foreground">Need ideas first? See <Link href="/ad-examples" className="text-[var(--studio-gold)] hover:underline">ad examples by industry</Link>.</p>
+          <p className="mt-6 text-sm text-muted-foreground">Need ideas first? See <Link href="/ad-examples" className="text-[var(--studio-gold)] hover:underline">ad examples by industry</Link> or our <Link href="/reports/facebook-ad-statistics" className="text-[var(--studio-gold)] hover:underline">Facebook ad statistics</Link> from real small-business ads.</p>
         </section>
         <div className="flex justify-center py-16"><CtaButton href={toolCtaHref("hub", "end")}>Make my free ads</CtaButton></div>
       </main>

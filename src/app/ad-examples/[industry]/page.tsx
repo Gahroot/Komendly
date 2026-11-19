@@ -208,7 +208,7 @@ export default async function IndustryPage({ params }: PageProps) {
 
         <nav className="mx-auto mt-16 max-w-5xl px-4 sm:px-6" aria-label="Related ad guides">
           <ul className="flex flex-wrap gap-2">
-            {[comboForIndustry(i.slug), galleryPage("platform:instagram"), galleryPage("platform:nextdoor"), galleryPage("occasion:grand-opening")].flatMap((p) => (p ? [p] : [])).map((p) => (
+            {[comboForIndustry(i.slug), comboForIndustry(i.slug, "google"), galleryPage("platform:instagram"), galleryPage("platform:nextdoor"), galleryPage("occasion:grand-opening")].flatMap((p) => (p ? [p] : [])).map((p) => (
               <li key={p.key}><Link href={p.path} className="inline-flex rounded-full border border-border px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:border-[var(--studio-gold)] hover:text-foreground">{anchorText(p.key, `industry:${i.slug}`)}</Link></li>
             ))}
           </ul>

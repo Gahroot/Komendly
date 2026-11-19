@@ -8,7 +8,7 @@ export const revalidate = 3600;
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return GALLERY_PAGES.filter((p) => p.kind === "combo").map((p) => ({ industry: p.industry! }));
+  return GALLERY_PAGES.filter((p) => p.kind === "combo" && p.comboPlatform === "facebook").map((p) => ({ industry: p.industry! }));
 }
 
 type Props = { params: Promise<{ industry: string }> };

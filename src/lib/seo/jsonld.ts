@@ -275,3 +275,43 @@ export function freeToolJsonLd(opts: { name: string; description: string; path: 
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   }
 }
+
+/** Public aggregate data report: Dataset (with CSV download) + Article, both about the same page. */
+export function dataReportJsonLd(opts: {
+  path: string; csvPath: string; headline: string; description: string; datePublished: string; dateModified: string;
+  temporalCoverage: string; keywords: string[]; variables: string[];
+}): JsonLd[] {
+  const url = absoluteUrl(opts.path)
+  return [
+    {
+      '@type': 'Dataset',
+      '@id': `${url}#dataset`,
+      name: opts.headline,
+      description: opts.description,
+      url,
+      keywords: opts.keywords,
+      variableMeasured: opts.variables,
+      temporalCoverage: opts.temporalCoverage,
+      dateModified: opts.dateModified,
+      isAccessibleForFree: true,
+      license: 'https://creativecommons.org/licenses/by/4.0/',
+      creator: { '@id': ORG_ID },
+      publisher: { '@id': ORG_ID },
+      distribution: [{ '@type': 'DataDownload', encodingFormat: 'text/csv', contentUrl: absoluteUrl(opts.csvPath) }],
+    },
+    {
+      '@type': 'Article',
+      '@id': `${url}#article`,
+      headline: opts.headline,
+      description: opts.description,
+      url,
+      mainEntityOfPage: url,
+      datePublished: opts.datePublished,
+      dateModified: opts.dateModified,
+      author: { '@id': ORG_ID },
+      publisher: { '@id': ORG_ID },
+      about: { '@id': `${url}#dataset` },
+      isPartOf: { '@id': WEBSITE_ID },
+    },
+  ]
+}

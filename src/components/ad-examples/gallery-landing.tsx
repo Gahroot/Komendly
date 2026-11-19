@@ -19,7 +19,7 @@ import { absoluteUrl } from "@/lib/site";
 import { breadcrumbJsonLd, faqJsonLd, galleryPageJsonLd, graph } from "@/lib/seo/jsonld";
 import "@/components/studio/studio.css";
 
-const KIND_LABEL: Record<GalleryKind, string> = { platform: "By platform", format: "By format", occasion: "By occasion", combo: "Facebook ads" };
+const KIND_LABEL: Record<GalleryKind, string> = { platform: "By platform", format: "By format", occasion: "By occasion", combo: "Facebook & Google ads by trade" };
 const TOOLS_FOR: Record<GalleryKind, string[]> = {
   platform: ["ad-size-checker", "ad-headline-generator", "caption-generator"],
   format: ["ad-size-checker", "hook-generator", "promo-ad-generator"],

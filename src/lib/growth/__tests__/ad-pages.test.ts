@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { INDUSTRIES } from "@/lib/ads/industries";
-import { GALLERY_PAGES, RESERVED_SEGMENTS, contentText, galleryCycleConfig, galleryPagePrompt, matchAds, pageSubstance, pickGalleryPages, similarity, siblingKeys, tooSimilar } from "../ad-pages";
-import { FACEBOOK_COMBOS, VOCABULARY, normTerm, termIndex } from "../vocabulary";
+import { GALLERY_PAGES, RESERVED_SEGMENTS, comboForIndustry, contentText, galleryGenerationOrder, galleryPage, galleryCycleConfig, galleryPagePrompt, matchAds, pageSubstance, pickGalleryPages, similarity, siblingKeys, tooSimilar } from "../ad-pages";
+import { FACEBOOK_COMBOS, GOOGLE_COMBOS, VOCABULARY, normTerm, termIndex } from "../vocabulary";
 
 describe("gallery vocabulary", () => {
   it("has unique keys, slugs per kind and paths", () => {
@@ -77,5 +77,58 @@ describe("engine page-key selection", () => {
     const p = GALLERY_PAGES.find((x) => x.key === "combo:facebook-roofers")!;
     expect(galleryPagePrompt(p).prompt).toContain("roofer");
     expect(galleryPagePrompt(p, "SIBLING TEXT").prompt).toContain("SIBLING TEXT");
+  });
+});
+
+describe("new platform, occasion and google combo pages", () => {
+  const keys = GALLERY_PAGES.map((p) => p.key);
+  it("adds the planned pages with the right paths and shapes", () => {
+    for (const s of ["linkedin", "google-search", "youtube", "pinterest", "snapchat", "reddit", "x"]) expect(keys).toContain(`platform:${s}`);
+    for (const s of ["valentines-day", "easter", "fathers-day", "back-to-school", "halloween", "summer-sale", "new-year", "fourth-of-july", "thanksgiving"]) expect(keys).toContain(`occasion:${s}`);
+    expect(keys).not.toContain("occasion:cyber-monday");
+    expect(galleryPage("platform:google-search")!.shape).toBe("none");
+    expect(galleryPage("combo:google-plumbers")!.path).toBe("/ad-examples/plumbers/google");
+    expect(galleryPage("combo:facebook-plumbers")!.path).toBe("/ad-examples/plumbers/facebook");
+    expect(comboForIndustry("plumbers")!.key).toBe("combo:facebook-plumbers");
+    expect(comboForIndustry("plumbers", "google")!.key).toBe("combo:google-plumbers");
+    expect(comboForIndustry("bakeries", "google")).toBeUndefined();
+  });
+  it("google combos exist as industries; slugs and titles are clean", () => {
+    for (const s of Object.keys(GOOGLE_COMBOS)) expect(INDUSTRIES.some((i) => i.slug === s)).toBe(true);
+    for (const kind of ["platform", "format", "occasion", "combo"]) {
+      const slugs = GALLERY_PAGES.filter((p) => p.kind === kind).map((p) => p.slug);
+      expect(new Set(slugs).size).toBe(slugs.length);
+    }
+    for (const p of GALLERY_PAGES) {
+      expect(p.entry.title).not.toMatch(/\| Komendly/);
+      expect(p.entry.guidance.length).toBeGreaterThanOrEqual(3);
+      if (p.kind !== "combo") expect(RESERVED_SEGMENTS as readonly string[]).toContain(p.path.split("/")[2]);
+    }
+  });
+  it("non-Meta platform pages say Komendly doesn't publish there", () => {
+    for (const s of ["linkedin", "google-search", "youtube", "pinterest", "snapchat", "reddit", "x"]) expect(galleryPage(`platform:${s}`)!.entry.intro).toMatch(/Komendly (does not|publishes only)/);
+    for (const k of Object.keys(GOOGLE_COMBOS)) expect(galleryPage(`combo:google-${k}`)!.entry.intro).toContain("publishes only to Facebook and Instagram");
+  });
+  it("generation order puts high-demand new pages first and covers every page once", () => {
+    const o = galleryGenerationOrder();
+    expect(o.slice(0, 4)).toEqual(["platform:google-search", "platform:linkedin", "platform:youtube", "occasion:valentines-day"]);
+    expect(o[4]).toMatch(/^combo:google-/);
+    expect([...o].sort()).toEqual([...keys].sort());
+  });
+  it("search pages ask for text ads within RSA limits; LinkedIn is B2B; prompts stay honest", () => {
+    const g = galleryPagePrompt(galleryPage("platform:google-search")!).prompt;
+    expect(g).toContain("responsive search ads");
+    expect(g).toContain("90 characters");
+    const c = galleryPagePrompt(galleryPage("combo:google-roofers")!).prompt;
+    expect(c).toContain("negative keywords");
+    expect(c).toContain("roofer");
+    expect(c).toContain("<=27 characters");
+    expect(galleryPagePrompt(galleryPage("platform:linkedin")!).prompt).toContain("B2B");
+    expect(galleryPagePrompt(galleryPage("platform:facebook")!).prompt).toContain("headline (<=40 chars)");
+    expect(galleryPagePrompt(galleryPage("combo:facebook-roofers")!).prompt).toContain("Facebook ads");
+  });
+  it("new siblings are covered by the duplicate check", () => {
+    expect(siblingKeys(galleryPage("platform:linkedin")!)).toContain("platform:google-search");
+    expect(siblingKeys(galleryPage("combo:google-hvac")!)).toContain("combo:facebook-hvac");
   });
 });

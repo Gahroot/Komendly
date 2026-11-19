@@ -11,6 +11,16 @@ export type GalleryKind = "platform" | "format" | "occasion" | "combo";
 /** Which real consented ads fit a page: by industry and/or image shape. "none" = real ads can't show this (e.g. video). */
 export type AdShape = "any" | "vertical" | "square" | "feed" | "none";
 
+/** "<platform> ads for <industry>" combos; slug = `<platform>-<industry>`, path = /ad-examples/<industry>/<platform>. */
+export const COMBO_PLATFORMS = ["facebook", "google"] as const;
+export type ComboPlatform = (typeof COMBO_PLATFORMS)[number];
+
+export function parseComboSlug(slug: string): { platform: ComboPlatform; industry: string } {
+  const m = /^(facebook|google)-(.+)$/.exec(slug);
+  if (!m) throw new Error(`bad combo slug ${slug}`);
+  return { platform: m[1] as ComboPlatform, industry: m[2]! };
+}
+
 export interface GalleryPageDef {
   key: string;
   kind: GalleryKind;
@@ -19,16 +29,19 @@ export interface GalleryPageDef {
   entry: VocabEntry;
   /** Combo pages only. */
   industry?: string;
+  /** Combo pages only: which ad platform the combo is about. */
+  comboPlatform?: ComboPlatform;
   shape: AdShape;
 }
 
 const SHAPES: Record<string, AdShape> = {
   "platform:facebook": "feed", "platform:instagram": "feed", "platform:tiktok": "vertical", "platform:google-business": "feed", "platform:nextdoor": "feed",
+  "platform:google-search": "none", "platform:linkedin": "feed", "platform:youtube": "none", "platform:pinterest": "feed", "platform:snapchat": "vertical", "platform:reddit": "feed", "platform:x": "feed",
   "format:instagram-story": "vertical", "format:carousel": "square", "format:ugc": "none", "format:promo-video": "none",
 };
 
 export function galleryPath(kind: GalleryKind, slug: string): string {
-  if (kind === "combo") return `/ad-examples/${slug.replace(/^facebook-/, "")}/facebook`;
+  if (kind === "combo") { const c = parseComboSlug(slug); return `/ad-examples/${c.industry}/${c.platform}`; }
   return `/ad-examples/${kind}/${slug}`;
 }
 
@@ -36,12 +49,24 @@ const def = (entry: VocabEntry): GalleryPageDef => {
   const kind = entry.kind as GalleryKind;
   return {
     key: entry.key, kind, slug: entry.slug, path: galleryPath(kind, entry.slug), entry,
-    ...(kind === "combo" ? { industry: entry.slug.replace(/^facebook-/, "") } : {}),
-    shape: kind === "combo" ? "any" : kind === "occasion" ? "none" : (SHAPES[entry.key] ?? "any"),
+    ...(kind === "combo" ? { industry: parseComboSlug(entry.slug).industry, comboPlatform: parseComboSlug(entry.slug).platform } : {}),
+    // Google combos are text search ads: real image ads don't show that.
+    shape: kind === "combo" ? (entry.slug.startsWith("google-") ? "none" : "any") : kind === "occasion" ? "none" : (SHAPES[entry.key] ?? "any"),
   };
 };
 
 export const GALLERY_PAGES: readonly GalleryPageDef[] = [...PLATFORM_VOCAB, ...FORMAT_VOCAB, ...OCCASION_VOCAB, ...COMBO_VOCAB].map(def);
+/**
+ * Engine generation order (missing pages are filled in this order): the higher-demand new pages first, then the rest
+ * in GALLERY_PAGES order. Display order (hub, siblings) stays GALLERY_PAGES.
+ */
+const GENERATE_FIRST = ["platform:google-search", "platform:linkedin", "platform:youtube", "occasion:valentines-day"];
+export function galleryGenerationOrder(): string[] {
+  const all = GALLERY_PAGES.map((p) => p.key);
+  const first = [...GENERATE_FIRST, ...GALLERY_PAGES.filter((p) => p.comboPlatform === "google").map((p) => p.key), "occasion:new-year"].filter((k) => all.includes(k));
+  return [...new Set([...first, ...all])];
+}
+
 /** Static first segments of the new URL scheme; must never be an industry slug. */
 export const RESERVED_SEGMENTS = ["platform", "format", "occasion"] as const;
 
@@ -51,8 +76,8 @@ export function galleryPage(key: string): GalleryPageDef | undefined {
 export function galleryPageFor(kind: GalleryKind, slug: string): GalleryPageDef | undefined {
   return GALLERY_PAGES.find((p) => p.kind === kind && p.slug === slug);
 }
-export function comboForIndustry(industry: string): GalleryPageDef | undefined {
-  return GALLERY_PAGES.find((p) => p.kind === "combo" && p.industry === industry);
+export function comboForIndustry(industry: string, platform: ComboPlatform = "facebook"): GalleryPageDef | undefined {
+  return GALLERY_PAGES.find((p) => p.kind === "combo" && p.industry === industry && p.comboPlatform === platform);
 }
 
 /** Real consented ads that fit the page (combo: that industry; shape filter by aspect). Order kept (featured first). */
@@ -144,11 +169,32 @@ export function pickGalleryPages(allKeys: readonly string[], existing: ReadonlyA
   return [...missing, ...stale].slice(0, room);
 }
 
-const TASK: Record<GalleryKind, (e: VocabEntry, industry?: (typeof INDUSTRIES)[number]) => string> = {
-  platform: (e) => `Page: "${e.h1}" (people search "${e.primaryQuery}"). Tips must be about this platform's placements, specs, audience behaviour and what small businesses post there, not generic ad advice. Samples: 4 ads for 4 different FICTIONAL small businesses in 4 different industries, each written for this platform.`,
+const HONEST = "Komendly makes ad creatives and copy and publishes only to Facebook and Instagram: never say or imply Komendly posts, runs or publishes ads on this platform; the owner uploads them there.";
+
+/** Per-platform sample hints (what a real ad on that platform looks like). */
+const PLATFORM_HINT: Record<string, string> = {
+  "platform:google-search": `These are Google SEARCH TEXT ads (responsive search ads), no images. ${HONEST} Tips: keywords, match intent, headline/description writing, assets (call, location, sitelinks), negative keywords.`,
+  "platform:linkedin": `LinkedIn is B2B: the 4 FICTIONAL businesses sell to other businesses or professionals (e.g. bookkeeping, IT support, B2B software, commercial cleaning, recruiting); write to a job role's problem. Headline <=70 chars is ideal, opening text <=150 chars before truncation. ${HONEST}`,
+  "platform:youtube": `These are YouTube VIDEO ads: in primaryText give the script beats with the first 5 seconds (before skip) spelled out, plus length (6s bumper / 15-30s skippable / Shorts 9:16). ${HONEST}`,
+  "platform:pinterest": `Pinterest Pins are saved ideas for planning (home, weddings, food, style, gifts, DIY): pick businesses that fit; headline is the Pin title (lead with the idea in the first 40 chars), primaryText is the Pin description using words people search on Pinterest. ${HONEST}`,
+  "platform:snapchat": `Snapchat full-screen vertical ads for a younger audience: headline <=34 chars, primaryText describes the 9:16 Snap (under 10s, message in the first seconds) plus the caption. ${HONEST}`,
+  "platform:reddit": `Reddit promoted posts: headline reads like a post title from someone in the community (plain, specific, no hype); name the subreddit-style audience in angle; businesses fit niche communities. ${HONEST}`,
+  "platform:x": `X (Twitter) promoted posts: primaryText is the post itself, under 280 characters, short and conversational, tied to a moment; headline is the website card title. ${HONEST}`,
+};
+
+/** Sample field instructions: Google text ads map RSA parts onto the shared sample shape (no schema change). */
+const SAMPLES_DEFAULT = "samples: 4 sample ads. Fields: business, city, headline (<=40 chars), primaryText (2-4 sentences, ends with a call to action), hook, offer, cta (button text), angle (one sentence: why it works).";
+const SAMPLES_SEARCH = "samples: 4 Google responsive search ads. Map them onto these fields: business, city, headline = two RSA headlines, each <=27 characters, joined with \" | \" (whole field <=60 chars); hook = a third RSA headline (<=30 chars); primaryText = two RSA descriptions, each <=90 characters, as two sentences (the second ends with a call to action); offer = the offer or price point in the ad; cta = the main action (e.g. Call now, Get a quote); angle = one sentence: which search it targets and why it works. Count characters: never exceed 30 per headline or 90 per description. Never use the word 'guaranteed'.";
+
+const isSearchPage = (p: GalleryPageDef) => p.key === "platform:google-search" || p.comboPlatform === "google";
+
+const TASK: Record<GalleryKind, (e: VocabEntry, industry?: (typeof INDUSTRIES)[number], page?: GalleryPageDef) => string> = {
+  platform: (e, _i, p) => `Page: "${e.h1}" (people search "${e.primaryQuery}"). Tips must be about this platform's placements, specs, audience behaviour and what small businesses post there, not generic ad advice. Samples: 4 ads for 4 different FICTIONAL small businesses in 4 different industries, each written for this platform.${p && PLATFORM_HINT[p.key] ? ` ${PLATFORM_HINT[p.key]}` : ""}`,
   format: (e) => `Page: "${e.h1}" (people search "${e.primaryQuery}"). Tips must be about making this format well (structure, length, shots/cards, specs). Samples: 4 FICTIONAL small businesses in different industries; in primaryText describe the piece in this format (e.g. cards, shots or script beats) plus the caption.`,
   occasion: (e) => `Page: "${e.h1}" (people search "${e.primaryQuery}"). Tips must be about timing, offers and wording for this occasion. Samples: 4 ads for this occasion from 4 FICTIONAL small businesses in different industries.`,
-  combo: (e, i) => `Page: "${e.h1}" (people search "${e.primaryQuery}"). This is about RUNNING Facebook ads as a ${i?.singular ?? "business"}: targeting radius, budget, goal (leads/calls/messages), lead forms, which ad to run first, seasonality. Samples: 4 Facebook ads for 4 FICTIONAL ${i?.plural ?? "businesses"} in different US/UK towns, each a different campaign goal.`,
+  combo: (e, i, p) => p?.comboPlatform === "google"
+    ? `Page: "${e.h1}" (people search "${e.primaryQuery}"). This is about RUNNING Google search ads as a ${i?.singular ?? "business"}: which keywords to bid on, negative keywords, location targeting, daily budget, call assets and ad schedule, and when Local Services Ads (pay per lead, where available) fit better than search ads. Samples: 4 Google search text ads for 4 FICTIONAL ${i?.plural ?? "businesses"} in different US/UK towns, each targeting a different kind of search (emergency, specific service, price-shopping, local). ${HONEST}`
+    : `Page: "${e.h1}" (people search "${e.primaryQuery}"). This is about RUNNING Facebook ads as a ${i?.singular ?? "business"}: targeting radius, budget, goal (leads/calls/messages), lead forms, which ad to run first, seasonality. Samples: 4 Facebook ads for 4 FICTIONAL ${i?.plural ?? "businesses"} in different US/UK towns, each a different campaign goal.`,
 };
 
 /** Codex prompt for one page; `avoid` = a near-duplicate sibling's text to steer away from on a retry. */
@@ -157,9 +203,9 @@ export function galleryPagePrompt(page: GalleryPageDef, avoid?: string): { syste
   return {
     system: "You write practical ad guidance for small-business owners. Plain words, concrete, honest. Never claim guarantees, cures, rankings or awards, never invent statistics. Business names must be clearly fictional, ordinary small-business names (not real brands).",
     prompt: [
-      TASK[page.kind](page.entry, industry),
+      TASK[page.kind](page.entry, industry, page),
       `The page already says (don't repeat these): ${page.entry.guidance.join(" | ")}`,
-      "Write:\n- intro: 2 sentences specific to this page.\n- whatWorks: 4 tips (title + one-sentence detail), each specific to this page.\n- samples: 4 sample ads. Fields: business, city, headline (<=40 chars), primaryText (2-4 sentences, ends with a call to action), hook, offer, cta (button text), angle (one sentence: why it works).",
+      `Write:\n- intro: 2 sentences specific to this page.\n- whatWorks: 4 tips (title + one-sentence detail), each specific to this page.\n- ${isSearchPage(page) ? SAMPLES_SEARCH : SAMPLES_DEFAULT}`,
       avoid ? `Your last draft was too close to a sibling page. Use different angles, wording, businesses and towns than this text: """${avoid.slice(0, 1500)}"""` : "",
     ].filter(Boolean).join("\n"),
   };

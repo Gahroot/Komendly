@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, Copy, Loader2, X } from "lucide-react";
-import { AI_TOOL_FIELDS, AI_TOOL_SECTIONS, CTA_GOALS, CTA_PLATFORMS, PLATFORM_LIMITS, budgetMath, buildHashtags, checkAdSize, checkLength, gradeAdCopy, isAiTool, pickCta, type AiToolSlug, type CtaGoal, type FreeToolSlug, type Grade, type ReviewOutput } from "@/lib/growth/free-tools";
+import { AI_TOOL_FIELDS, AI_TOOL_SECTIONS, CTA_GOALS, CTA_PLATFORMS, LINKEDIN_LIMITS, PLATFORM_LIMITS, RSA_LIMITS, budgetMath, buildHashtags, charCount, checkAdSize, checkLength, gradeAdCopy, isAiTool, keywordHits, pickCta, type AiToolSlug, type CtaGoal, type FreeToolSlug, type Grade, type LinkedInVariant, type ReviewOutput, type RsaOutput, type VideoScriptOutput } from "@/lib/growth/free-tools";
+import { MockupTool } from "./ad-mockup";
 
 const field = "w-full rounded-xl border border-border bg-white/5 px-4 py-3 text-base outline-none focus:border-[var(--studio-gold)]";
 const btn = "inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[var(--studio-gold)] px-6 font-semibold text-[#2a0f10] transition hover:brightness-105 disabled:opacity-60";
@@ -150,6 +151,87 @@ function SizeTool() {
   );
 }
 
+/** Editable result line with a live character count against a hard limit. */
+function CountedLine({ initial, max, note }: { initial: string; max: number; note?: string }) {
+  const [text, setText] = useState(initial);
+  const [done, setDone] = useState(false);
+  const n = charCount(text);
+  return (
+    <li className="rounded-lg border border-border px-3 py-2">
+      <div className="flex items-center gap-2">
+        <input aria-label="Edit line" value={text} onChange={(e) => setText(e.target.value)} className="min-w-0 flex-1 bg-transparent py-1 text-[15px] outline-none" />
+        <span className={`shrink-0 font-mono text-xs ${n > max ? "text-red-300" : "text-muted-foreground"}`}>{n}/{max}</span>
+        <button type="button" aria-label="Copy" onClick={() => { void navigator.clipboard?.writeText(text); setDone(true); setTimeout(() => setDone(false), 1500); }} className="shrink-0 text-muted-foreground hover:text-foreground">
+          {done ? <Check className="size-4" /> : <Copy className="size-4" />}
+        </button>
+      </div>
+      {note && <p className="text-xs text-muted-foreground">{note}</p>}
+    </li>
+  );
+}
+
+function RsaResult({ out, keywords }: { out: RsaOutput; keywords: string }) {
+  const note = (text: string, pin: string) => [pin !== "none" ? `Pin to position ${pin}` : "", keywordHits(text, keywords).length ? `Keyword: ${keywordHits(text, keywords).join(", ")}` : ""].filter(Boolean).join(" · ");
+  const withKw = out.headlines.filter((h) => keywordHits(h.text, keywords).length).length;
+  return (
+    <div className="space-y-6">
+      <p className="text-sm text-muted-foreground">{out.headlines.length} headlines, {out.descriptions.length} descriptions. {withKw} headline{withKw === 1 ? "" : "s"} contain{withKw === 1 ? "s" : ""} your keywords. Edit any line; the counter turns red over Google&apos;s limit.</p>
+      <div><h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">Headlines (max {RSA_LIMITS.headline})</h3><ul className="mt-3 space-y-2">{out.headlines.map((h) => <CountedLine key={h.text} initial={h.text} max={RSA_LIMITS.headline} note={note(h.text, h.pin)} />)}</ul></div>
+      <div><h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">Descriptions (max {RSA_LIMITS.description})</h3><ul className="mt-3 space-y-2">{out.descriptions.map((d) => <CountedLine key={d.text} initial={d.text} max={RSA_LIMITS.description} note={note(d.text, d.pin)} />)}</ul></div>
+      {out.paths.length > 0 && <div><h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">Display path (max {RSA_LIMITS.path} each)</h3><ul className="mt-3 space-y-2">{out.paths.map((p) => <CountedLine key={p} initial={p} max={RSA_LIMITS.path} />)}</ul></div>}
+    </div>
+  );
+}
+
+function LinkedInResult({ variants }: { variants: LinkedInVariant[] }) {
+  return (
+    <div className="space-y-6">
+      {variants.map((v, i) => (
+        <div key={`${i}-${v.headline}`} className="rounded-xl border border-border p-4">
+          <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">Variant {i + 1}{v.angle ? `: ${v.angle}` : ""} · button: {v.cta}</h3>
+          <ul className="mt-3 space-y-2">
+            <CountedLine initial={v.intro} max={LINKEDIN_LIMITS.intro} note="Intro text (all of it shows before 'see more')" />
+            <CountedLine initial={v.headline} max={LINKEDIN_LIMITS.headline} note="Headline" />
+            {v.description && <CountedLine initial={v.description} max={LINKEDIN_LIMITS.description} note="Description" />}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ScriptResult({ out }: { out: VideoScriptOutput }) {
+  const plain = (s: VideoScriptOutput["scripts"][number]) => [`HOOK: ${s.hook}`, ...s.scenes.map((c) => `[${c.time}] ${c.shot}${c.onScreen ? `\nOn screen: ${c.onScreen}` : ""}${c.voiceover ? `\nSay: ${c.voiceover}` : ""}`), `CTA: ${s.cta}`].join("\n\n");
+  return (
+    <div className="space-y-6">
+      {out.scripts.map((s, i) => (
+        <div key={`${i}-${s.hook}`} className="rounded-xl border border-border p-4">
+          <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">Script {i + 1}: {s.angle}</h3>
+          <p className="mt-3 font-medium">Hook: {s.hook}</p>
+          <ol className="mt-3 space-y-2">
+            {s.scenes.map((c, j) => (
+              <li key={j} className="rounded-lg border border-border px-3 py-2 text-sm">
+                <p><span className="font-mono text-xs text-[var(--studio-gold)]">{c.time}</span> {c.shot}</p>
+                {c.onScreen && <p className="mt-1 text-muted-foreground">On screen: <span className="text-foreground">{c.onScreen}</span></p>}
+                {c.voiceover && <p className="mt-1 text-muted-foreground">Say: <span className="text-foreground">{c.voiceover}</span></p>}
+              </li>
+            ))}
+          </ol>
+          <p className="mt-3 font-medium">CTA: {s.cta}</p>
+          <ul className="mt-3"><CopyLine text={plain(s)} /></ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function customResult(tool: AiToolSlug, out: Record<string, unknown>, input: Record<string, string>): ReactNode | null {
+  if (tool === "google-ads-headline-generator") return <RsaResult out={out as unknown as RsaOutput} keywords={input.keywords ?? ""} />;
+  if (tool === "linkedin-ad-copy-generator") return <LinkedInResult variants={(out as { variants: LinkedInVariant[] }).variants ?? []} />;
+  if (tool === "ugc-script-generator" || tool === "youtube-ad-script-generator") return <ScriptResult out={out as unknown as VideoScriptOutput} />;
+  return null;
+}
+
 function GenericAiTool({ tool }: { tool: AiToolSlug }) {
   const { state, run } = useAiJob(tool);
   const fields = AI_TOOL_FIELDS[tool] ?? [];
@@ -175,7 +257,7 @@ function GenericAiTool({ tool }: { tool: AiToolSlug }) {
         <button className={btn} disabled={state.phase === "working"}>{state.phase === "working" ? <><Loader2 className="size-4 animate-spin" /> Ozzy is writing…</> : "Write it for me"}</button>
       </form>
       {state.phase === "error" && <p role="alert" className="text-sm text-red-300">{state.error}</p>}
-      {out && (
+      {out && (customResult(tool, out, values) ?? (
         <div className="space-y-6">
           {AI_TOOL_SECTIONS[tool].map(([key, label]) => {
             const v = out[key];
@@ -183,7 +265,7 @@ function GenericAiTool({ tool }: { tool: AiToolSlug }) {
             return items.length ? <Section key={key} title={label} items={items} /> : null;
           })}
         </div>
-      )}
+      ))}
     </div>
   );
 }
@@ -326,5 +408,6 @@ export function ToolRunner({ slug }: { slug: FreeToolSlug }) {
   if (slug === "ad-character-counter") return <CounterTool />;
   if (slug === "cta-generator") return <CtaTool />;
   if (slug === "hashtag-generator") return <HashtagTool />;
+  if (slug === "ad-mockup-generator") return <MockupTool onUse={() => beacon("ad-mockup-generator")} />;
   return isAiTool(slug) ? <GenericAiTool tool={slug} /> : null;
 }

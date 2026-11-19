@@ -72,6 +72,7 @@ const publicPrefixes = [
   "/.well-known/openai-apps-challenge", // ChatGPT plugin domain verification (token from OPENAI_APPS_CHALLENGE)
   "/api/oauth/",           // OAuth register/token/revoke (client-authenticated) + consent POST (session + signed form)
   "/oauth/",               // Consent page (sends signed-out visitors to /login itself)
+  "/reports/",             // Public data reports (aggregate, anonymous; ISR daily) + their CSV downloads
   "/api/free-tools",       // Free /tools (no sign-up): AI job queue + poll + usage beacon (rate-limited, daily cap, kill switch sys_free_tools)
   "/shopify",              // Embedded Shopify admin app (App Bridge session token, no cookies; sys_shopify)
   "/api/shopify/",         // Shopify app API (session-token auth), HMAC-verified webhooks, health, signed open link

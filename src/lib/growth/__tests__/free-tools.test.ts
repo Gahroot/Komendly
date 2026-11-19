@@ -145,3 +145,62 @@ describe("tool vocabulary", () => {
     expect(v?.faq.some((f) => /fake/i.test(f.q))).toBe(true);
   });
 });
+
+describe("new tools: ugc, linkedin, rsa, youtube, mockup", () => {
+  it("RSA output enforces Google limits by dropping, never truncating", async () => {
+    const { RSA_OUTPUT, RSA_LIMITS, cleanRsa } = await import("../free-tools");
+    const hs = Array.from({ length: 16 }, (_, i) => ({ text: `  Emergency Plumber Leeds ${i}  `, pin: i < 4 ? "1" : "none" }));
+    const r = cleanRsa({ headlines: [{ text: "x".repeat(31) }, ...hs, { text: "emergency plumber leeds 0" }], descriptions: [{ text: "y".repeat(91) }, { text: "Fixed call-out fee. Book today." }], paths: ["  plumber ", "x".repeat(16), "leeds", "more"] });
+    expect(r.headlines).toHaveLength(RSA_LIMITS.maxHeadlines);
+    expect(r.headlines.every((x) => x.text.length <= 30 && x.text === x.text.trim())).toBe(true);
+    expect(r.headlines.filter((x) => x.pin === "1")).toHaveLength(2);
+    expect(r.descriptions.map((d) => d.text)).toEqual(["Fixed call-out fee. Book today."]);
+    expect(r.paths).toEqual(["plumber", "leeds"]);
+    expect(RSA_OUTPUT.safeParse({ headlines: hs, descriptions: [{ text: "y".repeat(91), pin: "none" }, { text: "z".repeat(95), pin: "none" }], paths: [] }).success).toBe(false);
+    expect(RSA_OUTPUT.safeParse({ headlines: hs, descriptions: [{ text: "Call now.", pin: "none" }, { text: "Book today.", pin: "none" }], paths: [] }).success).toBe(true);
+  });
+  it("LinkedIn output keeps intro <= 150, headline <= 70 and LinkedIn's own CTA buttons", async () => {
+    const { LINKEDIN_OUTPUT, LINKEDIN_CTAS } = await import("../free-tools");
+    const v = (intro: string, headline = "Payroll in 15 minutes", cta = "Learn More") => ({ angle: "a", intro, headline, description: "d", cta });
+    const ok = LINKEDIN_OUTPUT.safeParse({ variants: [v("short intro"), v("x".repeat(151)), v("fine"), v("ok", "h".repeat(71))] });
+    expect(ok.success && ok.data.variants.length).toBe(2);
+    expect(LINKEDIN_OUTPUT.safeParse({ variants: [v("a", "b", "Shop Now"), v("c")] }).success).toBe(false);
+    expect(LINKEDIN_CTAS).toContain("Request Demo");
+    expect(aiToolPrompt("linkedin-ad-copy-generator", { offer: "Payroll software" }).prompt).toContain("150 characters");
+  });
+  it("video script prompts follow the chosen length/format", async () => {
+    const { VIDEO_SCRIPT_OUTPUT, scriptWordBudget } = await import("../free-tools");
+    expect(aiToolPrompt("ugc-script-generator", { product: "Phone mount", length: "60" }).prompt).toContain("60 seconds");
+    expect(aiToolPrompt("youtube-ad-script-generator", { product: "Spanish lessons", format: "bumper" }).prompt).toContain("6-second");
+    expect(aiToolPrompt("youtube-ad-script-generator", { product: "Spanish lessons" }).prompt).toContain("0-5s");
+    expect(scriptWordBudget(15)).toBeLessThan(scriptWordBudget(30));
+    expect(parseAiToolInput("ugc-script-generator", { product: "Phone mount for cars", length: "45" }).ok).toBe(false);
+    expect(parseAiToolInput("google-ads-headline-generator", { business: "Plumber in Leeds, 24/7 call-outs" }).ok).toBe(false);
+    expect(VIDEO_SCRIPT_OUTPUT.safeParse({ scripts: [] }).success).toBe(false);
+  });
+  it("mockup helpers cut text like the feeds and wrap", async () => {
+    const { visibleAdText, wrapText, displayDomain, MOCKUP_FRAMES } = await import("../free-tools");
+    expect(visibleAdText("short", 125, "See more")).toEqual({ text: "short", cut: false });
+    const long = visibleAdText("word ".repeat(40), 125, "See more");
+    expect(long.cut).toBe(true);
+    expect(long.text.endsWith("… See more")).toBe(true);
+    expect(wrapText((s) => s.length, "aaa bbb ccc ddd", 7, 5)).toEqual(["aaa bbb", "ccc ddd"]);
+    expect(wrapText((s) => s.length, "aaa bbb ccc ddd eee", 7, 2)[1].endsWith("…")).toBe(true);
+    expect(displayDomain("https://www.fastflow.co.uk/path")).toBe("fastflow.co.uk");
+    expect(MOCKUP_FRAMES.map((f) => f.id)).toEqual(["facebook-feed", "instagram-feed", "instagram-story", "tiktok", "linkedin-feed"]);
+    expect(isAiTool("ad-mockup-generator")).toBe(false);
+  });
+  it("RSA page and ad copy generator split the Google intent and cross-link", () => {
+    const idx = termIndex(VOCABULARY);
+    expect(idx.get(normTerm("google ad copy generator"))).toBe("tool:ad-copy-generator");
+    for (const q of ["google ads headline generator", "rsa headline generator", "responsive search ad generator"]) expect(idx.get(normTerm(q))).toBe("tool:google-ads-headline-generator");
+    expect(getFreeTool("ad-copy-generator")?.related).toContain("google-ads-headline-generator");
+    expect(getFreeTool("google-ads-headline-generator")?.related).toContain("ad-copy-generator");
+    for (const t of FREE_TOOLS) for (const r of t.related ?? []) { expect(isFreeToolSlug(r)).toBe(true); expect(r).not.toBe(t.slug); }
+  });
+  it("tool page copy is not near-duplicate across tools", async () => {
+    const { similarity, MAX_SIBLING_SIMILARITY } = await import("../ad-pages");
+    const text = (v: (typeof TOOL_VOCAB)[number]) => [v.intro, ...v.guidance, ...v.faq.map((f) => `${f.q} ${f.a}`)].join(" ");
+    for (const a of TOOL_VOCAB) for (const b of TOOL_VOCAB) if (a.slug < b.slug) expect(similarity(text(a), text(b)), `${a.slug} vs ${b.slug}`).toBeLessThanOrEqual(MAX_SIBLING_SIMILARITY);
+  });
+});

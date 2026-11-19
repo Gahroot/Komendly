@@ -47,7 +47,13 @@ export interface GalleryLink {
   samples?: number
 }
 
-export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryLink[] = []): string {
+/** Indexable /ad-examples intent pages (platform/format/occasion/combo) listed in llms.txt. */
+export interface IntentLink { path: string; h1: string; also: string }
+
+/** Data report line (only when indexable). */
+export interface ReportLink { path: string; ads: number; sites: number }
+
+export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryLink[] = [], report: ReportLink | null = null, intents: readonly IntentLink[] = []): string {
   const sections = CATEGORIES.map((c) => {
     const inCat = posts.filter((p) => c.types.includes(p.type))
     return inCat.length ? `## Blog: ${c.name}\n\n${inCat.map(postLine).join('\n')}` : ''
@@ -73,6 +79,7 @@ export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryL
     `- [Examples](${SITE_URL}/examples): Ozzy Studio animated ads, Ad Pack static ads and a video testimonial, all made with Komendly`,
     `- [Ozzy for AI agents](${SITE_URL}/agents): let Claude, Cursor, ChatGPT or scripts make Studio videos and ad packs via the Komendly MCP server (https://www.komendly.com/api/mcp; add it as a connector and sign in) or the \`komendly\` CLI (personal API key), on the same plan and credits`,
     `- [Facebook ad examples by industry](${SITE_URL}/ad-examples): real customer ads made with Komendly, shared with permission, plus what works per industry`,
+    ...(report ? [`- [Facebook ad creative statistics](${SITE_URL}${report.path}): original, daily-updated data on ${report.ads} ads made from ${report.sites} real small-business websites (headline length, questions, numbers and offers, CTA verbs, brand colours, image sizes), with a free CSV`] : []),
     `- [Free ad tools](${SITE_URL}/tools): free, no-sign-up tools for small-business ads`,
     ...FREE_TOOLS.map((t) => `- [${t.name}](${SITE_URL}/tools/${t.slug}): ${t.description}`),
     `- [AI video testimonials](${SITE_URL}/testimonials): turn text reviews into AI-avatar videos`,
@@ -88,6 +95,7 @@ export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryL
     ...(galleries.length
       ? ['## Ad examples by industry', '', ...galleries.map((g) => `- [Facebook ad examples for ${g.plural}](${SITE_URL}/ad-examples/${g.slug}): ${[g.count ? `${g.count} real customer ads` : '', g.samples ? `${g.samples} sample ads and what works` : ''].filter(Boolean).join(', ')}`), '']
       : []),
+    ...(intents.length ? ['## Ad examples by platform, format, occasion and trade', '', ...intents.map((x) => `- [${x.h1}](${SITE_URL}${x.path})${x.also ? `: ${x.also}` : ''}`), ''] : []),
     ...sections.flatMap((s) => [s, '']),
   ].join('\n')
 }

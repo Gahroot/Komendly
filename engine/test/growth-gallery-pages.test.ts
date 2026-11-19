@@ -23,7 +23,7 @@ describe("gallery pages engine", () => {
     const { db, upserts } = fakeDb([]);
     const r = await galleryPagesCycle(db as never, seqProvider([content("alpha")]), now, { GALLERY_PAGES_PER_CYCLE: "1" }, "gpt-6.1-sol", okFetch);
     expect(r).toEqual({ written: 1, errors: [] });
-    expect(upserts).toEqual(["platform:facebook"]);
+    expect(upserts).toEqual(["platform:google-search"]);
   });
   it("respects the daily cap", async () => {
     const { db, upserts } = fakeDb([{ key: "platform:facebook", generatedAt: new Date("2026-11-18T08:00:00Z"), content: content("x") }]);

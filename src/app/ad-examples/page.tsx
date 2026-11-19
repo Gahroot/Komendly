@@ -109,7 +109,8 @@ export default async function AdExamplesHub() {
           ))}
         </section>
 
-        <p className="mx-auto mt-12 max-w-xl px-4 text-center text-sm text-muted-foreground">Writing your own? Try the free <Link href="/tools" className="text-[var(--studio-gold)] hover:underline">ad tools</Link>: headline generator, copy grader, size checker and more.</p>
+        <p className="mx-auto mt-12 max-w-xl px-4 text-center text-sm text-muted-foreground">Want the numbers? Read our <Link href="/reports/facebook-ad-statistics" className="text-[var(--studio-gold)] hover:underline">Facebook ad creative statistics</Link>: headline length, hooks, CTAs and colours across real small-business ads.</p>
+        <p className="mx-auto mt-4 max-w-xl px-4 text-center text-sm text-muted-foreground">Writing your own? Try the free <Link href="/tools" className="text-[var(--studio-gold)] hover:underline">ad tools</Link>: headline generator, copy grader, size checker and more.</p>
 
         <div className="px-4 py-20 sm:px-6">
           <CtaBlock title="Get 10 free ads for your business" campaign="hub" content="end" label="Make yours free" />

@@ -10,7 +10,7 @@ import { StudioFooter } from "@/components/studio/studio-footer";
 import { StudioNav } from "@/components/studio/studio-nav";
 import { StudioRoot } from "@/components/studio/studio-spell";
 import { AD_SIZE_GUIDE, FREE_TOOLS, LEGACY_TOOL_SLUGS, getFreeTool, type FreeTool } from "@/lib/growth/free-tools";
-import { alsoCalled, vocab, type VocabEntry } from "@/lib/growth/vocabulary";
+import { alsoCalled, anchorText, vocab, type VocabEntry } from "@/lib/growth/vocabulary";
 import { toolCtaHref } from "@/lib/growth/free-tools-links";
 import { freeToolsEnabled } from "@/lib/growth/free-tools-server";
 import { absoluteUrl } from "@/lib/site";
@@ -65,6 +65,12 @@ export default async function ToolPage({ params }: PageProps) {
         <section className="mx-auto mt-10 max-w-2xl" aria-label={t.name}>
           {on ? <ToolRunner slug={t.slug} /> : <p className="rounded-xl border border-border p-6 text-center text-muted-foreground">This tool is taking a short break. Back soon! Meanwhile, Ozzy can still make you 10 free ads from your website.</p>}
         </section>
+        {t.related?.length ? (
+          <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-muted-foreground">
+            Pairs well with:{" "}
+            {t.related.map((r, i) => <span key={r}>{i > 0 && " · "}<Link href={`/tools/${r}`} className="text-[var(--studio-gold)] hover:underline">{anchorText(`tool:${r}`, `tool:${t.slug}`)}</Link></span>)}
+          </p>
+        ) : null}
         {t.slug === "ad-size-guide" && <SizeGuide />}
         <section className="mx-auto mt-14 max-w-3xl" aria-labelledby="tips-title">
           <h2 id="tips-title" className="font-display text-2xl font-medium sm:text-3xl">Tips that make it work</h2>
