@@ -103,3 +103,16 @@ separate use case, once the product does it. Reviewers approve what the video sh
 - **Blocker: app branding.** The app is Display name "Prestyjco", privacy policy `prestyj.com/privacy`, terms
   `prestyj.com/tos`, site `prestyj.com`, no data deletion URL. The consent screen and the app's policies must match the
   product in the screencast (Komendly), so the submission must not go out like this.
+- App Basic settings switched to Komendly (verified via Graph API): display name Komendly, privacy
+  `https://www.komendly.com/privacy`, terms `https://www.komendly.com/terms`, data deletion URL
+  `https://www.komendly.com/privacy#meta-data`, app domain `komendly.com` added (ai.prestyj.com kept), site URL
+  `https://www.komendly.com/`. Prestyj logins on this app now show Komendly branding too.
+- Still to do in the dashboard: app icon (file at `~/Desktop/komendly-meta-icon-1024.png`; the upload needs a native file
+  picker), category ("Business and pages", optional), testing instructions (§4).
+- Access levels (Permissions and Features): ads_management, ads_read, business_management, pages_manage_ads: Standard,
+  never reviewed. **pages_show_list and pages_read_engagement: "App Review rejected"** (an earlier submission), and so is
+  Page Public Metadata Access. Check App Review → Requests for the rejection reason before resubmitting. Marketing API
+  Access Tier: Limited (5.2K calls), needs Upgrade. These sit in the "Tech Provider" table, and Meta requires Business
+  Verification for it. Business "Home Sales TV" (850028653548456) is Verified.
+- The first recording can't be submitted: it was made while the app was still named Prestyjco. Re-record after the icon
+  is set. Click Disconnect first, which revokes the grant, so the consent screen lists every permission fresh.
