@@ -14,13 +14,14 @@ import { AdCard } from "./ad-card";
 import { useDownloadGate } from "./download-gate";
 import { FeatureProvider } from "./feature-ad";
 import { BonusSection } from "./locked-bonus-section";
+import { LockedPackSection } from "./locked-pack-section";
 import { AdFailedCard } from "./ad-failed-card";
 import { AwarenessGroupHeader } from "./awareness-group-header";
 import { AdSkeletonCard } from "./ad-skeleton-card";
 import { FirstAdTimer } from "./first-ad-timer";
 import { MetaPublishDialog } from "./meta-publish-dialog";
 
-export function AdGallery({ run, offerOpen = false, remainingMs = null, unlockPack = false, offerReady = true }: { run: RunView; offerOpen?: boolean; remainingMs?: number | null; unlockPack?: boolean; offerReady?: boolean }) {
+export function AdGallery({ run, offerOpen = false, remainingMs = null, unlockPack = false, offerReady = true, unlockAvailable = false }: { run: RunView; offerOpen?: boolean; remainingMs?: number | null; unlockPack?: boolean; offerReady?: boolean; unlockAvailable?: boolean }) {
   const ratios = RATIOS.filter((r) => run.ratios.includes(r));
   const gate = useDownloadGate();
   const [ratio, setRatio] = useState<Ratio>(ratios.includes("4:5") ? "4:5" : (ratios[0] ?? "4:5"));
@@ -36,7 +37,9 @@ export function AdGallery({ run, offerOpen = false, remainingMs = null, unlockPa
   const done = ["completed", "partial", "failed", "canceled"].includes(run.status);
   const isFailed = (a: RunView["ads"][number]) => a.status === "failed_qc" || a.status === "failed";
   const rank = (a: RunView["ads"][number]) => (a.status === "ready" ? 0 : 1);
-  const live = mainAds.filter((a) => !isFailed(a)).sort((a, b) => rank(a) - rank(b) || a.index - b.index);
+  // Trial ads past the free pack limit get their own locked section below the free ones.
+  const packLocked = mainAds.filter((a) => a.locked && !isFailed(a)).sort((a, b) => a.index - b.index);
+  const live = mainAds.filter((a) => !isFailed(a) && !a.locked).sort((a, b) => rank(a) - rank(b) || a.index - b.index);
   const groups = AWARENESS_LEVELS.map((l) => [l, live.filter((a) => a.awareness === l)] as const).filter(([, ads]) => ads.length > 0);
   const failed = mainAds.filter(isFailed).sort((a, b) => a.index - b.index);
 
@@ -85,6 +88,7 @@ export function AdGallery({ run, offerOpen = false, remainingMs = null, unlockPa
           </div>
         </div>
       ))}
+      {offerReady && <LockedPackSection runId={run.id} ads={packLocked} unlockAvailable={unlockAvailable} />}
       <BonusSection runId={run.id} ads={bonusAds} bonus={bonus} ratio={ratio} offerOpen={offerOpen} remainingMs={remainingMs} unlockPack={unlockPack} offerReady={offerReady} />
       {!done && missing > 0 && (
         <div className="space-y-4">

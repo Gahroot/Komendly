@@ -44,24 +44,14 @@ describe("trial eligibility no longer needs a verified email", () => {
 });
 
 describe("download gate", () => {
-  it("blocks only unverified, unpaid trial downloads", () => {
-    expect(downloadNeedsVerifiedEmail({ isTrial: true, isPaid: false, emailVerified: false })).toBe(true);
-    expect(downloadNeedsVerifiedEmail({ isTrial: true, isPaid: false, emailVerified: true })).toBe(false);
-    expect(downloadNeedsVerifiedEmail({ isTrial: true, isPaid: true, emailVerified: false })).toBe(false);
-    expect(downloadNeedsVerifiedEmail({ isTrial: false, isPaid: false, emailVerified: false })).toBe(false);
-  });
-
-  it("throws 403 email_unverified server-side", () => {
-    try {
-      assertCanDownload({ emailVerifiedAt: null }, trialWs, { isTrial: true });
-      expect.unreachable();
-    } catch (e) {
-      expect(e).toBeInstanceOf(AdsHttpError);
-      expect(e).toMatchObject({ status: 403, code: "email_unverified", message: DOWNLOAD_GATE_MESSAGE });
+  it("never blocks downloads on email confirmation (unconfirmed sign-ups must still get their free ads)", () => {
+    for (const isTrial of [true, false]) for (const isPaid of [true, false]) for (const emailVerified of [true, false]) {
+      expect(downloadNeedsVerifiedEmail({ isTrial, isPaid, emailVerified })).toBe(false);
     }
-    expect(() => assertCanDownload({ emailVerifiedAt: new Date() }, trialWs, { isTrial: true })).not.toThrow();
+    expect(() => assertCanDownload({ emailVerifiedAt: null }, trialWs, { isTrial: true })).not.toThrow();
     expect(() => assertCanDownload({ emailVerifiedAt: null }, paidWs, { isTrial: true })).not.toThrow();
-    expect(() => assertCanDownload({ emailVerifiedAt: null }, trialWs, { isTrial: false })).not.toThrow();
+    expect(typeof DOWNLOAD_GATE_MESSAGE).toBe("string");
+    expect(AdsHttpError).toBeTypeOf("function");
   });
 });
 

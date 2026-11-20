@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { renderEmailLayout } from "@/lib/email/layout";
 import { pickFeatureAsset, publicFeatureImageUrl } from "./feature-assets";
 import { parseBonus } from "./bonus-access";
-import { isBonusUnlockedById } from "./bonus-unlock";
+import { isBonusUnlockedById, trialLockedIdsForRun } from "./bonus-unlock";
 import { trackAdsEvent } from "./events";
 import { canFeatureAd, defaultCaption, featuredEmailCopy, nextFeatureStatus, normalizeHandle } from "./features";
 import { appBaseUrl, sendAdsMail } from "./mailer";
@@ -40,7 +40,7 @@ export async function loadRunFeatures(runId: string): Promise<RunFeatures> {
 }
 
 async function adForUser(adId: string) {
-  const ad = await prisma.ad.findUnique({ where: { id: adId }, select: { id: true, status: true, workspaceId: true, visualBrief: true, run: { select: { kind: true } } } });
+  const ad = await prisma.ad.findUnique({ where: { id: adId }, select: { id: true, status: true, workspaceId: true, visualBrief: true, runId: true, run: { select: { kind: true } } } });
   if (!ad) throw new AdsHttpError(404, "not_found", "Not found.");
   const access = await requireWorkspaceMember({ workspaceId: ad.workspaceId });
   return { ad, access };
@@ -48,7 +48,8 @@ async function adForUser(adId: string) {
 
 export async function consentFeature(input: { adId: string; handle: string; brandName: string }): Promise<{ status: string }> {
   const { ad, access } = await adForUser(input.adId);
-  const locked = parseBonus(ad.visualBrief) !== null && !(await isBonusUnlockedById(ad.workspaceId));
+  const unlocked = await isBonusUnlockedById(ad.workspaceId);
+  const locked = (parseBonus(ad.visualBrief) !== null && !unlocked) || (await trialLockedIdsForRun(ad.runId, unlocked)).has(ad.id);
   if (!canFeatureAd({ status: ad.status, locked }, ad.run.kind)) throw new AdsHttpError(400, "not_featureable", "This ad can't be featured.");
   const current = await prisma.adsFeature.findUnique({ where: { adId: ad.id } });
   const next = nextFeatureStatus(current?.status ?? null, "consent");

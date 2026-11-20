@@ -58,7 +58,7 @@ export function RunScreen({ initial }: { initial: RunView }) {
     setLqDismissed(true);
   }, [lqKey]);
   // One offer at a time: Launch Quarter while open (and not dismissed), then the $9 unlock while bonus ads are locked.
-  const stage = trialOfferStage({ trialUnpaid, readyAds: readyMain, minReady: LAUNCH_OFFER_MIN_READY, launchOpen: offer.open, launchDismissed: lqDismissedStored || lqDismissedLocal, bonusLocked: Boolean(run.bonus?.locked), unlockAvailable: offer.unlockPack });
+  const stage = trialOfferStage({ trialUnpaid, readyAds: readyMain, minReady: LAUNCH_OFFER_MIN_READY, launchOpen: offer.open, launchDismissed: lqDismissedStored || lqDismissedLocal, bonusLocked: Boolean(run.bonus?.locked) || (run.lockedAds ?? 0) > 0, unlockAvailable: offer.unlockPack });
   const offerOpen = stage === "launch_quarter";
   // Wait for the server's offer state before any offer UI renders or logs "shown" (else it reads closed on first paint).
   const offerReady = offerStateSettled({ isTrial: run.isTrial, workspaceLoaded: ws !== undefined, isPaid: Boolean(ws?.isPaid), offerSettled: offer.settled });
@@ -85,7 +85,7 @@ export function RunScreen({ initial }: { initial: RunView }) {
         <CardFooter><Button asChild><Link href="/ads/app">Back to home</Link></Button></CardFooter>
       </Card>
     );
-  } else body = <AdGallery run={run} offerOpen={offerOpen} remainingMs={offer.remainingMs} unlockPack={stage === "unlock_pack"} offerReady={offerReady} />;
+  } else body = <AdGallery run={run} offerOpen={offerOpen} remainingMs={offer.remainingMs} unlockPack={stage === "unlock_pack"} offerReady={offerReady} unlockAvailable={trialUnpaid && offer.unlockPack} />;
   const showEarlyOffer = offerReady && offerOpen && !done && run.ads.length > 0 && ["queued", "generating"].includes(run.status);
 
   return (
@@ -111,7 +111,7 @@ export function RunScreen({ initial }: { initial: RunView }) {
         {showEarlyOffer && <OfferNudge runId={run.id} ready={readyMain} bonus={run.bonus ?? null} remainingMs={offer.remainingMs} onDismiss={dismissLaunch} valueLine={valueLine} />}
         {offerReady && stage === "unlock_pack" && run.bonus && <UnlockPackCard runId={run.id} bonus={run.bonus} />}
         {offerReady && done && trialUnpaid && stage !== "unlock_pack" && <TrialUpsell runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} onDecline={offerOpen ? dismissLaunch : undefined} valueLine={valueLine} />}
-        {offerReady && done && trialUnpaid && <OfferDownloadModal runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} />}
+        {offerReady && done && trialUnpaid && <OfferDownloadModal runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} lockedAds={run.lockedAds ?? 0} unlockAvailable={offer.unlockPack} />}
         {done && ws?.isPaid && <GenerateMoreForm url={run.url} brandProfileId={run.brandProfileId} />}
         {bridgeOn && <StudioBridgeCard placement="run_card" data={{ runId: run.id, domain, bestAdId: bridgeAd?.id ?? null, hasLogo: Boolean(run.logoUrl), freeVideosLeft: run.studio?.freeVideosLeft ?? 0 }} />}
         {done && run.ads.length > 0 && <GiftPackCard />}

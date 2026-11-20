@@ -95,3 +95,27 @@ export function shouldAwaitBonus(args: {
   if (args.bonusReadyLogged || !args.completedAt) return false;
   return args.now.getTime() - args.completedAt.getTime() < (args.windowMinutes ?? 20) * 60_000;
 }
+
+// ---- Free pack limit (autopilot plan, funnel fix 1) ----
+// A free trial pack shows its first FREE_TRIAL_ADS live ads; every other main ad stays locked until the workspace pays
+// (any plan, the Founding first month, or the $9 "Unlock this pack"). Like bonus ads, derived at read time, never stored.
+
+export const FREE_TRIAL_ADS = 3;
+
+export type LockCandidate = { id: string; index: number; status: string; visualBrief: unknown; qcReport?: unknown };
+
+/** An ad the engine replaced after failed QC (hidden; its replacement is shown instead). */
+export function isReplacedAd(qcReport: unknown): boolean {
+  if (!qcReport || typeof qcReport !== "object") return false;
+  const report = qcReport as { replacedBy?: unknown; replacementPending?: unknown };
+  return Boolean(report.replacedBy) || report.replacementPending === true;
+}
+
+/** Ids of the main (non-bonus) trial ads past the free limit, by index. Failed and replaced ads don't use a free slot. */
+export function trialLockedAdIds(run: { isTrial: boolean }, ads: readonly LockCandidate[], unlocked: boolean, free = FREE_TRIAL_ADS): Set<string> {
+  if (!run.isTrial || unlocked) return new Set();
+  const live = ads
+    .filter((a) => !parseBonus(a.visualBrief) && !isReplacedAd(a.qcReport) && a.status !== "failed" && a.status !== "failed_qc")
+    .sort((a, b) => a.index - b.index);
+  return new Set(live.slice(free).map((a) => a.id));
+}

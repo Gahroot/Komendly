@@ -64,6 +64,8 @@ export interface RunView {
   serverNow: string;
   /** Ready trial bonus ads; null when there are none (ADS_TRIAL_BONUS off). */
   bonus: RunBonusView | null;
+  /** Ready main ads past the free pack limit (locked until the workspace pays); optional for older clients. */
+  lockedAds?: number;
   /** Bonus ads are still expected for this settled run: keep polling. */
   bonusPending: boolean;
   /** Ads -> Ozzy Studio bridge (flag studio_bridge, default off). */

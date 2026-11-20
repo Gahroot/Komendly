@@ -4,7 +4,7 @@ import { trackAdsEvent } from "@/lib/ads/events";
 import { domainOf } from "@/lib/ads/run";
 import { adTextFile } from "@/lib/ads/launch-guide";
 import { exportableAssets } from "@/lib/ads/bonus-access";
-import { isBonusUnlocked } from "@/lib/ads/bonus-unlock";
+import { isBonusUnlocked, trialLockedIdsForRun } from "@/lib/ads/bonus-unlock";
 import { assertCanDownload } from "@/lib/ads/download-gate-server";
 import { extensionForMime, getObjectStream } from "@/lib/ads/storage";
 import { adsErrorResponse, AdsHttpError, requireWorkspaceMember } from "@/lib/ads/workspace";
@@ -22,8 +22,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     });
     assertCanDownload(user, workspace, run);
     const unlocked = await isBonusUnlocked(workspace);
-    // Locked trial bonus ads and their preview posters never leave the server in an export.
-    const perAd = run.ads.map((ad) => ({
+    // Locked trial bonus ads, ads past the free pack limit and preview posters never leave the server in an export.
+    const packLocked = await trialLockedIdsForRun(run.id, unlocked);
+    const perAd = run.ads.filter((ad) => !packLocked.has(ad.id)).map((ad) => ({
       ad,
       files: exportableAssets(ad, unlocked).map((asset) => ({
         key: asset.storageKey,
