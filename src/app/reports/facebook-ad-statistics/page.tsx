@@ -133,7 +133,7 @@ export default async function AdReportPage() {
             try the free <Link href="/tools" className="text-[var(--studio-gold)] hover:underline">ad tools</Link>.
           </p>
         </article>
-        <div className="py-16"><CtaBlock title="Get 10 free ads for your business" campaign="ad-report" content="end" label="Make yours free" /></div>
+        <div className="py-16"><CtaBlock title="Get free ads for your business" campaign="ad-report" content="end" label="Make yours free" /></div>
       </main>
       <StudioFooter />
     </StudioRoot>

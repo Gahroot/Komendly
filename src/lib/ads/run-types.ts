@@ -66,6 +66,8 @@ export interface RunView {
   bonus: RunBonusView | null;
   /** Ready main ads past the free pack limit (locked until the workspace pays); optional for older clients. */
   lockedAds?: number;
+  /** Free main ads on an unpaid trial (3, or 6 when referred); null/undefined = no limit. */
+  freeAds?: number | null;
   /** Bonus ads are still expected for this settled run: keep polling. */
   bonusPending: boolean;
   /** Ads -> Ozzy Studio bridge (flag studio_bridge, default off). */

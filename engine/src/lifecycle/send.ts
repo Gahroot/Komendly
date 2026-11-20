@@ -9,7 +9,7 @@ import { founderFrom, founderNote } from "../../../src/lib/ads/lifecycle/founder
 import { loadLifecycleCandidates } from "../../../src/lib/ads/lifecycle/load";
 import { BEST_AD_KINDS, dueEmail, isFreshKind, offerWindowStart, rankAdsForEmail, isStartKind, isVerifyKind, refreshedPackAllowed, type LifecycleCandidate, type LifecycleKind } from "../../../src/lib/ads/lifecycle/select";
 import { renderLifecycleHtml, renderLifecycleText, unsubscribeHeaders, type LifecycleEmailInput } from "../../../src/lib/ads/lifecycle/template";
-import { bonusLabel, parseBonus } from "../../../src/lib/ads/bonus-access";
+import { bonusLabel, freeTrialAdsFor, isReplacedAd, parseBonus } from "../../../src/lib/ads/bonus-access";
 import { makeReferralCode } from "../../../src/lib/ads/referral-code";
 import { addPreview } from "../jobs/bonus";
 import { nurtureState, startNurtureRun, type NurtureState } from "../jobs/nurture";
@@ -89,9 +89,10 @@ function trackBlock(b: LinkBlock, link: (path: string) => string): NonNullable<L
 
 const strOf = (v: unknown): string | null => (typeof v === "string" && v.trim() ? v.trim() : null);
 
-export async function brandContext(db: Db, runId: string | null) {
-  if (!runId) return { brandName: null, offer: null, audience: null, agencyLike: false, lockedLabel: null as string | null, pains: [] as string[], headlines: [] as string[], thumbs: [] as Array<{ assetId: string; alt: string; expiresAt: Date | null }> };
-  const run = await db.adRun.findUnique({ where: { id: runId }, select: { extraction: true, brandProfile: { select: { name: true, mainOffer: true, audience: true, pains: true } } } });
+/** `unlocked` = the workspace has paid (plan or pack): no free-pack limit. */
+export async function brandContext(db: Db, runId: string | null, unlocked = false) {
+  if (!runId) return { brandName: null, offer: null, audience: null, agencyLike: false, lockedLabel: null as string | null, freeCount: null as number | null, pains: [] as string[], headlines: [] as string[], thumbs: [] as Array<{ assetId: string; alt: string; expiresAt: Date | null }> };
+  const run = await db.adRun.findUnique({ where: { id: runId }, select: { isTrial: true, workspaceId: true, extraction: true, brandProfile: { select: { name: true, mainOffer: true, audience: true, pains: true } } } });
   const ex = (run?.extraction && typeof run.extraction === "object" ? run.extraction : {}) as Record<string, unknown>;
   const bp = run?.brandProfile;
   const painsRaw = Array.isArray(bp?.pains) && bp.pains.length ? bp.pains : Array.isArray(ex.pains) ? ex.pains : [];
@@ -102,13 +103,20 @@ export async function brandContext(db: Db, runId: string | null) {
     select: { index: true, headline: true, kind: true, visualBrief: true, qcReport: true, qcAttempts: true, assets: { where: { mime: { startsWith: "image/" } }, orderBy: { createdAt: "asc" }, take: 1, select: { id: true, expiresAt: true } } },
   });
   // Locked bonus ads are extras: never in the free count, headlines or thumbnails; mentioned separately.
+  // Free pack limit (bonus-access.ts trialLockedAdIds): an unpaid trial shows its first FREE_TRIAL_ADS main ads; the rest are locked.
   const locked = ads.filter((a) => parseBonus(a.visualBrief));
-  const free = ads.filter((a) => !parseBonus(a.visualBrief));
+  const main = ads.filter((a) => !parseBonus(a.visualBrief) && !isReplacedAd(a.qcReport));
+  const limit = run?.isTrial && !unlocked;
+  const referral = limit && run ? await db.adsReferral.findUnique({ where: { referredWorkspaceId: run.workspaceId }, select: { status: true } }) : null;
+  const free = limit ? main.slice(0, freeTrialAdsFor(!!referral && referral.status !== "rejected")) : main;
+  const packLocked = main.length - free.length;
   const stories = locked.filter((a) => parseBonus(a.visualBrief)?.bonusKind === "story").length;
   const fresh = locked.filter((a) => parseBonus(a.visualBrief)?.bonusKind === "fresh").length;
-  const lockedLabel = locked.length ? bonusLabel({ stories, fresh, videos: locked.length - stories - fresh }) : null;
+  const bonus = locked.length ? bonusLabel({ stories, fresh, videos: locked.length - stories - fresh }) : "";
+  const lockedLabel = [packLocked ? `${packLocked} more ${packLocked === 1 ? "ad" : "ads"}` : "", bonus].filter(Boolean).join(" + ") || null;
   return {
     lockedLabel,
+    freeCount: limit ? free.length : null,
     brandName: strOf(bp?.name) ?? strOf(ex.brandName) ?? strOf(ex.name),
     offer: strOf(bp?.mainOffer) ?? strOf(ex.mainOffer),
     audience: strOf(bp?.audience) ?? strOf(ex.audience),
@@ -138,7 +146,7 @@ export async function sendLifecycleEmail(deps: LifecycleDeps, c: LifecycleCandid
   const base = appUrl(env);
   const runId = opts.runId ?? c.trialRunId;
   const verify = isVerifyKind(kind);
-  const brand = await brandContext(deps.db, verify ? null : runId);
+  const brand = await brandContext(deps.db, verify ? null : runId, c.paid);
   if (kind === "founder_note") return sendFounderNote(deps, c, { runId, brandName: brand.brandName, dryRun: opts.dryRun });
   const verification = verify && !opts.dryRun ? await issueVerification(deps.db, c.userId, now) : null;
   const fresh = isFreshKind(kind) && opts.nurture?.state === "ready" ? opts.nurture : null;
@@ -155,7 +163,7 @@ export async function sendLifecycleEmail(deps: LifecycleDeps, c: LifecycleCandid
     audience: brand.audience,
     pains: brand.pains,
     headlines: brand.headlines,
-    readyAdCount: kind === "refreshed_pack" ? brand.headlines.length : c.readyAdCount,
+    readyAdCount: kind === "refreshed_pack" ? brand.headlines.length : (brand.freeCount ?? c.readyAdCount),
     lockedLabel: kind === "ads_ready" || kind === "refreshed_pack" || kind === "how_to_run" ? brand.lockedLabel : null,
     offerExpiresAt: launchOfferExpiresAt(offerWindowStart(c), LAUNCH_QUARTER),
     // Locked bonus ads exist and stay locked (day7 only reaches unpaid users who bought no pack: `paid` covers both).

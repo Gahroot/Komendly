@@ -16,7 +16,7 @@ import { LaunchQuarterCard, trackOfferView } from "./launch-quarter-card";
  * Peak intent: right after the first download of a finished trial, once per run and max one modal per session.
  * With ads past the free pack limit it leads with the $9 unlock (autopilot plan funnel fix 2), even after the Launch window.
  */
-export function OfferDownloadModal({ runId, bonus, offerOpen, remainingMs, lockedAds = 0, unlockAvailable = false }: { runId: string; bonus: BonusSummary | null; offerOpen: boolean; remainingMs: number | null; lockedAds?: number; unlockAvailable?: boolean }) {
+export function OfferDownloadModal({ runId, bonus, offerOpen, remainingMs, lockedAds = 0, unlockAvailable = false, freeAds = null }: { runId: string; bonus: BonusSummary | null; offerOpen: boolean; remainingMs: number | null; lockedAds?: number; unlockAvailable?: boolean; freeAds?: number | null }) {
   const [open, setOpen] = useState(false);
   const unlockFirst = lockedAds > 0 && unlockAvailable;
   useEffect(() => {
@@ -48,7 +48,7 @@ export function OfferDownloadModal({ runId, bonus, offerOpen, remainingMs, locke
       <DialogContent className="max-h-[95dvh] overflow-y-auto rounded-3xl sm:max-w-md">
         {unlockFirst ? (
           <>
-            <DialogTitle>Downloaded your {FREE_TRIAL_ADS} free ads. {lockedAds} more {lockedAds === 1 ? "is" : "are"} ready.</DialogTitle>
+            <DialogTitle>Downloaded your {freeAds ?? FREE_TRIAL_ADS} free ads. {lockedAds} more {lockedAds === 1 ? "is" : "are"} ready.</DialogTitle>
             <DialogDescription>
               Unlock the other {lockedAds} for ${UNLOCK_PACK.priceCents / 100}, once. No subscription. You also get {UNLOCK_PACK.credits} credits for brand-new ads.
             </DialogDescription>
@@ -57,12 +57,12 @@ export function OfferDownloadModal({ runId, bonus, offerOpen, remainingMs, locke
             </div>
             {offerOpen ? (
               <>
-                <p className="text-sm text-muted-foreground">Or let Ozzy run it: he puts your ads live in your own Meta account and replaces the losers every week.</p>
+                <p className="text-sm text-muted-foreground">Or let Ozzy run it: your ads go live in your own Meta account and the losers get replaced every week.</p>
                 <LaunchQuarterCard placement="post_download" bonus={bonus} remainingMs={remainingMs} runId={runId} />
               </>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Or let Ozzy run it: he puts your ads live in your own Meta account and replaces the losers every week.{" "}
+                Or let Ozzy run it: your ads go live in your own Meta account and the losers get replaced every week.{" "}
                 <Link href="/ads/billing" className="font-medium text-foreground underline-offset-4 hover:underline">See Ozzy Ad Department</Link>
               </p>
             )}

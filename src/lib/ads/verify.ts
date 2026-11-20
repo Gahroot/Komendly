@@ -41,7 +41,7 @@ export function verificationEmail(name: string | null, code: string, link: strin
   const hi = `Hi${name ? ` ${name}` : " there"},`;
   return {
     subject: `Your Komendly code: ${code}`,
-    text: `${hi}\n\nYour Komendly code is: ${code}\n\nType it on the "Check your inbox" screen, or click this link to confirm your email:\n${link}\n\nOnce confirmed, your free ads unlock: 10 static ads plus 1 animated ad, made from your website. No card needed.\n\nThe code and link expire in 24 hours. If you didn't sign up, ignore this email.`,
+    text: `${hi}\n\nYour Komendly code is: ${code}\n\nType it on the "Check your inbox" screen, or click this link to confirm your email:\n${link}\n\nYour free ads work either way: 3 ads made from your website. No card needed.\n\nThe code and link expire in 24 hours. If you didn't sign up, ignore this email.`,
     html: verificationEmailHtml(name, link, baseUrl, undefined, code),
   };
 }
@@ -63,7 +63,7 @@ export function verificationEmailHtml(name: string | null, link: string, baseUrl
     paragraphs: [
       `Hi${name ? ` ${name}` : " there"},`,
       ...(code ? [`Type ${code} on the "Check your inbox" screen, or use the button below.`] : []),
-      "Confirm your email and your free trial is unlocked: 10 static ads plus 1 animated ad, made from your website. No card needed.",
+      "Confirm your email to keep your account safe. Your free ads work either way. No card needed.",
     ],
     button: { label: "Confirm my email", href: link },
     note: code ? "The code and link expire in 24 hours. If you didn't sign up, you can safely ignore this email." : "This link expires in 24 hours. If you didn't sign up, you can safely ignore this email.",

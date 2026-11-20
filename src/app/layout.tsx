@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
 const siteConfig = {
   name: "Komendly",
   tagline: "Your website in. Ready-to-run ads out.",
-  description: "Paste your website and Ozzy, Komendly's AI ad wizard, builds on-brand, export-ready ads for every stage of awareness. 10 static ads + 1 animated ad free. No card required.",
+  description: "Paste your website and Ozzy, Komendly's AI ad wizard, builds on-brand, export-ready ads for every stage of awareness. 3 free ads, no card required.",
   url: "https://www.komendly.com",
   twitterHandle: "@komendly",
 };

@@ -30,8 +30,8 @@ export function StudioHero({ signedIn, variant }: { signedIn: boolean; variant: 
       </StudioParallax>
       <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center px-4 pt-24 text-center sm:px-6 sm:pt-32">
         <p className="studio-rise inline-flex items-center gap-2 rounded-full border border-border bg-[oklch(0.2_0.07_295/0.6)] px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)] backdrop-blur">
-          <span className="sm:hidden">10 free ads · no card</span>
-          <span className="max-sm:hidden">Free: 10 static ads + 1 animated ad · no card</span>
+          <span className="sm:hidden">3 free ads · no card</span>
+          <span className="max-sm:hidden">Free: 3 ads from your website · no card</span>
         </p>
         <h1 id="hero-title" className="studio-rise font-display mt-5 text-balance text-[2.6rem] font-medium leading-[1.02] tracking-[-0.025em] sm:text-6xl md:text-7xl" style={{ ["--rise-delay" as string]: "80ms" }}>
           {copy.title}

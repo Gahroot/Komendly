@@ -30,7 +30,7 @@ function LockedAdCard({ ad }: { ad: AdView }) {
 }
 
 /** Trial ads past the free pack limit: blurred, with the $9 unlock and the Ad Department offer. Renders nothing when none are locked. */
-export function LockedPackSection({ runId, ads, unlockAvailable }: { runId: string; ads: AdView[]; unlockAvailable: boolean }) {
+export function LockedPackSection({ runId, ads, unlockAvailable, freeAds }: { runId: string; ads: AdView[]; unlockAvailable: boolean; freeAds?: number | null }) {
   const ready = ads.filter((a) => a.status === "ready");
   useEffect(() => {
     if (ready.length === 0 || !firstInSession(`locked_pack_shown:${runId}`)) return;
@@ -48,10 +48,10 @@ export function LockedPackSection({ runId, ads, unlockAvailable }: { runId: stri
             <Lock className="size-4 text-primary" aria-hidden /> {n} more {n === 1 ? "ad is" : "ads are"} ready
           </h3>
           <p className="text-sm text-muted-foreground">
-            Your free pack includes {FREE_TRIAL_ADS} ads. {unlockAvailable ? `Unlock the other ${n} for ${usd(UNLOCK_PACK.priceCents)}, once. No subscription.` : "Any plan unlocks the rest."}
+            Your free pack includes {freeAds ?? FREE_TRIAL_ADS} ads. {unlockAvailable ? `Unlock the other ${n} for ${usd(UNLOCK_PACK.priceCents)}, once. No subscription.` : "Any plan unlocks the rest."}
           </p>
           <p className="text-sm text-muted-foreground">
-            Or let Ozzy run it: he puts your ads live in your own Meta account and replaces the losers every week. {usd(offerFirstPaymentCents(LAUNCH_QUARTER))} the first month.{" "}
+            Or let Ozzy run it: your ads go live in your own Meta account and the losers get replaced every week. {usd(offerFirstPaymentCents(LAUNCH_QUARTER))} the first month.{" "}
             <Link href="/ads/billing" className="font-medium text-foreground underline-offset-4 hover:underline" onClick={() => postOfferEvent("offer_clicked", { placement: "locked_pack", runId, offer: "plans" })}>See Ozzy Ad Department</Link>
           </p>
         </div>

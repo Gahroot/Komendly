@@ -4,8 +4,8 @@ import { CorrectionsSchema, MAX_EXTRACT_RETRIES, type Ratio } from "./contracts"
 import { trackAdsEvent } from "./events";
 import { extractRetriesUsed, parseExtraction } from "./run-confirm";
 import type { AdView, RunView } from "./run-types";
-import { isReplacedAd, parseBonus, PREVIEW_RATIO, shouldAwaitBonus, summarizeBonus, trialLockedAdIds } from "./bonus-access";
-import { isBonusUnlockedById, trialBonusEnabled } from "./bonus-unlock";
+import { freeTrialAdsFor, isReplacedAd, parseBonus, PREVIEW_RATIO, shouldAwaitBonus, summarizeBonus, trialLockedAdIds } from "./bonus-access";
+import { isBonusUnlockedById, isReferredWorkspace, trialBonusEnabled } from "./bonus-unlock";
 import { studioBridgeEnabled } from "@/lib/studio/bridge-server";
 
 function assetUrls(id: string) {
@@ -65,7 +65,8 @@ export async function loadRunView(runId: string): Promise<RunView | null> {
   const visible = run.ads.filter((a) => !isReplacedAd(a.qcReport));
   const hasBonusRows = visible.some((a) => parseBonus(a.visualBrief));
   const unlocked = hasBonusRows || run.isTrial ? await isBonusUnlockedById(run.workspaceId) : false;
-  const packLocked = trialLockedAdIds(run, visible, unlocked);
+  const freeAds = run.isTrial && !unlocked ? freeTrialAdsFor(await isReferredWorkspace(run.workspaceId)) : null;
+  const packLocked = freeAds === null ? new Set<string>() : trialLockedAdIds(run, visible, unlocked, freeAds);
   const ads = visible.map((a) => adView(a, unlocked, packLocked.has(a.id)));
   const bonusEnabled = trialBonusEnabled();
   const settled = ["completed", "partial"].includes(run.status);
@@ -104,6 +105,7 @@ export async function loadRunView(runId: string): Promise<RunView | null> {
     ads,
     serverNow: new Date().toISOString(),
     bonus: summarizeBonus(visible, unlocked),
+    freeAds,
     lockedAds: ads.filter((a) => a.locked && !a.bonusKind && a.status === "ready").length,
     bonusPending:
       settled && shouldAwaitBonus({ enabled: bonusEnabled, isTrial: run.isTrial, completedAt: run.completedAt, bonusReadyLogged, pendingBonusAds, now: new Date() }),

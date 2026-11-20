@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   title: "Free Ad Pack: 10 ready-to-run ads from your website",
   description: "Paste your website. Get 10 ready-to-run ads plus an animated video ad, free, in minutes. No card, no designer, no prompts.",
   alternates: { canonical: "/free-ads" },
-  openGraph: { title: "Free Ad Pack: 10 ads from your website", description: "10 ready-to-run ads + 1 animated ad, free. No card.", url: "/free-ads" },
+  openGraph: { title: "Free Ad Pack: ads from your website", description: "A pack of ready-to-run ads from your website. 3 are free, no card.", url: "/free-ads" },
 };
 
 // Verbatim from Trustpilot (shared with Max's OK).

@@ -11,7 +11,7 @@ export function StudioClosing() {
         <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-xl space-y-3">
             <h2 id="closing-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-4xl">Start free, upgrade when the ads work</h2>
-            <p className="text-muted-foreground">Free trial: 10 static ads + 1 animated ad. Plans add monthly credits, every ratio (4:5, 1:1, 9:16) and all five awareness levels, from $49/month.</p>
+            <p className="text-muted-foreground">Free trial: 3 ads from your website. Plans add monthly credits, every ratio (4:5, 1:1, 9:16) and all five awareness levels, from $49/month.</p>
             <p className="text-xs text-muted-foreground">{ADS_GUARANTEE}</p>
           </div>
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-end">

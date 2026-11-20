@@ -63,7 +63,7 @@ export default async function ToolPage({ params }: PageProps) {
           {also && <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">{also}</p>}
         </header>
         <section className="mx-auto mt-10 max-w-2xl" aria-label={t.name}>
-          {on ? <ToolRunner slug={t.slug} /> : <p className="rounded-xl border border-border p-6 text-center text-muted-foreground">This tool is taking a short break. Back soon! Meanwhile, Ozzy can still make you 10 free ads from your website.</p>}
+          {on ? <ToolRunner slug={t.slug} /> : <p className="rounded-xl border border-border p-6 text-center text-muted-foreground">This tool is taking a short break. Back soon! Meanwhile, Ozzy can still make you free ads from your website.</p>}
         </section>
         {t.related?.length ? (
           <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-muted-foreground">
@@ -96,7 +96,7 @@ export default async function ToolPage({ params }: PageProps) {
             <li><Link href="/ad-examples" className="inline-flex rounded-full px-3.5 py-1.5 text-sm text-[var(--studio-gold)] hover:underline">Ad examples by industry</Link></li>
           </ul>
         </nav>
-        <div className="py-16"><CtaBlock title="Get 10 free ads from your website" campaign={t.slug} content="end" label="Make my free ads" href={toolCtaHref(t.slug, "end")} /></div>
+        <div className="py-16"><CtaBlock title="Get free ads from your website" campaign={t.slug} content="end" label="Make my free ads" href={toolCtaHref(t.slug, "end")} /></div>
       </main>
       <StudioFooter />
     </StudioRoot>

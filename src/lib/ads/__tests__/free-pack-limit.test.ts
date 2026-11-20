@@ -23,3 +23,15 @@ describe("free pack limit", () => {
     expect(isReplacedAd(null)).toBe(false);
   });
 });
+
+describe("referred free pack", () => {
+  it("referred friends keep all 20 ads free; everyone else gets 3", async () => {
+    const { freeTrialAdsFor, REFERRED_FREE_TRIAL_ADS } = await import("../bonus-access");
+    const { REFERRED_TRIAL_STATIC } = await import("../referrals");
+    expect(REFERRED_FREE_TRIAL_ADS).toBe(REFERRED_TRIAL_STATIC);
+    expect(freeTrialAdsFor(true)).toBe(20);
+    expect(freeTrialAdsFor(false)).toBe(3);
+    const ads = Array.from({ length: 20 }, (_, i) => ({ id: `a${i}`, index: i, status: "ready", visualBrief: {} }));
+    expect(trialLockedAdIds({ isTrial: true }, ads, false, freeTrialAdsFor(true)).size).toBe(0);
+  });
+});

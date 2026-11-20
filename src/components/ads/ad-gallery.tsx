@@ -88,7 +88,7 @@ export function AdGallery({ run, offerOpen = false, remainingMs = null, unlockPa
           </div>
         </div>
       ))}
-      {offerReady && <LockedPackSection runId={run.id} ads={packLocked} unlockAvailable={unlockAvailable} />}
+      {offerReady && <LockedPackSection runId={run.id} ads={packLocked} unlockAvailable={unlockAvailable} freeAds={run.freeAds} />}
       <BonusSection runId={run.id} ads={bonusAds} bonus={bonus} ratio={ratio} offerOpen={offerOpen} remainingMs={remainingMs} unlockPack={unlockPack} offerReady={offerReady} />
       {!done && missing > 0 && (
         <div className="space-y-4">

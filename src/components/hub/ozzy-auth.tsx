@@ -48,7 +48,7 @@ export function OzzyAuth({ mode, referrerName, freeStatic = 10, defaultEmail, gi
 
   const q = params.get("next") ? `?next=${encodeURIComponent(next)}` : "";
   const other = isSignup ? `/login${q}` : `/register${q}`;
-  const title = isSignup ? (site ? "Where should we send your free ads?" : giftFor ? `Your 10 free ads for ${giftFor}` : referrerName ? `${referrerName} sent you free ads` : "Meet Ozzy") : "Welcome back";
+  const title = isSignup ? (site ? "Where should we send your free ads?" : giftFor ? `Your free ads for ${giftFor}` : referrerName ? `${referrerName} sent you free ads` : "Meet Ozzy") : "Welcome back";
   const description = isSignup
     ? site
       ? `${freeStatic} ads + 1 video ad for ${site}. We'll email you when they're ready. No card needed.`

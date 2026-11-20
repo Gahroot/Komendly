@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Komendly — Website to ads",
     short_name: "Komendly",
     description:
-      "Paste your website and get ready-to-run static and animated ads. Start with 10 free ads, no card needed.",
+      "Paste your website and get ready-to-run static and animated ads. Start with 3 free ads, no card needed.",
     start_url: "/",
     scope: "/",
     display: "standalone",

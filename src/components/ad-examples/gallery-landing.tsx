@@ -169,7 +169,7 @@ export async function GalleryLanding({ pageKey }: { pageKey: string }) {
         </section>
 
         <div className="px-4 py-20 sm:px-6">
-          <CtaBlock title="Your ads, made from your website" campaign={page.key} content="end" label="Get 10 free ads" href={ctaHref(page, "end")} />
+          <CtaBlock title="Your ads, made from your website" campaign={page.key} content="end" label="Get free ads" href={ctaHref(page, "end")} />
         </div>
       </main>
       <StudioFooter />

@@ -15,7 +15,7 @@ const STAGES: Stage[] = [
   { key: "read", ms: 3600, title: "Reads your site", text: "Audience, offer, proof and brand kit, straight from your own pages", line: "Reading tidybooks.app like a strategist…", form: "explorer", expression: "focused", motion: "scan" },
   { key: "review", ms: 3600, title: "Finds their words", text: "The pains and phrases your customers already use, for you to check", line: "Found it. That's exactly how their customers talk", form: "classic", expression: "excited", motion: "nod" },
   { key: "build", ms: 3800, title: "Crafts the ad", text: "Their words become your headline, on brand and in every size", line: "Turning their words into your headline…", form: "creator", expression: "focused", motion: "type" },
-  { key: "ready", ms: 4200, title: "Ready to run", text: "10 static ads and an animated one, export-ready in minutes", line: "Ta-da! One down, nine more on the way", form: "joyful", expression: "happy", motion: "celebrate" },
+  { key: "ready", ms: 4200, title: "Ready to run", text: "A pack of ads in your brand, export-ready in minutes", line: "Ta-da! One down, more on the way", form: "joyful", expression: "happy", motion: "celebrate" },
 ];
 const QUOTE = "I became a freelancer to design, not to chase receipts at 11pm.";
 const MOSAIC = (() => {

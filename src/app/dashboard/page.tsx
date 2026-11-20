@@ -31,7 +31,7 @@ export default async function HubHome() {
         <section aria-labelledby="free-pack" className={`${card} mt-16 border-[var(--studio-gold)]/40 p-6 sm:p-8`}>
           <p className="font-mono text-xs font-bold uppercase tracking-wider text-[var(--studio-gold)]">Your free ad pack is waiting</p>
           <h2 id="free-pack" className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">Drop in your website. Ozzy makes your ads.</h2>
-          <p className="mt-1 text-muted-foreground">10 ads + 1 animated ad in your brand, free. The first ones show up in a few minutes.</p>
+          <p className="mt-1 text-muted-foreground">A pack of ads in your brand, 3 of them free. The first ones show up in a few minutes.</p>
           <div className="mt-5 max-w-2xl"><AdsUrlForm signedIn cta="Make my free ads" /></div>
         </section>
       ) : null}

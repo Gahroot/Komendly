@@ -50,7 +50,7 @@ export function FreeAdsDemo() {
           loop
           playsInline
           preload="none"
-          aria-label="20-second demo: paste your website and Ozzy builds 10 static ads and an animated ad in every size"
+          aria-label="20-second demo: paste your website and Ozzy builds a pack of ads in every size"
         />
         <button
           type="button"

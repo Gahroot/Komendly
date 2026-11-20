@@ -111,7 +111,7 @@ export function RunScreen({ initial }: { initial: RunView }) {
         {showEarlyOffer && <OfferNudge runId={run.id} ready={readyMain} bonus={run.bonus ?? null} remainingMs={offer.remainingMs} onDismiss={dismissLaunch} valueLine={valueLine} />}
         {offerReady && stage === "unlock_pack" && run.bonus && <UnlockPackCard runId={run.id} bonus={run.bonus} />}
         {offerReady && done && trialUnpaid && stage !== "unlock_pack" && <TrialUpsell runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} onDecline={offerOpen ? dismissLaunch : undefined} valueLine={valueLine} />}
-        {offerReady && done && trialUnpaid && <OfferDownloadModal runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} lockedAds={run.lockedAds ?? 0} unlockAvailable={offer.unlockPack} />}
+        {offerReady && done && trialUnpaid && <OfferDownloadModal runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} lockedAds={run.lockedAds ?? 0} unlockAvailable={offer.unlockPack} freeAds={run.freeAds} />}
         {done && ws?.isPaid && <GenerateMoreForm url={run.url} brandProfileId={run.brandProfileId} />}
         {bridgeOn && <StudioBridgeCard placement="run_card" data={{ runId: run.id, domain, bestAdId: bridgeAd?.id ?? null, hasLogo: Boolean(run.logoUrl), freeVideosLeft: run.studio?.freeVideosLeft ?? 0 }} />}
         {done && run.ads.length > 0 && <GiftPackCard />}

@@ -13,7 +13,7 @@ type State = "checking" | "ok" | "expired" | "invalid";
 
 const COPY: Record<State, { title: string; text: string }> = {
   checking: { title: "Checking your link…", text: "Ozzy is reading the magic words." },
-  ok: { title: "You're confirmed!", text: "Your free ads are unlocked: 10 static ads and an animated one." },
+  ok: { title: "You're confirmed!", text: "Thanks. Your account is confirmed." },
   expired: { title: "That link has expired", text: "Links last 24 hours. Grab a fresh one and you're straight back in." },
   invalid: { title: "That link didn't work", text: "It may have been used already, or copied only partly. If you're already confirmed, just carry on." },
 };

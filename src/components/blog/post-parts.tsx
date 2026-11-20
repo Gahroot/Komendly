@@ -157,13 +157,13 @@ export function SourcesList({ sources }: { sources: PostSource[] }) {
 
 const CTA_COPY: Record<PostCta, { title: string; body: string; button: string }> = {
   ads: {
-    title: 'Get 10 free ads from your website',
+    title: 'Get free ads from your website',
     body: 'Paste your URL and Ozzy builds 10 on-brand static ads plus 1 animated ad, ready to run. No card required.',
     button: 'Make my free ads',
   },
   motion: {
     title: 'Make a free animated video ad',
-    body: 'Paste your URL and Ozzy turns your website into an animated video ad, plus 10 static ads. Free, no card required.',
+    body: 'Paste your URL and Ozzy turns your website into a pack of ads. 3 are free, no card required.',
     button: 'Make my free video ad',
   },
 }

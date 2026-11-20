@@ -66,7 +66,7 @@ export function softwareApplicationJsonLd(): JsonLd {
         name: 'Free trial',
         price: '0',
         priceCurrency: 'USD',
-        description: '10 static ads + 1 animated ad. No card required.',
+        description: '3 free ads from your website. No card required.',
         url: SITE_URL,
       },
       ...PLANS_FOR_SALE.map((p) => ({

@@ -12,7 +12,7 @@ const usd = (cents: number) => `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`
 export function productFacts(): string[] {
   return [
     'Komendly turns a website URL into on-brand, ready-to-run ad creatives (static and animated) via Ozzy, its AI ad wizard.',
-    'Free trial: 10 static ads + 1 animated ad, no credit card required (one trial per website, device and network; email verification required).',
+    'Free trial: 3 free ads from your website, no credit card required; the rest of the pack unlocks with any plan or a $9 one-time unlock (one trial per website, device and network).',
     'Ad sizes: 4:5, 1:1 and 9:16. Ads cover all 5 awareness stages.',
     '1 credit = 1 static ad in one size; an animated ad costs 5 credits.',
     `Monthly plans: ${PLANS_FOR_SALE.map((p) => `${p.name} ${usd(p.priceCents)}/month (${p.usageMultiple ? `${planUsageLine(p)}; 6 fresh ads every Monday; Ozzy Ad Coach${p.key === 'agency' ? '; 3 testimonial videos a month' : ''}` : `${p.monthlyCredits} credits`})`).join(', ')}.`,
@@ -62,7 +62,7 @@ export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryL
   return [
     '# Komendly',
     '',
-    '> Komendly turns a website into on-brand, ready-to-run static and animated ads with Ozzy, its AI ad wizard. Try it free: 10 static ads + 1 animated ad, no card required.',
+    '> Komendly turns a website into on-brand, ready-to-run static and animated ads with Ozzy, its AI ad wizard. Try it free: 3 ads from your website, no card required.',
     '',
     '## Product facts',
     '',

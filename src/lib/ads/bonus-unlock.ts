@@ -2,7 +2,7 @@
 import type { AdsWorkspace } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { isPaidWorkspace } from "./billing-gates";
-import { hasBonusAccess, trialLockedAdIds } from "./bonus-access";
+import { freeTrialAdsFor, hasBonusAccess, trialLockedAdIds } from "./bonus-access";
 
 type WorkspacePaidFields = Pick<AdsWorkspace, "id" | "adsPlan" | "subscriptionStatus" | "suspendedAt">;
 
@@ -27,6 +27,13 @@ export function trialBonusEnabled(env: Record<string, string | undefined> = proc
 /** Main ads of one trial run past the free limit (empty when the workspace has unlocked, or the run isn't a trial). */
 export async function trialLockedIdsForRun(runId: string, unlocked: boolean): Promise<Set<string>> {
   if (unlocked) return new Set();
-  const run = await prisma.adRun.findUnique({ where: { id: runId }, select: { isTrial: true, ads: { select: { id: true, index: true, status: true, visualBrief: true, qcReport: true } } } });
-  return run ? trialLockedAdIds(run, run.ads, false) : new Set();
+  const run = await prisma.adRun.findUnique({ where: { id: runId }, select: { isTrial: true, workspaceId: true, ads: { select: { id: true, index: true, status: true, visualBrief: true, qcReport: true } } } });
+  if (!run?.isTrial) return new Set();
+  return trialLockedAdIds(run, run.ads, false, freeTrialAdsFor(await isReferredWorkspace(run.workspaceId)));
+}
+
+/** Non-rejected referral (same rule as referrals.ts hasActiveReferral; kept here to avoid an import cycle). */
+export async function isReferredWorkspace(workspaceId: string): Promise<boolean> {
+  const r = await prisma.adsReferral.findUnique({ where: { referredWorkspaceId: workspaceId }, select: { status: true } });
+  return !!r && r.status !== "rejected";
 }

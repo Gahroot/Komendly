@@ -101,6 +101,9 @@ export function shouldAwaitBonus(args: {
 // (any plan, the Founding first month, or the $9 "Unlock this pack"). Like bonus ads, derived at read time, never stored.
 
 export const FREE_TRIAL_ADS = 3;
+/** Referred friends (Give 10, get 10) keep their whole 20-ad pack free: the referral hook. Matches referrals.ts REFERRED_TRIAL_STATIC. */
+export const REFERRED_FREE_TRIAL_ADS = 20;
+export const freeTrialAdsFor = (referred: boolean) => (referred ? REFERRED_FREE_TRIAL_ADS : FREE_TRIAL_ADS);
 
 export type LockCandidate = { id: string; index: number; status: string; visualBrief: unknown; qcReport?: unknown };
 

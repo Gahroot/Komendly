@@ -57,7 +57,7 @@ export default async function ToolsHub() {
           ))}
           </div>
         ) : (
-          <p className="mx-auto mt-12 max-w-xl text-center text-muted-foreground">Our free tools are taking a short break. Back soon! Meanwhile, Ozzy can still make you 10 free ads from your website.</p>
+          <p className="mx-auto mt-12 max-w-xl text-center text-muted-foreground">Our free tools are taking a short break. Back soon! Meanwhile, Ozzy can still make you free ads from your website.</p>
         )}
         <section className="mx-auto mt-16 max-w-3xl text-center" aria-labelledby="full-title">
           <h2 id="full-title" className="font-display text-2xl font-medium sm:text-3xl">Want finished ads, not just words?</h2>
