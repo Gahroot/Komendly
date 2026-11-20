@@ -37,3 +37,19 @@ cd /Users/groot/Komendly/docs/ai-assistants
 curl -s "https://registry.modelcontextprotocol.io/v0/servers?search=io.github.Gahroot/komendly"
 ```
 Bump `version` in `server.json` for every later publish.
+
+## Directory status (19 Nov 2026)
+| Directory | Status | Next step |
+|---|---|---|
+| Official MCP Registry (`io.github.Gahroot/komendly`) | Live, v1.0.0 | Bump `version` on changes |
+| Glama connector `io.github.Gahroot/komendly` | Listed (auto from registry) but **Unhealthy 0%**: its health check can't sign in | Sign in to Glama with GitHub (Gahroot), **claim ownership**, add a test profile under Admin → Test Profile |
+| punkpeye/awesome-remote-mcp-servers | PR #5297 open (labels endpoint-ok, has-connector; repo starred) | Wait for merge |
+| jaw9c/awesome-remote-mcp-servers | PR #2564 open | Wait for merge |
+| punkpeye/awesome-mcp-servers (installable list) | Not submitted: CI needs a Glama *server* listing for the repo (glama.ai/mcp/servers/Gahroot/Komendly is 404) | Add the repo on Glama ("Add Server", GitHub sign-in), then PR |
+| mcpservers.org | Submitted (free queue, review ≤2 weeks), Marketing, remote + OAuth | Wait for approval email (nolan@komendly.com) |
+| MCP Market (mcpmarket.com) | Not submitted (page crashed mid-form). Has a **Free Queue** option (4-6 weeks); default is $29 | Re-submit as Remote MCP + Free Queue |
+| mcp.so | Paid only now ($39) | Founder decision |
+| Smithery, Cursor directory, LobeHub | Not submitted: need GitHub sign-in in the browser | Sign in to GitHub in Safari first |
+| PulseMCP, GitHub MCP Registry | Copy the official registry automatically | Nothing |
+
+Server card (SEP-1649): `/.well-known/mcp/server-card.json` and `/.well-known/mcp.json`, built from the live probe (`src/lib/agent-keys/server-card.ts`).
