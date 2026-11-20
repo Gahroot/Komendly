@@ -11,8 +11,9 @@ tags:
   - "Facebook ads"
   - "AI ad creatives"
   - "Ad copywriting"
-published: false
-status: "draft"
+published: true
+status: "approved"
+approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "how to use chatgpt to create facebook ads"
 secondary_keywords:
   - "using chatgpt for facebook ads"
