@@ -47,9 +47,13 @@ Bump `version` in `server.json` for every later publish.
 | jaw9c/awesome-remote-mcp-servers | PR #2564 open | Wait for merge |
 | punkpeye/awesome-mcp-servers (installable list) | Not submitted: CI needs a Glama *server* listing for the repo (glama.ai/mcp/servers/Gahroot/Komendly is 404) | Add the repo on Glama ("Add Server", GitHub sign-in), then PR |
 | mcpservers.org | Submitted (free queue, review ≤2 weeks), Marketing, remote + OAuth | Wait for approval email (nolan@komendly.com) |
-| MCP Market (mcpmarket.com) | Not submitted (page crashed mid-form). Has a **Free Queue** option (4-6 weeks); default is $29 | Re-submit as Remote MCP + Free Queue |
+| MCP Market (mcpmarket.com) | Not submitted: the page crashed mid-form (nothing sent, nothing paid); retry blocked because the Mac screen locked (agent-desktop sees no windows while `CGSSessionScreenIsLocked`). Has a **Free Queue** option (4-6 weeks); default is $29 | Re-submit as Remote MCP + Free Queue once the screen is unlocked |
 | mcp.so | Paid only now ($39) | Founder decision |
 | Smithery, Cursor directory, LobeHub | Not submitted: need GitHub sign-in in the browser | Sign in to GitHub in Safari first |
 | PulseMCP, GitHub MCP Registry | Copy the official registry automatically | Nothing |
+
+Review status (last confirmed 19 Nov 2026 evening): Meta App Review "Review in progress" (submitted ~15:05 ET, up to ~20 days);
+Shopify App Store "Submitted, assigning a reviewer" (~18:45 ET). Neither is exposed via API; check the dashboards (Meta: App Review > Requests,
+Shopify Partners: Distribution) or email (nolan@prestyj.com).
 
 Server card (SEP-1649): `/.well-known/mcp/server-card.json` and `/.well-known/mcp.json`, built from the live probe (`src/lib/agent-keys/server-card.ts`).
