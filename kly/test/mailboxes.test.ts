@@ -227,7 +227,7 @@ describe("senderTick at scale", () => {
     const { senderTick } = await import("../src/sender");
     const row = (id: string, address: string, extra: Record<string, unknown> = {}) => ({ id, address, displayName: id, smtpHost: "smtp.x", smtpPort: 587, smtpUser: address, imapHost: "imap.x", imapPort: 993, secretRef: "db", secretEnc: sealSecret("pw-123456", KEY), provider: "maildoso", domain: address.split("@")[1], readyAt: new Date(NOW.getTime() - DAY), dailyCap: 15, warmupStartedAt: new Date(NOW.getTime() - 30 * DAY), paused: false, pausedReason: null, lastSentAt: null, lastPolledAt: null, imapLastUid: 0, ...extra });
     const rows = [row("A", "a@one.com"), row("B", "b@two.com", { readyAt: new Date(NOW.getTime() + DAY) }), row("C", "c@three.com")];
-    const lead = (id: string, extra: Record<string, unknown> = {}) => ({ id, email: `${id}@biz.com`, domain: "biz.com", status: "ad_made", step: 0, mailboxId: null, timezone: "America/New_York", armIds: [], businessName: "Biz", city: "Austin", niche: "roofing", claimToken: "c", unsubToken: "u", giftToken: null, adId: null, qualityNotes: null, lastSentAt: null, clickedAt: null, repliedAt: null, ...extra });
+    const lead = (id: string, extra: Record<string, unknown> = {}) => ({ id, email: `${id}@biz.com`, emailCheck: "valid", domain: "biz.com", status: "ad_made", step: 0, mailboxId: null, timezone: "America/New_York", armIds: [], businessName: "Biz", city: "Austin", niche: "roofing", claimToken: "c", unsubToken: "u", giftToken: null, adId: null, qualityNotes: null, lastSentAt: null, clickedAt: null, repliedAt: null, ...extra });
     const f = fakeDb({
       outboundMailbox: { findMany: () => rows },
       outboundSend: { groupBy: () => [] },

@@ -5,6 +5,7 @@ import type { Db } from "./db";
 import { errMsg, log } from "./log";
 import type { KlyAI } from "./ai";
 import { codexWeeklyPct } from "./ai";
+import { governorCheck } from "./governor";
 import { chooseArm, ensureSeeds, promoteAndRetire, refreshArmStats, seededRng, type Rng } from "./arms";
 import { autoscaleTick, currentVolume, warmupCapacity } from "./autoscale";
 import { syncConversions } from "./conversions";
@@ -34,7 +35,8 @@ export const TICK_MS = 60_000;
 export const IMAP_EVERY_MS = 5 * 60_000;
 export const CODEX_USAGE_EVERY_MS = 15 * 60_000;
 export const BUFFER_DAYS = 2;
-export const MAX_FIND_PER_TICK = 10;
+/** Nov 21: 10 -> 25 (verified-only sending needs ~10 stored leads per checker-"valid" address). */
+export const MAX_FIND_PER_TICK = 25;
 export const MAX_GIFTS_PER_TICK = 5;
 /** Cities tried per discovery tick (sources exhaust a niche|city quickly). */
 export const CITIES_PER_DISCOVERY = 3;
@@ -77,7 +79,7 @@ export function giftHeadroom(sendingLive: boolean, dailyVolume: number, unsent: 
 
 /** Standing lead stock (Nov 16): discovery keeps at least this many sendable leads waiting even while today's volume
  * is small, so the jump when rented mailboxes go live (and each +30% domain step) never waits on discovery. */
-export const LEAD_FLOOR = 2000;
+export const LEAD_FLOOR = 5000;
 /** Leads to discover now so the buffer holds ~BUFFER_DAYS of sending capacity (never below `floor`). */
 export function discoveryNeed(dailyVolume: number, buffered: number, perTick = MAX_FIND_PER_TICK, floor = 0): number {
   return Math.max(0, Math.min(perTick, Math.max(dailyVolume * BUFFER_DAYS, floor) - buffered));
@@ -113,6 +115,8 @@ export interface LoopState {
   /** Pooled SMTP transports + Maildoso sync timing (mailboxes.ts). */
   mail: MailRuntime;
   verify: VerifyRuntime;
+  /** Hard-rule governor stop reason this tick (null = sending allowed). */
+  governor?: string | null;
   /** Growth systems run by Kly (review_gifts, new_business): last cycle time + CT cursor. */
   growth: { lastAt: Partial<Record<KlySystem, number>>; newBiz: NewBizRuntime };
 }
@@ -160,7 +164,8 @@ export function qualifierFor(ai: KlyAI | null, niche: string): Qualifier | undef
 
 /** Leads waiting to be sent: qualified found leads + ready ads not yet emailed. */
 export async function leadBuffer(db: Db, voice = false): Promise<number> {
-  if (!voice) return db.outboundLead.count({ where: { step: 0, status: { in: ["found", "ad_made"] }, email: { not: "" } } });
+  // Only addresses that can still be mailed count: checker "valid", or not checked yet (catch_all/unknown never send).
+  if (!voice) return db.outboundLead.count({ where: { step: 0, status: { in: ["found", "ad_made"] }, email: { not: "" }, OR: [{ emailCheck: "valid" }, { emailCheck: null }, { emailCheck: "retry" }] } });
   return db.outboundLead.count({ where: { step: 0, status: { in: ["found", "ad_made"] }, OR: [{ email: { not: "" } }, { phone: { not: null }, voiceStatus: null }] } });
 }
 
@@ -297,7 +302,14 @@ export async function runTick(d: LoopDeps, state: LoopState): Promise<void> {
       if (r) log("info", `kly ${key}`, { ...r, sent });
     });
   }
-  if (sendingLive) {
+  // Hard-rule governors (complaint, 2% bounces, 2,000 sends with no positive reply): any stop pauses all cold sending.
+  // Fails closed: if the check itself errors, nothing is sent this tick.
+  let governed: string | null = sendingLive ? "governor check failed" : null;
+  if (sendingLive) await step(state, "governor", async () => {
+    governed = await governorCheck(db, d.alert, now, env);
+  });
+  state.governor = governed;
+  if (sendingLive && !governed) {
     await step(state, "sender", async () => {
       const sent = await senderTick({ db, provider, env, rng, dailyVolume: volume, followUpDays: s.followUpDays, maxSteps: s.maxSteps, explorationPct: s.explorationPct, now: clock, mailboxes: boxes, transport: state.mail.pool.transport, warmup: s, probeSecret: warmupSecretOf(env) || undefined });
       if (sent.some((x) => x.result.startsWith("sent") || x.result.startsWith("auto-paused"))) log("info", "kly sender", { sent });
@@ -305,7 +317,7 @@ export async function runTick(d: LoopDeps, state: LoopState): Promise<void> {
   }
   await step(state, "voice", async () => {
     const r = await voiceTick({
-      db, settings: s, killSwitch: kill, sendingLive, env, now: clock, alert: d.alert,
+      db, settings: s, killSwitch: kill, sendingLive: sendingLive && !governed, env, now: clock, alert: d.alert,
       // Requested on a call: bypasses dailyGiftCap, still stopped by the monthly budget / Codex weekly cap.
       startGift: async (ids) => (kill || stop ? 0 : startHookAds(db, { limit: ids.length, leadIds: ids, senderName: cfg.senderName, minScore: 0, rng, explorationPct: s.explorationPct, env })),
     });

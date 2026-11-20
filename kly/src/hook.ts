@@ -102,7 +102,8 @@ export async function assignGiftTiming(db: Db, o: TimingOpts): Promise<{ onClick
   if (t.all.length === 0) return res;
   const env = o.env ?? process.env;
   const leads = await db.outboundLead.findMany({
-    where: { status: "found", giftId: null, email: { not: "" }, OR: [{ score: null }, { score: { gte: o.minScore } }], NOT: { armIds: { hasSome: t.all } } },
+    // Only leads that can actually be emailed (checker "valid") get a gift page / AI spend.
+    where: { status: "found", giftId: null, email: { not: "" }, emailCheck: "valid", OR: [{ score: null }, { score: { gte: o.minScore } }], NOT: { armIds: { hasSome: t.all } } },
     orderBy: [{ score: "desc" }, { createdAt: "asc" }],
     take: o.limit,
   });
@@ -152,7 +153,7 @@ export async function startHookAds(db: Db, o: StartOpts): Promise<number> {
   const t = o.leadIds ? null : await timingArmIds(db);
   const leads = await db.outboundLead.findMany({
     // Phone-only leads (email "") get a gift only when they ask for it on a call (voice passes leadIds).
-    where: { status: "found", giftId: null, OR: [{ score: null }, { score: { gte: o.minScore } }], ...(o.leadIds ? { id: { in: o.leadIds } } : { email: { not: "" } }), ...(t?.all.length ? { armIds: { hasSome: t.prebuilt } } : {}) },
+    where: { status: "found", giftId: null, OR: [{ score: null }, { score: { gte: o.minScore } }], ...(o.leadIds ? { id: { in: o.leadIds } } : { email: { not: "" }, emailCheck: "valid" }), ...(t?.all.length ? { armIds: { hasSome: t.prebuilt } } : {}) },
     orderBy: [{ score: "desc" }, { createdAt: "asc" }],
     take: o.limit,
   });

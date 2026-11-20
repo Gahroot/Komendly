@@ -17,7 +17,7 @@ export async function killSwitchReason(db: Db, s: KlySettingsRow): Promise<strin
   return flag?.enabled ? null : 'feature flag "outbound" is off';
 }
 
-export type DecisionKind = "scale" | "arm_new" | "arm_retire" | "champion" | "segment" | "pause" | "resume" | "insight" | "budget" | "error";
+export type DecisionKind = "scale" | "arm_new" | "arm_retire" | "champion" | "segment" | "pause" | "resume" | "insight" | "budget" | "error" | "governor";
 
 export async function decide(db: Db, kind: DecisionKind, summary: string, data: Record<string, unknown> = {}): Promise<void> {
   await db.klyDecision.create({ data: { kind, summary: summary.slice(0, 1000), data: data as Prisma.InputJsonValue } });

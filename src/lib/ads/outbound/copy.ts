@@ -28,7 +28,8 @@ export interface OutboundEmail {
   text: string;
 }
 
-const BANNED = /\b(guarantee|guaranteed|results|roi|revenue|leads? (?:will|guaranteed)|customer of ours|we work with|partner(?!s? program)|award|#1|best in|free forever|limited time|act now|urgent|last chance|congratulations|winner|100%|dear sir|to whom it may concern|i hope this (?:email|message) finds you|hi there)\b|%|\$|!{2,}|https?:|www\.|@/i;
+// "$" only for the real, fixed prices (Ozzy Ad Department $97 first month then $197/mo, $9 unlock); any other amount is banned.
+const BANNED = /\b(guarantee|guaranteed|results|roi|revenue|leads? (?:will|guaranteed)|customer of ours|we work with|partner(?!s? program)|award|#1|best in|free forever|limited time|act now|urgent|last chance|congratulations|winner|100%|dear sir|to whom it may concern|i hope this (?:email|message) finds you|hi there)\b|%|\$(?!(?:97|197|9)\b(?![.,]\d))|!{2,}|https?:|www\.|@/i;
 
 // ---------------------------------------------------------------------------
 // Names
@@ -84,7 +85,7 @@ export const DEFAULT_BODY = [
   "",
   "{link}",
   "",
-  "Built it from your website. It's yours to run, free, no catch. Want more? Ozzy will make you 10 more on that page, also free.",
+  "Built it from your website. It's yours to run, free, no catch. Want more? That page gets you 3 more free ads, no card.",
 ].join("\n");
 export const DEFAULT_FOLLOWUP = ["Your ad's still here if you want it: {link}", "", "No pressure either way."].join("\n");
 
@@ -92,13 +93,45 @@ export const DEFAULT_FOLLOWUP = ["Your ad's still here if you want it: {link}", 
  * The starting copy arms. The first body line is what shows in the inbox preview after the subject, so it's the hook
  * (never a greeting). Subjects: short, lowercase, gift/curiosity, never the company name. One link.
  */
-export const SEED_COPY: Array<{ dimension: CopyDimension; key: string; template: string; audience?: "agency"; timing: GiftTiming | "any" }> = [
+export interface SeedCopy {
+  dimension: CopyDimension;
+  key: string;
+  template: string;
+  audience?: "agency";
+  timing: GiftTiming | "any";
+  /** Kept for history only: Kly retires the live arm and never selects it again (Nov 21 rewrite). */
+  retired?: true;
+}
+
+/** Sign-off the founder variants carry themselves (no auto signature is added under it). */
+export const NOLAN_SIGNOFF = "\u2014 Nolan, founder, Komendly";
+
+/** A template that ends with its own "— Name" sign-off line. */
+export function hasOwnSignOff(text: string): boolean {
+  return /(^|\n)\u2014 [^\n]+\s*$/.test(text.trim());
+}
+
+/**
+ * Nov 21 rewrite (autopilot plan): 3 local-business bodies + 1 threaded follow-up, signed by Nolan, pitching Ozzy Ad
+ * Department. Timing "any": the wording is true whether the gift ad is pre-made or drawn when they open {link}.
+ */
+export const NOLAN_COPY: SeedCopy[] = [
+  { dimension: "body", key: "nolan-meta-live", timing: "any", template: ["Here's a Facebook ad for {business}, drawn from your website:", "", "{link}", "", "I'm Nolan, I run Komendly. Our Ozzy Ad Department puts ads like this live in your own Meta account and replaces the losers every week. $97 the first month, then $197/mo.", "", "Your first 3 ads are free, no card.", "", NOLAN_SIGNOFF].join("\n") },
+  { dimension: "body", key: "nolan-would-you-run", timing: "any", template: ["Would you run this ad for {business}?", "", "{link}", "", "It comes straight from your website. If you like it, Komendly's Ozzy Ad Department takes it from there: your ads go live in your own Meta account and the losers get replaced every week. $97 for the first month, $197/mo after.", "", "The first 3 ads are free, no card needed.", "", NOLAN_SIGNOFF].join("\n") },
+  { dimension: "body", key: "nolan-no-agency", timing: "any", template: ["Ozzy, Komendly's ad tool, turns {business}'s website into Facebook ads. Yours is here:", "", "{link}", "", "Want them running without hiring an agency? Your ads go live in your own Meta account and the losers get replaced every week. Month to month: $97 the first month, then $197/mo.", "", "3 free ads to start, no card.", "", NOLAN_SIGNOFF].join("\n") },
+  { dimension: "followup", key: "nolan-followup", timing: "any", template: ["The ad for {business} is one tap away: {link}", "", "If you'd rather not run ads yourself, Ozzy Ad Department puts them live in your own Meta account and swaps out the losers every week. $97 the first month, 3 ads free first.", "", NOLAN_SIGNOFF].join("\n") },
+];
+
+/** Old local-business body/follow-up seeds, retired by the Nov 21 rewrite (agency copy keeps running). */
+const RETIRED_KEYS = new Set(["made-this", "would-you-run", "headline-hook", "too-busy", "still-here", "last-note", "did-it-land", "oc-tap-to-draw", "oc-want-one", "oc-too-busy", "oc-still-ready", "oc-last-note"]);
+
+export const SEED_COPY: SeedCopy[] = ([
   { dimension: "subject", key: "made-you-something", timing: "prebuilt", template: DEFAULT_SUBJECT },
   { dimension: "subject", key: "free-gift", timing: "any", template: "a free gift for you" },
   { dimension: "subject", key: "your-free-ad", timing: "prebuilt", template: "here's your free ad" },
   { dimension: "subject", key: "new-fb-ad", timing: "prebuilt", template: "your new facebook ad" },
   { dimension: "body", key: "made-this", timing: "prebuilt", template: DEFAULT_BODY },
-  { dimension: "body", key: "would-you-run", timing: "prebuilt", template: ["Would you run this ad?", "", "{link}", "", "I made it from {business}'s website. Free to keep, no catch. If the angle's off, Ozzy will make you 10 more there, free."].join("\n") },
+  { dimension: "body", key: "would-you-run", timing: "prebuilt", template: ["Would you run this ad?", "", "{link}", "", "I made it from {business}'s website. Free to keep, no catch. If the angle's off, that page gets you 3 more free ads, no card."].join("\n") },
   { dimension: "body", key: "headline-hook", timing: "prebuilt", template: ["\"{headline}\"", "", "That's your new Facebook ad. Made it from {business}'s website:", "", "{link}", "", "Yours to use, free. Tweak it or ignore it, totally up to you."].join("\n") },
   { dimension: "body", key: "too-busy", timing: "prebuilt", template: ["Most {niche} are too busy doing the actual work to make ads. So I made {business} one.", "", "{link}", "", "Free to keep. No call, no catch."].join("\n") },
   { dimension: "followup", key: "still-here", timing: "prebuilt", template: DEFAULT_FOLLOWUP },
@@ -108,9 +141,9 @@ export const SEED_COPY: Array<{ dimension: CopyDimension; key: string; template:
   { dimension: "subject", key: "agency-for-your-clients", timing: "any", audience: "agency", template: "for your clients" },
   { dimension: "subject", key: "agency-made-this", timing: "prebuilt", audience: "agency", template: "made this from your site" },
   { dimension: "subject", key: "agency-creative", timing: "any", audience: "agency", template: "client ads, in minutes" },
-  { dimension: "body", key: "agency-roster", timing: "prebuilt", audience: "agency", template: ["Made this for {business}, straight from your website \u2193", "", "{link}", "", "Now picture that for every client on your roster. Point Ozzy at any client's site and he makes a full pack of ready-to-run Meta ads. Your first 10 are free."].join("\n") },
+  { dimension: "body", key: "agency-roster", timing: "prebuilt", audience: "agency", template: ["Made this for {business}, straight from your website \u2193", "", "{link}", "", "Now picture that for every client on your roster. Point Ozzy at any client's site and he makes a full pack of ready-to-run Meta ads. Your first 3 are free."].join("\n") },
   { dimension: "body", key: "agency-how-long", timing: "prebuilt", audience: "agency", template: ["How long does your team spend on one client's ad creative?", "", "{link}", "", "Ozzy made that from your website in a couple of minutes. Give him any client's site and you get a full pack. First 3 ads are free, no card."].join("\n") },
-  { dimension: "body", key: "agency-headline", timing: "prebuilt", audience: "agency", template: ["\"{headline}\"", "", "That's an ad Ozzy made for {business} from your site:", "", "{link}", "", "Komendly turns any client's website into ready-to-run Facebook and Instagram ads. Your first 10 are free."].join("\n") },
+  { dimension: "body", key: "agency-headline", timing: "prebuilt", audience: "agency", template: ["\"{headline}\"", "", "That's an ad Ozzy made for {business} from your site:", "", "{link}", "", "Komendly turns any client's website into ready-to-run Facebook and Instagram ads. Your first 3 are free."].join("\n") },
   { dimension: "followup", key: "agency-still-here", timing: "prebuilt", audience: "agency", template: ["Still here if you want it: {link}", "", "Worth a look before your next client creative sprint."].join("\n") },
   { dimension: "followup", key: "agency-last-note", timing: "prebuilt", audience: "agency", template: ["Last note from me. If your team already has creative covered, all good.", "", "The ad's yours either way: {link}"].join("\n") },
   // Partner program (real terms: AdsPartner.commissionPct 30, 12 months; see /partners). "%" is banned, so "percent".
@@ -124,10 +157,10 @@ export const SEED_COPY: Array<{ dimension: CopyDimension; key: string; template:
   { dimension: "body", key: "oc-tap-to-draw", timing: "on-click", template: ["Ozzy draws free Facebook ads straight from a business's website. He's got {business}'s site open and is ready to make yours.", "", "{link}", "", "Tap that and watch him draw 3 ads for you, live, in about two minutes. Free to keep, no card, no catch."].join("\n") },
   { dimension: "body", key: "oc-want-one", timing: "on-click", template: ["Want a free Facebook ad for {business}?", "", "{link}", "", "Open that and Ozzy draws three from your website while you watch. Takes a couple of minutes. Yours to keep, no catch."].join("\n") },
   { dimension: "body", key: "oc-too-busy", timing: "on-click", template: ["Most {niche} are too busy doing the actual work to make ads. So Ozzy will make {business} a few, free.", "", "{link}", "", "Tap it and he draws them live from your website. No call, no card."].join("\n") },
-  { dimension: "body", key: "oc-agency", timing: "on-click", audience: "agency", template: ["Want to see what Ozzy makes from your website?", "", "{link}", "", "Tap it and he draws three ready-to-run Meta ads live. Then point him at any client's site. First 10 are free, no card."].join("\n") },
+  { dimension: "body", key: "oc-agency", timing: "on-click", audience: "agency", template: ["Want to see what Ozzy makes from your website?", "", "{link}", "", "Tap it and he draws three ready-to-run Meta ads live. Then point him at any client's site. First 3 ads are free, no card."].join("\n") },
   { dimension: "followup", key: "oc-still-ready", timing: "on-click", template: ["Ozzy's still ready to draw your ads: {link}", "", "Takes two minutes, free either way."].join("\n") },
   { dimension: "followup", key: "oc-last-note", timing: "on-click", template: ["Last note from me. If ads aren't a priority right now, totally get it.", "", "Ozzy's offer stands: {link}"].join("\n") },
-];
+] as SeedCopy[]).map((c): SeedCopy => (RETIRED_KEYS.has(c.key) ? { ...c, retired: true } : c)).concat(NOLAN_COPY);
 
 export function renderTemplate(t: string, vars: Partial<Record<(typeof PLACEHOLDERS)[number], string>>): string {
   return t.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? (vars[k as keyof typeof vars] ?? "") : m));
@@ -178,11 +211,11 @@ export function buildOutboundEmail(c: OutboundCopyContext): OutboundEmail {
   const vars = { business: cleanBusinessName(c.businessName), city: c.city, niche: trade(c.niche), headline, link: c.claimUrl };
   let tpl = c.step === 1 ? variantOr("body", c.variant?.body, DEFAULT_BODY) : variantOr("followup", c.variant?.followup, DEFAULT_FOLLOWUP);
   if (tpl.includes("{headline}") && (headline.length < 8 || headline.length > 90)) tpl = c.step === 1 ? DEFAULT_BODY : DEFAULT_FOLLOWUP;
+  const body = renderTemplate(tpl, vars);
   const text = [
-    renderTemplate(tpl, vars),
+    body,
     "",
-    ...signature(c.senderName),
-    "",
+    ...(hasOwnSignOff(body) ? [] : [...signature(c.senderName), ""]),
     "--",
     `Komendly, ${c.postalAddress}`,
     `Not for you? Reply "stop" or unsubscribe: ${c.unsubscribeUrl}`,
@@ -233,6 +266,7 @@ export function unsubscribeHeaders(unsubscribeUrl: string, mailbox: string): Rec
 export const COPY_STYLE_GUIDE = [
   "Write like one real person typing a quick note to a local business owner, not marketing.",
   "Subjects: 2-6 words, lowercase, curiosity or gift framing (e.g. 'made you something', 'a free gift for you'); never the business name, never 're:', no '!'.",
+  "Prices may appear only as the real ones: $97 the first month, then $197/mo (Ozzy Ad Department); 3 free ads, no card. Never promise leads, sales or outcomes.",
   "Bodies: under 70 words, short lines. The FIRST LINE is the inbox preview, so it must be the hook (the gift, a question, their ad's headline), never a greeting like 'Hey X team' or 'Hi there'. Exactly one {link}, no summary of their own website back to them, no buzzwords, no claims about results.",
   "Follow-ups: 1-3 short lines, exactly one {link}, friendly, zero guilt.",
   "Agency variants (audience agency) pitch speed across all their clients and the Agency plan, never claim we work with other agencies.",
@@ -277,8 +311,9 @@ export function buildOutboundHtml(c: OutboundCopyContext, h: OutboundHtmlInput):
   const asset = (h.assetBase ?? "https://www.komendly.com").replace(/\/$/, "");
   const plain = buildOutboundEmail(c);
   const bodyText = plain.text.split("\n--\n")[0] ?? plain.text;
+  const ownSig = hasOwnSignOff(bodyText);
   const sig = signature(c.senderName);
-  const sigStart = bodyText.lastIndexOf(`\n\n${sig[0]}\n`);
+  const sigStart = ownSig ? -1 : bodyText.lastIndexOf(`\n\n${sig[0]}\n`);
   const message = sigStart >= 0 ? bodyText.slice(0, sigStart) : bodyText;
   const name = cleanBusinessName(h.businessName);
   const link = esc(c.claimUrl);
@@ -334,8 +369,8 @@ a{color:${K.gold};}
 <tr><td class="pad" bgcolor="${K.card}" style="background-color:${K.card};padding:28px 36px 30px;border-radius:18px;border:1px solid ${K.border};">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
 ${rows.join("\n")}
-<tr><td style="padding:6px 0 0;font-family:${SERIF};font-size:18px;font-style:italic;color:${K.text};">${esc(sig[0] ?? "Ozzy")}</td></tr>
-<tr><td style="padding:2px 0 0;font-family:${SANS};font-size:13px;color:${K.muted};">${esc(sig[1] ?? "Komendly")} &middot; <a href="https://www.komendly.com" target="_blank" style="color:${K.muted};text-decoration:underline;">komendly.com</a></td></tr>
+${ownSig ? "" : `<tr><td style="padding:6px 0 0;font-family:${SERIF};font-size:18px;font-style:italic;color:${K.text};">${esc(sig[0] ?? "Ozzy")}</td></tr>
+<tr><td style="padding:2px 0 0;font-family:${SANS};font-size:13px;color:${K.muted};">${esc(sig[1] ?? "Komendly")} &middot; <a href="https://www.komendly.com" target="_blank" style="color:${K.muted};text-decoration:underline;">komendly.com</a></td></tr>`}
 </table>
 </td></tr>
 <tr><td align="center" style="padding:18px 16px 0;font-family:${SANS};font-size:11px;line-height:1.6;color:${K.faint};">Komendly, ${esc(c.postalAddress)}<br>Not for you? Reply &quot;stop&quot; or <a href="${esc(c.unsubscribeUrl)}" style="color:${K.faint};text-decoration:underline;">unsubscribe</a>.</td></tr>

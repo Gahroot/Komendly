@@ -12,8 +12,9 @@ import { errMsg, log } from "./log";
 export type EmailCheck = "valid" | "invalid" | "catch_all" | "unknown";
 export type RcptVerdict = "ok" | "invalid" | "temp" | "blocked";
 
-export const VERIFY_PER_TICK = 30;
-export const VERIFY_CONCURRENCY = 5;
+/** Nov 21: 30 -> 100 per tick (own SMTP checker, no per-check cost; Google refusals still pause it). */
+export const VERIFY_PER_TICK = 100;
+export const VERIFY_CONCURRENCY = 10;
 export const VERIFY_TIMEOUT_MS = 20_000;
 export const RETRY_AFTER_MS = 45 * 60_000;
 export const BLOCKED_PAUSE_MS = 60 * 60_000;

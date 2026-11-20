@@ -2,7 +2,7 @@
 // Reward ladder (per contacted lead, in [0,1]): click 0.1 < positive reply 0.3 < signup 0.6 < paid 1.0 (+revenue).
 import type { Prisma } from "@prisma/client";
 import { AD_GOALS, AWARENESS_LEVELS } from "../../src/lib/ads/contracts";
-import { checkVariant, EMAIL_FORMATS, GIFT_TIMINGS, SEED_COPY, type CopyDimension, type GiftTiming } from "../../src/lib/ads/outbound/copy";
+import { checkVariant, EMAIL_FORMATS, GIFT_TIMINGS, NOLAN_COPY, SEED_COPY, type CopyDimension, type GiftTiming } from "../../src/lib/ads/outbound/copy";
 import type { Db } from "./db";
 import { decide } from "./settings";
 import { METROS, NICHES, type Audience } from "./targets";
@@ -156,7 +156,7 @@ export interface SeedArm {
 
 export function seedArms(): SeedArm[] {
   const out: SeedArm[] = [
-    ...SEED_COPY.map((c) => ({ dimension: c.dimension as Dimension, key: c.key, content: { template: c.template, ...(c.audience === "agency" ? { audience: "agency" } : {}), timing: c.timing } })),
+    ...SEED_COPY.filter((c) => !c.retired).map((c) => ({ dimension: c.dimension as Dimension, key: c.key, content: { template: c.template, ...(c.audience === "agency" ? { audience: "agency" } : {}), timing: c.timing } })),
     // Gift made before the email (ad in the email) vs drawn live when the prospect opens the link (no AI spend on
     // the ~98% who never click, so volume isn't capped by the Codex plan).
     { dimension: "gift_timing", key: "prebuilt", content: { timing: "prebuilt" } },
@@ -202,8 +202,23 @@ export function checkArmContent(dim: string, content: unknown): string | null {
 }
 
 /** Add any missing seed arms (new seeds ship with code) and retire live arms whose content no longer passes the rules. */
+/** Seed copy keys that are kept for history but must never be selected again (dimension:key). */
+export const RETIRED_SEED_KEYS: ReadonlySet<string> = new Set(SEED_COPY.filter((c) => c.retired).map((c) => `${c.dimension}:${c.key}`));
+const NOLAN_KEYS = new Set(NOLAN_COPY.map((c) => `${c.dimension}:${c.key}`));
+
+/** Live arms the Nov 21 copy rewrite retires: the old local seeds, plus local AI body/follow-up arms older than the
+ * founder variants (they pitched the old offer). Agency copy, subjects and newer AI arms keep running. */
+export function rewriteRetirements(arms: ReadonlyArray<{ id: string; dimension: string; key: string; status: string; content: unknown; origin?: string | null; createdAt?: Date | null }>): string[] {
+  const nolanAt = arms.filter((a) => NOLAN_KEYS.has(`${a.dimension}:${a.key}`) && a.createdAt).map((a) => (a.createdAt as Date).getTime());
+  const cutoff = nolanAt.length ? Math.min(...nolanAt) : null;
+  return arms
+    .filter((a) => a.status !== "retired")
+    .filter((a) => RETIRED_SEED_KEYS.has(`${a.dimension}:${a.key}`) || (cutoff !== null && a.origin === "ai" && (a.dimension === "body" || a.dimension === "followup") && armAudience(a.content) === "local" && (a.createdAt?.getTime() ?? Infinity) < cutoff))
+    .map((a) => a.id);
+}
+
 export async function ensureSeeds(db: Db): Promise<number> {
-  const existing = await db.klyArm.findMany({ select: { id: true, dimension: true, key: true, status: true, content: true } });
+  const existing = await db.klyArm.findMany({ select: { id: true, dimension: true, key: true, status: true, content: true, origin: true, createdAt: true } });
   const have = new Set(existing.map((a) => `${a.dimension}:${a.key}`));
   const rows = seedArms().filter((a) => !have.has(`${a.dimension}:${a.key}`) && !checkArmContent(a.dimension, a.content));
   const r = rows.length ? await db.klyArm.createMany({ data: rows.map((a) => ({ dimension: a.dimension, key: a.key, content: a.content as Prisma.InputJsonValue, origin: "seed" })), skipDuplicates: true }) : { count: 0 };
@@ -216,6 +231,14 @@ export async function ensureSeeds(db: Db): Promise<number> {
       await db.klyArm.update({ where: { id: a.id }, data: { content: want as Prisma.InputJsonValue } });
       a.content = want as typeof a.content;
     }
+  }
+  // Copy rewrite: old local bodies/follow-ups stop being selected (rows and stats stay for history).
+  const all = r.count ? await db.klyArm.findMany({ select: { id: true, dimension: true, key: true, status: true, content: true, origin: true, createdAt: true } }) : existing;
+  const rewrite = rewriteRetirements(all ?? existing);
+  if (rewrite.length) {
+    await db.klyArm.updateMany({ where: { id: { in: rewrite } }, data: { status: "retired", retiredAt: new Date() } });
+    await decide(db, "arm_retire", `Retired ${rewrite.length} old copy variants for the founder rewrite (Ozzy Ad Department pitch).`, { ids: rewrite });
+    for (const a of existing) if (rewrite.includes(a.id)) a.status = "retired";
   }
   const stale = existing.filter((a) => a.status !== "retired" && checkArmContent(a.dimension, a.content));
   if (stale.length) {

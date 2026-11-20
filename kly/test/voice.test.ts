@@ -21,7 +21,7 @@ function fakeFetch(reply: (url: string, body: unknown) => unknown) {
   return { f, calls };
 }
 
-const lead = (o: Record<string, unknown> = {}) => ({ id: "L1", businessName: "Acme Roofing", email: "owner@acme.com", domain: "acme.com", website: "https://acme.com", niche: "roofers", city: "Denver", region: "CO", timezone: "America/Denver", phone: "+13035551234", claimToken: "c", unsubToken: "u", giftToken: null as string | null, giftId: null as string | null, adId: null as string | null, qualityNotes: null, status: "found", voiceStatus: null as string | null, mailboxId: null, armIds: [], ...o });
+const lead = (o: Record<string, unknown> = {}) => ({ id: "L1", businessName: "Acme Roofing", email: "owner@acme.com", emailCheck: "valid", domain: "acme.com", website: "https://acme.com", niche: "roofers", city: "Denver", region: "CO", timezone: "America/Denver", phone: "+13035551234", claimToken: "c", unsubToken: "u", giftToken: null as string | null, giftId: null as string | null, adId: null as string | null, qualityNotes: null, status: "found", voiceStatus: null as string | null, mailboxId: null, armIds: [], ...o });
 
 describe("phones", () => {
   it("normalizes US numbers to E.164 and drops invalid/toll-free/foreign", () => {

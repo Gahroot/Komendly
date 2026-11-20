@@ -168,7 +168,7 @@ export function fallbackCaptions(c: SocialContent): Record<SocialPlatform, strin
   const lead = c.kind === "tip"
     ? `G'day! Quick ad tip from Ozzy: ${c.brief.replace(/^ad tip:\s*/i, "")}.`
     : `G'day! Here's ${c.brief}.${credit}`;
-  const pitch = "Paste your website and Ozzy makes you 10 free Facebook and Instagram ads.";
+  const pitch = "Paste your website and Ozzy makes you 3 free Facebook and Instagram ads.";
   return {
     facebook: `${lead} ${pitch} ${socialLink("facebook")} #SmallBusiness`,
     instagram: `${lead} ${pitch} Link in bio. #SmallBusiness #FacebookAds`,

@@ -9,6 +9,7 @@ import { GiftSlots } from "@/components/growth/gift-slots";
 import { GiftPassOn } from "@/components/growth/gift-pass-on";
 import { giftByToken, giftView, recipientHasAccount } from "@/lib/ads/gifts";
 import { REFERRED_TRIAL_STATIC } from "@/lib/ads/referrals";
+import { FREE_TRIAL_ADS } from "@/lib/ads/bonus-access";
 import { prisma } from "@/lib/prisma";
 import { startHref } from "@/lib/ads/url-submit";
 import "@/components/studio/studio.css";
@@ -71,12 +72,12 @@ export default async function GiftPage({ params }: Props) {
         {outbound && !hasAccount && (
           <div className="mx-auto mt-12 flex max-w-xl items-end gap-2 px-2" aria-hidden>
             <OzzyLazy size={72} perch="ledge" speech={false} pose={{ form: "creator", expression: "happy", motion: "wave" }} />
-            <p className="ozzy-say relative mb-10 w-max max-w-[min(15rem,calc(100vw-9rem))] rounded-xl border-2 border-[#1a0f3a] bg-[#fff1d6] px-3 py-1.5 text-[13px] font-semibold leading-snug text-[#2a1a6e] shadow-[0_3px_0_#1a0f3a]">G&apos;day! I&apos;ve got {g.domain} ready. One tap and I&apos;ll draw you 10 more, free.</p>
+            <p className="ozzy-say relative mb-10 w-max max-w-[min(15rem,calc(100vw-9rem))] rounded-xl border-2 border-[#1a0f3a] bg-[#fff1d6] px-3 py-1.5 text-[13px] font-semibold leading-snug text-[#2a1a6e] shadow-[0_3px_0_#1a0f3a]">G&apos;day! I&apos;ve got {g.domain} ready. One tap and I&apos;ll draw you {FREE_TRIAL_ADS} more, free.</p>
           </div>
         )}
         <section className={`mx-auto max-w-xl rounded-3xl border border-[var(--studio-gold)]/30 bg-white/[0.03] p-6 text-center ${outbound && !hasAccount ? "" : "mt-12"}`}>
-          <h2 className="font-display text-2xl font-medium sm:text-3xl">{hasAccount ? "Want more like these?" : outbound ? "Want 10 more? They're free." : `Get your full free pack: ${REFERRED_TRIAL_STATIC} ads`}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">{hasAccount ? "Your business already has a Komendly account. Log in to make more." : outbound ? `Ozzy makes 10 more ads plus 1 animated ad from ${g.domain}, on new angles. Your website is already filled in, and the ads above come with you. No card needed.` : `${g.senderName}'s gift unlocks double the usual free pack: ${REFERRED_TRIAL_STATIC} static ads plus an animated one, for ${g.domain}.`}</p>
+          <h2 className="font-display text-2xl font-medium sm:text-3xl">{hasAccount ? "Want more like these?" : outbound ? `Want ${FREE_TRIAL_ADS} more? They're free.` : `Get your full free pack: ${REFERRED_TRIAL_STATIC} ads`}</h2>
+          <p className="mt-2 text-sm text-muted-foreground">{hasAccount ? "Your business already has a Komendly account. Log in to make more." : outbound ? `Ozzy makes ${FREE_TRIAL_ADS} more free ads from ${g.domain}, on new angles. Your website is already filled in, and the ads above come with you. No card needed.` : `${g.senderName}'s gift unlocks double the usual free pack: ${REFERRED_TRIAL_STATIC} static ads plus an animated one, for ${g.domain}.`}</p>
           <a href={cta} className="spellbar__cta mt-5 inline-flex h-13 w-full items-center justify-center rounded-2xl px-6 text-base font-semibold sm:w-auto">{hasAccount ? "Log in" : outbound ? "Get my free ads" : "Get your full free pack"}</a>
           {!hasAccount && <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">{["No card", "Ready in minutes", "Yours to keep"].map((t) => <li key={t} className="inline-flex items-center gap-1"><Check className="size-3.5 text-[var(--studio-gold)]" />{t}</li>)}</ul>}
         </section>

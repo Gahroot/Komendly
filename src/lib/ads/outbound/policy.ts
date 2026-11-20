@@ -204,15 +204,16 @@ export function canSendNow(m: MailboxPace, now: Date): PaceDecision {
 // Health / auto-pause
 
 export const HEALTH_WINDOW = 100;
-export const MAX_BOUNCE_RATE = 0.06;
+/** Hard rule (autopilot plan): pause sending above 2% bounces. */
+export const MAX_BOUNCE_RATE = 0.02;
 /** A bounce rate needs a real sample: one dead address in the first few sends is noise, not a bad list. */
 export const MIN_BOUNCE_SAMPLE = 50;
-export const MIN_BOUNCES = 4;
+export const MIN_BOUNCES = 2;
 /** A burst still pauses fast: this many bounces within the last BURST_WINDOW sends. */
 export const BURST_BOUNCES = 3;
 export const BURST_WINDOW = 10;
 
-/** Most recent first. Any complaint; a bounce burst; or (>= 50 sends, >= 4 bounces) bounce rate > 6% -> reason; else null.
+/** Most recent first. Any complaint; a bounce burst; or (>= 50 sends, >= 2 bounces) bounce rate > 2% -> reason; else null.
  * Websites often list dead addresses (we can't verify a mailbox before sending), so a few bounces are expected. */
 /** Auto-pauses lift themselves after a cool-down so nobody has to babysit them; admin pauses never auto-lift. */
 export const BOUNCE_COOLDOWN_MS = 24 * 3600_000;

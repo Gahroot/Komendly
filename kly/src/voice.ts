@@ -13,7 +13,7 @@ import { komendlyCustomers, extractSitePhone } from "./finder";
 import { isLegalLead } from "./legal";
 import { errMsg, log } from "./log";
 import { replyEmail, suppress, type AlertFn } from "./replies";
-import { isOnClickLead } from "./sender";
+import { isOnClickLead, isSendableCheck } from "./sender";
 import { WEAK_SENT_NOTE } from "./hook";
 import { outboundEnv, smtpTransport, type OutboundEnv, type Transport } from "./sender";
 import { dayStart, decide, SETTINGS_ID, type KlySettingsRow } from "./settings";
@@ -340,6 +340,8 @@ export async function sendVoiceGifts(d: VoiceDeps, cfg: OutboundEnv, now: Date):
     const ev = await db.outboundVoiceEvent.findFirst({ where: { leadId: lead.id, type: { in: [...GIFT_EVENTS] }, email: { not: null } }, orderBy: { tribunalEventId: "desc" } });
     const to = (ev?.email ?? lead.email).trim().toLowerCase();
     if (!EMAIL_RE.test(to) || isSuppressed(to, sup) || sup.has(lead.domain)) continue;
+    // Verified addresses only: the promised gift goes to the lead's own checker-"valid" address, nothing else.
+    if (!isSendableCheck(lead.emailCheck) || to !== lead.email.trim().toLowerCase()) continue;
     const row = lead.mailboxId ? await db.outboundMailbox.findUnique({ where: { id: lead.mailboxId } }) : null;
     const m = cfg.mailboxes.find((x) => x.address === row?.address) ?? cfg.mailboxes[0];
     if (!m) continue;

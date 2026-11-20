@@ -25,6 +25,11 @@ import { leadSystemAllowed, isKlySystem, SYSTEM_EVENTS, systemEvent, systemVaria
 export const VOICE_STOP_STATUSES = ["gift_yes", "info_requested", "not_interested", "opt_out"] as const;
 
 export const DEFAULT_SENDER_NAME = "Ozzy at Komendly";
+/** The only email-check verdict that may receive mail (hard rule: verified addresses only). */
+export const SENDABLE_CHECK = "valid";
+export function isSendableCheck(c: string | null | undefined): boolean {
+  return c === SENDABLE_CHECK && verifyEnabled();
+}
 export const COPY_DIMENSIONS: Dimension[] = ["subject", "body", "followup", "format"];
 
 export interface OutboundEnv {
@@ -319,8 +324,10 @@ async function mailboxHealth(db: Db, b: StoredMailbox, now: Date): Promise<strin
  * fresh lead nobody else has claimed. Business hours, suppression and the voice stop list still apply.
  */
 export async function assignLeads(db: Db, mailboxIds: string[], now: Date, followUpDays: number, maxSteps: number): Promise<Map<string, { lead: LeadRow; step: 1 | 2 }>> {
-  // First emails go only to addresses our own checker passed (kly/src/verify.ts), unless checking is switched off.
-  const where = { purgedAt: null, email: { not: "" }, OR: [{ status: { in: ["ad_made", "queued"] }, step: 0, ...(verifyEnabled() ? { emailCheck: { in: ["valid", "catch_all", "unknown"] } } : {}), OR: [{ mailboxId: null }, { mailboxId: { in: mailboxIds } }] }, { status: "sent", step: 1, mailboxId: { in: mailboxIds } }], AND: [{ OR: [{ voiceStatus: null }, { voiceStatus: { notIn: [...VOICE_STOP_STATUSES] } }] }] };
+  // Hard rule (autopilot plan): every email, first or follow-up, goes only to an address our own checker marked
+  // "valid" (kly/src/verify.ts). catch_all / unknown / unchecked never get mail. With checking off, nothing is sent.
+  if (!verifyEnabled()) return new Map();
+  const where = { purgedAt: null, email: { not: "" }, emailCheck: SENDABLE_CHECK, OR: [{ status: { in: ["ad_made", "queued"] }, step: 0, OR: [{ mailboxId: null }, { mailboxId: { in: mailboxIds } }] }, { status: "sent", step: 1, mailboxId: { in: mailboxIds } }], AND: [{ OR: [{ voiceStatus: null }, { voiceStatus: { notIn: [...VOICE_STOP_STATUSES] } }] }] };
   // Growth-system leads (time-sensitive: new sites, ready review videos) first, then the oldest classic leads.
   const [sysLeads, classic] = await Promise.all([
     db.outboundLead.findMany({ where: { ...where, system: { not: null } }, orderBy: [{ step: "desc" }, { createdAt: "desc" }], take: 50 }),
@@ -333,6 +340,7 @@ export async function assignLeads(db: Db, mailboxIds: string[], now: Date, follo
   const taken = new Set<string>();
   const ready: Array<{ lead: LeadRow; step: 1 | 2 }> = [];
   for (const l of candidates) {
+    if (!isSendableCheck(l.emailCheck)) continue; // belt and braces on top of the query filter
     const step = nextStep(l, now, followUpDays * 86_400_000);
     if (!step || step > maxSteps || !inBusinessHours(now, l.timezone)) continue;
     if (sup.has(l.email.toLowerCase()) || sup.has(l.domain)) {
@@ -348,9 +356,7 @@ export async function assignLeads(db: Db, mailboxIds: string[], now: Date, follo
       taken.add(r.lead.id);
     }
   }
-  // Safest addresses first (Nov 16): checker-"valid" before catch-all before unknown, to keep bounces low on new domains.
-  const checkRank = (c: string | null) => (c === "valid" ? 0 : c === "catch_all" ? 1 : 2);
-  const fresh = ready.filter((r) => !r.lead.mailboxId && !taken.has(r.lead.id)).sort((a, b) => (a.lead.system ? 0 : 1) - (b.lead.system ? 0 : 1) || checkRank(a.lead.emailCheck) - checkRank(b.lead.emailCheck));
+  const fresh = ready.filter((r) => !r.lead.mailboxId && !taken.has(r.lead.id)).sort((a, b) => (a.lead.system ? 0 : 1) - (b.lead.system ? 0 : 1));
   for (const id of mailboxIds) {
     if (out.has(id)) continue;
     const r = fresh.shift();
@@ -363,6 +369,7 @@ export async function assignLeads(db: Db, mailboxIds: string[], now: Date, follo
 async function sendOne(deps: SenderDeps, cfg: OutboundEnv, m: StoredMailbox, mailboxId: string, lead: LeadRow, step: 1 | 2, now: Date, all: readonly StoredMailbox[] = []): Promise<string> {
   const { db } = deps;
   // Growth-system kill switch (sys_<key>) on top of Kly's own gates; the lead just waits while it is off.
+  if (!isSendableCheck(lead.emailCheck)) return "refused: email not verified";
   if (!(await leadSystemAllowed(db, lead.system))) return `system ${lead.system} off`;
   const arms = await copyArms(db, lead, deps.rng, deps.explorationPct);
   // Claim the lead for this mailbox (sticky: the follow-up comes from the same person) and pin its arms.
