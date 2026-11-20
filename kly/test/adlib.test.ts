@@ -81,3 +81,32 @@ describe("adlib priority", () => {
     expect(used).toEqual([["adlib:1", "adlib:2"]]);
   });
 });
+
+describe("adlibSegment (warm leads first)", () => {
+  const { adlibSegment } = await_import();
+  function await_import() { return { adlibSegment: async (...a: Parameters<typeof import("../src/loop").adlibSegment>) => (await import("../src/loop")).adlibSegment(...a) }; }
+  const arms = [
+    { id: "a1", dimension: "segment", status: "active", content: { niche: "med spas", cities: ["X, TX"] } },
+    { id: "a2", dimension: "segment", status: "active", content: { niche: "roofers", cities: ["Y, TX"] } },
+  ];
+  const places = [
+    { niche: "med spas", city: "Austin", state: "TX" }, { niche: "med spas", city: "Dallas", state: "TX" }, { niche: "med spas", city: "Austin", state: "TX" },
+    { niche: "roofers", city: "Tulsa", state: "OK" }, { niche: "no arm niche", city: "Reno", state: "NV" }, { niche: "no arm niche", city: "Reno", state: "NV" }, { niche: "no arm niche", city: "Reno", state: "NV" }, { niche: "no arm niche", city: "Reno", state: "NV" },
+  ];
+  const db = {
+    klyPlace: {
+      groupBy: async () => Object.entries(places.reduce<Record<string, number>>((m, p) => ((m[p.niche] = (m[p.niche] ?? 0) + 1), m), {})).map(([niche, n]) => ({ niche, _count: { _all: n } })),
+      findMany: async ({ where }: { where: { niche: string } }) => places.filter((p) => p.niche === where.niche),
+    },
+    klyArm: { findMany: async () => arms },
+  } as never;
+  it("picks the biggest backlog niche that has an arm, with the places' own cities", async () => {
+    const r = await adlibSegment(db, () => 0);
+    expect(r?.arm.id).toBe("a1");
+    expect(new Set(r?.cities)).toEqual(new Set(["Austin, TX", "Dallas, TX"]));
+  });
+  it("returns null when nothing waits", async () => {
+    const empty = { klyPlace: { groupBy: async () => [], findMany: async () => [] }, klyArm: { findMany: async () => arms } } as never;
+    expect(await adlibSegment(empty, () => 0)).toBeNull();
+  });
+});

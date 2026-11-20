@@ -187,13 +187,38 @@ export function pickCities(cities: readonly string[], n: number, rng: Rng): stri
   return out;
 }
 
+/**
+ * The niche with the most unused adlib places that has a live segment arm, plus up to CITIES_PER_DISCOVERY of those
+ * places' cities ("City, ST"). Null when none wait or no arm matches the niche.
+ */
+export async function adlibSegment(db: Db, rng: Rng): Promise<{ arm: Awaited<ReturnType<typeof chooseArm>> & object; cities: string[] } | null> {
+  const groups = await db.klyPlace.groupBy({ by: ["niche"], where: { source: "adlib", usedAt: null }, _count: { _all: true } });
+  if (!groups.length) return null;
+  const arms = await db.klyArm.findMany({ where: { dimension: "segment", status: { not: "retired" } } });
+  const byNiche = new Map<string, (typeof arms)[number]>();
+  for (const a of arms) {
+    const n = (a.content as { niche?: string }).niche;
+    if (n && !byNiche.has(n)) byNiche.set(n, a);
+  }
+  const ranked = groups.filter((g) => byNiche.has(g.niche)).sort((a, b) => b._count._all - a._count._all || a.niche.localeCompare(b.niche));
+  // Mostly the biggest backlog, sometimes the next ones, so one niche can't starve the rest.
+  const pick = ranked[Math.min(ranked.length - 1, Math.floor(rng() * rng() * Math.min(ranked.length, 4)))];
+  if (!pick) return null;
+  const places = await db.klyPlace.findMany({ where: { source: "adlib", usedAt: null, niche: pick.niche }, select: { city: true, state: true }, orderBy: [{ confidence: "desc" }, { id: "asc" }], take: 60 });
+  const cities = pickCities([...new Set(places.map((p) => `${p.city}, ${p.state}`))], CITIES_PER_DISCOVERY, rng);
+  return cities.length ? { arm: byNiche.get(pick.niche)!, cities } : null;
+}
+
 /** Segment-arm driven discovery: pick a niche arm (and a few of its cities) and find up to `need` leads tagged with it. */
 export async function discover(db: Db, ai: KlyAI | null, s: KlySettingsRow, need: number, rng: Rng, rt: SourceRuntime = createSourceRuntime()): Promise<{ segment: string | null; created: number }> {
   if (need <= 0) return { segment: null, created: 0 };
-  const arm = await chooseArm(db, "segment", rng, s.explorationPct);
+  // Warm leads first: while Meta Ad Library advertisers (KlyPlace source 'adlib') wait unused, discovery works their niche
+  // in their own cities instead of the bandit's pick, so they are processed in days, not whenever their niche comes up.
+  const warm = s.sources.includes("adlib") ? await adlibSegment(db, rng).catch(() => null) : null;
+  const arm = warm?.arm ?? (await chooseArm(db, "segment", rng, s.explorationPct));
   if (!arm) return { segment: null, created: 0 };
   const c = arm.content as { niche?: string; city?: string; cities?: string[] };
-  const cities = c.cities?.length ? pickCities(c.cities, CITIES_PER_DISCOVERY, rng) : c.city ? [c.city] : [];
+  const cities = warm ? warm.cities : c.cities?.length ? pickCities(c.cities, CITIES_PER_DISCOVERY, rng) : c.city ? [c.city] : [];
   if (!c.niche || !cities.length) return { segment: arm.key, created: 0 };
   const r = await findLeads(
     { db, qualify: qualifierFor(ai, c.niche), minScore: s.minLeadScore, allowPhoneOnly: s.voiceEnabled, sources: s.sources, rt, ai, codexSearchCalls: s.codexSearchPerTick, deadlineMs: DISCOVERY_DEADLINE_MS },
