@@ -11,13 +11,14 @@ import { track } from "@/lib/analytics/track";
 import { safeAppNext } from "@/lib/hub/safe-next";
 import { pendingRunDomain } from "@/lib/ads/url-submit";
 import { loadDraft } from "@/lib/testimonial-draft";
+import { FREE_TRIAL_ADS } from "@/lib/ads/bonus-access";
 
 /**
  * The one Ozzy front door for every app (/login, /register, /ads/login, /ads/signup).
  * Uses the ads auth API: signup records first-touch attribution, referrals, the Studio invite cookie and sends
  * the verification email. Lands on ?next (same-origin only) or /dashboard.
  */
-export function OzzyAuth({ mode, referrerName, freeStatic = 10, defaultEmail, giftFor }: { mode: "login" | "signup"; referrerName?: string; freeStatic?: number; /** Kly prospects: the address we emailed. */ defaultEmail?: string; /** Kly prospects: their business name. */ giftFor?: string }) {
+export function OzzyAuth({ mode, referrerName, freeStatic = FREE_TRIAL_ADS, defaultEmail, giftFor }: { mode: "login" | "signup"; referrerName?: string; freeStatic?: number; /** Kly prospects: the address we emailed. */ defaultEmail?: string; /** Kly prospects: their business name. */ giftFor?: string }) {
   const router = useRouter();
   const params = useSearchParams();
   const next = safeAppNext(params.get("next") ?? params.get("redirect"));
@@ -51,11 +52,11 @@ export function OzzyAuth({ mode, referrerName, freeStatic = 10, defaultEmail, gi
   const title = isSignup ? (site ? "Where should we send your free ads?" : giftFor ? `Your free ads for ${giftFor}` : referrerName ? `${referrerName} sent you free ads` : "Meet Ozzy") : "Welcome back";
   const description = isSignup
     ? site
-      ? `${freeStatic} ads + 1 video ad for ${site}. We'll email you when they're ready. No card needed.`
+      ? `${freeStatic} free ads for ${site}. We'll email you when they're ready. No card needed.`
       : giftFor
-      ? `${freeStatic} more ads + 1 animated ad from your website, free. Your gifted ads are already waiting inside. No card needed.`
+      ? `${freeStatic} more free ads from your website. Your gifted ads are already waiting inside. No card needed.`
       : referrerName
-      ? `${freeStatic} static ads + 1 animated ad from your website, free. No card needed.`
+      ? `${freeStatic} free ads from your website. No card needed.`
       : "Ozzy makes your ads, videos and testimonials. Start free: a pack of ads and your first Studio video, no card needed."
     : params.get("verified") === "1"
       ? "Your email is confirmed. Sign in and Ozzy will get cracking."

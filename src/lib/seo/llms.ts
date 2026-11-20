@@ -1,4 +1,5 @@
 import { ADS_GUARANTEE, ADS_TOPUPS, FOUNDING_TERMS, PLANS_FOR_SALE, planUsageLine } from '@/lib/ads/billing-config'
+import { FREE_PACK_LINE, HERO_INCLUDES, HERO_OUTCOME, HERO_PLAN, HERO_PRICE_LINE, PUBLIC_OFFER, UNLOCK_LINE } from '@/lib/ads/public-offer'
 import { CATEGORIES, type BlogPostMeta } from '@/lib/blog'
 import { stripFootnotes } from '@/lib/blog-content'
 import { SITE_URL } from '@/lib/site'
@@ -12,10 +13,11 @@ const usd = (cents: number) => `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`
 export function productFacts(): string[] {
   return [
     'Komendly turns a website URL into on-brand, ready-to-run ad creatives (static and animated) via Ozzy, its AI ad wizard.',
-    'Free trial: 3 free ads from your website, no credit card required; the rest of the pack unlocks with any plan or a $9 one-time unlock (one trial per website, device and network).',
+    `Main paid plan: ${HERO_PRICE_LINE}. ${HERO_OUTCOME} Includes ${HERO_INCLUDES}.`,
+    `Free pack: ${FREE_PACK_LINE}. ${UNLOCK_LINE} (one free pack per website, device and network).`,
+    `Other monthly plans: ${PLANS_FOR_SALE.filter((p) => p.key !== HERO_PLAN.key).map((p) => `${p.name} ${usd(p.priceCents)}/month (${p.usageMultiple ? `${planUsageLine(p)}; 6 fresh ads every Monday; Ozzy Ad Coach${p.key === 'agency' ? '; 3 testimonial videos a month' : ''}` : `${p.monthlyCredits} credits`})`).join(', ')}.`,
     'Ad sizes: 4:5, 1:1 and 9:16. Ads cover all 5 awareness stages.',
     '1 credit = 1 static ad in one size; an animated ad costs 5 credits.',
-    `Monthly plans: ${PLANS_FOR_SALE.map((p) => `${p.name} ${usd(p.priceCents)}/month (${p.usageMultiple ? `${planUsageLine(p)}; 6 fresh ads every Monday; Ozzy Ad Coach${p.key === 'agency' ? '; 3 testimonial videos a month' : ''}` : `${p.monthlyCredits} credits`})`).join(', ')}.`,
     `${FOUNDING_TERMS}`,
     `One-time credit top-ups: ${ADS_TOPUPS.map((t) => `${t.credits} credits ${usd(t.priceCents)}`).join(', ')}.`,
     ADS_GUARANTEE,
@@ -62,7 +64,7 @@ export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryL
   return [
     '# Komendly',
     '',
-    '> Komendly turns a website into on-brand, ready-to-run static and animated ads with Ozzy, its AI ad wizard. Try it free: 3 ads from your website, no card required.',
+    `> Komendly turns a website into on-brand, ready-to-run static and animated ads with Ozzy, its AI ad wizard. Try it free: ${PUBLIC_OFFER.freeAds} ads from your website, no card required. Main plan: ${HERO_PRICE_LINE}; ${HERO_OUTCOME.charAt(0).toLowerCase()}${HERO_OUTCOME.slice(1)}`,
     '',
     '## Product facts',
     '',
@@ -74,7 +76,7 @@ export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryL
     `- [Ozzy Studio](${SITE_URL}/ozzy-studio): make video ads, motion graphics and footage edits by chatting with Ozzy; 1 free video`,
     `- [Remix any ad](${SITE_URL}/remix): paste a link to any ad (TikTok, Reels, YouTube Shorts, Facebook, X) and Ozzy rebuilds its hook, pacing and style for your brand, never its footage, logos or words; first video free`,
     `- [Pricing](${SITE_URL}/pricing): one plan for Ozzy Studio, Ad Packs and Testimonials`,
-    `- [Ads pricing](${SITE_URL}/ads/pricing): plans, credits and the free trial`,
+    `- [Ads pricing](${SITE_URL}/ads/pricing): ${PUBLIC_OFFER.heroName} (${PUBLIC_OFFER.heroFirstMonth} the first month, then ${PUBLIC_OFFER.heroPrice}/month), other plans, credits and the free pack`,
     `- [Partner program](${SITE_URL}/partners): web designers, freelancers and agencies earn 30% of what referred clients pay for 12 months`,
     `- [Ad of the week](${SITE_URL}/ad-of-the-week): real customer ads made with Komendly, featured weekly`,
     `- [Examples](${SITE_URL}/examples): Ozzy Studio animated ads, Ad Pack static ads and a video testimonial, all made with Komendly`,

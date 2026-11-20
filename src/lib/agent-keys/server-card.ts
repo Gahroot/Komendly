@@ -22,7 +22,7 @@ export async function buildServerCard(origin: string) {
   const url = `${origin}/api/mcp`;
   return {
     serverInfo: init.serverInfo,
-    description: "Make Facebook and Instagram ad creatives from any website, and promo videos with Ozzy. Free first Ad Pack. OAuth sign-in.",
+    description: "Make Facebook and Instagram ad creatives from any website, and promo videos with Ozzy. 3 free ads, no card. OAuth sign-in.",
     websiteUrl: `${origin}/agents`,
     documentationUrl: `${origin}/agents`,
     iconUrl: `${origin}/brand/komendly-mark-256.png`,

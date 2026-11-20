@@ -8,11 +8,13 @@ when that file can't be read. Never state any Komendly fact that is not on this 
 - Komendly turns a website URL into on-brand, ready-to-run ad creatives (static + animated) via Ozzy, its AI ad wizard.
 - Ad sizes: 4:5, 1:1, 9:16.
 - Ads for all 5 awareness stages (unaware, problem aware, solution aware, product aware, most aware).
-- One-click publish to Meta on Growth and Scale plans.
+- Lead paid plan: Ozzy Ad Department, $97 the first month, then $197/month. The promise: the customer's ads go live in their own Meta ad account (Ozzy walks them through it step by step) and the losing ads get replaced every week: 6 fresh ads every Monday, plus Ozzy Ad Coach, which reads their uploaded Ads Manager results and says which ads to turn off.
+- Never describe it as "one-click publishing" or tie publishing to Growth/Scale plans.
 - Second product: AI video testimonials (komendly.com/testimonials) turns text reviews into AI-avatar videos.
 
 ## Free trial
-- 10 static ads + 1 animated ad, no card required.
+- 3 free ads made from the business's website, no card required. The rest of the pack unlocks once with "Unlock this pack" ($9) or with any paid plan.
+- People who sign up through a referral link get 20 free ads.
 - One trial per website/device/network; email verification.
 
 ## Guarantee
@@ -34,7 +36,8 @@ when that file can't be read. Never state any Komendly fact that is not on this 
 ## Links
 - Pricing: internal link `/pricing`. Free studio: `/`.
 
-## Fallback prices (only if billing-config.ts on main can't be read; from CONTRACT.md, 2026-11-07)
+## Fallback prices (only if billing-config.ts on main can't be read; updated 2026-11-20)
+- plan: Ozzy Ad Department | price: 197 (first month 97) | credits: 1200
 - plan: Starter | price: 49 | credits: 20
 - plan: Growth | price: 119 | credits: 55
 - plan: Scale | price: 229 | credits: 115

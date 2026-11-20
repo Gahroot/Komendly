@@ -14,7 +14,8 @@ import { errMsg, log } from "./log";
 import type { Db } from "./db";
 import { normalizeUsPhone, type Place } from "./finder";
 
-export const SOURCE_IDS = ["osm", "search", "codex_search", "overture"] as const;
+// "adlib" (Meta Ad Library advertisers, src/adlib.ts) is listed first: planSources always runs it first when enabled.
+export const SOURCE_IDS = ["adlib", "osm", "search", "codex_search", "overture"] as const;
 export type SourceId = (typeof SOURCE_IDS)[number];
 
 export interface Candidate extends Place {

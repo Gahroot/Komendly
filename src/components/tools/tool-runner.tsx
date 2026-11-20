@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, Copy, Loader2, X } from "lucide-react";
 import { AI_TOOL_FIELDS, AI_TOOL_SECTIONS, CTA_GOALS, CTA_PLATFORMS, LINKEDIN_LIMITS, PLATFORM_LIMITS, RSA_LIMITS, budgetMath, buildHashtags, charCount, checkAdSize, checkLength, gradeAdCopy, isAiTool, keywordHits, pickCta, type AiToolSlug, type CtaGoal, type FreeToolSlug, type Grade, type LinkedInVariant, type ReviewOutput, type RsaOutput, type VideoScriptOutput } from "@/lib/growth/free-tools";
+import { FREE_TRIAL_ADS } from "@/lib/ads/bonus-access";
 import { MockupTool } from "./ad-mockup";
 
 const field = "w-full rounded-xl border border-border bg-white/5 px-4 py-3 text-base outline-none focus:border-[var(--studio-gold)]";
@@ -394,7 +395,7 @@ function MakerTool() {
         <button className={`${btn} shrink-0`}>Make my free ads</button>
       </div>
       {err && <p role="alert" className="text-sm text-red-300">{err}</p>}
-      <p className="text-xs text-muted-foreground">10 image ads + 1 animated ad, no watermark, no card.</p>
+      <p className="text-xs text-muted-foreground">{FREE_TRIAL_ADS} free ads, no watermark, no card.</p>
     </form>
   );
 }

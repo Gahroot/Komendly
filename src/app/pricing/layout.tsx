@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { TestiStudio } from "@/components/testimonials/testi-studio";
+import { HERO_OUTCOME, HERO_PRICE_LINE, PUBLIC_OFFER } from "@/lib/ads/public-offer";
 
-const DESC = "One Ozzy plan for Ad Packs, Ozzy Studio and AI testimonial videos. Start free, plans from $49/month, 30-day money-back guarantee.";
+const DESC = `${HERO_OUTCOME} ${HERO_PRICE_LINE}. Start free with ${PUBLIC_OFFER.freeAds} ads, no card.`;
 
 export const metadata: Metadata = {
   title: "Pricing: Ad Packs, Ozzy Studio and AI testimonials",

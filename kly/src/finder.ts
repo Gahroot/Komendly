@@ -13,6 +13,7 @@ import { codexSearchSource, createSourceRuntime, polite, searchSource, SOURCE_ID
 import { addCost, decide, SETTINGS_ID } from "./settings";
 import type { KlyAI } from "./ai";
 import { overtureSource } from "./places";
+import { adlibSource } from "./adlib";
 
 const OSM_UA = "Komendly-lead-finder/1.0 (+https://www.komendly.com)";
 
@@ -315,7 +316,7 @@ export const osmSource: LeadSource = {
 };
 
 function sourceById(id: SourceId): LeadSource {
-  return id === "osm" ? osmSource : id === "search" ? searchSource : id === "overture" ? overtureSource : codexSearchSource;
+  return id === "osm" ? osmSource : id === "search" ? searchSource : id === "overture" ? overtureSource : id === "adlib" ? adlibSource : codexSearchSource;
 }
 
 export interface YieldRow {
@@ -329,12 +330,18 @@ export interface YieldRow {
 
 export const EXHAUSTED_DAYS = 14;
 
-/** A source is "exhausted" for one niche|city after consecutive runs with nothing new (OSM: 1, rotating searches: 3). */
+/** A source is "exhausted" for one niche|city after consecutive runs with nothing new (OSM: 1, rotating searches: 3).
+ * Never adlib: it is a cheap DB read that also tops up from other cities, and new imports must be picked up at once. */
 export function isExhausted(r: Pick<YieldRow, "source" | "dry" | "lastRunAt">, now: Date): boolean {
+  if (r.source === "adlib") return false;
   return r.dry >= (r.source === "osm" ? 1 : 3) && now.getTime() - r.lastRunAt.getTime() < EXHAUSTED_DAYS * 86_400_000;
 }
 
-/** Sources to run for one city, best niche-level yield first (untried first, ties in SOURCE_IDS order), minus exhausted. */
+/** Sources always run before the yield-ranked rest (warm Meta advertisers first). */
+export const PRIORITY_SOURCES: readonly SourceId[] = ["adlib"];
+
+/** Sources to run for one city: PRIORITY_SOURCES first, then best niche-level yield first (untried first, ties in
+ * SOURCE_IDS order), minus exhausted. */
 export function planSources(enabled: readonly string[], rows: readonly YieldRow[], city: string, now: Date): SourceId[] {
   const ids = SOURCE_IDS.filter((id) => enabled.includes(id));
   const score = (id: SourceId): number => {
@@ -346,7 +353,7 @@ export function planSources(enabled: readonly string[], rows: readonly YieldRow[
   const scores = new Map(ids.map((id) => [id, score(id)]));
   return ids
     .filter((id) => !rows.some((r) => r.source === id && r.city === city && isExhausted(r, now)))
-    .sort((a, b) => (scores.get(b) ?? 0) - (scores.get(a) ?? 0) || SOURCE_IDS.indexOf(a) - SOURCE_IDS.indexOf(b));
+    .sort((a, b) => Number(!PRIORITY_SOURCES.includes(a)) - Number(!PRIORITY_SOURCES.includes(b)) || (scores.get(b) ?? 0) - (scores.get(a) ?? 0) || SOURCE_IDS.indexOf(a) - SOURCE_IDS.indexOf(b));
 }
 
 interface Blocks {

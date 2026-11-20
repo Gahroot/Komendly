@@ -11,16 +11,18 @@ import { StudioFooter } from "@/components/studio/studio-footer";
 import { StudioNav } from "@/components/studio/studio-nav";
 import { StudioRoot } from "@/components/studio/studio-spell";
 import "@/components/studio/studio.css";
+import { UNLOCK_PACK } from "@/lib/ads/billing-config";
+import { FREE_TRIAL_ADS } from "@/lib/ads/bonus-access";
 
 // Cold-traffic landing page for the Free Ad Pack (Meta ads). Static on purpose: no session read, so it is
 // publicly cacheable (next.config.ts headers) and fast. UTM/fbclid first touch is stored by the middleware;
 // the CTA sends everyone to signup, which forwards signed-in users straight to /ads/start.
 // Buyers are mostly owners aged 35-64 on phones in the Facebook app: big type, real proof up top, one field.
 export const metadata: Metadata = {
-  title: "Free Ad Pack: 10 ready-to-run ads from your website",
-  description: "Paste your website. Get 10 ready-to-run ads plus an animated video ad, free, in minutes. No card, no designer, no prompts.",
+  title: `Free Ad Pack: ${FREE_TRIAL_ADS} ready-to-run ads from your website`,
+  description: `Paste your website. Get ${FREE_TRIAL_ADS} ready-to-run ads free, in minutes. No card, no designer, no prompts.`,
   alternates: { canonical: "/free-ads" },
-  openGraph: { title: "Free Ad Pack: ads from your website", description: "A pack of ready-to-run ads from your website. 3 are free, no card.", url: "/free-ads" },
+  openGraph: { title: "Free Ad Pack: ads from your website", description: `A pack of ready-to-run ads from your website. ${FREE_TRIAL_ADS} are free, no card.`, url: "/free-ads" },
 };
 
 // Verbatim from Trustpilot (shared with Max's OK).
@@ -33,8 +35,8 @@ const MAX = {
 };
 
 const STACK = [
-  { what: "10 ready-to-post ads for your social feeds", worth: "Freelancers charge $15-60 per ad" },
-  { what: "1 animated video ad", worth: "Video ads usually cost the most to make" },
+  { what: `${FREE_TRIAL_ADS} ready-to-post ads for your social feeds, free`, worth: "Freelancers charge $15-60 per ad" },
+  { what: "The rest of the pack, including an animated video ad", worth: `Unlock it once for $${UNLOCK_PACK.priceCents / 100}, or with any plan` },
   { what: "The words for every ad, written for your customers", worth: "Headlines and text pulled from your own website" },
   { what: "Your logo and colours, taken from your site", worth: "Every ad looks like your business, not a template" },
 ];
@@ -52,7 +54,7 @@ const STEPS = [
 ];
 
 const FAQ = [
-  { q: "Is it really free?", a: "Yes. The Free Ad Pack needs no card. You only pay if you choose a plan afterwards." },
+  { q: "Is it really free?", a: `Yes. Your ${FREE_TRIAL_ADS} free ads need no card. You only pay if you want the rest of the pack ($${UNLOCK_PACK.priceCents / 100} once) or a plan.` },
   { q: "Do I need to be good with computers?", a: "No. If you can type your website address, you can do this. We do the design and the writing." },
   { q: "Why only one per business?", a: "Each pack runs real image and video generation, so it's one free pack per business, per device and per email." },
   { q: "Where can I run the ads?", a: "Anywhere you advertise. They're made in the 4:5 feed size, and they're yours to use." },
@@ -109,10 +111,10 @@ export default function FreeAdsPage() {
             Free Ad Pack · no card needed
           </p>
           <h1 id="offer-title" className="font-display mt-3 text-balance text-[2.4rem] font-medium leading-[1.08] tracking-[-0.02em] sm:text-6xl">
-            Paste your website. Get 10 ready-to-run ads, free.
+            Paste your website. Get {FREE_TRIAL_ADS} ready-to-run ads, free.
           </h1>
           <p className="mt-3 max-w-xl text-pretty text-lg text-foreground/90 sm:text-xl">
-            Plus a video ad. Made from your own website in minutes. No designer needed.
+            Made from your own website in minutes. No designer needed.
           </p>
           <div id="start" className="mt-5 flex w-full justify-center"><Cta id="hero" /></div>
           <div className="mt-4 flex w-full justify-center sm:mt-8"><MaxQuote /></div>

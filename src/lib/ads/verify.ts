@@ -58,7 +58,7 @@ export function verificationEmailHtml(name: string | null, link: string, baseUrl
   return renderEmailLayout({
     appUrl: baseUrl,
     imageUrl,
-    preheader: code ? `Your code is ${code}. Confirm your email to unlock your free ads.` : "Confirm your email to unlock 10 free static ads and 1 animated ad.",
+    preheader: code ? `Your code is ${code}. Confirm your email to unlock your free ads.` : "Confirm your email to unlock your 3 free ads.",
     heading: code ? `Your code: ${code}` : "One click and Ozzy gets to work",
     paragraphs: [
       `Hi${name ? ` ${name}` : " there"},`,

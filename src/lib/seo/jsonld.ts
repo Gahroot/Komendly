@@ -1,4 +1,5 @@
-import { ADS_GUARANTEE, PLANS_FOR_SALE, planUsageLine } from '@/lib/ads/billing-config'
+import { ADS_GUARANTEE, PLANS_FOR_SALE, planUsageLine, type AdsPlanTier } from '@/lib/ads/billing-config'
+import { HERO_INCLUDES, HERO_OUTCOME, HERO_PLAN, PUBLIC_OFFER, UNLOCK_LINE } from '@/lib/ads/public-offer'
 import { authorUrl, type Author } from '@/lib/authors'
 import type { BlogPostMeta, FaqItem } from '@/lib/blog'
 import { stripFootnotes } from '@/lib/blog-content'
@@ -45,6 +46,12 @@ export function websiteJsonLd(description: string): JsonLd {
   return { '@type': 'WebSite', '@id': WEBSITE_ID, url: SITE_URL, name: SITE_NAME, description, publisher: { '@id': ORG_ID } }
 }
 
+/** Offer text for a plan: the hero plan leads with its outcome and first-month price. */
+function planOfferDescription(p: AdsPlanTier, creditsLine: string): string {
+  if (p.key === HERO_PLAN.key) return `${HERO_OUTCOME} ${PUBLIC_OFFER.heroFirstMonth} the first month, then ${PUBLIC_OFFER.heroPrice}/month. ${planUsageLine(p)}, ${HERO_INCLUDES}. ${ADS_GUARANTEE}`
+  return `${p.usageMultiple ? `${planUsageLine(p)}, 6 fresh ads every Monday and Ozzy Ad Coach` : creditsLine}. ${ADS_GUARANTEE}`
+}
+
 /** Website2ads product entity with real offers from billing-config. */
 export function softwareApplicationJsonLd(): JsonLd {
   const dollars = (cents: number) => (cents / 100).toFixed(2)
@@ -66,7 +73,7 @@ export function softwareApplicationJsonLd(): JsonLd {
         name: 'Free trial',
         price: '0',
         priceCurrency: 'USD',
-        description: '3 free ads from your website. No card required.',
+        description: `${PUBLIC_OFFER.freeAds} free ads from your website. No card required. ${UNLOCK_LINE}.`,
         url: SITE_URL,
       },
       ...PLANS_FOR_SALE.map((p) => ({
@@ -74,7 +81,7 @@ export function softwareApplicationJsonLd(): JsonLd {
         name: `${p.name} plan`,
         price: dollars(p.priceCents),
         priceCurrency: 'USD',
-        description: `${p.usageMultiple ? `${planUsageLine(p)}, 6 fresh ads every Monday and Ozzy Ad Coach` : `${p.monthlyCredits} credits per month`}. ${ADS_GUARANTEE}`,
+        description: planOfferDescription(p, `${p.monthlyCredits} credits per month`),
         url: `${SITE_URL}/ads/pricing`,
         priceSpecification: {
           '@type': 'UnitPriceSpecification',
@@ -118,7 +125,7 @@ export function studioApplicationJsonLd(): JsonLd {
         name: `${p.name} plan`,
         price: dollars(p.priceCents),
         priceCurrency: 'USD',
-        description: `${p.usageMultiple ? `${planUsageLine(p)}, 6 fresh ads every Monday and Ozzy Ad Coach` : `${p.monthlyCredits} Ozzy credits per month, shared by Ozzy Studio and Ad Packs`}. ${ADS_GUARANTEE}`,
+        description: planOfferDescription(p, `${p.monthlyCredits} Ozzy credits per month, shared by Ozzy Studio and Ad Packs`),
         url: `${SITE_URL}/pricing`,
         priceSpecification: {
           '@type': 'UnitPriceSpecification',

@@ -10,6 +10,7 @@ import { formatCents } from "@/lib/ads/billing-format";
 import { FIRST_VIDEO_OFFER, perVideoUsd, VIDEO_PACK_OFFER } from "@/lib/first-video-offer";
 import { ATTRACTION, planAppsSummary, TESTIMONIALS_PER_MONTH } from "@/lib/hub/money-model";
 import { STUDIO_INVITE, STUDIO_PRICE } from "@/lib/studio/contracts";
+import { HERO_OUTCOME, PUBLIC_OFFER } from "@/lib/ads/public-offer";
 import { cn } from "@/lib/utils";
 
 /** Display order for new buyers: Starter (fallback), Ozzy Ad Department (hero), Scale, Agency; hidden plans are skipped. */
@@ -67,7 +68,7 @@ export function OzzyPricing({ yearly, basePath, planHref, freeHref, testimonialA
         <Image src="/brand/ozzy-adventurer-cool.png" alt="" width={104} height={104} unoptimized className="mx-auto [image-rendering:pixelated]" />
         <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]">Pricing</p>
         <h1 className="font-display mt-3 text-balance text-4xl font-medium tracking-[-0.02em] sm:text-6xl">Your AI <em className="text-[var(--studio-gold)]">ad department.</em></h1>
-        <p className="mt-4 text-muted-foreground">Fresh ads every Monday, a coach that tells you what&apos;s working, 30-day no-questions refund. Start free: {ATTRACTION.adPack}, plus {ATTRACTION.studio.charAt(0).toLowerCase()}{ATTRACTION.studio.slice(1)}.</p>
+        <p className="mt-4 text-muted-foreground">{HERO_OUTCOME} {PUBLIC_OFFER.heroName}: {PUBLIC_OFFER.heroFirstMonth} the first month, then {PUBLIC_OFFER.heroPrice}/month, 6 fresh ads every Monday and a coach that tells you what&apos;s working. 30-day no-questions refund. Start free: {ATTRACTION.adPack}, plus {ATTRACTION.studio.charAt(0).toLowerCase()}{ATTRACTION.studio.slice(1)}.</p>
         <Link href={freeHref} data-pricing-plan="free" className="spellbar__cta mt-6 inline-flex h-11 items-center justify-center rounded-xl px-6 font-semibold">Start free, no card</Link>
       </div>
 

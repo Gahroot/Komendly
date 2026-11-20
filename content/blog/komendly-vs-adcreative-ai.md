@@ -10,7 +10,7 @@ tags:
   - "AI advertising"
   - "AdCreative.ai"
   - "ad creative tools"
-published: true
+published: false
 status: "approved"
 approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "komendly vs adcreative.ai"

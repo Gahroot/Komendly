@@ -8,6 +8,7 @@ import { REFERRAL_COOKIE, REFERRED_TRIAL_STATIC, lookupReferralCode } from "@/li
 import { KLY_COOKIE, isKlyClaimToken } from "@/lib/kly/claim";
 import { cleanBusinessName } from "@/lib/ads/outbound/copy";
 import { prisma } from "@/lib/prisma";
+import { FREE_TRIAL_ADS } from "@/lib/ads/bonus-access";
 
 export const metadata = { title: "Sign up", robots: { index: false, follow: true } };
 
@@ -29,7 +30,7 @@ export default async function AdsSignupPage({ searchParams }: { searchParams: Pr
     <div className="min-h-screen text-foreground">
       <SiteHeader cta={false} />
       <Suspense fallback={<div className="min-h-[60vh]" />}>
-        <OzzyAuth mode="signup" referrerName={referrer?.name} freeStatic={referrer ? REFERRED_TRIAL_STATIC : 10} defaultEmail={kly?.email} giftFor={kly?.business} />
+        <OzzyAuth mode="signup" referrerName={referrer?.name} freeStatic={referrer ? REFERRED_TRIAL_STATIC : FREE_TRIAL_ADS} defaultEmail={kly?.email} giftFor={kly?.business} />
       </Suspense>
     </div>
   );

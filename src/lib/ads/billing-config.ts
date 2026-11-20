@@ -8,7 +8,7 @@
 // AdCreative.ai / Creatify / Canva / freelancer / agency prices): overall PMC $48, OPP $64, IPP $69, PME $95.
 // Each tier is the revenue-max price inside its own segment's acceptable range (Starter $29-59, Growth
 // $66-133, Scale $121-246); credits are the most that keep the 70% floor.
-// Hormozi money model: attraction = free trial (10 static + 1 motion); continuity = monthly plans with Scale
+// Hormozi money model: attraction = free pack (3 free ads, 20 via referral; $9 "Unlock this pack" for the rest); continuity = monthly plans with Scale
 // as the anchor; downsell = one-time credit packs, priced per credit above every plan, no subscription;
 // guarantee = 30-day one-click refund of the first payment (self-serve, src/lib/ads/self-refund.ts).
 // Price IDs come from env (created by scripts/ads-stripe-setup.ts); a missing ID = not purchasable.

@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAdsWorkspace } from "@/hooks/useAdsWorkspace";
 import { UsageBar } from "@/components/ads/usage-bar";
 import { usageMeter } from "@/lib/ads/billing-config";
+import { freeTrialAdsFor, REFERRED_FREE_TRIAL_ADS } from "@/lib/ads/bonus-access";
 
 /** Credit balance, plan badge and the free-trial state with an upgrade CTA. */
 export function AdsAccountCard() {
@@ -41,7 +42,7 @@ export function AdsAccountCard() {
         {data.isPaid ? (
           <Button asChild variant="outline" className="w-full"><Link href="/ads/billing">Manage billing</Link></Button>
         ) : data.trialAvailable ? (
-          <p className="text-sm text-muted-foreground">Your free trial is ready: {data.trialStatic} static ads + 1 animated ad for one website.</p>
+          <p className="text-sm text-muted-foreground">Your free pack is ready: {freeTrialAdsFor(data.trialStatic >= REFERRED_FREE_TRIAL_ADS)} free ads for one website.</p>
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">You&apos;ve used your free trial. Pick a monthly plan to keep making ads.</p>

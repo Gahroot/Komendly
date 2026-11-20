@@ -14,10 +14,11 @@ import { StudioNav } from "@/components/studio/studio-nav";
 import { StudioRoot } from "@/components/studio/studio-spell";
 import "@/components/studio/studio.css";
 import { graph, jsonLdString, softwareApplicationJsonLd } from "@/lib/seo/jsonld";
+import { PUBLIC_OFFER } from "@/lib/ads/public-offer";
 
 export const metadata: Metadata = {
   title: { absolute: "Komendly — Your website in, ready-to-run ads out" },
-  description: "Paste your website. Ozzy builds 10 on-brand, export-ready ads and an animated ad in minutes. Free, no card required.",
+  description: `Paste your website. Ozzy builds on-brand, ready-to-run ads in minutes: ${PUBLIC_OFFER.freeAds} free, no card required. Then your ads go live in your own Meta account and the losers get replaced every week.`,
   alternates: { canonical: "/" },
 };
 

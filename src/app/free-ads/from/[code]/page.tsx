@@ -10,6 +10,7 @@ import { StudioNav } from "@/components/studio/studio-nav";
 import { StudioRoot } from "@/components/studio/studio-spell";
 import { StudioUrlForm } from "@/components/studio/studio-url-form";
 import { REFERRED_TRIAL_STATIC, lookupReferralCode } from "@/lib/ads/referrals";
+import { FREE_TRIAL_ADS } from "@/lib/ads/bonus-access";
 import "@/components/studio/studio.css";
 
 // Referral landing (/r/<code> redirects here after setting kmd_ref). Per-code content only: safe to cache publicly.
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = ref ? `${ref.name} sent you ${REFERRED_TRIAL_STATIC} free ads` : "Free Ad Pack";
   return {
     title,
-    description: `Paste your website and get ${REFERRED_TRIAL_STATIC} ready-to-run Facebook & Instagram ads plus an animated ad, free. Double the usual free pack.`,
+    description: `Paste your website and get ${REFERRED_TRIAL_STATIC} ready-to-run Facebook & Instagram ads, free. The usual free pack is ${FREE_TRIAL_ADS}.`,
     robots: { index: false, follow: false },
     openGraph: { title, description: `${REFERRED_TRIAL_STATIC} free Facebook & Instagram ads made from your website. No card.` },
   };
@@ -37,7 +38,7 @@ const SAMPLES = [
 export default async function ReferralLandingPage({ params }: Props) {
   const ref = await lookupReferralCode((await params).code.toLowerCase());
   if (!ref) redirect("/free-ads");
-  const perks = [`${REFERRED_TRIAL_STATIC} on-brand static ads (double the usual 10)`, "1 animated video ad", "Copy written from your customers' own words", "No card, nothing to cancel"];
+  const perks = [`${REFERRED_TRIAL_STATIC} on-brand static ads, free (the usual free pack is ${FREE_TRIAL_ADS})`, "Copy written from your customers' own words", "No card, nothing to cancel"];
   return (
     <StudioRoot className={`${fraunces.variable} min-h-screen bg-[#0c0820]`}>
       <DeviceCookie />
@@ -53,7 +54,7 @@ export default async function ReferralLandingPage({ params }: Props) {
             {ref.name} sent you <span className="text-[var(--studio-gold)]">{REFERRED_TRIAL_STATIC} free ads</span>
           </h1>
           <p className="mt-4 max-w-xl text-pretty text-base text-muted-foreground sm:text-lg">
-            Paste your website and Ozzy makes {REFERRED_TRIAL_STATIC} ready-to-run Facebook &amp; Instagram ads, plus an animated one. Twice the normal free pack, because a friend sent you.
+            Paste your website and Ozzy makes {REFERRED_TRIAL_STATIC} ready-to-run Facebook &amp; Instagram ads, free. The normal free pack is {FREE_TRIAL_ADS}; you get more because a friend sent you.
           </p>
           <div className="w-full max-w-2xl pt-28 sm:pt-20">
             <StudioUrlForm signedIn={false} cta={`Get my ${REFERRED_TRIAL_STATIC} free ads`} />

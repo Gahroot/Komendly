@@ -5,10 +5,11 @@ import { OzzyPricing, TestimonialPackLinks } from "@/components/billing/ozzy-pri
 import { StudioFooter } from "@/components/studio/studio-footer";
 import { getCurrentUser } from "@/lib/auth";
 import { planCheckoutPath } from "@/lib/ads/plan-checkout";
+import { HERO_OUTCOME, HERO_PRICE_LINE, PUBLIC_OFFER } from "@/lib/ads/public-offer";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "One Ozzy plan for Ad Packs, Ozzy Studio and AI testimonials. Start free, plans from $49/month, yearly billing with 2 months free.",
+  description: `${HERO_OUTCOME} ${HERO_PRICE_LINE}. Start free with ${PUBLIC_OFFER.freeAds} ads, no card.`,
   alternates: { canonical: "/pricing" },
 };
 
