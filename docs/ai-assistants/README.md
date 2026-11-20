@@ -38,22 +38,27 @@ curl -s "https://registry.modelcontextprotocol.io/v0/servers?search=io.github.Ga
 ```
 Bump `version` in `server.json` for every later publish.
 
-## Directory status (19 Nov 2026)
+## Directory status (19 Nov 2026, ~20:00 ET)
 | Directory | Status | Next step |
 |---|---|---|
 | Official MCP Registry (`io.github.Gahroot/komendly`) | Live, v1.0.0 | Bump `version` on changes |
-| Glama connector `io.github.Gahroot/komendly` | Listed (auto from registry) but **Unhealthy 0%**: its health check can't sign in | Sign in to Glama with GitHub (Gahroot), **claim ownership**, add a test profile under Admin → Test Profile |
-| punkpeye/awesome-remote-mcp-servers | PR #5297 open (labels endpoint-ok, has-connector; repo starred) | Wait for merge |
+| Glama connector `io.github.Gahroot/komendly` | **Claimed (ownership verified via GitHub @Gahroot), Healthy.** Test profile sends header `X-Komendly-Client: probe` (public probe: initialize + tools/list only) | Nothing; uptime climbs with hourly checks |
+| Glama server (repo `Gahroot/Komendly`) | Submitted "Add Server > Runs from source" (reviewed; then an email asks for a Dockerfile) | Answer Glama's email; then PR to punkpeye/awesome-mcp-servers (its CI needs this listing) |
+| punkpeye/awesome-remote-mcp-servers | PR #5297 open (endpoint-ok, has-connector; repo starred) | Wait for merge |
 | jaw9c/awesome-remote-mcp-servers | PR #2564 open | Wait for merge |
-| punkpeye/awesome-mcp-servers (installable list) | Not submitted: CI needs a Glama *server* listing for the repo (glama.ai/mcp/servers/Gahroot/Komendly is 404) | Add the repo on Glama ("Add Server", GitHub sign-in), then PR |
-| mcpservers.org | Submitted (free queue, review ≤2 weeks), Marketing, remote + OAuth | Wait for approval email (nolan@komendly.com) |
-| MCP Market (mcpmarket.com) | Not submitted: the page crashed mid-form (nothing sent, nothing paid); retry blocked because the Mac screen locked (agent-desktop sees no windows while `CGSSessionScreenIsLocked`). Has a **Free Queue** option (4-6 weeks); default is $29 | Re-submit as Remote MCP + Free Queue once the screen is unlocked |
-| mcp.so | Paid only now ($39) | Founder decision |
-| Smithery, Cursor directory, LobeHub | Not submitted: need GitHub sign-in in the browser | Sign in to GitHub in Safari first |
+| mcpservers.org | Submitted (free queue, review within 2 weeks), Marketing, remote + OAuth | Approval email to nolan@komendly.com |
+| mcp.directory | Submitted (free, "published within 24 hours"), repo Gahroot/Komendly, npm `komendly` | Email to nolan@komendly.com |
+| MCP Market | Repo already in their free queue (form said "already in our queue"); free queue is GitHub-repo only, Remote MCP needs paid $29/$69 | Wait (4-6 weeks) |
+| Cursor directory | Plugin created at cursor.directory/plugins/komendly-ozzy (MCP config = hosted URL). **Hidden pending manual review**: their scanner can't clone the repo (archive >100 MB); repo field is locked | Wait for manual review |
+| Smithery | Closed: stopped accepting accounts/submissions on 31 Oct 2026 (now a curated Arcade.dev directory) | Nothing |
+| LobeHub MCP marketplace | Market CLI logged in as Gahroot, but its GitHub connect asks **read+write on all repos incl. private**; declined | Founder decision (scoped token or separate org/repo) |
+| mcp.so | Paid only ($39) | Skipped |
+| AI Agents Directory | Needs an account login | Later |
+| AI Agents List | Paid ($29+) | Skipped |
 | PulseMCP, GitHub MCP Registry | Copy the official registry automatically | Nothing |
 
-Review status (last confirmed 19 Nov 2026 evening): Meta App Review "Review in progress" (submitted ~15:05 ET, up to ~20 days);
-Shopify App Store "Submitted, assigning a reviewer" (~18:45 ET). Neither is exposed via API; check the dashboards (Meta: App Review > Requests,
-Shopify Partners: Distribution) or email (nolan@prestyj.com).
+Review status (checked 19 Nov 2026 ~20:00 ET in the dashboards): Meta App Review "Review in progress" (submitted ~15:05 ET; the
+"not approved" entry below it is the old Nov 2025 submission). Shopify App Store "Submitted, assigning a reviewer" (~18:45 ET).
+Issues are emailed to nolan@prestyj.com.
 
 Server card (SEP-1649): `/.well-known/mcp/server-card.json` and `/.well-known/mcp.json`, built from the live probe (`src/lib/agent-keys/server-card.ts`).
