@@ -21,7 +21,8 @@ import { isBillingConfigured } from "@/lib/ads/billing-stripe";
 import { getOrCreateWorkspace } from "@/lib/ads/workspace";
 import { prisma } from "@/lib/prisma";
 import { expiringCredits } from "@/lib/ads/referrals";
-import { BillingActionButton } from "./_components/billing-action-button";
+import { AutoCheckout, BillingActionButton } from "./_components/billing-action-button";
+import { autoCheckoutPlan, signedOutBillingRedirect } from "@/lib/ads/plan-checkout";
 import { CheckoutDownsell } from "@/components/ads/checkout-downsell";
 import { PricingBeacon } from "@/components/analytics/pricing-beacon";
 import { CheckoutReturnTracker } from "@/components/analytics/checkout-return-tracker";
@@ -51,10 +52,10 @@ const REASON_LABELS: Record<string, string> = {
   offer_bonus: "Launch offer bonus",
 };
 
-export default async function AdsBillingPage({ searchParams }: { searchParams: Promise<{ checkout?: string; declined?: string; session_id?: string; billing?: string; offer?: string; bought?: string }> }) {
+export default async function AdsBillingPage({ searchParams }: { searchParams: Promise<{ checkout?: string; declined?: string; session_id?: string; billing?: string; offer?: string; bought?: string; plan?: string }> }) {
   const user = await getCurrentUser();
-  if (!user) redirect("/ads/login?next=/ads/billing");
-  const { checkout, declined, session_id, billing, offer, bought } = await searchParams;
+  const { checkout, declined, session_id, billing, offer, bought, plan: pickedPlan } = await searchParams;
+  if (!user) redirect(signedOutBillingRedirect(pickedPlan, billing === "year"));
   const now = new Date();
   const yearly = billing === "year";
   const ws = await getOrCreateWorkspace(user);
@@ -80,6 +81,9 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
     && !(await isBonusUnlocked(ws))
     && Boolean(await prisma.ad.findFirst({ where: { workspaceId: ws.id, status: "ready", visualBrief: { path: ["locked"], equals: true } }, select: { id: true } }));
   const unlockNext = checkout === "success" && bought === UNLOCK_PACK.key && !paid && !ws.suspendedAt;
+  const autoKey = autoCheckoutPlan({ plan: pickedPlan, paid, checkout, suspended: Boolean(ws.suspendedAt), configured });
+  const autoPlan = autoKey ? getPlan(autoKey) : null;
+  const autoReady = autoPlan && (yearly ? annualPriceIdFor(autoPlan) : priceIdFor(autoPlan)) ? autoPlan : null;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -91,6 +95,7 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
           <p className="text-muted-foreground">One Ozzy wallet for Ad Packs and Ozzy Studio · 1 credit = 1 static ad · an animated ad 5 · a Studio video 5 to 8.</p>
         </div>
 
+        {autoReady && <AutoCheckout planKey={autoReady.key} planName={autoReady.name} interval={yearly ? "year" : "month"} />}
         {(checkout === "success" || checkout === "canceled") && <CheckoutReturnTracker outcome={checkout} pixel={checkout === "success" ? await loadCheckoutPixel(session_id, ws.id) : null} />}
         {checkout === "success" && <Notice tone="ok">Payment received. Your credits appear here within a few seconds.</Notice>}
         {unlockNext && <UnlockPackNext couponReady={Boolean(unlockPackCouponId()) && !ws.stripeSubscriptionId} />}

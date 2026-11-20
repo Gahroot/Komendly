@@ -4,6 +4,7 @@ import { AdsNav } from "@/components/ads/ads-nav";
 import { OzzyPricing, TestimonialPackLinks } from "@/components/billing/ozzy-pricing";
 import { StudioFooter } from "@/components/studio/studio-footer";
 import { getCurrentUser } from "@/lib/auth";
+import { planCheckoutPath } from "@/lib/ads/plan-checkout";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -23,7 +24,10 @@ export default async function AdsPricingPage({ searchParams }: { searchParams: P
       <OzzyPricing
         yearly={yearly}
         basePath="/ads/pricing"
-        planHref={signedIn ? billingPath : `/ads/signup?next=${encodeURIComponent(billingPath)}`}
+        planHref={(plan) => {
+          const path = plan ? planCheckoutPath(plan, yearly) : billingPath;
+          return signedIn ? path : `/ads/signup?next=${encodeURIComponent(path)}`;
+        }}
         freeHref={signedIn ? "/studio" : "/ads/signup?next=%2Fstudio"}
         testimonialActions={<TestimonialPackLinks signedIn={signedIn} />}
       />

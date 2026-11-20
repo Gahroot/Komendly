@@ -78,6 +78,7 @@ describe("HMAC", () => {
 });
 
 // ---------- in-memory Prisma fake ----------
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- loose in-memory Prisma fake
 type Row = Record<string, any>;
 function p2002() { return new Prisma.PrismaClientKnownRequestError("dup", { code: "P2002", clientVersion: "x" }); }
 function matches(r: Row, where: Row): boolean {
@@ -120,9 +121,11 @@ function fakeDb(sysOn = true) {
     shopifyWebhookEvent: table(),
   };
   db.$transaction = vi.fn(async (fn: (tx: Row) => unknown) => fn(db));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- fake stands in for PrismaClient
   return db as any;
 }
 const token = { accessToken: "shpat_x", expiresAt: new Date(NOW.getTime() + 3600_000), refreshToken: "r", scope: "read_products" };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- fake stands in for PrismaClient
 const install = (db: any, shop = "demo.myshopify.com") => ensureShop(db, { shop, token, name: "Demo", email: "owner@demo.com", storeUrl: "https://demo.com" }, NOW);
 
 beforeEach(() => {

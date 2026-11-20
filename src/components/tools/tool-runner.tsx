@@ -54,7 +54,7 @@ function ReviewTool() {
     <div className="space-y-6">
       <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); void run({ review, ...(business.trim() ? { business } : {}) }); }}>
         <label className="block text-sm font-medium" htmlFor="rev">Paste a review a real customer wrote</label>
-        <p className="text-xs text-muted-foreground">Real reviews only: the tool trims your customer's words, it never invents praise.</p>
+        <p className="text-xs text-muted-foreground">Real reviews only: the tool trims your customer&apos;s words, it never invents praise.</p>
         <textarea id="rev" required minLength={30} maxLength={2000} rows={5} value={review} onChange={(e) => setReview(e.target.value)} placeholder="We called on a Sunday with a burst pipe and they were here in an hour…" className={field} />
         <input aria-label="Business name (optional)" maxLength={120} value={business} onChange={(e) => setBusiness(e.target.value)} placeholder="Business name (optional)" className={field} />
         <button className={btn} disabled={state.phase === "working"}>{state.phase === "working" ? <><Loader2 className="size-4 animate-spin" /> Ozzy is reading…</> : "Turn it into an ad"}</button>

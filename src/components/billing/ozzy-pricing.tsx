@@ -19,8 +19,8 @@ export interface OzzyPricingProps {
   yearly: boolean;
   /** Page path for the interval toggle links. */
   basePath: string;
-  /** Where "Choose <plan>" goes (signed in: /ads/billing; else sign-up/login with next). */
-  planHref: string;
+  /** Where "Choose <plan>" goes (plan key) and "Buy credits" goes (no key). */
+  planHref: (plan?: AdsPlanKey) => string;
   /** Start-free link (Studio / free ad pack). */
   freeHref: string;
   /** Testimonial packs actions (Launch Kit claim / 5-pack), page-specific. */
@@ -104,7 +104,7 @@ export function OzzyPricing({ yearly, basePath, planHref, freeHref, testimonialA
               <ul className="mt-5 flex-1 space-y-2.5 text-sm">
                 {[...planAppsSummary(p.key), ...p.highlights.slice(-1)].map((i) => <li key={i} className="flex gap-2"><Check aria-hidden className="mt-0.5 size-4 shrink-0 text-[var(--studio-gold)]" />{i}</li>)}
               </ul>
-              <Link href={planHref} data-pricing-plan={p.key} data-pricing-interval={yearly ? "year" : "month"} className={cn("mt-6 inline-flex h-11 items-center justify-center rounded-xl font-semibold", featured ? "spellbar__cta" : "border border-border text-foreground transition-colors hover:bg-accent")}>Choose {p.name}{yearly ? " yearly" : ""}</Link>
+              <Link href={planHref(p.key)} data-pricing-plan={p.key} data-pricing-interval={yearly ? "year" : "month"} className={cn("mt-6 inline-flex h-11 items-center justify-center rounded-xl font-semibold", featured ? "spellbar__cta" : "border border-border text-foreground transition-colors hover:bg-accent")}>Choose {p.name}{yearly ? " yearly" : ""}</Link>
             </section>
           );
         })}
@@ -145,7 +145,7 @@ export function OzzyPricing({ yearly, basePath, planHref, freeHref, testimonialA
           <h2 id="topups-h" className="font-display text-2xl font-medium">Just need a few more credits?</h2>
           <p className="mt-1 text-sm text-muted-foreground">One-time top-ups for Ad Packs and Studio, no subscription, never expire: {ADS_TOPUPS.map((t) => `${t.name} for ${formatCents(t.priceCents)}`).join(" · ")}.</p>
         </div>
-        <Link href={planHref} data-pricing-plan="topup" className="inline-flex h-11 items-center justify-center rounded-xl border border-border px-6 font-semibold transition-colors hover:bg-accent">Buy credits</Link>
+        <Link href={planHref()} data-pricing-plan="topup" className="inline-flex h-11 items-center justify-center rounded-xl border border-border px-6 font-semibold transition-colors hover:bg-accent">Buy credits</Link>
       </section>
 
       <section id="testimonial-packs" aria-labelledby="packs-h" className="pixel-frame mt-16 rounded-2xl border border-[var(--studio-gold)]/40 bg-card/60 p-6 sm:p-8">

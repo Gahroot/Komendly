@@ -26,6 +26,7 @@ export function FreeAdsUrlForm({ id, cta = "Get my free ads" }: { id: string; ct
   // Prefill from ?url= (URL boxes on /ad-examples/<industry> and /tools submit here).
   useEffect(() => {
     const u = new URLSearchParams(window.location.search).get("url");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time prefill from the URL after hydration
     if (u) setUrl(u.slice(0, 300));
   }, []);
 

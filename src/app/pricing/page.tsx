@@ -7,6 +7,7 @@ import { OzzyPricing } from "@/components/billing/ozzy-pricing";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { PriceSurvey } from "@/components/testimonials/price-survey";
+import { planCheckoutPath } from "@/lib/ads/plan-checkout";
 import { LaunchKitActions, LegacyPlanNotice } from "./_components/pricing-client";
 
 export default async function PricingPage({ searchParams }: { searchParams: Promise<{ billing?: string }> }) {
@@ -19,7 +20,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
       <OzzyPricing
         yearly={yearly}
         basePath="/pricing"
-        planHref={billingPath}
+        planHref={(plan) => (plan ? planCheckoutPath(plan, yearly) : billingPath)}
         freeHref="/ads/signup?next=%2Fstudio"
         notice={<Suspense fallback={null}><LegacyPlanNotice /></Suspense>}
         testimonialActions={<Suspense fallback={null}><LaunchKitActions /></Suspense>}
