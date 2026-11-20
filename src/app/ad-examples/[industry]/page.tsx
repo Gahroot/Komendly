@@ -14,10 +14,12 @@ import { MIN_INDEXABLE_INDUSTRY_ADS, getIndustry, industryGuide, industryTagSlug
 import { absoluteUrl } from "@/lib/site";
 import { MakeYoursUrlBox } from "@/components/ad-examples/url-box";
 import { galleryCtaHref } from "@/lib/ads/industries";
-import { MIN_INDEXABLE_SAMPLES, type SampleAd } from "@/lib/growth/industry-examples";
+import { MIN_INDEXABLE_SAMPLES } from "@/lib/growth/industry-examples";
 import { loadIndustryExample } from "@/lib/growth/industry-examples-server";
 import { comboForIndustry, galleryPage } from "@/lib/growth/ad-pages";
 import { anchorText } from "@/lib/growth/vocabulary";
+import { angleLabel, categoryAngles, category as tradeCategory, ideasPath, templatizeSample, tradePage, type TradePage } from "@/lib/growth/trade-playbooks";
+import { Bullets, ChipLinks, Faq, PaidNote, TemplateAdCard } from "@/components/ad-examples/playbook-parts";
 import { breadcrumbJsonLd, faqJsonLd, galleryPageJsonLd, graph } from "@/lib/seo/jsonld";
 import "@/components/studio/studio.css";
 
@@ -43,31 +45,14 @@ async function load(slug: string) {
   const ads = all.filter((a) => a.industry === industry.slug);
   const available = new Set(summarizeIndustries(all).map((x) => x.industry.slug));
   const content = await loadIndustryExample(industry.slug);
-  return { industry, ads, available, content };
+  return { industry, ads, available, content, trade: tradePage(industry.slug) };
 }
 
-/** Indexable with enough real consented ads, or enough engine-written samples + tips. */
-function indexable(ads: number, samples: number): boolean {
-  return ads >= MIN_INDEXABLE_INDUSTRY_ADS || samples >= MIN_INDEXABLE_SAMPLES;
+/** Indexable with a hand-written trade playbook, enough real consented ads, or enough engine-written samples + tips. */
+function indexable(ads: number, samples: number, trade: TradePage | null): boolean {
+  return !!trade || ads >= MIN_INDEXABLE_INDUSTRY_ADS || samples >= MIN_INDEXABLE_SAMPLES;
 }
 
-function SampleAdCard({ ad }: { ad: SampleAd }) {
-  return (
-    <li className="studio-frame flex flex-col gap-3 rounded-xl p-5">
-      <div className="flex items-center justify-between gap-2">
-        <p className="truncate font-medium">{ad.business} <span className="text-muted-foreground">· {ad.city}</span></p>
-        <span className="shrink-0 rounded-full border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Sample</span>
-      </div>
-      <p className="text-sm italic text-foreground/80">{ad.hook}</p>
-      <p className="whitespace-pre-line text-[15px] leading-relaxed text-foreground/90">{ad.primaryText}</p>
-      <div className="mt-auto flex items-center justify-between gap-3 rounded-lg bg-white/5 px-3 py-2">
-        <p className="text-sm font-semibold">{ad.headline}</p>
-        <span className="shrink-0 rounded-md bg-white/10 px-2.5 py-1 text-xs font-medium">{ad.cta}</span>
-      </div>
-      <p className="text-sm text-muted-foreground"><span className="font-medium text-foreground/80">Why it works: </span>{ad.angle}</p>
-    </li>
-  );
-}
 
 function description(i: Industry, count: number): string {
   return count > 0
@@ -88,29 +73,33 @@ function relatedPosts(i: Industry): BlogPostMeta[] {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const data = await load((await params).industry);
   if (!data) return {};
-  const { industry: i, ads, content } = data;
+  const { industry: i, ads, content, trade } = data;
   const path = `/ad-examples/${i.slug}`;
-  const title = `Facebook Ad Examples for ${titleCase(i.plural)}${ads.length ? ` (${ads.length} real ${ads.length === 1 ? "ad" : "ads"})` : ""}`;
+  const title = trade?.title ?? `Facebook Ad Examples for ${titleCase(i.plural)}${ads.length ? ` (${ads.length} real ${ads.length === 1 ? "ad" : "ads"})` : ""}`;
+  const desc = trade?.description ?? description(i, ads.length);
   const first = ads[0];
   return {
     title,
-    description: description(i, ads.length),
+    description: desc,
     alternates: { canonical: path },
-    openGraph: { title, description: description(i, ads.length), url: path, ...(first ? { images: [{ url: absoluteUrl(first.src), width: first.width, height: first.height, alt: `${first.brandName} ad` }] } : {}) },
+    openGraph: { title, description: desc, url: path, ...(first ? { images: [{ url: absoluteUrl(first.src), width: first.width, height: first.height, alt: `${first.brandName} ad` }] } : {}) },
     twitter: { card: "summary_large_image", title, ...(first ? { images: [absoluteUrl(first.src)] } : {}) },
-    ...(!indexable(ads.length, content?.samples.length ?? 0) ? { robots: { index: false, follow: true } } : {}),
+    ...(!indexable(ads.length, content?.samples.length ?? 0, trade) ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
 export default async function IndustryPage({ params }: PageProps) {
   const data = await load((await params).industry);
   if (!data) notFound();
-  const { industry: i, ads, available, content } = data;
+  const { industry: i, ads, available, content, trade } = data;
   const guide = industryGuide(i);
+  const faq = trade?.faq ?? guide.faq;
+  const pb = trade?.playbook;
+  const cat = pb ? tradeCategory(pb.category) : undefined;
   const path = `/ad-examples/${i.slug}`;
   const related = relatedIndustries(i, available);
   const posts = relatedPosts(i);
-  const h1 = `Facebook ad examples for ${i.plural}`;
+  const h1 = trade?.h1 ?? `Facebook ad examples for ${i.plural}`;
 
   return (
     <StudioRoot className={`${fraunces.variable} min-h-screen bg-[#0c0820]`}>
@@ -118,12 +107,12 @@ export default async function IndustryPage({ params }: PageProps) {
         data={graph(
           galleryPageJsonLd({
             name: h1,
-            description: description(i, ads.length),
+            description: trade?.description ?? description(i, ads.length),
             path,
             items: ads.map((a) => ({ name: a.brandName, url: path, image: { url: a.src, caption: a.headline, width: a.width, height: a.height } })),
           }),
           breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Ad examples", path: "/ad-examples" }, { name: cap(i.plural), path }]),
-          faqJsonLd(guide.faq, absoluteUrl(path)),
+          faqJsonLd(faq, absoluteUrl(path)),
         )}
       />
       <StudioNav signedIn={false} />
@@ -131,9 +120,9 @@ export default async function IndustryPage({ params }: PageProps) {
         <header className="mx-auto max-w-3xl px-4 pt-8 text-center sm:px-6 sm:pt-14">
           <div className="flex justify-center"><Breadcrumbs items={[{ name: "Home", href: "/" }, { name: "Ad examples", href: "/ad-examples" }, { name: cap(i.plural) }]} /></div>
           <h1 className="font-display mt-5 text-balance text-[2.2rem] font-medium leading-[1.05] tracking-[-0.025em] sm:text-6xl">
-            Facebook ad examples for <span className="text-[var(--studio-gold)]">{i.plural}</span>
+            {trade ? h1 : <>Facebook ad examples for <span className="text-[var(--studio-gold)]">{i.plural}</span></>}
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-pretty text-base text-muted-foreground sm:text-lg">{guide.intro}</p>
+          <p className="mx-auto mt-5 max-w-2xl text-pretty text-base text-muted-foreground sm:text-lg">{trade ? trade.intro : guide.intro}</p>
           {ads.length > 0 && <p className="mt-4 font-mono text-xs uppercase tracking-[0.14em] text-[var(--studio-gold)]">{ads.length} real {ads.length === 1 ? "ad" : "ads"} · shared with permission</p>}
         </header>
 
@@ -142,6 +131,12 @@ export default async function IndustryPage({ params }: PageProps) {
             <ul className="mx-auto grid max-w-sm gap-x-5 gap-y-10 sm:max-w-none sm:grid-cols-2 lg:grid-cols-3">
               {ads.map((a, n) => <AdCard key={a.adId} ad={a} eager={n < 2} />)}
             </ul>
+          ) : trade ? (
+            <div>
+              <h2 className="font-display text-2xl font-medium tracking-[-0.02em] sm:text-3xl">3 example {trade.playbook.term} ads to adapt</h2>
+              <p className="mt-3 max-w-3xl text-sm text-muted-foreground">Example ads written by Ozzy, Komendly&apos;s AI ad maker, as templates. They aren&apos;t real companies or customer ads and claim no results: fill in the brackets with your business, town, offer and a real review.</p>
+              <ul className="mt-6 grid gap-5 md:grid-cols-3">{trade.examples.map((a) => <TemplateAdCard key={a.business} ad={a} />)}</ul>
+            </div>
           ) : (
             <div className="mx-auto max-w-xl text-center">
               <Image src="/brand/ozzy-explorer-focused.png" alt="" width={110} height={110} unoptimized className="mx-auto [image-rendering:pixelated]" />
@@ -149,6 +144,49 @@ export default async function IndustryPage({ params }: PageProps) {
             </div>
           )}
         </section>
+
+        {trade && pb && (
+          <section className="mx-auto mt-20 max-w-5xl space-y-14 px-4 sm:px-6" aria-label={`${pb.term} ad playbook`}>
+            <div className="grid gap-10 md:grid-cols-2">
+              <div>
+                <h2 className="font-display text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Hooks that fit {i.plural}</h2>
+                <Bullets items={pb.hooks} />
+              </div>
+              <div>
+                <h2 className="font-display text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Offers that work</h2>
+                <Bullets items={pb.offers} />
+                <p className="mt-3 text-sm text-muted-foreground">Only advertise offers you really run, say what&apos;s included and give them an end date.</p>
+              </div>
+              <div>
+                <h2 className="font-display text-2xl font-medium tracking-[-0.02em] sm:text-3xl">What to show</h2>
+                <Bullets items={pb.proof} />
+              </div>
+              <div>
+                <h2 className="font-display text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Formats</h2>
+                <p className="mt-4 text-muted-foreground">{pb.formats}</p>
+                <p className="mt-3 text-sm text-muted-foreground"><span className="font-medium text-foreground/80">Busy season: </span>{pb.peak}</p>
+              </div>
+            </div>
+            <div className="rounded-xl border border-border p-6">
+              <h2 className="font-display text-2xl font-medium tracking-[-0.02em]">Budget guidance</h2>
+              <p className="mt-3 text-muted-foreground">{trade.budget}</p>
+              {pb.note && <p className="mt-3 text-sm text-muted-foreground"><span className="font-medium text-foreground/80">Ad rules to know: </span>{pb.note}</p>}
+            </div>
+            {trade.seasonal.length > 0 && (
+              <div>
+                <h2 className="font-display text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Seasonal {pb.term} ad ideas</h2>
+                <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+                  {trade.seasonal.map((x) => (
+                    <li key={x.season.key} className="rounded-xl border border-border p-5">
+                      <h3 className="font-semibold">{x.path ? <Link href={x.path} className="hover:text-[var(--studio-gold)]">{x.season.name}</Link> : x.season.name}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{x.idea}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </section>
+        )}
 
         {content && (
           <section className="mx-auto mt-20 max-w-5xl px-4 sm:px-6" aria-labelledby="works-title">
@@ -159,26 +197,27 @@ export default async function IndustryPage({ params }: PageProps) {
                 <li key={w.title} className="rounded-xl border border-border p-5"><h3 className="font-semibold">{w.title}</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{w.detail}</p></li>
               ))}
             </ul>
-            <h2 className="font-display mt-16 text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Sample {i.singular} ads to adapt</h2>
-            <p className="mt-3 text-sm text-muted-foreground">Written by Ozzy, Komendly&apos;s AI ad wizard, for <strong>fictional demo businesses</strong>. Not real companies or customer ads; swap in your own offer and photos.</p>
+            <h2 className="font-display mt-16 text-2xl font-medium tracking-[-0.02em] sm:text-3xl">More {i.singular} ad templates</h2>
+            <p className="mt-3 text-sm text-muted-foreground">Example ads written by Ozzy as templates: not real companies or customer ads, and no results claimed. Swap in your business, town, offer and photos.</p>
             <ul className="mt-6 grid gap-5 sm:grid-cols-2">
-              {content.samples.map((a) => <SampleAdCard key={a.business} ad={a} />)}
+              {content.samples.map((a, n) => <TemplateAdCard key={n} ad={templatizeSample(a)} />)}
             </ul>
           </section>
         )}
 
         <section className="mx-auto mt-16 max-w-3xl px-4 text-center sm:px-6" aria-labelledby="url-title">
           <h2 id="url-title" className="font-display text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Make yours from your website</h2>
-          <p className="mt-3 text-muted-foreground">Paste your {i.singular} website. Ozzy reads it and makes ads with your brand, offers and photos. 3 are free.</p>
+          <p className="mt-3 text-muted-foreground">Paste your {i.singular} website. Ozzy reads it and makes ads with your brand, offers and photos. 3 free ads, no card.</p>
           <div className="mt-6"><MakeYoursUrlBox href={galleryCtaHref(i.slug, "url_box")} /></div>
           <p className="mt-4 text-sm text-muted-foreground">Or try the free <Link href="/tools/ad-copy-generator" className="text-[var(--studio-gold)] hover:underline">ad copy generator</Link> and <Link href="/tools/ad-copy-grader" className="text-[var(--studio-gold)] hover:underline">ad copy grader</Link>.</p>
         </section>
 
         <div className="mt-16 px-4 sm:px-6">
-          <CtaBlock title={`Get free ads for your ${i.singular} business`} campaign={i.slug} content="mid" label="Make my free ads" />
+          <CtaBlock title={`Get 3 free ads for your ${i.singular} business`} campaign={i.slug} content="mid" label="Get my 3 free ads" />
         </div>
+        <PaidNote />
 
-        <section className="mx-auto mt-20 max-w-3xl px-4 sm:px-6" aria-labelledby="guide-title">
+        {!trade && <section className="mx-auto mt-20 max-w-3xl px-4 sm:px-6" aria-labelledby="guide-title">
           <h2 id="guide-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-4xl">How to make a {i.singular} ad that works</h2>
           <div className="mt-8 space-y-8">
             {guide.sections.map((s) => (
@@ -192,19 +231,16 @@ export default async function IndustryPage({ params }: PageProps) {
               </div>
             ))}
           </div>
-        </section>
+        </section>}
 
-        <section className="mx-auto mt-20 max-w-3xl px-4 sm:px-6" aria-labelledby="faq-title">
-          <h2 id="faq-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-4xl">Questions</h2>
-          <div className="mt-6 divide-y divide-border rounded-xl border border-border">
-            {guide.faq.map((f) => (
-              <details key={f.q} className="group px-5 py-4">
-                <summary className="cursor-pointer list-none font-medium marker:hidden">{f.q}</summary>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{f.a}</p>
-              </details>
-            ))}
-          </div>
-        </section>
+        <Faq items={faq} />
+
+        {trade && cat && (
+          <section className="mx-auto mt-16 grid max-w-5xl gap-10 px-4 sm:px-6 md:grid-cols-2" aria-label="Related ad ideas">
+            <ChipLinks title={`${cat.label} ad ideas`} links={categoryAngles(cat.slug).map((a) => ({ href: a.path, label: angleLabel(a.angle) }))} />
+            <ChipLinks title={`More ${cat.label.toLowerCase()} trades`} links={trade.related.map((r) => ({ href: `/ad-examples/${r.slug}`, label: `${r.term} ad examples` }))} />
+          </section>
+        )}
 
         <nav className="mx-auto mt-16 max-w-5xl px-4 sm:px-6" aria-label="Related ad guides">
           <ul className="flex flex-wrap gap-2">
@@ -241,7 +277,8 @@ export default async function IndustryPage({ params }: PageProps) {
         )}
 
         <div className="px-4 py-20 sm:px-6">
-          <CtaBlock title={`Your ${i.singular} ads, made from your website`} campaign={i.slug} content="end" label={`Get 10 free ${i.singular} ads`} />
+          <CtaBlock title={`Your ${i.singular} ads, made from your website`} campaign={i.slug} content="end" label="Get my 3 free ads" />
+        <p className="mt-4 text-center text-sm text-muted-foreground">More ideas: <Link href={ideasPath(cat?.slug ?? "home-services")} className="text-[var(--studio-gold)] hover:underline">{cat?.label ?? "Home service"} ad ideas</Link></p>
         </div>
       </main>
       <StudioFooter />

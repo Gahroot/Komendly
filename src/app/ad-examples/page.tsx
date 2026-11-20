@@ -12,6 +12,7 @@ import { galleryCtaHref } from "@/lib/ads/industries";
 import { loadIndexableIndustryLinks } from "@/lib/growth/industry-examples-server";
 import { KIND_LABEL } from "@/components/ad-examples/gallery-landing";
 import { GALLERY_PAGES } from "@/lib/growth/ad-pages";
+import { CATEGORIES as TRADE_CATEGORIES, IDEAS_BASE, angleLabel, categoryAngles, ideasPath, tradesIn } from "@/lib/growth/trade-playbooks";
 import { breadcrumbJsonLd, galleryPageJsonLd, graph } from "@/lib/seo/jsonld";
 import "@/components/studio/studio.css";
 
@@ -31,7 +32,7 @@ export default async function AdExamplesHub() {
   const industries = summarizeIndustries(await loadGalleryAds());
   const total = industries.reduce((n, x) => n + x.count, 0);
   const withAds = new Set(industries.map((x) => x.industry.slug));
-  const guides = (await loadIndexableIndustryLinks()).filter((g) => !withAds.has(g.slug));
+  const guides = (await loadIndexableIndustryLinks()).filter((g) => !withAds.has(g.slug) && !g.guide);
   return (
     <StudioRoot className={`${fraunces.variable} min-h-screen bg-[#0c0820]`}>
       <JsonLd
@@ -96,6 +97,24 @@ export default async function AdExamplesHub() {
           </section>
         )}
 
+        <section className="mx-auto mt-16 max-w-5xl px-4 sm:px-6" aria-labelledby="trades-title">
+          <h2 id="trades-title" className="font-display text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Ad examples and ideas by trade</h2>
+          <p className="mt-2 text-sm text-muted-foreground">Hooks, offers, copy templates and budget guidance for US local service businesses. <Link href={IDEAS_BASE} className="text-[var(--studio-gold)] hover:underline">All ad ideas</Link></p>
+          <div className="mt-6 grid gap-8 sm:grid-cols-2">
+            {TRADE_CATEGORIES.map((c) => (
+              <div key={c.slug}>
+                <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--studio-gold)]"><Link href={ideasPath(c.slug)} className="hover:underline">{c.label}</Link></h3>
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {tradesIn(c.slug).map((p) => <li key={p.slug}><Link href={`/ad-examples/${p.slug}`} className="inline-flex rounded-full border border-border px-3 py-1 text-sm capitalize text-muted-foreground transition-colors hover:border-[var(--studio-gold)] hover:text-foreground">{p.term}</Link></li>)}
+                </ul>
+                <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                  {categoryAngles(c.slug).map((a) => <li key={a.path}><Link href={a.path} className="text-muted-foreground hover:text-foreground">{angleLabel(a.angle)}</Link></li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section className="mx-auto mt-16 grid max-w-5xl gap-8 px-4 sm:grid-cols-2 sm:px-6" aria-label="Browse ad examples by platform, format and occasion">
           {(["platform", "format", "occasion", "combo"] as const).map((k) => (
             <div key={k}>
@@ -113,7 +132,7 @@ export default async function AdExamplesHub() {
         <p className="mx-auto mt-4 max-w-xl px-4 text-center text-sm text-muted-foreground">Writing your own? Try the free <Link href="/tools" className="text-[var(--studio-gold)] hover:underline">ad tools</Link>: headline generator, copy grader, size checker and more.</p>
 
         <div className="px-4 py-20 sm:px-6">
-          <CtaBlock title="Get free ads for your business" campaign="hub" content="end" label="Make yours free" />
+          <CtaBlock title="Get free ads for your business" campaign="hub" content="end" label="Get my 3 free ads" />
         </div>
       </main>
       <StudioFooter />

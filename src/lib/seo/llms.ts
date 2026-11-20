@@ -48,6 +48,8 @@ export interface GalleryLink {
   count: number
   /** Engine-written sample ads for fictional demo businesses (clearly labelled on the page). */
   samples?: number
+  /** Hand-written trade playbook on the page (hooks, offers, copy templates, budget guidance). */
+  guide?: boolean
 }
 
 /** Indexable /ad-examples intent pages (platform/format/occasion/combo) listed in llms.txt. */
@@ -98,7 +100,7 @@ export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryL
     ...studioFacts().map((f) => `- ${f}`),
     '',
     ...(galleries.length
-      ? ['## Ad examples by industry', '', ...galleries.map((g) => `- [Facebook ad examples for ${g.plural}](${SITE_URL}/ad-examples/${g.slug}): ${[g.count ? `${g.count} real customer ads` : '', g.samples ? `${g.samples} sample ads and what works` : ''].filter(Boolean).join(', ')}`), '']
+      ? ['## Ad examples by industry', '', ...galleries.map((g) => `- [Facebook ad examples for ${g.plural}](${SITE_URL}/ad-examples/${g.slug}): ${[g.count ? `${g.count} real customer ads` : '', g.guide ? 'hooks, offers, ad copy templates and budget guidance' : '', g.samples ? `${g.samples} sample ads and what works` : ''].filter(Boolean).join(', ')}`), '']
       : []),
     ...(intents.length ? ['## Ad examples by platform, format, occasion and trade', '', ...intents.map((x) => `- [${x.h1}](${SITE_URL}${x.path})${x.also ? `: ${x.also}` : ''}`), ''] : []),
     ...sections.flatMap((s) => [s, '']),

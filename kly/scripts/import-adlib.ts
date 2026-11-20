@@ -56,15 +56,20 @@ if (!process.env.DATABASE_URL) {
     for (const g of await db.klyPlace.findMany({ where: { domain: { in: domains } }, select: { domain: true } })) inPlaces.add(g.domain);
     for (const g of await db.outboundLead.findMany({ where: { domain: { in: domains } }, select: { domain: true } })) inLeads.add(g.domain);
   }
+  // Known advertisers already imported from Overture/fsq and not handed out yet: retag them 'adlib' so they get priority
+  // (only unused rows, never ones already turned into leads). Their own location/niche data is kept.
+  const retag = places.filter((p) => inPlaces.has(p.domain) && !inLeads.has(p.domain)).map((p) => p.domain);
   places = places.filter((p) => !inPlaces.has(p.domain) && !inLeads.has(p.domain));
   const perNiche: Record<string, number> = {};
   for (const p of places) perNiche[p.niche] = (perNiche[p.niche] ?? 0) + 1;
   const counts = { alreadyInKlyPlace: inPlaces.size, alreadyOutboundLead: [...inLeads].filter((d) => !inPlaces.has(d)).length, perNiche: Object.fromEntries(Object.entries(perNiche).sort((a, b) => b[1] - a[1])) };
-  if (dry) console.log(JSON.stringify({ ...counts, wouldInsert: places.length }, null, 1));
+  const retagWhere = { domain: { in: retag }, usedAt: null, source: { not: "adlib" } };
+  if (dry) console.log(JSON.stringify({ ...counts, wouldInsert: places.length, wouldRetag: await db.klyPlace.count({ where: retagWhere }) }, null, 1));
   else {
     let inserted = 0;
     for (let i = 0; i < places.length; i += 1000) inserted += (await db.klyPlace.createMany({ data: places.slice(i, i + 1000), skipDuplicates: true })).count;
-    console.log(JSON.stringify({ ...counts, inserted }, null, 1));
+    const retagged = retag.length ? (await db.klyPlace.updateMany({ where: retagWhere, data: { source: "adlib" } })).count : 0;
+    console.log(JSON.stringify({ ...counts, inserted, retagged }, null, 1));
   }
   await db.$disconnect();
 }

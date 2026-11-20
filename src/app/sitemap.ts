@@ -8,6 +8,7 @@ import { SITE_URL } from '@/lib/site'
 import { INTEGRATION_PATHS } from '@/lib/integrations'
 import { REPORT_PATH } from '@/lib/growth/ad-report'
 import { loadAdReport } from '@/lib/growth/ad-report-server'
+import { CATEGORIES as TRADE_CATEGORIES, IDEAS_BASE, allAnglePages, ideasPath } from '@/lib/growth/trade-playbooks'
 
 function latest(dates: string[]): string | undefined {
   return dates.sort().at(-1)
@@ -86,5 +87,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const report = await loadAdReport()
   const reportPages: MetadataRoute.Sitemap = report.indexable ? [{ url: `${SITE_URL}${REPORT_PATH}`, lastModified: report.to ?? undefined, changeFrequency: 'weekly' as const, priority: 0.7 }] : []
 
-  return [...reportPages, ...staticPages, ...postPages, ...categoryPages, ...authorPages, ...tagPages, ...galleryPages, ...intentPages]
+  // Local-service ad library: ideas hub, category pages and angle pages (hand-written content, always indexable)
+  const ideaPages: MetadataRoute.Sitemap = [IDEAS_BASE, ...TRADE_CATEGORIES.map((c) => ideasPath(c.slug)), ...allAnglePages().map((a) => a.path)].map((p) => ({
+    url: `${SITE_URL}${p}`,
+    changeFrequency: 'monthly' as const,
+    priority: 0.5,
+  }))
+
+  return [...reportPages, ...staticPages, ...postPages, ...categoryPages, ...authorPages, ...tagPages, ...galleryPages, ...intentPages, ...ideaPages]
 }

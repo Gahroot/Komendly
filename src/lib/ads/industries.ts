@@ -26,7 +26,7 @@ export const INDUSTRIES: readonly Industry[] = [
   I("plumbers", "plumber", "plumbers", "local-service", "plumbing repairs and installs", ["plumbing", "plumber", "plumbers", "drain", "drains", "water heater", "leak", "leaks", "pipes", "lead pipe", "sewer"]),
   I("hvac", "HVAC company", "HVAC companies", "local-service", "heating and cooling repair", ["hvac", "air conditioning", "heating and cooling", "furnace", "heat pump", "ac repair", "ductwork"]),
   I("electricians", "electrician", "electricians", "local-service", "electrical repairs and installs", ["electrician", "electricians", "electrical", "wiring", "panel upgrade", "ev charger", "lighting installation", "outdoor lighting", "landscape lighting"]),
-  I("landscapers", "landscaper", "landscapers", "local-service", "lawn care and landscape design", ["landscaping", "landscape design", "landscaper", "lawn", "lawn care", "grounds maintenance", "hardscape", "hardscaping", "garden design", "tree service", "irrigation"]),
+  I("landscapers", "landscaper", "landscapers", "local-service", "lawn care and landscape design", ["landscaping", "landscape design", "landscaper", "lawn", "lawn care", "grounds maintenance", "hardscape", "hardscaping", "garden design", "irrigation"]),
   I("cleaning-services", "cleaning service", "cleaning services", "local-service", "home and office cleaning", ["cleaning", "cleaners", "maid", "house cleaning", "janitorial", "carpet cleaning", "deep clean"]),
   I("dentists", "dentist", "dentists", "local-venue", "dental care for the whole family", ["dentist", "dentists", "dental", "dentistry", "orthodontist", "orthodontics", "teeth", "invisalign", "smile"]),
   I("chiropractors", "chiropractor", "chiropractors", "local-venue", "chiropractic care and pain relief", ["chiropractor", "chiropractic", "spinal", "adjustment", "back pain", "physical therapy", "physiotherapy"]),
@@ -40,7 +40,7 @@ export const INDUSTRIES: readonly Industry[] = [
   I("accountants", "accountant", "accountants and bookkeepers", "professional", "bookkeeping, tax and accounting", ["accountant", "accounting", "bookkeeping", "bookkeeper", "cpa", "tax preparation", "taxes", "quickbooks", "payroll"]),
   I("photographers", "photographer", "photographers", "professional", "photo sessions", ["photographer", "photography", "photo session", "photoshoot", "portraits", "headshots", "engagement photos"]),
   I("florists", "florist", "florists", "shop", "fresh flowers and arrangements", ["florist", "flowers", "floral", "bouquet", "bouquets", "flower delivery", "cut flower"]),
-  I("pet-groomers", "pet groomer", "pet groomers", "local-service", "grooming for dogs and cats", ["pet grooming", "dog grooming", "groomer", "grooming", "pet", "pets", "dog", "dogs", "doggy daycare", "veterinary", "vet"]),
+  I("pet-groomers", "pet groomer", "pet groomers", "local-service", "grooming for dogs and cats", ["pet grooming", "dog grooming", "groomer", "grooming", "pet", "pets", "dog", "dogs", "doggy daycare", "mobile grooming"]),
   I("auto-repair", "auto repair shop", "auto repair shops", "local-service", "car repair and maintenance", ["auto repair", "mechanic", "car repair", "oil change", "brakes", "tires", "auto body", "collision", "transmission"]),
   I("contractors", "contractor", "contractors", "local-service", "remodels and home improvement", ["contractor", "general contractor", "remodel", "remodeling", "renovation", "home improvement", "construction", "kitchen remodel", "bathroom remodel", "windows", "siding", "decks"]),
   I("interior-designers", "interior designer", "interior designers", "professional", "interior design and decor", ["interior design", "interior designer", "decor", "home staging", "window treatments", "blinds", "shades", "shutters", "drapery", "furniture"]),
@@ -66,6 +66,18 @@ export const INDUSTRIES: readonly Industry[] = [
   I("handyman", "handyman", "handymen", "local-service", "small repairs and odd jobs around the house", ["handyman", "handyman services", "odd jobs", "honey do", "small repairs", "drywall repair", "furniture assembly", "tv mounting"]),
   I("food-trucks", "food truck", "food trucks", "local-venue", "street food from a truck near you", ["food truck", "food trucks", "street food", "food trailer", "truck schedule", "mobile kitchen"]),
   I("tattoo-shops", "tattoo shop", "tattoo shops", "local-venue", "custom tattoos and piercings", ["tattoo", "tattoos", "tattoo shop", "tattoo studio", "tattoo artist", "piercing", "piercings", "flash tattoo"]),
+  // US local-service trades for the ad library (trade playbooks, src/lib/growth/trade-playbooks-data.ts), 20 Nov 2026.
+  I("painters", "painting company", "painting companies", "local-service", "interior and exterior painting", ["painter", "painters", "house painting", "painting contractor", "interior painting", "exterior painting", "cabinet painting"]),
+  I("garage-door", "garage door company", "garage door companies", "local-service", "garage door repair and installs", ["garage door", "garage doors", "garage door repair", "garage door opener", "overhead door"]),
+  I("junk-removal", "junk removal company", "junk removal companies", "local-service", "hauling away junk and cleanouts", ["junk removal", "junk hauling", "dumpster rental", "debris removal", "cleanouts", "estate cleanout"]),
+  I("tree-services", "tree service", "tree services", "local-service", "tree removal, trimming and stump grinding", ["tree service", "tree removal", "tree trimming", "arborist", "stump grinding", "tree care"]),
+  I("locksmiths", "locksmith", "locksmiths", "local-service", "lockouts, rekeys and new locks", ["locksmith", "locksmiths", "lockout", "rekey", "rekeying", "lock repair", "key replacement"]),
+  I("appliance-repair", "appliance repair company", "appliance repair companies", "local-service", "appliance repairs at home", ["appliance repair", "washer repair", "dryer repair", "refrigerator repair", "dishwasher repair", "oven repair"]),
+  I("massage-therapists", "massage therapist", "massage therapists", "local-venue", "massage therapy", ["massage", "massage therapy", "massage therapist", "deep tissue", "sports massage", "prenatal massage"]),
+  I("veterinarians", "veterinarian", "veterinarians", "local-venue", "care for dogs, cats and other pets", ["veterinarian", "veterinary", "vet", "vet clinic", "animal hospital", "pet vaccines", "spay", "neuter"]),
+  I("optometrists", "optometrist", "optometrists", "local-venue", "eye exams, glasses and contacts", ["optometrist", "optometry", "eye exam", "eye exams", "eyeglasses", "contact lenses", "eye doctor"]),
+  I("towing", "towing company", "towing companies", "local-service", "towing and roadside help", ["towing", "tow truck", "roadside assistance", "wrecker", "jump start", "flatbed"]),
+  I("auto-glass", "auto glass shop", "auto glass shops", "local-service", "windshield repair and replacement", ["auto glass", "windshield", "windshield replacement", "windshield repair", "chip repair", "car window"]),
   I("churches", "church", "churches", "local-venue", "a welcoming church community", ["church", "churches", "worship", "sunday service", "ministry", "congregation", "pastor", "sermon", "bible study"]),
 ];
 
@@ -191,7 +203,7 @@ export function industryGuide(i: Industry): IndustryGuide {
       { q: `What makes a good Facebook ad for a ${i.singular}?`, a: `One clear idea per ad, a real photo or visual of ${i.offer}, words your customers would use themselves, and one simple next step. Test a few different angles rather than one "perfect" ad.` },
       { q: `How many ads should a ${i.singular} run at once?`, a: "Start with several distinct angles (for example a problem, an offer and a reminder for people who already know you), then keep the ones that earn clicks and replace the rest." },
       { q: "Are these real ads?", a: "Yes. Every ad on this page was generated by Komendly from a real business website, and the business gave us permission to show it. We don't show their results, only the creative." },
-      { q: `Can I make ads like these for my ${i.singular} business?`, a: "Yes. Paste your website and Komendly makes 10 ready-to-run static ads plus an animated one for free, using your own brand, photos and offers." },
+      { q: `Can I make ads like these for my ${i.singular} business?`, a: "Yes. Paste your website and Komendly makes ready-to-run ads from your own brand, photos and offers: 3 free ads, no card." },
     ],
   };
 }

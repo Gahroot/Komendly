@@ -27,17 +27,22 @@ export async function loadIndustryExample(slug: string): Promise<IndustryContent
   return (await loadIndustryExamples()).find((x) => x.industry === slug)?.content ?? null;
 }
 
-/** Indexable /ad-examples/<industry> pages: enough real consented ads OR enough engine samples (sitemap, llms.txt, hub). */
-export async function loadIndexableIndustryLinks(): Promise<Array<{ slug: string; plural: string; count: number; samples: number; updatedAt?: string }>> {
+/**
+ * Indexable /ad-examples/<industry> pages (sitemap, llms.txt, hub): trades with a hand-written playbook always (real
+ * hooks/offers/copy/FAQ content), others with enough real consented ads OR enough engine samples.
+ */
+export async function loadIndexableIndustryLinks(): Promise<Array<{ slug: string; plural: string; count: number; samples: number; guide: boolean; updatedAt?: string }>> {
   const { loadGalleryAds, summarizeIndustries } = await import("@/lib/ads/gallery");
   const { INDUSTRIES, MIN_INDEXABLE_INDUSTRY_ADS } = await import("@/lib/ads/industries");
   const { MIN_INDEXABLE_SAMPLES } = await import("@/lib/growth/industry-examples");
+  const { playbook } = await import("@/lib/growth/trade-playbooks");
   const [ads, examples] = await Promise.all([loadGalleryAds(), loadIndustryExamples()]);
   const counts = new Map(summarizeIndustries(ads).map((x) => [x.industry.slug, x.count]));
   return INDUSTRIES.flatMap((i) => {
     const count = counts.get(i.slug) ?? 0;
     const ex = examples.find((e) => e.industry === i.slug);
     const samples = ex?.content.samples.length ?? 0;
-    return count >= MIN_INDEXABLE_INDUSTRY_ADS || samples >= MIN_INDEXABLE_SAMPLES ? [{ slug: i.slug, plural: i.plural, count, samples, updatedAt: ex?.updatedAt }] : [];
+    const guide = !!playbook(i.slug);
+    return guide || count >= MIN_INDEXABLE_INDUSTRY_ADS || samples >= MIN_INDEXABLE_SAMPLES ? [{ slug: i.slug, plural: i.plural, count, samples, guide, updatedAt: ex?.updatedAt }] : [];
   });
 }

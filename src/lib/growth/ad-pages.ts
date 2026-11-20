@@ -68,7 +68,7 @@ export function galleryGenerationOrder(): string[] {
 }
 
 /** Static first segments of the new URL scheme; must never be an industry slug. */
-export const RESERVED_SEGMENTS = ["platform", "format", "occasion"] as const;
+export const RESERVED_SEGMENTS = ["platform", "format", "occasion", "ideas"] as const;
 
 export function galleryPage(key: string): GalleryPageDef | undefined {
   return GALLERY_PAGES.find((p) => p.key === key);
@@ -193,8 +193,8 @@ const TASK: Record<GalleryKind, (e: VocabEntry, industry?: (typeof INDUSTRIES)[n
   format: (e) => `Page: "${e.h1}" (people search "${e.primaryQuery}"). Tips must be about making this format well (structure, length, shots/cards, specs). Samples: 4 FICTIONAL small businesses in different industries; in primaryText describe the piece in this format (e.g. cards, shots or script beats) plus the caption.`,
   occasion: (e) => `Page: "${e.h1}" (people search "${e.primaryQuery}"). Tips must be about timing, offers and wording for this occasion. Samples: 4 ads for this occasion from 4 FICTIONAL small businesses in different industries.`,
   combo: (e, i, p) => p?.comboPlatform === "google"
-    ? `Page: "${e.h1}" (people search "${e.primaryQuery}"). This is about RUNNING Google search ads as a ${i?.singular ?? "business"}: which keywords to bid on, negative keywords, location targeting, daily budget, call assets and ad schedule, and when Local Services Ads (pay per lead, where available) fit better than search ads. Samples: 4 Google search text ads for 4 FICTIONAL ${i?.plural ?? "businesses"} in different US/UK towns, each targeting a different kind of search (emergency, specific service, price-shopping, local). ${HONEST}`
-    : `Page: "${e.h1}" (people search "${e.primaryQuery}"). This is about RUNNING Facebook ads as a ${i?.singular ?? "business"}: targeting radius, budget, goal (leads/calls/messages), lead forms, which ad to run first, seasonality. Samples: 4 Facebook ads for 4 FICTIONAL ${i?.plural ?? "businesses"} in different US/UK towns, each a different campaign goal.`,
+    ? `Page: "${e.h1}" (people search "${e.primaryQuery}"). This is about RUNNING Google search ads as a ${i?.singular ?? "business"}: which keywords to bid on, negative keywords, location targeting, daily budget, call assets and ad schedule, and when Local Services Ads (pay per lead, where available) fit better than search ads. Samples: 4 Google search text ads for 4 FICTIONAL ${i?.plural ?? "businesses"} in different US towns, each targeting a different kind of search (emergency, specific service, price-shopping, local). ${HONEST}`
+    : `Page: "${e.h1}" (people search "${e.primaryQuery}"). This is about RUNNING Facebook ads as a ${i?.singular ?? "business"}: targeting radius, budget, goal (leads/calls/messages), lead forms, which ad to run first, seasonality. Samples: 4 Facebook ads for 4 FICTIONAL ${i?.plural ?? "businesses"} in different US towns, each a different campaign goal.`,
 };
 
 /** Codex prompt for one page; `avoid` = a near-duplicate sibling's text to steer away from on a retry. */

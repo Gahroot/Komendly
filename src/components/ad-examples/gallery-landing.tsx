@@ -14,6 +14,7 @@ import { loadGalleryPageData, type GalleryPageData } from "@/lib/growth/ad-pages
 import { FREE_TOOLS } from "@/lib/growth/free-tools";
 import type { SampleAd } from "@/lib/growth/industry-examples";
 import { withSystemUtm } from "@/lib/growth/systems";
+import { templatizeSample } from "@/lib/growth/trade-playbooks";
 import { adImageAlt, alsoCalled, anchorText } from "@/lib/growth/vocabulary";
 import { absoluteUrl } from "@/lib/site";
 import { breadcrumbJsonLd, faqJsonLd, galleryPageJsonLd, graph } from "@/lib/seo/jsonld";
@@ -58,8 +59,8 @@ function SampleAdCard({ ad }: { ad: SampleAd }) {
   return (
     <li className="studio-frame flex flex-col gap-3 rounded-xl p-5">
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate font-medium">{ad.business} <span className="text-muted-foreground">· {ad.city}</span></p>
-        <span className="shrink-0 rounded-full border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Sample</span>
+        <p className="truncate font-medium">Example ad <span className="text-muted-foreground">· written by Ozzy</span></p>
+        <span className="shrink-0 rounded-full border border-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">Template</span>
       </div>
       <p className="text-sm italic text-foreground/80">{ad.hook}</p>
       <p className="whitespace-pre-line text-[15px] leading-relaxed text-foreground/90">{ad.primaryText}</p>
@@ -127,15 +128,15 @@ export async function GalleryLanding({ pageKey }: { pageKey: string }) {
               {content.whatWorks.map((w) => <li key={w.title} className="rounded-xl border border-border p-5"><h3 className="font-semibold">{w.title}</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{w.detail}</p></li>)}
             </ul>
             <h2 className="font-display mt-16 text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Sample ads to adapt</h2>
-            <p className="mt-3 text-sm text-muted-foreground">Written by Ozzy, Komendly&apos;s AI ad wizard, for <strong>fictional demo businesses</strong>. Not real companies or customer ads; swap in your own offer and photos.</p>
-            <ul className="mt-6 grid gap-5 sm:grid-cols-2">{content.samples.map((a) => <SampleAdCard key={a.business} ad={a} />)}</ul>
+            <p className="mt-3 text-sm text-muted-foreground">Example ads written by Ozzy, Komendly&apos;s AI ad maker, as templates: not real companies or customer ads, and no results claimed. Swap in your business name, town, offer and photos.</p>
+            <ul className="mt-6 grid gap-5 sm:grid-cols-2">{content.samples.map((a, n) => <SampleAdCard key={n} ad={templatizeSample(a)} />)}</ul>
           </section>
         ) : (
           <p className="mx-auto mt-12 max-w-xl px-4 text-center text-sm text-muted-foreground">Ozzy is still writing sample ads for this page. Check back soon, or make your own below.</p>
         )}
 
         <div className="mt-16 px-4 sm:px-6">
-          <CtaBlock title={industry ? `Get 10 free Facebook ads for your ${industry.singular} business` : "Make yours free from your website"} campaign={page.key} content="mid" label="Make my free ads" href={ctaHref(page, "mid")} />
+          <CtaBlock title={industry ? `Get 3 free Facebook ads for your ${industry.singular} business` : "Make yours free from your website"} campaign={page.key} content="mid" label="Make my free ads" href={ctaHref(page, "mid")} />
         </div>
 
         <section className="mx-auto mt-20 max-w-3xl px-4 sm:px-6" aria-labelledby="faq-title">
