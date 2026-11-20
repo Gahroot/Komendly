@@ -241,7 +241,7 @@ For an eligible account:
 
 1. Open ChatGPT’s Plugins interface and choose the plus button, then Add custom MCP server.[^8]
 2. Enter Komendly’s endpoint: `https://www.komendly.com/api/mcp`.
-3. Choose OAuth and complete sign-in on komendly.com. The assistant never sees your password.
+3. Choose OAuth and complete sign-in on komendly.com.
 4. Create the connection, review the discovered tools and install the resulting plugin. Start a new conversation and select it with an @ mention.[^8]
 5. Request the pack, then check status and download the completed files.
 
