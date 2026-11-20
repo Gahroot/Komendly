@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AUTOPILOT_UPGRADE_HREF } from "@/lib/ads/autopilot";
 import { loadAutopilot } from "@/lib/ads/autopilot-server";
 import { WEEKLY_TEASER } from "@/lib/ads/weekly-drop";
+import { WEEKLY_SWAP_STEPS, WEEKLY_SWAP_TITLE } from "@/lib/ads/launch-guide";
 import { AutopilotControls } from "./autopilot-controls";
 
 export async function WeeklyDropCard({ workspace }: { workspace: { id: string; adsPlan: string; subscriptionStatus: string; suspendedAt: Date | null } }) {
@@ -55,6 +56,16 @@ export async function WeeklyDropCard({ workspace }: { workspace: { id: string; a
             ) : null}
           </div>
         )}
+        <details className="rounded-lg border p-3">
+          <summary className="cursor-pointer text-sm font-medium">{WEEKLY_SWAP_TITLE}</summary>
+          <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
+            {WEEKLY_SWAP_STEPS.map((s) => <li key={s.title}><span className="font-medium text-foreground">{s.title}.</span> {s.text}</li>)}
+          </ol>
+          <div className="mt-3 flex flex-wrap gap-3 text-sm">
+            <Link href="/ads/coach" className="font-medium text-primary hover:underline">Open Ozzy Ad Coach</Link>
+            <a href="https://adsmanager.facebook.com/" target="_blank" rel="noreferrer" className="font-medium text-primary hover:underline">Open Meta Ads Manager</a>
+          </div>
+        </details>
       </CardContent>
     </Card>
   );

@@ -19,6 +19,18 @@ export const LAUNCH_GUIDE_STEPS: readonly GuideStep[] = [
   { title: "Wait 4 days, then keep the winner", text: "Don't touch anything for 4 days, even if day 1 looks slow. Then turn off the ads that cost the most per result and keep the best one running. Add fresh ads next to it every week." },
 ];
 
+/**
+ * The weekly half of the offer ("losers replaced every week"), done by hand until Meta approves one-click publishing.
+ * Shown on the Weekly Drop card and in the Monday email. Same rules as step 5 above.
+ */
+export const WEEKLY_SWAP_TITLE = "Your 5-minute Monday swap";
+
+export const WEEKLY_SWAP_STEPS: readonly GuideStep[] = [
+  { title: "Ask Ozzy which ads lost", text: "In Ads Manager, export last week's results (Reports, Export table data). Upload the file to Ozzy Ad Coach: he says which ads to keep and which to turn off." },
+  { title: "Turn the losers off", text: "Switch off the ads he flags, usually the ones that cost the most per result. Leave the winners alone." },
+  { title: "Add this week's ads", text: "Add 2 or 3 of this week's new ads to the same ad set, with the text from ad-text.txt, then Publish. Keep 3 to 5 ads running at a time." },
+];
+
 /** Which size goes where (Meta picks the placement; uploading both sizes lets each spot use the right one). */
 export const LAUNCH_GUIDE_SIZES: readonly { ratio: string; where: string }[] = [
   { ratio: "4:5", where: "Facebook and Instagram feeds (use this one if you upload only one size)" },

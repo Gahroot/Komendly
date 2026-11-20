@@ -124,7 +124,8 @@ export function weeklyDropEmailCopy(o: { firstName: string | null; brandName: st
       `${hi} it's Ozzy. Your Weekly Drop is in: ${made}${brand ? ` for ${brand}` : ""}, made from your brand with angles you haven't run yet.`,
       ...(focus ? [`This week's focus: ${focus}`] : []),
       ...(o.videoReady ? ["Your Monday video is waiting in Ozzy Studio. Ask him for changes any time."] : []),
-      "Swap them in for whatever is getting tired, or test them side by side. Want a different focus next week? Change it on your dashboard in one sentence.",
+      "Your 5-minute Monday swap: upload last week's Ads Manager results to Ozzy Ad Coach and he'll tell you which ads to turn off. Then add 2 or 3 of these new ones to the same ad set.",
+      "Want a different focus next week? Change it on your dashboard in one sentence.",
     ],
     ctaLabel: "See this week's ads",
   };

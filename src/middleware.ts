@@ -58,6 +58,7 @@ const publicPrefixes = [
   "/api/ads/gift-public/", // Gift pack page beacon + token-checked ad images (public /gift/<token>)
   "/api/ad-of-the-week/",  // Public images of consented ads only (Ad of the week, /ad-examples)
   "/api/ads-billing/webhook", // Stripe webhook for ads billing (signature-verified)
+  "/api/cron/",            // Vercel Cron jobs (Bearer CRON_SECRET checked in each route)
   "/api/winback/go",       // Win-back: signed, expiring links (update card portal, churn reason, come-back checkout)
   "/api/recovery/resume",  // Abandoned-checkout recovery: signed, expiring resume-checkout link (token-bound to user + item)
   "/s/",                   // Ozzy Studio public share pages (/s/<token>)

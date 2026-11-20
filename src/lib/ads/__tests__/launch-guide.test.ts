@@ -27,3 +27,15 @@ describe("launch guide file text", () => {
     expect(t).not.toContain("button below");
   });
 });
+
+describe("weekly swap guide", () => {
+  it("covers coach, turning losers off and adding new ads, with no result promises", async () => {
+    const { WEEKLY_SWAP_STEPS } = await import("../launch-guide");
+    const all = WEEKLY_SWAP_STEPS.map((s) => `${s.title} ${s.text}`).join(" ");
+    expect(WEEKLY_SWAP_STEPS).toHaveLength(3);
+    expect(all).toMatch(/Ozzy Ad Coach/);
+    expect(all).toMatch(/turn off|Turn the losers off/i);
+    expect(all).toMatch(/same ad set/);
+    expect(all).not.toMatch(/guarantee|leads guaranteed|more sales/i);
+  });
+});

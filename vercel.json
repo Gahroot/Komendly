@@ -1,0 +1,3 @@
+{
+  "crons": [{ "path": "/api/cron/scoreboard-digest", "schedule": "0 14 * * 1" }]
+}
