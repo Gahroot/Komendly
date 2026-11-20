@@ -8,6 +8,9 @@ import { FBC_COOKIE, FIRST_TOUCH_COOKIE, LAST_TOUCH_COOKIE, parseFirstTouch } fr
 
 const LANDED_COOKIE = "kmd_ld";
 const ENGAGED_COOKIE = "kmd_eg";
+/** Prefetch / prerender / link-preview requests (Sec-Purpose, Purpose, X-Purpose, X-Moz) are not visits. */
+const PREFETCH = /prefetch|prerender|preview/i;
+const isPrefetch = (h: Headers) => ["sec-purpose", "purpose", "x-purpose", "x-moz"].some((k) => PREFETCH.test(h.get(k) ?? ""));
 
 /**
  * Funnel step 0: one `visit_landed` AdsEvent per anonymous visitor per UTC day, with its attribution.
@@ -25,7 +28,7 @@ export async function POST(request: NextRequest) {
     const engaged = body.kind === "engaged";
     const cookie = engaged ? ENGAGED_COOKIE : LANDED_COOKIE;
     const name = engaged ? "visit_engaged" : "visit_landed";
-    if (!anonId || request.cookies.get(cookie)?.value === day || BOT_UA.test(request.headers.get("user-agent") ?? "")) return ok;
+    if (!anonId || request.cookies.get(cookie)?.value === day || BOT_UA.test(request.headers.get("user-agent") ?? "") || isPrefetch(request.headers)) return ok;
     ok.cookies.set(cookie, day, { path: "/", maxAge: 60 * 60 * 24, sameSite: "lax", httpOnly: true, secure: process.env.NODE_ENV === "production" });
     const seen = await prisma.adsEvent.findFirst({
       where: { name, createdAt: { gte: new Date(`${day}T00:00:00Z`) }, props: { path: ["anonId"], equals: anonId } },

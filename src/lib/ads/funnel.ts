@@ -70,6 +70,43 @@ export function legacyBurstBots(rows: readonly { props: unknown; createdAt: Date
   return out;
 }
 
+type LandedProps = { anonId?: unknown; ipNet?: unknown; firstTouch?: { fbclid?: unknown } | null; lastTouch?: { fbclid?: unknown } | null };
+const str = (v: unknown): string | null => (typeof v === "string" && v.length > 0 ? v : null);
+/** Test clicks we make ourselves (e2e runs use fbclid E2E...). */
+const TEST_FBCLID = /^e2e/i;
+
+/**
+ * Real visitors out of raw `visit_landed` rows (the beacon dedupes per browser per day, but over-counts):
+ * - drops our own browsers (internal anonIds) and anything from the networks (ipNet) those browsers used, plus e2e test clicks;
+ * - drops bot-flagged visits (Meta review IPs) and legacy no-ipNet bursts (Meta ad review, 2026-11-08);
+ * - counts one visitor per UTC day per ad click: one fbclid opened in several in-app browsers/webviews (each with a
+ *   fresh anonId cookie) is one person; without fbclid the anonId is the visitor.
+ * Keeps the first row of each visitor-day, in input order. `dropped` = rows removed for any reason.
+ */
+export function realVisits<T extends { props: unknown; createdAt: Date }>(rows: readonly T[], internalAnonIds: ReadonlySet<string>): { visits: T[]; bots: number; dropped: number } {
+  const p = (r: T) => (r.props ?? {}) as LandedProps;
+  const internalNets = new Set(rows.filter((r) => internalAnonIds.has(String(p(r).anonId ?? ""))).map((r) => str(p(r).ipNet)).filter((x): x is string => !!x));
+  const fbclidOf = (r: T) => str(p(r).lastTouch?.fbclid) ?? str(p(r).firstTouch?.fbclid);
+  const outside = rows.filter((r) => {
+    const net = str(p(r).ipNet);
+    return !internalAnonIds.has(String(p(r).anonId ?? "")) && !(net !== null && internalNets.has(net)) && !TEST_FBCLID.test(fbclidOf(r) ?? "");
+  });
+  const bursts = legacyBurstBots(outside);
+  const humans = outside.filter((r, i) => !isBotVisit(r.props) && !bursts.has(i));
+  const seen = new Set<string>();
+  const visits = humans.filter((r) => {
+    const day = r.createdAt.toISOString().slice(0, 10);
+    const fb = fbclidOf(r);
+    const anon = str(p(r).anonId);
+    if (!fb && !anon) return true;
+    const key = fb ? `${day}|fb:${fb}` : `${day}|a:${anon}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return { visits, bots: outside.length - humans.length, dropped: rows.length - visits.length };
+}
+
 export type PaymentEvent = { name: string; props: unknown; createdAt: Date };
 const amountOf = (props: unknown): number => {
   const a = (props as { amountCents?: unknown } | null)?.amountCents;

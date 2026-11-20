@@ -58,9 +58,13 @@ CAPI user data: sha256 email, sha256 user id (`external_id`), IP, user agent, `f
 
 **Admin:** `/admin/ads/funnel` (API `/api/admin/ads/funnel?from&to&by=channel|source|campaign|content`): landed → signed up → trial finished → paid → active at 30 days / now, revenue, 30-day gross profit (revenue − provider cost), weekly sign-up cohorts, and Meta campaigns (spend, CPC, cost per sign-up/trial, CAC, GP30 ÷ spend). Channels: `meta_paid` (fbclid or utm_source facebook/instagram/meta/fb/ig), `blog`, `campaign` (other UTM), `referral`, `direct`. Spend joins on `utm_campaign` = Meta campaign id or name, so use `utm_campaign={{campaign.id}}` in ad URLs. Logic: `src/lib/ads/funnel.ts` (tests in `src/lib/ads/__tests__/funnel.test.ts`).
 
+**Visitor count** (`realVisits` in `funnel.ts`, used by `/admin/ads/funnel` and `/admin/money`): raw `visit_landed` rows minus bot-flagged visits (Meta review IPs), legacy no-`ipNet` bursts (Meta ad review, 8 Nov 2026), our own browsers and the networks they use, and e2e test clicks (`fbclid` starting `E2E`); then one visitor per UTC day per ad click (`fbclid`, so one click opened in several in-app browsers counts once), else per `anonId`. The beacon itself skips crawler UAs, prefetch/preview requests and prerendered pages that were never opened.
+
+**Scoreboard:** `/admin/ads/scoreboard` shows sign-ups and new payments by channel by week (Meta ads, Kly, community, blog, referrals, other, direct) and the plan checkpoints (`src/lib/ads/scoreboard.ts`). Every live-mode Website2ads payment from a real account emails `ADS_ALERT_EMAIL` once (`src/lib/ads/payment-alert.ts`, marker AdsEvent `ads_payment_alerted`).
+
 **Env vars (Vercel):**
 - `NEXT_PUBLIC_META_PIXEL_ID` = `2076490092891007` ("Komendly Pixel", AI Consulting ad account act_838454441892655, Home Sales TV business; default if unset)
 - `META_CAPI_TOKEN`: system-user token for CAPI (unset = no server events)
 - `META_CAPI_TEST_CODE`: only while testing in Events Manager → Test events; remove after
 - `META_ADS_TOKEN`: token with `ads_read` for spend (falls back to `META_CAPI_TOKEN`)
-- `META_AD_ACCOUNT_ID` = `act_1460244746175741` (unset = spend shows 0)
+- `META_AD_ACCOUNT_ID` = `act_838454441892655` (Komendly's ad account, same as the pixel above; unset = spend shows 0). Not `act_1460244746175741`: that account holds Easefolio campaigns.

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { loadInternalIds } from "@/lib/internal-accounts";
 import { isInternalEmail } from "@/lib/internal-email";
 import { parseFirstTouch, serializeFirstTouch, type FirstTouch } from "@/lib/analytics/first-touch";
-import { classifyTouch, isBotVisit, legacyBurstBots, revenuePayments } from "@/lib/ads/funnel";
+import { classifyTouch, realVisits, revenuePayments } from "@/lib/ads/funnel";
 import { ADS_PLANS } from "@/lib/ads/billing-config";
 import { loadMetaCampaignSpend } from "@/lib/ads/meta-insights";
 import { PLAN_CONFIG, type PlanKey } from "@/lib/stripe-config";
@@ -76,9 +76,7 @@ export async function loadMoneyDashboard(funnelPeriod: Period = "all", now: Date
   const from = periodStart(funnelPeriod, now) ?? new Date("2025-01-01T00:00:00Z");
   const internalAnon = new Set(internal.anonIds);
   const landedAll = await prisma.adsEvent.findMany({ where: { name: "visit_landed", createdAt: { gte: from } }, select: { props: true, createdAt: true } });
-  const landed = landedAll.filter((l) => !internalAnon.has(String((l.props as { anonId?: unknown } | null)?.anonId ?? "")));
-  const bursts = legacyBurstBots(landed);
-  const visits = landed.filter((l, i) => !isBotVisit(l.props) && !bursts.has(i)).map((l) => touchOf(l.props));
+  const visits = realVisits(landedAll, internalAnon).visits.map((l) => touchOf(l.props));
   const periodSignups = signups.filter((s) => s.workspaceId && s.createdAt >= from && !internalWs.has(s.workspaceId));
   const ids = periodSignups.map((s) => s.workspaceId as string);
   const [trials, checkouts] = await Promise.all([

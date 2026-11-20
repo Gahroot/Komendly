@@ -2,7 +2,7 @@
 import { loadInternalIds } from "@/lib/internal-accounts";
 import { prisma } from "@/lib/prisma";
 import { parseFirstTouch, serializeFirstTouch, type FirstTouch } from "@/lib/analytics/first-touch";
-import { campaignEconomics, cohortsByWeek, funnelBySource, funnelTotal, isBotVisit, isFunnelTestEmail, legacyBurstBots, revenuePayments, studioFunnel, sumRevenueCents, type GroupBy, type SignupRow, type StudioWorkspaceFacts, adEconomics } from "./funnel";
+import { campaignEconomics, cohortsByWeek, funnelBySource, funnelTotal, isBotVisit, isFunnelTestEmail, realVisits, revenuePayments, studioFunnel, sumRevenueCents, type GroupBy, type SignupRow, type StudioWorkspaceFacts, adEconomics } from "./funnel";
 import { isTestEmail } from "./signups";
 import { PRICING_FUNNEL_EVENTS, pricingDropoff } from "./pricing-funnel";
 import { loadMetaAdSpend, loadMetaCampaignSpend } from "./meta-insights";
@@ -27,7 +27,6 @@ export async function loadSourceFunnel(from: Date, to: Date, by: GroupBy, now: D
     prisma.adsEvent.findMany({ where: { name: "signed_up", createdAt: { gte: from, lt: to }, workspaceId: { not: null, notIn: internal.workspaceIds } }, select: { workspaceId: true, props: true, createdAt: true } }),
   ]);
   // Our own browsers (internal accounts' sign-up anonIds) are not visitors.
-  const landed = landedAll.filter((l) => !ours(l.props));
   const engagedEvents = engagedAll.filter((e) => !ours(e.props));
   const ids = [...new Set(signedUp.map((s) => s.workspaceId).filter((x): x is string => !!x))];
   const [workspaces, trials, payments, ads] = await Promise.all([
@@ -59,12 +58,12 @@ export async function loadSourceFunnel(from: Date, to: Date, by: GroupBy, now: D
       cost30dMicros: ads.filter((a) => a.workspaceId === id && a.createdAt.getTime() <= day30).reduce((t, a) => t + Number(a.costMicros), 0),
     }];
   });
-  // Landed excludes bot-flagged visits (Meta ad review); engaged = same anonId sent the engagement beacon that UTC day.
+  // Landed = real visitors (realVisits: no bots, no internal browsers/networks, one per ad click per day); engaged = same anonId sent the engagement beacon that UTC day.
   const anonDay = (props: unknown, at: Date) => `${String((props as { anonId?: unknown } | null)?.anonId ?? "")}|${at.toISOString().slice(0, 10)}`;
   const engaged = new Set(engagedEvents.filter((e) => !isBotVisit(e.props)).map((e) => anonDay(e.props, e.createdAt)));
-  const bursts = legacyBurstBots(landed);
-  const visits = landed.filter((l, i) => !isBotVisit(l.props) && !bursts.has(i)).map((l) => ({ touch: touchOf(l.props), engaged: engaged.has(anonDay(l.props, l.createdAt)) }));
-  const botVisits = landed.length - visits.length;
+  const real = realVisits(landedAll, internalAnon);
+  const visits = real.visits.map((l) => ({ touch: touchOf(l.props), engaged: engaged.has(anonDay(l.props, l.createdAt)) }));
+  const botVisits = real.bots;
   const funnel = funnelBySource(visits, rows, by, now);
   const day = (d: Date) => d.toISOString().slice(0, 10);
   const spend = await loadMetaCampaignSpend(day(from), day(new Date(to.getTime() - 1)));

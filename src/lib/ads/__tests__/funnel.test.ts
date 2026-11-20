@@ -108,3 +108,40 @@ describe("classifyTouch: growth systems + Kly", () => {
     expect(classifyTouch({ utm_source: "facebook" }).channel).toBe("meta_paid");
   });
 });
+
+describe("realVisits (visitor count: one real visitor per ad click per day)", () => {
+  const at = (iso: string) => new Date(iso);
+  const row = (props: Record<string, unknown>, iso = "2026-11-16T12:00:00Z") => ({ props: { ipNet: "1.2.3.0/24", ...props } as Record<string, unknown>, createdAt: at(iso) });
+  it("dedupes one fbclid opened in several browsers the same day, keeps it on another day", async () => {
+    const { realVisits } = await import("@/lib/ads/funnel");
+    const rows = [
+      row({ anonId: "a1", firstTouch: { fbclid: "F1" } }),
+      row({ anonId: "a2", firstTouch: { fbclid: "F1" } }, "2026-11-16T12:05:00Z"),
+      row({ anonId: "a3", lastTouch: { fbclid: "F1" } }, "2026-11-16T18:00:00Z"),
+      row({ anonId: "a4", firstTouch: { fbclid: "F1" } }, "2026-11-17T09:00:00Z"),
+      row({ anonId: "a5" }),
+      row({ anonId: "a5" }, "2026-11-16T13:00:00Z"),
+    ];
+    const r = realVisits(rows, new Set());
+    expect(r.visits.map((v) => v.props.anonId)).toEqual(["a1", "a4", "a5"]);
+    expect(r.dropped).toBe(3);
+  });
+  it("drops bots, internal browsers, their networks and e2e test clicks", async () => {
+    const { realVisits } = await import("@/lib/ads/funnel");
+    const rows = [
+      row({ anonId: "bot", bot: "meta_review", ipNet: "31.13.0.0/24" }),
+      row({ anonId: "me", ipNet: "68.48.10.0/24" }),
+      row({ anonId: "my-phone", ipNet: "68.48.10.0/24" }),
+      row({ anonId: "e2e", ipNet: "9.9.9.0/24", firstTouch: { fbclid: "E2EADRDY123" } }),
+      row({ anonId: "real", ipNet: "5.5.5.0/24", firstTouch: { fbclid: "IwAR1" } }),
+    ];
+    const r = realVisits(rows, new Set(["me"]));
+    expect(r.visits.map((v) => v.props.anonId)).toEqual(["real"]);
+    expect(r.bots).toBe(1);
+  });
+  it("still drops legacy (no ipNet) bursts", async () => {
+    const { realVisits, LEGACY_BURST_PER_HOUR } = await import("@/lib/ads/funnel");
+    const burst = Array.from({ length: LEGACY_BURST_PER_HOUR }, (_, i) => ({ props: { anonId: `b${i}`, firstTouch: { fbclid: `x${i}` } }, createdAt: at("2026-11-08T10:00:00Z") }));
+    expect(realVisits([...burst, { props: { anonId: "ok" }, createdAt: at("2026-11-08T15:00:00Z") }], new Set()).visits).toHaveLength(1);
+  });
+});

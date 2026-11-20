@@ -61,8 +61,13 @@ export function trackMetaPixel(event: FunnelEvent, params: Params): void {
       tick();
     }
     if (event === "landing_view") {
-      void navigator.sendBeacon?.("/api/ads/landed", JSON.stringify({ path: window.location.pathname }));
-      watchEngagement();
+      const land = () => {
+        void navigator.sendBeacon?.("/api/ads/landed", JSON.stringify({ path: window.location.pathname }));
+        watchEngagement();
+      };
+      // A speculatively prerendered page is not a visit until the person actually opens it.
+      if ((document as Document & { prerendering?: boolean }).prerendering) document.addEventListener("prerenderingchange", land, { once: true });
+      else land();
     }
   } catch {
     // analytics must never break the product

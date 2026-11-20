@@ -67,6 +67,8 @@ export function alertMessage(f: AlertFacts): { subject: string; text: string } {
 export async function founderAlert(name: string, data: { userId?: string; workspaceId?: string; props?: Record<string, unknown> }): Promise<void> {
   const to = process.env.ADS_ALERT_EMAIL;
   if (!to || !isAlertEvent(name)) return;
+  // Ads Stripe checkouts get their PAID email from payment-alert.ts (live mode only, one per payment); Shopify etc. stay here.
+  if (name === "purchased" && typeof data.props?.checkoutSessionId === "string") return;
   try {
     const userId = data.userId ?? (data.workspaceId ? (await prisma.adsWorkspace.findUnique({ where: { id: data.workspaceId }, select: { ownerId: true } }))?.ownerId : undefined);
     if (!userId) return;

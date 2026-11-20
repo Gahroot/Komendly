@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { annualCredits, intervalFromPriceId, getOffer, getPlan, getTopup, offerCreditsFor, UNLOCK_PACK, UNLOCK_PACK_NOTE, UNLIMITED_WEEK, offerFromPriceId, planFromPriceId, type AdsLaunchOffer } from "./billing-config";
 import { applyCreditMutation, endUnlimitedWeek, grantSubscriptionCredits, grantTopup, grantUnlimitedWeek, refundCredits, upgradeTopUpCredits } from "./credits";
 import { trackAdsEvent } from "./events";
+import { adsPaymentAlert } from "./payment-alert";
 import { getAdsStripe } from "./billing-stripe";
 import { commissionsForStripeEvent } from "./commissions";
 import { isTrialStartInvoice, recordFreeMonthClaim, statusAfterCheckout } from "./referral-billing";
@@ -48,6 +49,17 @@ async function onCheckoutCompleted(s: Stripe.Checkout.Session) {
     await recordCheckoutRecovered(prisma, { userId: ws.ownerId, workspaceId: ws.id, billing: "ads", amountCents: s.amount_total ?? 0, ref: s.id });
     // Win-back: a churned customer paying again within 60 days of a winback email = winback_recovered (once per churn).
     await recordWinbackPayment(prisma, { userId: ws.ownerId, workspaceId: ws.id, billing: "ads", amountCents: s.amount_total ?? 0, ref: s.id });
+    // Founder "PAID" email (live mode, real accounts, once per subscription / one-time session; never throws).
+    await adsPaymentAlert({
+      livemode: s.livemode,
+      kind: s.mode === "subscription" ? "subscription" : "one_time",
+      workspaceId: ws.id,
+      subscriptionId: idOf(s.subscription),
+      checkoutSessionId: s.id,
+      amountCents: s.amount_total ?? 0,
+      currency: s.currency,
+      what: String(s.metadata?.offer ?? s.metadata?.plan ?? s.metadata?.topup ?? s.mode),
+    });
   }
   const customer = idOf(s.customer);
   if (customer && !ws.stripeCustomerId) await prisma.adsWorkspace.update({ where: { id: ws.id }, data: { stripeCustomerId: customer } });
@@ -152,6 +164,11 @@ async function onInvoicePaid(inv: Stripe.Invoice) {
   const already = await prisma.adsEvent.findFirst({ where: { name: "paid_converted", workspaceId: ws.id } });
   if (!already) await trackAdsEvent("paid_converted", { workspaceId: ws.id, userId: ws.ownerId, props: { plan: plan.key, ...(offer ? { offer: offer.key } : {}), invoiceId: inv.id, amountCents: inv.amount_paid } });
   else if (inv.billing_reason === "subscription_cycle") await trackOncePer("renewed", "invoiceId", { workspaceId: ws.id, userId: ws.ownerId, props: { plan: plan.key, invoiceId: inv.id, amountCents: inv.amount_paid } });
+  // New subscription money (first invoice, or the first paid invoice after a free-month trial): founder "PAID" email.
+  // Same key as the checkout alert (sub:<id>), so a paid checkout + its invoice send one email. Renewals don't alert.
+  if (inv.amount_paid > 0 && (inv.billing_reason === "subscription_create" || !already)) {
+    await adsPaymentAlert({ livemode: inv.livemode, kind: "subscription", workspaceId: ws.id, subscriptionId: idOf(sub.subscription), invoiceId: inv.id, amountCents: inv.amount_paid, currency: inv.currency, what: offer?.key ?? plan.key });
+  }
 }
 
 /** Studio launch bonus (first paid invoice) + plan testimonials (every paid period of Scale/Agency). Idempotent per invoice. */
