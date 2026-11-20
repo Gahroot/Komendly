@@ -1,6 +1,7 @@
 {
   "name": "komendly-blog-engine",
   "private": true,
+  "license": "UNLICENSED",
   "type": "module",
   "engines": { "node": ">=24" },
   "scripts": {

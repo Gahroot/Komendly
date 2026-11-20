@@ -125,4 +125,4 @@ npm run start    # Start production server
 
 ## License
 
-Private - all rights reserved.
+Proprietary. Copyright (c) 2025-2026 Nolan Grout. All rights reserved. No license is granted to copy, modify, distribute or use this code, including for AI training. See [LICENSE](LICENSE).

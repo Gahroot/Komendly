@@ -2,6 +2,7 @@
   "name": "komendly-kly",
   "version": "0.1.0",
   "private": true,
+  "license": "UNLICENSED",
   "type": "module",
   "engines": {
     "node": ">=22"

@@ -1,0 +1,40 @@
+Komendly Proprietary License
+
+Copyright (c) 2025-2026 Nolan Grout. All rights reserved.
+
+This repository and everything in it, including all source code, object code,
+schemas, prompts, documentation, designs, images, videos and other assets
+(the "Software"), is the confidential and proprietary property of Nolan Grout
+(the "Owner").
+
+NO LICENSE IS GRANTED. Viewing the Software, for example because the
+repository is publicly visible, gives you no rights to it. Without the
+Owner's prior written permission you may not, in whole or in part:
+
+  1. copy, reproduce, download, mirror, fork (except as GitHub's Terms of
+     Service strictly require), or store the Software;
+  2. modify, translate, adapt or create derivative works of it;
+  3. distribute, publish, sublicense, sell, rent, lease, host or otherwise
+     make it available to anyone;
+  4. use it to build, train, fine-tune, evaluate or improve any product,
+     service, dataset or machine-learning / AI model, or include it in any
+     dataset or corpus;
+  5. decompile, disassemble or reverse engineer any part of it; or
+  6. remove or change any copyright, trademark or proprietary notice.
+
+The names "Komendly" and "Ozzy" and their logos are trademarks of the Owner.
+Nothing here grants any right to use them.
+
+Use of the hosted Komendly service (www.komendly.com), its APIs, its MCP
+server and the published `komendly` npm package is governed only by the
+Komendly Terms of Service, not by this file.
+
+Any unauthorized use ends any permission you may think you have and may
+result in civil and criminal liability. The Owner reserves every right not
+expressly granted in writing.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED. IN NO EVENT SHALL THE OWNER BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY ARISING FROM OR IN CONNECTION WITH THE SOFTWARE.
+
+Permission requests: nolan@komendly.com
