@@ -38,6 +38,14 @@ export function upgradeUrlForAgent(): string {
   return isAssistantRequest() ? linkForAgent(PRICING_URL) : UPGRADE_URL;
 }
 
+/**
+ * Whether a UI may offer an Upgrade button to a free account that hasn't hit a limit. ChatGPT's app guidelines forbid
+ * promoting upgrades (only explaining an unavailable feature with a link to the plans page), so not for ChatGPT clients.
+ */
+export function upgradePromptAllowed(agent = currentAgent()): boolean {
+  return !/chatgpt|openai/i.test(agent?.clientName ?? "");
+}
+
 type Hints = { readOnlyHint: boolean; destructiveHint: boolean; openWorldHint: boolean };
 const READ: Hints = { readOnlyHint: true, destructiveHint: false, openWorldHint: false };
 const write = (openWorld: boolean): Hints => ({ readOnlyHint: false, destructiveHint: false, openWorldHint: openWorld });

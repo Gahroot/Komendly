@@ -17,6 +17,8 @@ import { AdDepartmentSection } from "@/components/ads/ad-department/ad-departmen
 import { loadAdDepartment } from "@/lib/ads/bonuses/server";
 import { CoachCard } from "@/components/ads/coach/coach-card";
 import { WeeklyDropCard } from "@/components/ads/weekly-drop-card";
+import { AdWatchOptin } from "@/components/growth/ad-watch-optin";
+import { adWatchEnabled } from "@/lib/growth/ad-watch-server";
 
 export const metadata = { title: "Home", robots: { index: false, follow: false } };
 
@@ -24,7 +26,7 @@ export default async function AdsAppPage() {
   const user = await getCurrentUser();
   if (!user) redirect(`/ads/login?next=${encodeURIComponent("/ads/app")}`);
   const ws = await getOrCreateWorkspace(user);
-  const [bridge, department] = await Promise.all([bridgeForWorkspace(ws.id, ws.studioFreeVideos), loadAdDepartment(ws)]);
+  const [bridge, department, adWatchOn] = await Promise.all([bridgeForWorkspace(ws.id, ws.studioFreeVideos), loadAdDepartment(ws), adWatchEnabled()]);
   return (
     <div className="min-h-screen bg-background text-foreground">
       <DeviceCookie />
@@ -52,6 +54,7 @@ export default async function AdsAppPage() {
           <div className="space-y-6">
             <AdsAccountCard />
             <CoachCard />
+            {adWatchOn && <AdWatchOptin source="dashboard" tone="app" defaultEmail={user.email} title="Competitor ad watch" description="Get your competitors' new Facebook ads by email every Monday, each with a one-tap &quot;Make my version&quot;. Free; skipped when nothing is new." className="bg-card" />}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between text-base font-semibold">

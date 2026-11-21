@@ -1,0 +1,2710 @@
+{
+ "version": 1,
+ "collectedOn": "2026-11-20",
+ "generatedAt": "2026-11-21T19:37:24.468Z",
+ "advertisers": 1529,
+ "trades": 22,
+ "states": 51,
+ "indexable": true,
+ "firstSeenFrom": "2018-10-18",
+ "firstSeenTo": "2026-11-19",
+ "liveAds": {
+  "n": 1529,
+  "median": 1,
+  "mean": 1.6,
+  "p75": 2,
+  "p90": 3,
+  "multiAdShare": 28,
+  "buckets": [
+   {
+    "label": "1 live ad",
+    "advertisers": 1101,
+    "share": 72
+   },
+   {
+    "label": "2 live ads",
+    "advertisers": 257,
+    "share": 16.8
+   },
+   {
+    "label": "3–5 live ads",
+    "advertisers": 138,
+    "share": 9
+   },
+   {
+    "label": "6–10 live ads",
+    "advertisers": 24,
+    "share": 1.6
+   },
+   {
+    "label": "11+ live ads",
+    "advertisers": 9,
+    "share": 0.6
+   }
+  ]
+ },
+ "runDays": {
+  "n": 1529,
+  "median": 158,
+  "p25": 58,
+  "p75": 329,
+  "over30Share": 86.3,
+  "over90Share": 67.1,
+  "over365Share": 23.3,
+  "buckets": [
+   {
+    "label": "Under 30 days",
+    "advertisers": 209,
+    "share": 13.7
+   },
+   {
+    "label": "30–89 days",
+    "advertisers": 294,
+    "share": 19.2
+   },
+   {
+    "label": "90–179 days",
+    "advertisers": 380,
+    "share": 24.9
+   },
+   {
+    "label": "180–364 days",
+    "advertisers": 290,
+    "share": 19
+   },
+   {
+    "label": "1–2 years",
+    "advertisers": 206,
+    "share": 13.5
+   },
+   {
+    "label": "2+ years",
+    "advertisers": 150,
+    "share": 9.8
+   }
+  ]
+ },
+ "media": null,
+ "signals": {
+  "n": 1528,
+  "offerShare": 44.8,
+  "rows": [
+   {
+    "id": "emoji",
+    "label": "Uses emoji",
+    "advertisers": 716,
+    "share": 46.9
+   },
+   {
+    "id": "question",
+    "label": "Asks the reader a question",
+    "advertisers": 415,
+    "share": 27.2
+   },
+   {
+    "id": "price",
+    "label": "Shows a dollar price",
+    "advertisers": 340,
+    "share": 22.3
+   },
+   {
+    "id": "deal",
+    "label": "Uses deal words (special, deal, discount, save, sale, promo, coupon)",
+    "advertisers": 295,
+    "share": 19.3
+   },
+   {
+    "id": "free",
+    "label": "Offers something free (estimate, consult, inspection…)",
+    "advertisers": 268,
+    "share": 17.5
+   },
+   {
+    "id": "new_customer",
+    "label": "Targets new customers / patients",
+    "advertisers": 130,
+    "share": 8.5
+   },
+   {
+    "id": "percent",
+    "label": "Shows a percentage (e.g. % off, 0% APR)",
+    "advertisers": 78,
+    "share": 5.1
+   },
+   {
+    "id": "proof",
+    "label": "Cites reviews, ratings or awards",
+    "advertisers": 77,
+    "share": 5
+   },
+   {
+    "id": "urgency",
+    "label": "Uses time pressure (limited time, ends, hurry, spots left)",
+    "advertisers": 76,
+    "share": 5
+   },
+   {
+    "id": "trust",
+    "label": "Mentions a warranty or guarantee",
+    "advertisers": 62,
+    "share": 4.1
+   },
+   {
+    "id": "financing",
+    "label": "Mentions financing or payment plans",
+    "advertisers": 50,
+    "share": 3.3
+   },
+   {
+    "id": "local",
+    "label": "Says family-owned or locally owned",
+    "advertisers": 41,
+    "share": 2.7
+   }
+  ]
+ },
+ "words": {
+  "n": 1528,
+  "rows": [
+   {
+    "word": "free",
+    "advertisers": 268,
+    "share": 17.5
+   },
+   {
+    "word": "service",
+    "advertisers": 153,
+    "share": 10
+   },
+   {
+    "word": "book",
+    "advertisers": 148,
+    "share": 9.7
+   },
+   {
+    "word": "special",
+    "advertisers": 132,
+    "share": 8.6
+   },
+   {
+    "word": "home",
+    "advertisers": 131,
+    "share": 8.6
+   },
+   {
+    "word": "looking",
+    "advertisers": 127,
+    "share": 8.3
+   },
+   {
+    "word": "help",
+    "advertisers": 123,
+    "share": 8
+   },
+   {
+    "word": "services",
+    "advertisers": 120,
+    "share": 7.9
+   },
+   {
+    "word": "ready",
+    "advertisers": 118,
+    "share": 7.7
+   },
+   {
+    "word": "care",
+    "advertisers": 116,
+    "share": 7.6
+   },
+   {
+    "word": "team",
+    "advertisers": 111,
+    "share": 7.3
+   },
+   {
+    "word": "car",
+    "advertisers": 107,
+    "share": 7
+   },
+   {
+    "word": "repair",
+    "advertisers": 107,
+    "share": 7
+   },
+   {
+    "word": "offer",
+    "advertisers": 106,
+    "share": 6.9
+   },
+   {
+    "word": "full",
+    "advertisers": 105,
+    "share": 6.9
+   },
+   {
+    "word": "quality",
+    "advertisers": 101,
+    "share": 6.6
+   },
+   {
+    "word": "smile",
+    "advertisers": 92,
+    "share": 6
+   },
+   {
+    "word": "limited",
+    "advertisers": 91,
+    "share": 6
+   },
+   {
+    "word": "vehicle",
+    "advertisers": 85,
+    "share": 5.6
+   },
+   {
+    "word": "experience",
+    "advertisers": 82,
+    "share": 5.4
+   },
+   {
+    "word": "take",
+    "advertisers": 82,
+    "share": 5.4
+   },
+   {
+    "word": "first",
+    "advertisers": 80,
+    "share": 5.2
+   },
+   {
+    "word": "roof",
+    "advertisers": 78,
+    "share": 5.1
+   },
+   {
+    "word": "family",
+    "advertisers": 77,
+    "share": 5
+   },
+   {
+    "word": "contact",
+    "advertisers": 76,
+    "share": 5
+   }
+  ]
+ },
+ "byTrade": [
+  {
+   "slug": "auto-repair",
+   "label": "Auto repair shops",
+   "playbook": "auto-repair",
+   "advertisers": 136,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.3,
+   "multiAdShare": 19.1,
+   "medianDays": 100,
+   "over90Share": 52.2,
+   "over365Share": 21.3,
+   "offerShare": 48.5,
+   "topSignal": "Uses deal words (special, deal, discount, save, sale, promo, coupon)",
+   "topSignalShare": 31.6
+  },
+  {
+   "slug": "plumbers",
+   "label": "Plumbers",
+   "playbook": "plumbers",
+   "advertisers": 130,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.5,
+   "multiAdShare": 31.5,
+   "medianDays": 172.5,
+   "over90Share": 70.8,
+   "over365Share": 24.6,
+   "offerShare": 34.9,
+   "topSignal": "Asks the reader a question",
+   "topSignalShare": 32.6
+  },
+  {
+   "slug": "dentists",
+   "label": "Dentists",
+   "playbook": "dentists",
+   "advertisers": 126,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.6,
+   "multiAdShare": 23.8,
+   "medianDays": 241,
+   "over90Share": 85.7,
+   "over365Share": 38.1,
+   "offerShare": 37.3,
+   "topSignal": "Asks the reader a question",
+   "topSignalShare": 38.1
+  },
+  {
+   "slug": "med-spas",
+   "label": "Med spas",
+   "playbook": "med-spas",
+   "advertisers": 123,
+   "medianLiveAds": 1,
+   "meanLiveAds": 2.3,
+   "multiAdShare": 40.7,
+   "medianDays": 49,
+   "over90Share": 32.5,
+   "over365Share": 3.3,
+   "offerShare": 69.9,
+   "topSignal": "Shows a dollar price",
+   "topSignalShare": 56.9
+  },
+  {
+   "slug": "roofers",
+   "label": "Roofers",
+   "playbook": "roofers",
+   "advertisers": 121,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.8,
+   "multiAdShare": 38.8,
+   "medianDays": 183,
+   "over90Share": 83.5,
+   "over365Share": 31.4,
+   "offerShare": 50.4,
+   "topSignal": "Offers something free (estimate, consult, inspection…)",
+   "topSignalShare": 39.7
+  },
+  {
+   "slug": "laser-hair-removal",
+   "label": "Laser hair removal clinics",
+   "playbook": "med-spas",
+   "advertisers": 100,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.6,
+   "multiAdShare": 27,
+   "medianDays": 38,
+   "over90Share": 36,
+   "over365Share": 14,
+   "offerShare": 61,
+   "topSignal": "Uses deal words (special, deal, discount, save, sale, promo, coupon)",
+   "topSignalShare": 40
+  },
+  {
+   "slug": "hvac",
+   "label": "HVAC companies",
+   "playbook": "hvac",
+   "advertisers": 91,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.3,
+   "multiAdShare": 23.1,
+   "medianDays": 201,
+   "over90Share": 63.7,
+   "over365Share": 28.6,
+   "offerShare": 48.4,
+   "topSignal": "Shows a dollar price",
+   "topSignalShare": 30.8
+  },
+  {
+   "slug": "orthodontists",
+   "label": "Orthodontists (Invisalign)",
+   "playbook": "dentists",
+   "advertisers": 71,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.6,
+   "multiAdShare": 29.6,
+   "medianDays": 184,
+   "over90Share": 80.3,
+   "over365Share": 29.6,
+   "offerShare": 40.8,
+   "topSignal": "Offers something free (estimate, consult, inspection…)",
+   "topSignalShare": 31
+  },
+  {
+   "slug": "car-dealerships",
+   "label": "Car dealerships",
+   "playbook": null,
+   "advertisers": 67,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.4,
+   "multiAdShare": 25.4,
+   "medianDays": 126,
+   "over90Share": 64.2,
+   "over365Share": 20.9,
+   "offerShare": 46.3,
+   "topSignal": "Mentions financing or payment plans",
+   "topSignalShare": 32.8
+  },
+  {
+   "slug": "personal-injury-lawyers",
+   "label": "Personal injury lawyers",
+   "playbook": "law-firms",
+   "advertisers": 63,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.8,
+   "multiAdShare": 39.7,
+   "medianDays": 147,
+   "over90Share": 58.7,
+   "over365Share": 20.6,
+   "offerShare": 42.9,
+   "topSignal": "Offers something free (estimate, consult, inspection…)",
+   "topSignalShare": 42.9
+  },
+  {
+   "slug": "botox-fillers",
+   "label": "Botox & filler injectors",
+   "playbook": "med-spas",
+   "advertisers": 61,
+   "medianLiveAds": 1,
+   "meanLiveAds": 2.4,
+   "multiAdShare": 32.8,
+   "medianDays": 162,
+   "over90Share": 80.3,
+   "over365Share": 18,
+   "offerShare": 45.9,
+   "topSignal": "Shows a dollar price",
+   "topSignalShare": 29.5
+  },
+  {
+   "slug": "martial-arts",
+   "label": "Martial arts schools",
+   "playbook": null,
+   "advertisers": 58,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.1,
+   "multiAdShare": 12.1,
+   "medianDays": 307.5,
+   "over90Share": 89.7,
+   "over365Share": 46.6,
+   "offerShare": 27.6,
+   "topSignal": "Offers something free (estimate, consult, inspection…)",
+   "topSignalShare": 24.1
+  },
+  {
+   "slug": "cosmetic-dentists",
+   "label": "Cosmetic & implant dentists",
+   "playbook": "dentists",
+   "advertisers": 52,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.6,
+   "multiAdShare": 19.2,
+   "medianDays": 137.5,
+   "over90Share": 71.2,
+   "over365Share": 21.2,
+   "offerShare": 42.3,
+   "topSignal": "Uses deal words (special, deal, discount, save, sale, promo, coupon)",
+   "topSignalShare": 32.7
+  },
+  {
+   "slug": "window-tint",
+   "label": "Window tint shops",
+   "playbook": null,
+   "advertisers": 52,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.4,
+   "multiAdShare": 23.1,
+   "medianDays": 172.5,
+   "over90Share": 78.8,
+   "over365Share": 26.9,
+   "offerShare": 32.7,
+   "topSignal": "Asks the reader a question",
+   "topSignalShare": 32.7
+  },
+  {
+   "slug": "yoga-pilates-studios",
+   "label": "Yoga & Pilates studios",
+   "playbook": "yoga-studios",
+   "advertisers": 51,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.6,
+   "multiAdShare": 21.6,
+   "medianDays": 151,
+   "over90Share": 78.4,
+   "over365Share": 15.7,
+   "offerShare": 37.3,
+   "topSignal": "Shows a dollar price",
+   "topSignalShare": 25.5
+  },
+  {
+   "slug": "solar-installers",
+   "label": "Solar installers",
+   "playbook": "solar-installers",
+   "advertisers": 50,
+   "medianLiveAds": 1,
+   "meanLiveAds": 2.1,
+   "multiAdShare": 46,
+   "medianDays": 110,
+   "over90Share": 62,
+   "over365Share": 6,
+   "offerShare": 42,
+   "topSignal": "Uses deal words (special, deal, discount, save, sale, promo, coupon)",
+   "topSignalShare": 22
+  },
+  {
+   "slug": "auto-detailing",
+   "label": "Auto detailers",
+   "playbook": "mobile-detailing",
+   "advertisers": 49,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.2,
+   "multiAdShare": 14.3,
+   "medianDays": 184,
+   "over90Share": 83.7,
+   "over365Share": 20.4,
+   "offerShare": 30.6,
+   "topSignal": "Shows a percentage (e.g. % off, 0% APR)",
+   "topSignalShare": 18.4
+  },
+  {
+   "slug": "pest-control",
+   "label": "Pest control companies",
+   "playbook": "pest-control",
+   "advertisers": 33,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.6,
+   "multiAdShare": 36.4,
+   "medianDays": 135,
+   "over90Share": 51.5,
+   "over365Share": 18.2,
+   "offerShare": 48.5,
+   "topSignal": "Offers something free (estimate, consult, inspection…)",
+   "topSignalShare": 27.3
+  },
+  {
+   "slug": "electricians",
+   "label": "Electricians",
+   "playbook": "electricians",
+   "advertisers": 31,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.5,
+   "multiAdShare": 25.8,
+   "medianDays": 185,
+   "over90Share": 77.4,
+   "over365Share": 32.3,
+   "offerShare": 29,
+   "topSignal": "Asks the reader a question",
+   "topSignalShare": 29
+  },
+  {
+   "slug": "chiropractors",
+   "label": "Chiropractors",
+   "playbook": "chiropractors",
+   "advertisers": 30,
+   "medianLiveAds": 1,
+   "meanLiveAds": 2.6,
+   "multiAdShare": 20,
+   "medianDays": 183,
+   "over90Share": 90,
+   "over365Share": 23.3,
+   "offerShare": 26.7,
+   "topSignal": "Shows a dollar price",
+   "topSignalShare": 20
+  },
+  {
+   "slug": "tire-shops",
+   "label": "Tire shops",
+   "playbook": "auto-repair",
+   "advertisers": 28,
+   "medianLiveAds": 1,
+   "meanLiveAds": 1.4,
+   "multiAdShare": 21.4,
+   "medianDays": 136.5,
+   "over90Share": 64.3,
+   "over365Share": 25,
+   "offerShare": 57.1,
+   "topSignal": "Uses deal words (special, deal, discount, save, sale, promo, coupon)",
+   "topSignalShare": 42.9
+  }
+ ],
+ "byState": [
+  {
+   "state": "TX",
+   "advertisers": 162,
+   "medianLiveAds": 1,
+   "medianDays": 145,
+   "over90Share": 62.3
+  },
+  {
+   "state": "CA",
+   "advertisers": 156,
+   "medianLiveAds": 1,
+   "medianDays": 151,
+   "over90Share": 68.6
+  },
+  {
+   "state": "FL",
+   "advertisers": 128,
+   "medianLiveAds": 1,
+   "medianDays": 161,
+   "over90Share": 68.8
+  },
+  {
+   "state": "NY",
+   "advertisers": 72,
+   "medianLiveAds": 1,
+   "medianDays": 176,
+   "over90Share": 65.3
+  },
+  {
+   "state": "IL",
+   "advertisers": 59,
+   "medianLiveAds": 1,
+   "medianDays": 151,
+   "over90Share": 61
+  },
+  {
+   "state": "NC",
+   "advertisers": 59,
+   "medianLiveAds": 1,
+   "medianDays": 177,
+   "over90Share": 67.8
+  },
+  {
+   "state": "NJ",
+   "advertisers": 57,
+   "medianLiveAds": 1,
+   "medianDays": 122,
+   "over90Share": 63.2
+  },
+  {
+   "state": "AZ",
+   "advertisers": 54,
+   "medianLiveAds": 1,
+   "medianDays": 150.5,
+   "over90Share": 57.4
+  },
+  {
+   "state": "OH",
+   "advertisers": 51,
+   "medianLiveAds": 1,
+   "medianDays": 157,
+   "over90Share": 74.5
+  },
+  {
+   "state": "CO",
+   "advertisers": 46,
+   "medianLiveAds": 1,
+   "medianDays": 112,
+   "over90Share": 60.9
+  },
+  {
+   "state": "VA",
+   "advertisers": 45,
+   "medianLiveAds": 1,
+   "medianDays": 208,
+   "over90Share": 73.3
+  },
+  {
+   "state": "WA",
+   "advertisers": 42,
+   "medianLiveAds": 1,
+   "medianDays": 174.5,
+   "over90Share": 73.8
+  },
+  {
+   "state": "GA",
+   "advertisers": 40,
+   "medianLiveAds": 1,
+   "medianDays": 178,
+   "over90Share": 67.5
+  },
+  {
+   "state": "MI",
+   "advertisers": 36,
+   "medianLiveAds": 1,
+   "medianDays": 79.5,
+   "over90Share": 47.2
+  },
+  {
+   "state": "MD",
+   "advertisers": 34,
+   "medianLiveAds": 1,
+   "medianDays": 199,
+   "over90Share": 76.5
+  },
+  {
+   "state": "PA",
+   "advertisers": 33,
+   "medianLiveAds": 1,
+   "medianDays": 175,
+   "over90Share": 75.8
+  },
+  {
+   "state": "TN",
+   "advertisers": 29,
+   "medianLiveAds": 1,
+   "medianDays": 101,
+   "over90Share": 58.6
+  },
+  {
+   "state": "IN",
+   "advertisers": 28,
+   "medianLiveAds": 1,
+   "medianDays": 145,
+   "over90Share": 67.9
+  },
+  {
+   "state": "SC",
+   "advertisers": 27,
+   "medianLiveAds": 1,
+   "medianDays": 135,
+   "over90Share": 66.7
+  },
+  {
+   "state": "MA",
+   "advertisers": 26,
+   "medianLiveAds": 1,
+   "medianDays": 135.5,
+   "over90Share": 65.4
+  },
+  {
+   "state": "MN",
+   "advertisers": 25,
+   "medianLiveAds": 1,
+   "medianDays": 144,
+   "over90Share": 72
+  },
+  {
+   "state": "NV",
+   "advertisers": 24,
+   "medianLiveAds": 2,
+   "medianDays": 165.5,
+   "over90Share": 62.5
+  },
+  {
+   "state": "MO",
+   "advertisers": 23,
+   "medianLiveAds": 1,
+   "medianDays": 111,
+   "over90Share": 56.5
+  },
+  {
+   "state": "OR",
+   "advertisers": 23,
+   "medianLiveAds": 1,
+   "medianDays": 168,
+   "over90Share": 78.3
+  },
+  {
+   "state": "AL",
+   "advertisers": 22,
+   "medianLiveAds": 1.5,
+   "medianDays": 189.5,
+   "over90Share": 86.4
+  },
+  {
+   "state": "UT",
+   "advertisers": 22,
+   "medianLiveAds": 1,
+   "medianDays": 195,
+   "over90Share": 68.2
+  }
+ ],
+ "leaderboards": [
+  {
+   "slug": "auto-repair",
+   "label": "Auto repair shops",
+   "singular": "auto repair",
+   "playbook": "auto-repair",
+   "advertisers": 136,
+   "medianDays": 100,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2021-07-14",
+     "days": 1955,
+     "state": "SC",
+     "excerpt": "We work hard to ensure you always leave [business] 100% satisfied. We're a family-owned, full-service auto repair shop here to serve you. 🤝 Visit us online…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=515411989682468"
+    },
+    {
+     "rank": 2,
+     "since": "2021-12-28",
+     "days": 1788,
+     "state": "OH",
+     "excerpt": "[business] is an automotive repair shop that cares about people and is devoted to Honest, Quality, Auto Repair. [website] [business] Auto Service - We are a…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=344931203727882"
+    },
+    {
+     "rank": 3,
+     "since": "2022-09-02",
+     "days": 1540,
+     "state": "CO",
+     "excerpt": "Are you hoping for an honest and trustworthy auto repair shop? Do you dread that check engine light or clunking noise, thinking “who knows what they’ll say I…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=806479697152996"
+    },
+    {
+     "rank": 4,
+     "since": "2022-11-23",
+     "days": 1458,
+     "state": "VA",
+     "excerpt": "We're your one stop shop for tires and auto repair. Visit us today! [website] See You Soon! [business] is located at [address] Check here for location hours…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=927539975317153"
+    },
+    {
+     "rank": 5,
+     "since": "2023-03-30",
+     "days": 1331,
+     "state": "VA",
+     "excerpt": "24 hour [business], auto body shop, auto repair shop [website] [business] Our [business] service is accessible 24 hours a day, seven days a week. When your car…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=9086104851462482"
+    },
+    {
+     "rank": 6,
+     "since": "2023-10-18",
+     "days": 1129,
+     "state": "CA",
+     "excerpt": "[business]'s go-to [business] Auto Repair Shop. Visit Today for Shorter Waits, Lower Prices, & Friendly Service. [website] It's Time To Service Your Car…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=331037396245245"
+    },
+    {
+     "rank": 7,
+     "since": "2024-04-02",
+     "days": 962,
+     "state": "TX",
+     "excerpt": "[business] Auto Body Shop, a top-rated, I-Car® Gold Certified, family-owned premier auto collision. Collision, Hail and dent repair located in [city] top rated…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=958970835276316"
+    },
+    {
+     "rank": 8,
+     "since": "2024-04-29",
+     "days": 935,
+     "state": "CA",
+     "excerpt": "Well, I've got to run to keep from hidin' And I'm bound to keep on ridin' And I've got one more silver dollar But I'm not gonna let 'em catch me, no Not gonna…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1477575366172129"
+    },
+    {
+     "rank": 9,
+     "since": "2024-05-02",
+     "days": 932,
+     "state": "MD",
+     "excerpt": "[business], located in [city], MD, is your local one-stop auto glass shop. [website] [business] Learn more",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=941631691301069"
+    },
+    {
+     "rank": 10,
+     "since": "2024-06-28",
+     "days": 875,
+     "state": "MA",
+     "excerpt": "If you've been in an accident it is your choice where you get it repaired! We offer safe proper repairs & never cut corners. Come see why more people choose…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=828048199291787"
+    }
+   ]
+  },
+  {
+   "slug": "plumbers",
+   "label": "Plumbers",
+   "singular": "plumbing",
+   "playbook": "plumbers",
+   "advertisers": 130,
+   "medianDays": 172.5,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2020-12-11",
+     "days": 2170,
+     "state": "CA",
+     "excerpt": "😷 Masked up and ready to help with your plumbing needs 24/7 Services 🧰 ✅Residential ✅Commercial ✅Plumbing ✅HVAC (Heating, Ventilation, and Air-[business])…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=plumbing%20services&search_type=keyword_unordered"
+    },
+    {
+     "rank": 2,
+     "since": "2021-11-03",
+     "days": 1843,
+     "state": "PA",
+     "excerpt": "[business] Delivers Fuel and Repairs, Services & Installs Plumbing, Heating & Cooling Equipment. Learn more on our website, [website] [website] Local Fuel…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=plumbing%20services&search_type=keyword_unordered"
+    },
+    {
+     "rank": 3,
+     "since": "2022-01-03",
+     "days": 1782,
+     "state": "MO",
+     "excerpt": "Providing Three Generations of Affordable Comfort to Central Missouri since 1958. [website] [business] Learn more",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=plumber&search_type=keyword_unordered"
+    },
+    {
+     "rank": 4,
+     "since": "2022-05-04",
+     "days": 1661,
+     "state": "CO",
+     "excerpt": "We are a family owned plumbing business. Our goals are to earn your repeat business and give back to the community. A percentage of all of our sales go to The…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=plumbing%20services&search_type=keyword_unordered"
+    },
+    {
+     "rank": 5,
+     "since": "2022-06-20",
+     "days": 1614,
+     "state": "WI",
+     "excerpt": "[business]'s licensed, union plumbers are ready to provide you with professional, friendly plumbing services including sumps, water heaters, repairs and more…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=plumbing%20services&search_type=keyword_unordered"
+    },
+    {
+     "rank": 6,
+     "since": "2023-10-03",
+     "days": 1144,
+     "state": "AL",
+     "excerpt": "We are hiring! Join our team and enjoy competitive pay, great benefits and a company culture that values its team members and customers. To apply, visit…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=plumber&search_type=keyword_unordered"
+    },
+    {
+     "rank": 7,
+     "since": "2023-10-17",
+     "days": 1130,
+     "state": "AZ",
+     "excerpt": "Residential and comercial plumbing. Water heaters and water treatment. No job to big or small. All plumbing needs you have we can help. Emergency services…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=plumbing%20services&search_type=keyword_unordered"
+    },
+    {
+     "rank": 8,
+     "since": "2024-01-01",
+     "days": 1054,
+     "state": "GA",
+     "excerpt": "Plumbing Contractor, Sales, Service and Installation. Including Septic Systems and Well Pump Repair. Residential and Commercial Projects. Tankless water heater…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=water%20heater%20installation&search_type=keyword_unordered"
+    },
+    {
+     "rank": 9,
+     "since": "2024-05-12",
+     "days": 922,
+     "state": "SC",
+     "excerpt": "It is the goal of [business] to provide you with the highest quality services and to contin [website] [business] Book now",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=plumbing%20services&search_type=keyword_unordered"
+    },
+    {
+     "rank": 10,
+     "since": "2024-07-03",
+     "days": 870,
+     "state": "SD",
+     "excerpt": "Discover why we have been known as \"The Plumbers That Care\" for over 75 years. Contact [business] today for quality plumbing repairs and installations! Call or…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=plumber&search_type=keyword_unordered"
+    }
+   ]
+  },
+  {
+   "slug": "dentists",
+   "label": "Dentists",
+   "singular": "dental",
+   "playbook": "dentists",
+   "advertisers": 126,
+   "medianDays": 241,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2021-10-17",
+     "days": 1860,
+     "state": "FL",
+     "excerpt": "Family & Cosmetic Dentistry [website] [business] General Dentist in [city], FL - Visit our skilled General Dentist in [city], FL. Accepting new appointments…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1931742056989594"
+    },
+    {
+     "rank": 2,
+     "since": "2022-03-24",
+     "days": 1702,
+     "state": "NJ",
+     "excerpt": "SMILE just in time for summer! Our caring team is here for you, keeping your health at the top of our list! • Ultraclean, sterilized office and equipment •…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=3276935695920103"
+    },
+    {
+     "rank": 3,
+     "since": "2023-02-15",
+     "days": 1374,
+     "state": "TX",
+     "excerpt": "Our friendly staff is dedicated to caring for you and your entire family's oral health and well-being. We take the time to create a personalized treatment for…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=6118738938182114"
+    },
+    {
+     "rank": 4,
+     "since": "2023-02-16",
+     "days": 1373,
+     "state": "WA",
+     "excerpt": "Karen has been a valued patient of ours for many years. We spoke with her recently about her reasons for choosing [business]. Karen said she first came due to…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=992728651698595"
+    },
+    {
+     "rank": 5,
+     "since": "2023-06-16",
+     "days": 1253,
+     "state": "PA",
+     "excerpt": "M2 Dentistry, a pediatric dental office that caters to your family's specific needs! With on-time appointments, sedation options, games, and prizes at each…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=836097014698068"
+    },
+    {
+     "rank": 6,
+     "since": "2024-03-05",
+     "days": 990,
+     "state": "VA",
+     "excerpt": "✅ Family dentistry in [business]. ✅ Extra gentle care. ✅ Convenient, comfortable space. Book your appointment now! [website] Schedule a Cleaning Today! Dentist…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=939655380756505"
+    },
+    {
+     "rank": 7,
+     "since": "2024-03-18",
+     "days": 977,
+     "state": "NC",
+     "excerpt": "Is your child facing a dental emergency? 😰 We understand as a parent that emergencies can be stressful, but we're here to help you in your family's time of…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=805440184749912"
+    },
+    {
+     "rank": 8,
+     "since": "2024-03-20",
+     "days": 975,
+     "state": "NC",
+     "excerpt": "Do you or a love one have Sleep Disturbed Breathing or Sleep Apnea? 😴 Our Sleep Apnea dentist may be able to help! Sleep apnea will worsen over time if left…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1449441292330762"
+    },
+    {
+     "rank": 9,
+     "since": "2024-05-13",
+     "days": 921,
+     "state": "FL",
+     "excerpt": "Best Dentists in [business]! Gentle dentistry. Implant, crowns, veneers, deep cleaning, healthy mouth cleaning, dental teeth whitening, and more! [website]…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=458450266554324"
+    },
+    {
+     "rank": 10,
+     "since": "2024-08-12",
+     "days": 830,
+     "state": "CO",
+     "excerpt": "Cosmetic & Family Dentist Learn More",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=464624659724334"
+    }
+   ]
+  },
+  {
+   "slug": "med-spas",
+   "label": "Med spas",
+   "singular": "med spa",
+   "playbook": "med-spas",
+   "advertisers": 123,
+   "medianDays": 49,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2024-06-05",
+     "days": 898,
+     "state": "NC",
+     "excerpt": "✨New Patient Special!✨ Enjoy Botox Cosmetic for $12 a unit at [business] MedSpa in [city] and the surrounding areas! Schedule today! Use promo code: NEWBOTOX…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1239218214296820"
+    },
+    {
+     "rank": 2,
+     "since": "2025-05-18",
+     "days": 551,
+     "state": "VA",
+     "excerpt": "👀 Tired of shaving? Get silky-smooth legs all summer! 💎 Full Legs Laser: $247/session (Reg. $399) 💋 limited spots! 📍 [city], VA — Safe, quick & done by…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=578466058317045"
+    },
+    {
+     "rank": 3,
+     "since": "2025-09-02",
+     "days": 444,
+     "state": "CA",
+     "excerpt": "Tired of struggling with your eyebrows every day, Los Angeles? We’ve got the perfect solution! Special Thanksgiving Offer: Promo Price: Just $245 (Regularly…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=31293891156892001"
+    },
+    {
+     "rank": 4,
+     "since": "2025-12-26",
+     "days": 329,
+     "state": "NJ",
+     "excerpt": "Plump it, Flaunt it, Own it. Facial Fillers at [business] for natural looking volume, youthful definition, and enhanced contours. PLUMP LIPS, SMOOTH SMILE…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=2412691832534901"
+    },
+    {
+     "rank": 5,
+     "since": "2025-12-27",
+     "days": 328,
+     "state": "VA",
+     "excerpt": "🎉 From December 28th through December 31st only, [business] MedSpa is offering exclusive end-of-season savings on some of our most popular treatments. For…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=863561469596926"
+    },
+    {
+     "rank": 6,
+     "since": "2026-01-20",
+     "days": 304,
+     "state": "FL",
+     "excerpt": "✨ LIMITED-TIME BOTOX SPECIAL! ✨ The first 35 units of Botox for just $250! 💉😍 Don't miss this exclusive offer to refresh your look and smooth out fine lines…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=907513828519736"
+    },
+    {
+     "rank": 7,
+     "since": "2026-01-21",
+     "days": 303,
+     "state": "NC",
+     "excerpt": "Discover [city]'s premier destination for looking and feeling your best. From Botox and fillers to advanced laser treatments, body contouring, and rejuvenating…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1380238696901503"
+    },
+    {
+     "rank": 8,
+     "since": "2026-03-08",
+     "days": 257,
+     "state": "FL",
+     "excerpt": "[city], FL & SURROUNDING AREAS🎉 Slim Down FAST With Our Instant Shape & Sculpt Treatment - Now $79.99!😱 Get our Instant Shape & Sculpt Treatment + Bonus Skin…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=857617397302227"
+    },
+    {
+     "rank": 9,
+     "since": "2026-03-08",
+     "days": 257,
+     "state": "CA",
+     "excerpt": "To see this content, you need to confirm your age by logging in. Log in",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1642576896874818"
+    },
+    {
+     "rank": 10,
+     "since": "2026-04-04",
+     "days": 230,
+     "state": "NY",
+     "excerpt": "✨ Member Exclusive: Limited-Time Add-On Special! ✨ Enhance your wellness experience with our 30-Minute Lymphatic Drainage Massage — now only $30 (add-on…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=907828392071781"
+    }
+   ]
+  },
+  {
+   "slug": "roofers",
+   "label": "Roofers",
+   "singular": "roofing",
+   "playbook": "roofers",
+   "advertisers": 121,
+   "medianDays": 183,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2020-12-09",
+     "days": 2172,
+     "state": "NJ",
+     "excerpt": "[business] Roofing and [business] experts. Family owned for over 27 years! Contact us for a Free Estimate today. [website] [business] Book now",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=roofing%20free%20estimate&search_type=keyword_unordered"
+    },
+    {
+     "rank": 2,
+     "since": "2023-04-28",
+     "days": 1302,
+     "state": "NY",
+     "excerpt": "Voted \"Post Star 2023 Best of the Region\" Roofing Company. We offer top-quality installation, professional service, quick turnaround, and immaculate cleanup…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=roofing%20company&search_type=keyword_unordered"
+    },
+    {
+     "rank": 3,
+     "since": "2023-04-28",
+     "days": 1302,
+     "state": "MD",
+     "excerpt": "We specialize in insurance restoration. Call us today to book your free inspection. [website] [business] By trusting a reliable company such as ours, your…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=roofing%20company&search_type=keyword_unordered"
+    },
+    {
+     "rank": 4,
+     "since": "2023-07-13",
+     "days": 1226,
+     "state": "OH",
+     "excerpt": "With over ten years of experience, the staff at [business] will take care of all your roofing needs. [website] [business] in [city], OH, is a local roofing…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=roofing%20free%20estimate&search_type=keyword_unordered"
+    },
+    {
+     "rank": 5,
+     "since": "2023-10-26",
+     "days": 1121,
+     "state": "OH",
+     "excerpt": "Are you seeking a challenging position in the commercial roofing industry? [business] Roofing seeks proactive individuals who have at least five years of…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=roofing%20company&search_type=keyword_unordered"
+    },
+    {
+     "rank": 6,
+     "since": "2024-02-01",
+     "days": 1023,
+     "state": "AR",
+     "excerpt": "[business] Roofing Is Here For All Of Your Residential Roofing Needs. 0:00 / 0:27 [website] Leaky Roof? Get Quote",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=roof%20repair&search_type=keyword_unordered"
+    },
+    {
+     "rank": 7,
+     "since": "2024-04-21",
+     "days": 943,
+     "state": "GA",
+     "excerpt": "[website] [business] Learn more",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=roofing%20company&search_type=keyword_unordered"
+    },
+    {
+     "rank": 8,
+     "since": "2024-04-22",
+     "days": 942,
+     "state": "WI",
+     "excerpt": "Southeastern Wisconsin’s Trusted Contractor for Roofing, Siding & Trim, and Windows & Doors Since 1957. [website] GET A FREE ESTIMATE Learn more",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=roofing%20free%20estimate&search_type=keyword_unordered"
+    },
+    {
+     "rank": 9,
+     "since": "2024-05-22",
+     "days": 912,
+     "state": "PA",
+     "excerpt": "Don’t Let Delays and Procrastination Get the Better of You and Your Roof! We have extensive experience with all roof system types! 📅 Schedule your FREE roof…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=roofing%20free%20estimate&search_type=keyword_unordered"
+    },
+    {
+     "rank": 10,
+     "since": "2024-08-12",
+     "days": 830,
+     "state": "NH",
+     "excerpt": "Reach out today for a free estimate #[business] 0:00 / 0:15 [website] [business] Get quote",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=roofing%20free%20estimate&search_type=keyword_unordered"
+    }
+   ]
+  },
+  {
+   "slug": "laser-hair-removal",
+   "label": "Laser hair removal clinics",
+   "singular": "laser hair removal",
+   "playbook": "med-spas",
+   "advertisers": 100,
+   "medianDays": 38,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2023-07-23",
+     "days": 1216,
+     "state": "TX",
+     "excerpt": "Our staff is skilled in injectables, skin tightening, laser hair removal, acne & many other med spa 0:00 / 0:07 [business] Health/beauty, Spa, Health & Beauty…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=302453178829385"
+    },
+    {
+     "rank": 2,
+     "since": "2023-09-05",
+     "days": 1172,
+     "state": "NY",
+     "excerpt": "Advanced Skin Care Services. Hydrafacial & Cosmetic Laser & Hair Removal. [website] [business] Book now",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=806717791238454"
+    },
+    {
+     "rank": 3,
+     "since": "2024-02-17",
+     "days": 1007,
+     "state": "TX",
+     "excerpt": "Ditch the razor make the switch to laser hair removal with our May Special! Buy any laser hair removal package and get the small area package FREE! Or get Full…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=263944223405291"
+    },
+    {
+     "rank": 4,
+     "since": "2024-11-14",
+     "days": 736,
+     "state": "KY",
+     "excerpt": "Make self care a priority with an [business] Skin & Beauty Co. membership ✨ [website] [city], KY Med Spa Schedule your appointment Book now",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1636824240231597"
+    },
+    {
+     "rank": 5,
+     "since": "2024-12-09",
+     "days": 711,
+     "state": "FL",
+     "excerpt": "Laser [business] for Men & Women. Safe, quick and virtually painless laser hair removal. Book Now at [website] or call [phone] [business] and Ae",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1665562850693268"
+    },
+    {
+     "rank": 6,
+     "since": "2025-02-04",
+     "days": 654,
+     "state": "NY",
+     "excerpt": "LASER [business] IS OUR ONLY SPECIALTY [business] Get directions",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=562607033474498"
+    },
+    {
+     "rank": 7,
+     "since": "2025-05-09",
+     "days": 560,
+     "state": "FL",
+     "excerpt": "Smooth skin shouldn’t cost a fortune. At [business] Center in South [city], we offer expert laser hair removal at unbeatable prices: • Small Areas – $109 •…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1874092446682081"
+    },
+    {
+     "rank": 8,
+     "since": "2025-07-07",
+     "days": 501,
+     "state": "GA",
+     "excerpt": "They never tell you the real tea about laser hair removal… so we did. ☕✨ Forget the horror stories and outdated info — laser has changed, and it might just…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=727317926671379"
+    },
+    {
+     "rank": 9,
+     "since": "2025-09-13",
+     "days": 433,
+     "state": "NY",
+     "excerpt": "Laser Hair Removal for Men Full Upper Body Package – $280 ✔ Back ✔ Chest ✔ Stomach ✔ Arms ✔ Underarms ✔ Hands ✔ Neck ✔ Face Smooth skin. Clean look. One price…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1613154203211072"
+    },
+    {
+     "rank": 10,
+     "since": "2025-10-09",
+     "days": 407,
+     "state": "IN",
+     "excerpt": "Do you ever feel like your skincare routine just isn’t enough anymore? Fine lines, uneven skin, or loss of volume can leave you looking tired — even when you…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1297160121697240"
+    }
+   ]
+  },
+  {
+   "slug": "hvac",
+   "label": "HVAC companies",
+   "singular": "HVAC",
+   "playbook": "hvac",
+   "advertisers": 91,
+   "medianDays": 201,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2021-09-01",
+     "days": 1906,
+     "state": "NY",
+     "excerpt": "[business] Delivers Fuel and Repairs, Services & Installs Heating & Cooling Equipment. Learn more on our website, [website] Local Fuel Delivery & HVAC…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=hvac&search_type=keyword_unordered"
+    },
+    {
+     "rank": 2,
+     "since": "2021-09-01",
+     "days": 1906,
+     "state": "CT",
+     "excerpt": "[business] Delivers Fuel and Repairs, Services & Installs Heating & Cooling Equipment. Learn more on our website, [website] [website] Local Fuel Delivery &…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=hvac&search_type=keyword_unordered"
+    },
+    {
+     "rank": 3,
+     "since": "2023-08-03",
+     "days": 1205,
+     "state": "GA",
+     "excerpt": "📢📢 CLAIM YOUR MONEY!!! 💰💰 👉 $2,000 in federal tax credits for all qualifying [business] Electric Systems! 😱 📲 Call us for a free quote and unlock your…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=heating%20and%20air%20conditioning&search_type=keyword_unordered"
+    },
+    {
+     "rank": 4,
+     "since": "2024-01-09",
+     "days": 1046,
+     "state": "CA",
+     "excerpt": "🌞Stress-Free Home Maintenance! Let [business] handle HVAC & Plumbing needs. Book Now! #NoMoreLeaks #ComfortableLiving [website] Contact Us Now! Learn More",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=heating%20and%20air%20conditioning&search_type=keyword_unordered"
+    },
+    {
+     "rank": 5,
+     "since": "2024-06-18",
+     "days": 885,
+     "state": "OH",
+     "excerpt": "[business] is both the name of our business, and how homeowners in the West [city] area view our company. Contact us today to find out how we can service your…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=heating%20and%20air%20conditioning&search_type=keyword_unordered"
+    },
+    {
+     "rank": 6,
+     "since": "2024-07-21",
+     "days": 852,
+     "state": "AR",
+     "excerpt": "Schedule your annual tune-ups. They play a crucial role in keeping you comfortable all year round. Just $119 (Includes Spring/Fall Checkups)😊 For Inquires…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=hvac&search_type=keyword_unordered"
+    },
+    {
+     "rank": 7,
+     "since": "2024-09-17",
+     "days": 794,
+     "state": "SC",
+     "excerpt": "[business] Heating & Air provides heating, air conditioning, and indoor air quality services in [city], SC. and the surrounding areas. Call today! [website]…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=heating%20and%20air%20conditioning&search_type=keyword_unordered"
+    },
+    {
+     "rank": 8,
+     "since": "2024-10-04",
+     "days": 777,
+     "state": "PA",
+     "excerpt": "Here For Your Comfort (TM). Over 40 years of providing Heating, Cooling & Electrical services. [website] Standby Generators [business] is a full-service HVAC…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=hvac&search_type=keyword_unordered"
+    },
+    {
+     "rank": 9,
+     "since": "2025-02-10",
+     "days": 648,
+     "state": "NM",
+     "excerpt": "You want it right, right today, Get it done the [business] Way 🎼! 0:00 / 0:30 [business] Appliance Repair 6,252 people like this Like Page",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=heating%20and%20air%20conditioning&search_type=keyword_unordered"
+    },
+    {
+     "rank": 10,
+     "since": "2025-02-12",
+     "days": 646,
+     "state": "OK",
+     "excerpt": "[website] HVAC Service & Repair in [city], Oklahoma - [business] Heating & Air When you are in need of quick HVAC repair in [city], turn to the experts at…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=hvac&search_type=keyword_unordered"
+    }
+   ]
+  },
+  {
+   "slug": "orthodontists",
+   "label": "Orthodontists (Invisalign)",
+   "singular": "orthodontist",
+   "playbook": "dentists",
+   "advertisers": 71,
+   "medianDays": 184,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2023-06-07",
+     "days": 1262,
+     "state": "NC",
+     "excerpt": "Invisalign®, clear and metal braces for children, teens, and adults. Consultations are free offered in-person and virtually. [website] [business] Contact us",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=275696214928256"
+    },
+    {
+     "rank": 2,
+     "since": "2023-11-06",
+     "days": 1110,
+     "state": "NC",
+     "excerpt": "Schedule an appointment with [business], your local dentist serving [city], NC. [phone] [website] [business] Learn more",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=2031817500520352"
+    },
+    {
+     "rank": 3,
+     "since": "2024-03-12",
+     "days": 983,
+     "state": "NY",
+     "excerpt": "Have you been dreaming of straightening your teeth discreetly and achieving your perfect smile? 😁✨ This month ONLY, we're offering Invisalign treatment for…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1126520812118373"
+    },
+    {
+     "rank": 4,
+     "since": "2024-03-22",
+     "days": 973,
+     "state": "MN",
+     "excerpt": "Get Your Perfect Smile Started with a Free Orthodontic Exam! 🎉 Limited Time Offer! 🎉 Are you or your child in need of orthodontic care? Don't miss this…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1049799993305292"
+    },
+    {
+     "rank": 5,
+     "since": "2024-04-06",
+     "days": 958,
+     "state": "OR",
+     "excerpt": "Invest in yourself and smile with confidence! We offer complimentary consultations to provide you with a customized smile plan using Invisalign® or [business]…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1481553086041488"
+    },
+    {
+     "rank": 6,
+     "since": "2024-04-19",
+     "days": 945,
+     "state": "IL",
+     "excerpt": "Your journey to a beautiful and confident smile starts here at [business]! 😁🦷 We’ve supported thousands of adults and teens in gaining confidence with their…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1165117251184578"
+    },
+    {
+     "rank": 7,
+     "since": "2024-07-22",
+     "days": 851,
+     "state": "CT",
+     "excerpt": "Come and experience [business] newest Dental office! Dental cleanings and check-ups, Invisalign, Fillings, and Cosmetic Dentistry and more for the entire…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1831659370689161"
+    },
+    {
+     "rank": 8,
+     "since": "2024-12-14",
+     "days": 706,
+     "state": "TX",
+     "excerpt": "Transform your smile with personalized Braces and Invisalign, crafted exclusively for your unique smile! Schedule your complimentary consultation! 📍[city], TX…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1306394713718659"
+    },
+    {
+     "rank": 9,
+     "since": "2025-03-07",
+     "days": 623,
+     "state": "NY",
+     "excerpt": "Our orthodontic team is passionate about creating beautiful smiles, and it shows in everything we do. We love making a difference, one smile at a time 😊…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=2888170328019484"
+    },
+    {
+     "rank": 10,
+     "since": "2025-04-16",
+     "days": 583,
+     "state": "OH",
+     "excerpt": "Unmatched expertise meets personalized care at [business] Smile Care. Trust us to keep your smile healthy and beautiful. Your smile, our priority! Learn More",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1630687147578899"
+    }
+   ]
+  },
+  {
+   "slug": "car-dealerships",
+   "label": "Car dealerships",
+   "singular": "car dealership",
+   "playbook": null,
+   "advertisers": 67,
+   "medianDays": 126,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2025-02-09",
+     "days": 649,
+     "state": "FL",
+     "excerpt": "Hey there! Looking for a buy here pay here dealership? 🚗🔥 Check out our used car dealership in [city]! We've got a selection of reliable and affordable cars…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1351754309577427"
+    },
+    {
+     "rank": 2,
+     "since": "2025-02-14",
+     "days": 644,
+     "state": "NC",
+     "excerpt": "Location ■1214 north main Street, [city] NC 28129. Website: [website] Cell:[phone] ■Open Monday to Friday 9am-6pm and Saturday 9am-5pm. BUY-HERE-PAY-HERE●all…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=918266380505171"
+    },
+    {
+     "rank": 3,
+     "since": "2025-04-14",
+     "days": 585,
+     "state": "FL",
+     "excerpt": "Your car search ends here, With shiny new rides and prices so clear. Need something fast? Or roomy and strong? We’ve got the car that won’t steer you wrong…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=2148297262307761"
+    },
+    {
+     "rank": 4,
+     "since": "2025-05-23",
+     "days": 546,
+     "state": "OK",
+     "excerpt": "[website] [website] Easiest buy here pay here auto financing in the state of Oklahoma Monday to Saturday 8:45am to 7pm 🇺🇸 🇲🇽 🇬🇹 🇳🇮 Hablamos espanol y…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=689205797196928"
+    },
+    {
+     "rank": 5,
+     "since": "2025-07-15",
+     "days": 493,
+     "state": "MI",
+     "excerpt": "Largest selection of high-quality pre-owned inventory in [business], MI and surroundings!🚗🔥 💰 Outstanding financing options 👀 Option to sell or trade-in…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=600697493091529"
+    },
+    {
+     "rank": 6,
+     "since": "2025-08-18",
+     "days": 459,
+     "state": "AZ",
+     "excerpt": "Our used car sales team has been serving this part of Arizona since 1986, and we’re always excited to help our next customer. Contact our staff at [business]…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=626555730137725"
+    },
+    {
+     "rank": 7,
+     "since": "2025-10-06",
+     "days": 410,
+     "state": "NY",
+     "excerpt": "[business] is proud to offer an extensive collection of used cars. If you need an affordable vehicle, look no further. We are proud to offer our customers…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1062907892471723"
+    },
+    {
+     "rank": 8,
+     "since": "2025-11-15",
+     "days": 370,
+     "state": "AZ",
+     "excerpt": "[business] Auto Sales specializes in affordable cars [website] Used Car Dealerships [city] AZ | Affordable Cars for sale | [business] Contact Us [website] Used…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=4259634457688253"
+    },
+    {
+     "rank": 9,
+     "since": "2025-12-16",
+     "days": 339,
+     "state": "GA",
+     "excerpt": "Other dealers said no? We specialize in approvals for tough credit! Tap & get pre-qualified! 👇 If you’re in the market for a used car but rough credit or no…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=25412804345006413"
+    },
+    {
+     "rank": 10,
+     "since": "2026-01-07",
+     "days": 317,
+     "state": "TX",
+     "excerpt": "🚗 Over 125cars in stock 🏦 Any budget ✅ Easy financing/ buy here pay here 🛑 Bad credit or no credit? ☎️ [phone] 📍[address], [city] Tx 78224 [website]…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1647465269681702"
+    }
+   ]
+  },
+  {
+   "slug": "personal-injury-lawyers",
+   "label": "Personal injury lawyers",
+   "singular": "personal injury lawyer",
+   "playbook": "law-firms",
+   "advertisers": 63,
+   "medianDays": 147,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2018-10-18",
+     "days": 2955,
+     "state": "CA",
+     "excerpt": "As [business] most experienced personal injury attorneys, we have recovered millions of dollars in damages for accident victims. Call the best [business]…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=405836623527730"
+    },
+    {
+     "rank": 2,
+     "since": "2020-11-16",
+     "days": 2195,
+     "state": "GA",
+     "excerpt": "Need help in criminal defense, family law, or personal injury claims? For a free consultation, contact the [business] today by phone at [phone] or through our…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=854119955415808"
+    },
+    {
+     "rank": 3,
+     "since": "2022-02-15",
+     "days": 1739,
+     "state": "TX",
+     "excerpt": "18-Wheeler or Commercial Vehicle wrecks are never simple. When we find that the company cut corners, put their profit over your safety, that's personal…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=473066847642149"
+    },
+    {
+     "rank": 4,
+     "since": "2023-11-01",
+     "days": 1115,
+     "state": "WI",
+     "excerpt": "Your case is \"Not Just Another Suit.\" We give every client the personal care and attention they deserve and bring a fresh approach to the practice of personal…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=266542485818738"
+    },
+    {
+     "rank": 5,
+     "since": "2023-11-17",
+     "days": 1099,
+     "state": "CA",
+     "excerpt": "Empower your claim with the expertise of [business], your ally in navigating Georgia's personal injury landscape! 🚗🤕 Secure your FREE consultation today…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=7302830116395936"
+    },
+    {
+     "rank": 6,
+     "since": "2024-02-27",
+     "days": 997,
+     "state": "CA",
+     "excerpt": "In the aftermath of a personal injury, you need more than just a lawyer; you need someone who will pour love into your life and treat you like family. Meet…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=842774170948937"
+    },
+    {
+     "rank": 7,
+     "since": "2024-09-16",
+     "days": 795,
+     "state": "FL",
+     "excerpt": "🚗 Herniated Disc/Spinal Cord Injury in Car Accidents 🚗 Have you or someone you know suffered from a herniated disc after a car accident? The consequences can…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=538136822037685"
+    },
+    {
+     "rank": 8,
+     "since": "2025-02-06",
+     "days": 652,
+     "state": "TX",
+     "excerpt": "Texas Big Rig Truck Accident Lawyers | We Can Help Get You Maximum Compensation. If you’ve experienced injuries from a truck accident in Texas, [business] is…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1961846847638893"
+    },
+    {
+     "rank": 9,
+     "since": "2025-05-20",
+     "days": 549,
+     "state": "OK",
+     "excerpt": "💼 Are you searching for an attorney in Oklahoma that is reliable, honest and experienced? Look no further than [business]! ⚖️ Our legal team is ready to…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=671967722368332"
+    },
+    {
+     "rank": 10,
+     "since": "2025-07-03",
+     "days": 505,
+     "state": "FL",
+     "excerpt": "Don’t worry, don’t stress, let me take care of the rest… ••••••• Accident? #CallKevin | #OrangeInjury ⚖️ Leaven Law ⚖️ 📲 [phone] ‼️ Personal Injury & Accident…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=694692133437928"
+    }
+   ]
+  },
+  {
+   "slug": "botox-fillers",
+   "label": "Botox & filler injectors",
+   "singular": "Botox and filler",
+   "playbook": "med-spas",
+   "advertisers": 61,
+   "medianDays": 162,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2024-05-05",
+     "days": 929,
+     "state": "FL",
+     "excerpt": "\"Being chosen as the Top Cosmetic Dentist & Dentist for the @miamiherald of 2023 is an immense honor! Winning 1st place Gold for Top Cosmetic Dentist & Silver…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=2524636111056889"
+    },
+    {
+     "rank": 2,
+     "since": "2024-08-02",
+     "days": 840,
+     "state": "CA",
+     "excerpt": "Not sad, just need lip filler. 😉💋 📞[phone] to book an appointment. #cheekfiller #botox #dysport #GlowAestheticCenter #weightlossjourney #lipfiller…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1216179699538925"
+    },
+    {
+     "rank": 3,
+     "since": "2024-11-11",
+     "days": 739,
+     "state": "GA",
+     "excerpt": "Get Your First Treatment for 20% Off! Lip Filler | Microneedling | Facials | Botox | PRP | Threads 0:00 / 0:13 [website] [business] Book now",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=531067926468029"
+    },
+    {
+     "rank": 4,
+     "since": "2025-04-15",
+     "days": 584,
+     "state": "MA",
+     "excerpt": "***Botox 💉 Promo*** $10/Unit For New Patients CLAIM OFFER & FREE CONSULT Limited time offer. [business], MA. Get glowing smooth skin - great for forehead…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1161304322345239"
+    },
+    {
+     "rank": 5,
+     "since": "2025-04-16",
+     "days": 583,
+     "state": "NV",
+     "excerpt": "💋 Plump, perfect lips are just one appointment away! Get natural-looking lip fillers today! ✨ Book now with [business] located in [city] Nevada and receive…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=710895528568650"
+    },
+    {
+     "rank": 6,
+     "since": "2025-11-04",
+     "days": 381,
+     "state": "TX",
+     "excerpt": "✨ Facial Balancing at [business] Med Spa ✨ It’s not about changing your face — it’s about enhancing your natural beauty and restoring harmony to your features…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=854261787043424"
+    },
+    {
+     "rank": 7,
+     "since": "2025-12-01",
+     "days": 354,
+     "state": "CA",
+     "excerpt": "Absolute Perfection Each treatment with me will 100% be tailored to your wants/needs and of course anatomy! Everyone is different and we should be treated as…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=892079769811751"
+    },
+    {
+     "rank": 8,
+     "since": "2025-12-02",
+     "days": 353,
+     "state": "MD",
+     "excerpt": "Tired of looking tired? 😫 ✨ Get our tox special at just $𝟏𝟐.𝟗𝟗/unit this month only! PS - 💳 We accept payment for the girls who need Botox on a Budget 😘…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1560740275068720"
+    },
+    {
+     "rank": 9,
+     "since": "2025-12-26",
+     "days": 329,
+     "state": "NJ",
+     "excerpt": "My dermatologist said spending $2,000/year on lip filler for smoker's lines is unnecessary—especially if you never even smoked. Then she handed me a small…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1193442559030722"
+    },
+    {
+     "rank": 10,
+     "since": "2026-01-13",
+     "days": 311,
+     "state": "CT",
+     "excerpt": "Hydrated. Smooth. Enhanced. See what expert lip filler can do in just one visit. Now Booking: [city]: 📍 [address] 110, [city], CT 06489 📞 [phone] Trumbull…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=881403757624605"
+    }
+   ]
+  },
+  {
+   "slug": "martial-arts",
+   "label": "Martial arts schools",
+   "singular": "martial arts",
+   "playbook": null,
+   "advertisers": 58,
+   "medianDays": 307.5,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2020-09-11",
+     "days": 2261,
+     "state": "IL",
+     "excerpt": "A Family Martial Arts Training Center for everyone. Don't be afraid to live your life the way you want to. Learn to set goals and achieve greatness today. Live…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=3767037996658042"
+    },
+    {
+     "rank": 2,
+     "since": "2022-01-06",
+     "days": 1779,
+     "state": "SC",
+     "excerpt": "💥[business] ADULTS💥 Get a FREE uniform when you join our Brazilian Jiu-Jitsu gym this month! [business] Gym is a Brazilian Jiu Jitsu academy, run by James…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=595479264874472"
+    },
+    {
+     "rank": 3,
+     "since": "2022-07-16",
+     "days": 1588,
+     "state": "GA",
+     "excerpt": "We offer martial arts classes to children ages 3-adults. We offer a specialized children’s program for ages 3-4, 5-6, and 7-12 that teachers character…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=5622239397810535"
+    },
+    {
+     "rank": 4,
+     "since": "2023-09-07",
+     "days": 1170,
+     "state": "WA",
+     "excerpt": "Ready to experience a fitness journey like never before? Discover the power within you at [business]! 🏋️‍♂️ 🎉 Claim Your 3 FREE Class Welcome Pass Today! 🎉…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=977802716671196"
+    },
+    {
+     "rank": 5,
+     "since": "2023-09-11",
+     "days": 1166,
+     "state": "AR",
+     "excerpt": "At [business] we develop incredible martial artists; shape confident, moral leaders and grow an awesome and supportive Taekwondo family. [website] [business]…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=320564037149435"
+    },
+    {
+     "rank": 6,
+     "since": "2024-07-29",
+     "days": 844,
+     "state": "NY",
+     "excerpt": "👋 ATTN: [business], NY Want to Learn How to Defend Yourself? 🥋 Are you ready for something new? Come Learn Jiu-Jitsu [business] Jiu-Jitsu Academy is thrilled…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1934448487015872"
+    },
+    {
+     "rank": 7,
+     "since": "2024-08-12",
+     "days": 830,
+     "state": "MD",
+     "excerpt": "Hey there! Real quick 😀 Just wanted to say thanks again for checking out our Academy! 🥋 Means a ton to us that you’ve even considered taking classes at our…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=851984899847144"
+    },
+    {
+     "rank": 8,
+     "since": "2024-11-30",
+     "days": 720,
+     "state": "AL",
+     "excerpt": "[website] [business] Learn more",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=439275432365975"
+    },
+    {
+     "rank": 9,
+     "since": "2025-03-17",
+     "days": 613,
+     "state": "MA",
+     "excerpt": "Located in [city], Massachusetts, [business] incorporates Total Body Wellness into every aspect of it [website] [business] If you’re tired of workouts that…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1712205156040673"
+    },
+    {
+     "rank": 10,
+     "since": "2025-04-04",
+     "days": 595,
+     "state": "CA",
+     "excerpt": "Try One Week Free at [business] #1 Jiu Jitsu Gym! Classes available for ages 3+ OPENS INSTAGRAM [business] Send message",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=3720514311415316"
+    }
+   ]
+  },
+  {
+   "slug": "cosmetic-dentists",
+   "label": "Cosmetic & implant dentists",
+   "singular": "cosmetic dentistry",
+   "playbook": "dentists",
+   "advertisers": 52,
+   "medianDays": 137.5,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2021-07-23",
+     "days": 1946,
+     "state": "AZ",
+     "excerpt": "Our specialty [business] and Maxillofacial [business] office is here with a long-lasting and proven solution for a renewed, natural-looking smile. Dental…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=3100809123528784"
+    },
+    {
+     "rank": 2,
+     "since": "2022-05-23",
+     "days": 1642,
+     "state": "IN",
+     "excerpt": "Dental implants provide a long-term solution to replacing a single missing tooth or multiple missing teeth. Get a free consultation today! 0:00 / 0:31…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1104889700061493"
+    },
+    {
+     "rank": 3,
+     "since": "2023-09-25",
+     "days": 1152,
+     "state": "CA",
+     "excerpt": "Do you have broken or missing teeth? Dental implants are a proven way to replace missing teeth permanently. They’re also one of the most cost-effective…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1391156321538042"
+    },
+    {
+     "rank": 4,
+     "since": "2024-11-05",
+     "days": 745,
+     "state": "FL",
+     "excerpt": "Multidisciplinary Dental team! We have experienced Periodontists, Orthodontist and General Dentists, who specialize in cosmetic and emergency treatments…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=2802075023300129"
+    },
+    {
+     "rank": 5,
+     "since": "2024-11-13",
+     "days": 737,
+     "state": "UT",
+     "excerpt": "At [business], creating beautiful smiles is our thing. Restore your smile with dental implants. Schedule a consult today! BOOK2.[website] Restore Your Smile…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=948292430450353"
+    },
+    {
+     "rank": 6,
+     "since": "2025-07-11",
+     "days": 497,
+     "state": "CO",
+     "excerpt": "[business] #1 choice for full mouth dental implants & dentures! A short drive can save you thousands on your dental treatment. 0:00 / 5:05 [website] Save…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1175821347646716"
+    },
+    {
+     "rank": 7,
+     "since": "2025-07-23",
+     "days": 485,
+     "state": "TX",
+     "excerpt": "We are the only prosthodontist practice in your area. Our advanced training specifically treats common-to-difficult restorative problems involving implants…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=2169490986796958"
+    },
+    {
+     "rank": 8,
+     "since": "2025-11-12",
+     "days": 373,
+     "state": "MO",
+     "excerpt": "Crooked teeth? Stains? Chips or gaps? Whatever’s keeping you from loving your smile, your dream smile is within reach! 😁✨ Our cosmetic treatments are…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=716771334820210"
+    },
+    {
+     "rank": 9,
+     "since": "2025-11-21",
+     "days": 364,
+     "state": "TX",
+     "excerpt": "🦷 [business], TX - At [business] Dental, we’re offering Single Tooth Implants for just $1,750 per tooth — all-inclusive with no hidden fees. ✅ Natural look &…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1189828256573675"
+    },
+    {
+     "rank": 10,
+     "since": "2025-12-15",
+     "days": 340,
+     "state": "TN",
+     "excerpt": "‼️Hey [city]‼️ [business] is looking to help 50 new patients handle their smile makeover needs with our limited Veneer Discount Program. We want to help people…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=2211223426035615"
+    }
+   ]
+  },
+  {
+   "slug": "window-tint",
+   "label": "Window tint shops",
+   "singular": "window tint",
+   "playbook": null,
+   "advertisers": 52,
+   "medianDays": 172.5,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2025-03-04",
+     "days": 626,
+     "state": "TN",
+     "excerpt": "Ride in Style with [business] Tint 0:00 / 0:32 Let us Fix up your ride today! Learn More",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=952402287017085"
+    },
+    {
+     "rank": 2,
+     "since": "2025-05-07",
+     "days": 562,
+     "state": "TX",
+     "excerpt": "🎯Learn Automotive Window Film Installation! Join our expert-led window tinting class and learn the skills you need for flawless installations. Hands-on…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1319362062482775"
+    },
+    {
+     "rank": 3,
+     "since": "2025-06-11",
+     "days": 527,
+     "state": "MO",
+     "excerpt": "If the best installation and materials are more important than the lowest price, we are the window tint shop for you. Contact us today, for a free estimate…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1206100267981261"
+    },
+    {
+     "rank": 4,
+     "since": "2025-08-29",
+     "days": 448,
+     "state": "CA",
+     "excerpt": "Not all PPF is created equal! 🚨 PPF doesn't have to be an eye sore... Don't settle for exposed edges and corners! The installer you pick will determine the…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=2279863029114348"
+    },
+    {
+     "rank": 5,
+     "since": "2025-11-13",
+     "days": 372,
+     "state": "TX",
+     "excerpt": "Thinking about [business] Pro? Get a fast quote for Paint Protection Film, Coatings, or Tint today. 0:00 / 0:17 [website] Get a Free Quote Protect Your Ride…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=848376317902467"
+    },
+    {
+     "rank": 6,
+     "since": "2026-02-21",
+     "days": 272,
+     "state": "FL",
+     "excerpt": "Looking for the Best Window Tinting Near You? [business] Window Tinting in [city] Specializes in Auto Window Tinting Services. [business] Window Tinting is an…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1173033674716837"
+    },
+    {
+     "rank": 7,
+     "since": "2026-03-04",
+     "days": 261,
+     "state": "AZ",
+     "excerpt": "We’re protecting the front end of this Tundra with our self healing PPF. 🛡 𝐍𝐨𝐭 𝐨𝐧𝐥𝐲 𝐢𝐬 𝐭𝐡𝐢𝐬 𝐭𝐫𝐮𝐜𝐤 𝐛𝐫𝐚𝐧𝐝 𝐧𝐞𝐰, 𝐛𝐮𝐭 𝐨𝐮𝐫…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=2863009687363329"
+    },
+    {
+     "rank": 8,
+     "since": "2026-03-16",
+     "days": 249,
+     "state": "AL",
+     "excerpt": "📢FlexGuard is premium paint protection film that is designed to take on a battery of potential hazards, preserving your vehicle's paint in the process…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1275603077794831"
+    },
+    {
+     "rank": 9,
+     "since": "2026-04-22",
+     "days": 212,
+     "state": "CT",
+     "excerpt": "You spent $60,000 or more on your new car. Right now the paint is perfect. One week of driving changes that. Rock chips, scratches, and stains start damaging…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=978758358555170"
+    },
+    {
+     "rank": 10,
+     "since": "2026-05-04",
+     "days": 200,
+     "state": "NY",
+     "excerpt": "Tired of rock chips and scuff marks ruining your car's paint job? Protect your investment with our Paint Protection Film! Our expert installers ensure a…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1751021822592482"
+    }
+   ]
+  },
+  {
+   "slug": "yoga-pilates-studios",
+   "label": "Yoga & Pilates studios",
+   "singular": "yoga and Pilates",
+   "playbook": "yoga-studios",
+   "advertisers": 51,
+   "medianDays": 151,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2023-11-14",
+     "days": 1102,
+     "state": "TX",
+     "excerpt": "It's time to get strong, [city]! And to do it for all the right reasons (you and everyone who depends on you)!💪 ✅Regain flexibility ✅Build strength ✅Feel FIT…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=359116399858435"
+    },
+    {
+     "rank": 2,
+     "since": "2024-02-06",
+     "days": 1018,
+     "state": "OH",
+     "excerpt": "[website] [business] Book now",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=343156981884343"
+    },
+    {
+     "rank": 3,
+     "since": "2024-11-06",
+     "days": 744,
+     "state": "MN",
+     "excerpt": "Now offering limited-time incentives! 🔑 [business] modern studio, 1, 2 and 3-bedroom apartment homes are matched with a convenient location and…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=541607771840069"
+    },
+    {
+     "rank": 4,
+     "since": "2025-02-07",
+     "days": 651,
+     "state": "LA",
+     "excerpt": "Are stress, aches, or stiffness holding you back? Our multi-level yoga classes are designed to help you move with ease, reduce pain, and find peace of mind…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1156729989177845"
+    },
+    {
+     "rank": 5,
+     "since": "2025-03-03",
+     "days": 627,
+     "state": "TX",
+     "excerpt": "New Student Special: 10 Days for $10 ✨ Ready to step into a yoga practice that feels like home? 🌿💛 At [business], we invite you to experience the magic of…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1739376729955094"
+    },
+    {
+     "rank": 6,
+     "since": "2025-04-01",
+     "days": 598,
+     "state": "MN",
+     "excerpt": "At The [business] [city], you have access to premier amenities, including a fitness suite with yoga room, rooftop lounge with hot tub, & more. Schedule your…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1338541424026530"
+    },
+    {
+     "rank": 7,
+     "since": "2025-04-08",
+     "days": 591,
+     "state": "GA",
+     "excerpt": "🎉 Limited-Time Special: Get Up to 2 Months FREE at [business] Luxury Apartments! Welcome to [business] – boutique-style 55+ living in the heart of [business]…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1001569901551474"
+    },
+    {
+     "rank": 8,
+     "since": "2025-07-12",
+     "days": 496,
+     "state": "MD",
+     "excerpt": "New Student Unlimited Classes for 30 Days [website] Our New Student 1-Month Unlimited Pass is the perfect way to try yoga on your terms. Just looking for a way…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1647383033317648"
+    },
+    {
+     "rank": 9,
+     "since": "2026-01-09",
+     "days": 315,
+     "state": "IL",
+     "excerpt": "Step into our cozy cabin vibe Goat Yoga Studio filled with furry friends that are sure to make anyone smile. Our Studio is surrounded in glass windows allowing…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1205257144440005"
+    },
+    {
+     "rank": 10,
+     "since": "2026-02-04",
+     "days": 289,
+     "state": "WI",
+     "excerpt": "With state-of-the-art amenities and shops and dining just steps from your door, this is a lifestyle people hold onto. A few rare openings are available…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1949068959294116"
+    }
+   ]
+  },
+  {
+   "slug": "solar-installers",
+   "label": "Solar installers",
+   "singular": "solar",
+   "playbook": "solar-installers",
+   "advertisers": 50,
+   "medianDays": 110,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2025-11-25",
+     "days": 360,
+     "state": "AZ",
+     "excerpt": "Take control of your electricity with solar and battery storage, and build resilience with a trusted local installer. [website] Beat Rising Energy Rates Learn…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=solar%20installer&search_type=keyword_unordered"
+    },
+    {
+     "rank": 2,
+     "since": "2026-01-21",
+     "days": 303,
+     "state": "DC",
+     "excerpt": "Thinking about going solar but overwhelmed by the process?... [business] takes care of everything from: ✅ Site surveys ✅ Permitting ✅ Installation ✅ Financing…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=solar%20panels%20for%20your%20home&search_type=keyword_unordered"
+    },
+    {
+     "rank": 3,
+     "since": "2026-02-10",
+     "days": 283,
+     "state": "CA",
+     "excerpt": "🌞🦅 Tired of Bird Trouble on Your Solar Panels? [business]'s Got You Covered! 🏆 [business] is not just Riverside County's #1 cleaning company; we're your…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=solar%20installation%20company&search_type=keyword_unordered"
+    },
+    {
+     "rank": 4,
+     "since": "2026-02-24",
+     "days": 269,
+     "state": "VT",
+     "excerpt": "A battery backup system means you're not sitting in the dark the next time the power goes out in Vermont. [business] installs reliable battery storage that…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=solar%20installation%20company&search_type=keyword_unordered"
+    },
+    {
+     "rank": 5,
+     "since": "2026-02-25",
+     "days": 268,
+     "state": "NH",
+     "excerpt": "A battery backup system means you're not sitting in the dark the next time the power goes out in New Hampshire. [business] installs reliable battery storage…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=solar%20installation%20company&search_type=keyword_unordered"
+    },
+    {
+     "rank": 6,
+     "since": "2026-03-27",
+     "days": 238,
+     "state": "CA",
+     "excerpt": "𝗔𝗱𝗱 𝗺𝗼𝗿𝗲 𝗳𝗿𝗲𝗲𝗱𝗼𝗺 𝘁𝗼 𝘆𝗼𝘂𝗿 𝗵𝗼𝗺𝗲 𝗮𝗻𝗱 𝗼𝗳𝗳-𝗴𝗿𝗶𝗱 𝗹𝗶𝗳𝗲𝘀𝘁𝘆𝗹𝗲!🏡 The Off-Grid Solar Kit lets you enjoy independent power, no…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=solar%20panels%20for%20your%20home&search_type=keyword_unordered"
+    },
+    {
+     "rank": 7,
+     "since": "2026-04-21",
+     "days": 213,
+     "state": "CA",
+     "excerpt": "Before you even consider buying solar you should use our free online tool. Our tool will calculate the cost to get solar energy in your home as well as how…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=solar%20installer&search_type=keyword_unordered"
+    },
+    {
+     "rank": 8,
+     "since": "2026-05-20",
+     "days": 184,
+     "state": "CA",
+     "excerpt": "Stop letting heavy, bulky gear hold back your adventures. 🏞️ The [business] 200W Essential Solar Panel Kit features a sleek, foldable suitcase design with a…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=solar%20panels%20for%20your%20home&search_type=keyword_unordered"
+    },
+    {
+     "rank": 9,
+     "since": "2026-05-29",
+     "days": 175,
+     "state": "FL",
+     "excerpt": "Reliable backup power and full off-grid systems for your home or business in Northern Florida & Southern [business]. Each client's needs are different. We know…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=solar%20installation%20company&search_type=keyword_unordered"
+    },
+    {
+     "rank": 10,
+     "since": "2026-06-04",
+     "days": 169,
+     "state": "MA",
+     "excerpt": "You have already looked into solar. Now it comes down to timing and who you trust to install it. 15 years serving Western Massachusetts. More than 2,000…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=solar%20installer&search_type=keyword_unordered"
+    }
+   ]
+  },
+  {
+   "slug": "auto-detailing",
+   "label": "Auto detailers",
+   "singular": "auto detailing",
+   "playbook": "mobile-detailing",
+   "advertisers": 49,
+   "medianDays": 184,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2023-02-28",
+     "days": 1361,
+     "state": "AL",
+     "excerpt": "Certified auto [business] Full mobile auto [business] �full interior/exterior detail �paint corrections �headlight restoration �appointment only [website]…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=557516523015219"
+    },
+    {
+     "rank": 2,
+     "since": "2023-03-11",
+     "days": 1350,
+     "state": "VA",
+     "excerpt": "Professional auto mobile detailing company that comes to your doorstep. Offering paint corrections, interior shampoo and extractions, full details, headlamp…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=921453495865284"
+    },
+    {
+     "rank": 3,
+     "since": "2024-04-05",
+     "days": 959,
+     "state": "VA",
+     "excerpt": "General Pump Solid Shaft [business] Washer Pump with Side Sight Glass. 5.5 GPM @ 3500 PSI. $675 plus shipping The preferred pump frame in the pressure cleaning…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1116816682674816"
+    },
+    {
+     "rank": 4,
+     "since": "2024-09-12",
+     "days": 799,
+     "state": "AZ",
+     "excerpt": "100% 5 Star Google Reviews In Business Since 2008 Color Change Wraps Stripes & [business] Fleet Wraps Wheels & Tires Powder Coating Caliper Color Change Smoked…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=2126065131123865"
+    },
+    {
+     "rank": 5,
+     "since": "2025-04-06",
+     "days": 593,
+     "state": "NH",
+     "excerpt": "Restore Your Car's Shine ✨ with [business] Our expert team will bring back the luster to your vehicle's exterior. From thorough washing to paint correction and…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1821948345038994"
+    },
+    {
+     "rank": 6,
+     "since": "2025-10-06",
+     "days": 410,
+     "state": "WA",
+     "excerpt": "Treat Your Car Like You Love It! The [business] Auto Salon [business] Offers Full Service Car Detail, Ceramic Coating, Paint Correction & More [website]…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1142325244541666"
+    },
+    {
+     "rank": 7,
+     "since": "2025-12-05",
+     "days": 350,
+     "state": "FL",
+     "excerpt": "Auto Glass Repair/Replace, Auto Accessories, Vehicle Electronics, Trailer Hitches, Tint [website] [business] Auto [business] of West [business] Beach, Florida…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1261554495782803"
+    },
+    {
+     "rank": 8,
+     "since": "2025-12-14",
+     "days": 341,
+     "state": "GA",
+     "excerpt": "[business] Detailing in [city] provides unmatched detailing services for luxury cars. Whether it's ceramic coating or paint correction, we ensure your high-end…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1196402456015653"
+    },
+    {
+     "rank": 9,
+     "since": "2026-01-02",
+     "days": 322,
+     "state": "AR",
+     "excerpt": "Professional detailing you can count on. Quality, care, and attention to detail—every vehicle, every service. Gift cards available for added convenience…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=2203960323464480"
+    },
+    {
+     "rank": 10,
+     "since": "2026-02-18",
+     "days": 275,
+     "state": "TX",
+     "excerpt": "[business] Auto Detailing & Hand Car [business], we also de windshield repair and paint restoration. [website] [business] Our Promise We hold ourselves to a…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1589782498929437"
+    }
+   ]
+  },
+  {
+   "slug": "pest-control",
+   "label": "Pest control companies",
+   "singular": "pest control",
+   "playbook": "pest-control",
+   "advertisers": 33,
+   "medianDays": 135,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2020-05-13",
+     "days": 2382,
+     "state": "AZ",
+     "excerpt": "Mention Facebook and Receive 50% Off Your Initial Service. Family/Locally Owned, Over 500 5 Star Reviews Online, [business] Products, Guaranteed Results!",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=pest%20control&search_type=keyword_unordered"
+    },
+    {
+     "rank": 2,
+     "since": "2023-07-17",
+     "days": 1222,
+     "state": "IN",
+     "excerpt": "[business] most trusted Pest Control Company. Specializing in Termite and Bed Bug Control and prevention. [website] [business] At [business] we specialize in…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=exterminator&search_type=keyword_unordered"
+    },
+    {
+     "rank": 3,
+     "since": "2024-05-09",
+     "days": 925,
+     "state": "CO",
+     "excerpt": "Pest control In [city] that protects what’s important to you. [website] Pest Control [city] - [business] At [business], we provide pest control services in…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=exterminator&search_type=keyword_unordered"
+    },
+    {
+     "rank": 4,
+     "since": "2024-11-13",
+     "days": 737,
+     "state": "CO",
+     "excerpt": "We offer Honest, Safe and Effective pest control at the best price. [website] [business] Relax... With No Bugs SCHEDULE PEST CONTROL SERVICE play video…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=pest%20control&search_type=keyword_unordered"
+    },
+    {
+     "rank": 5,
+     "since": "2025-06-05",
+     "days": 533,
+     "state": "VA",
+     "excerpt": "\"Ready for a pest-free home? 🛡️ Book online NOW in just 60 seconds — fast, easy, and hassle-free! 🕒🐜\" If you'd rather chat, give us a call at [phone]…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=pest%20control&search_type=keyword_unordered"
+    },
+    {
+     "rank": 6,
+     "since": "2025-07-16",
+     "days": 492,
+     "state": "KS",
+     "excerpt": "FREE estimates. Licensed service. Guarantees and warranties available. [business] care. [business] removals. Pest control. Call [phone]. Top-rated [business]…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=pest%20control&search_type=keyword_unordered"
+    },
+    {
+     "rank": 7,
+     "since": "2026-03-01",
+     "days": 264,
+     "state": "KS",
+     "excerpt": "🪧 If pest control has been on your mind, this is your sign to move forward.⁣ 𝐖𝐞 𝐡𝐞𝐥𝐩 𝐩𝐫𝐨𝐭𝐞𝐜𝐭 𝐡𝐨𝐦𝐞𝐬 𝐚𝐧𝐝 𝐛𝐮𝐬𝐢𝐧𝐞𝐬𝐬𝐞𝐬 𝐚𝐜𝐫𝐨𝐬𝐬…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=termite%20treatment&search_type=keyword_unordered"
+    },
+    {
+     "rank": 8,
+     "since": "2026-04-13",
+     "days": 221,
+     "state": "FL",
+     "excerpt": "Don't let termites threaten your investment. [business] helps homeowners with termite concerns through a free termite inspection. [website] Free Termite…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=pest%20control&search_type=keyword_unordered"
+    },
+    {
+     "rank": 9,
+     "since": "2026-04-15",
+     "days": 219,
+     "state": "WA",
+     "excerpt": "🌟Thousands of rave reviews and freshly restocked - grab it before it's gone. Click the \"Shop Now\" button to buy! Goodbye bugs!! Ultrasonic plug-in repellent…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=pest%20control&search_type=keyword_unordered"
+    },
+    {
+     "rank": 10,
+     "since": "2026-06-30",
+     "days": 143,
+     "state": "FL",
+     "excerpt": "Pests in your home? Don't let unwanted guests take over! Save $50 OFF Initial Quarterly Pest Service or $100 OFF Initial Termite Treatment with [business]…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=termite%20treatment&search_type=keyword_unordered"
+    }
+   ]
+  },
+  {
+   "slug": "electricians",
+   "label": "Electricians",
+   "singular": "electrician",
+   "playbook": "electricians",
+   "advertisers": 31,
+   "medianDays": 185,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2022-02-11",
+     "days": 1743,
+     "state": "SC",
+     "excerpt": "[business] Electrical Group is an [business] electrical contractor exceeding customers needs throughout the whole country. Our goal is to be there for you,24…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=electrical%20contractor&search_type=keyword_unordered"
+    },
+    {
+     "rank": 2,
+     "since": "2025-03-03",
+     "days": 627,
+     "state": "FL",
+     "excerpt": "⚠️ Struggling with the Electrical Exam? 📖 Pass with Confidence—Guaranteed! ✅ Get the Best Exam Prep Book Today! [website] Electrical Exam Prep Learn More…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=electrician&search_type=keyword_unordered"
+    },
+    {
+     "rank": 3,
+     "since": "2025-05-01",
+     "days": 568,
+     "state": "DE",
+     "excerpt": "Lights Out? 😱 Get fast, reliable, guaranteed electrical service from [business]. Same-day appointments*. Upfront pricing. Happiness Guaranteed. 💥 Leave the…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=electrician&search_type=keyword_unordered"
+    },
+    {
+     "rank": 4,
+     "since": "2025-05-27",
+     "days": 542,
+     "state": "IN",
+     "excerpt": "[business] is a family owned and operated business in Southern Indiana. We have experienced team dedicated to your home project, no matter how big or small. We…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=electrical%20contractor&search_type=keyword_unordered"
+    },
+    {
+     "rank": 5,
+     "since": "2025-06-05",
+     "days": 533,
+     "state": "MA",
+     "excerpt": "Generators, Generator service. New homes, Additions, full service electrical work. Give us a call @ [phone] [website] full service electrical company…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=electrical%20contractor&search_type=keyword_unordered"
+    },
+    {
+     "rank": 6,
+     "since": "2025-07-23",
+     "days": 485,
+     "state": "VA",
+     "excerpt": "[business] connects U.S. military veterans to high-paying, high-demand careers in the electrical industry. Wages start at $20/hr with ZERO student debt + full…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=electrical%20contractor&search_type=keyword_unordered"
+    },
+    {
+     "rank": 7,
+     "since": "2025-10-06",
+     "days": 410,
+     "state": "AR",
+     "excerpt": "🛡️ Join the [business] Shield Circle Today! 🛡️ At [business], we believe peace of mind should come standard with great service. That’s why we created the…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=electrician&search_type=keyword_unordered"
+    },
+    {
+     "rank": 8,
+     "since": "2025-10-31",
+     "days": 385,
+     "state": "NC",
+     "excerpt": "[website] [business] is a locally owned and operated electrical contractor based in [city], NC. We offer both residential and commercials services including…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=electrical%20contractor&search_type=keyword_unordered"
+    },
+    {
+     "rank": 9,
+     "since": "2025-12-15",
+     "days": 340,
+     "state": "ME",
+     "excerpt": "Are you prepared for the next power outage? Prepare now with a [business]! Click on the link below to see if the [business] is available in your area! ⚡️Safely…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=electrician&search_type=keyword_unordered"
+    },
+    {
+     "rank": 10,
+     "since": "2026-01-19",
+     "days": 305,
+     "state": "AR",
+     "excerpt": "[business]. is a locally owned and operated electrical contractor. Proudly serving customers in the Northwest Arkansas area since 2017. We are currently…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=US&media_type=all&q=electrical%20contractor&search_type=keyword_unordered"
+    }
+   ]
+  },
+  {
+   "slug": "chiropractors",
+   "label": "Chiropractors",
+   "singular": "chiropractic",
+   "playbook": "chiropractors",
+   "advertisers": 30,
+   "medianDays": 183,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2024-11-01",
+     "days": 749,
+     "state": "MN",
+     "excerpt": "Unlock better health with Treat the Cause, a podcast that explores the root causes of digestive issues, hormonal imbalances, anxiety, and chronic pain. Join…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=592860463067156"
+    },
+    {
+     "rank": 2,
+     "since": "2024-11-18",
+     "days": 732,
+     "state": "NY",
+     "excerpt": "Mother brought 6 year old child with pigeon toed | in-toe gait with both feet and also noticed rounded shoulders with a slouched posture. Thorough Structural…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1053667073204883"
+    },
+    {
+     "rank": 3,
+     "since": "2025-11-07",
+     "days": 378,
+     "state": "TN",
+     "excerpt": "What can someone do to fix sleep issues? Research has shown that sleep issues can be caused by sleeping posture. During sleep our muscles and joints are often…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1910438439513040"
+    },
+    {
+     "rank": 4,
+     "since": "2025-11-24",
+     "days": 361,
+     "state": "TX",
+     "excerpt": "🌟 Booking Your Appointment Has Never Been Easier! At Spine Health & Wellness, we know life gets busy—that’s why we’ve made scheduling your care simple and…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=890275183566201"
+    },
+    {
+     "rank": 5,
+     "since": "2025-11-24",
+     "days": 361,
+     "state": "MN",
+     "excerpt": "Pain or Injury...time to get things checked out! :) 0:00 / 0:57 [website] $20 Exam, X-rays, Adjustment Get Offer",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1555207459264221"
+    },
+    {
+     "rank": 6,
+     "since": "2025-12-30",
+     "days": 325,
+     "state": "KY",
+     "excerpt": "🌟 Feeling out of alignment after an accident or injury? Let’s fix that. 🌟 Whether it’s back pain, neck stiffness, or just feeling “off,” chiropractic care…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=892016353411654"
+    },
+    {
+     "rank": 7,
+     "since": "2026-02-03",
+     "days": 290,
+     "state": "IL",
+     "excerpt": "Don't live with neck or back pain every day! We help people every day with neck and back pain and we want to help even more! Click below to schedule a $40 new…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=906421145093110"
+    },
+    {
+     "rank": 8,
+     "since": "2026-04-14",
+     "days": 220,
+     "state": "UT",
+     "excerpt": "Back pain shouldn’t cost you thousands. Skip weekly chiropractor visits and get clinic-level relief at home, without prescriptions. Contour combines…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=941597068874057"
+    },
+    {
+     "rank": 9,
+     "since": "2026-05-16",
+     "days": 188,
+     "state": "CA",
+     "excerpt": "Tired of living with chronic pain? The [business] Method has helped over 5000 patients find lasting relief — even when everything else failed. Here’s why…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1396012751861801"
+    },
+    {
+     "rank": 10,
+     "since": "2026-05-26",
+     "days": 178,
+     "state": "TN",
+     "excerpt": "Getting started at [business] is easy. Our $49 new patient special includes an initial consultation, exam, x-rays, and your first adjustment. Discover why…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1526652472504987"
+    }
+   ]
+  },
+  {
+   "slug": "tire-shops",
+   "label": "Tire shops",
+   "singular": "tire shop",
+   "playbook": "auto-repair",
+   "advertisers": 28,
+   "medianDays": 136.5,
+   "indexable": true,
+   "entries": [
+    {
+     "rank": 1,
+     "since": "2025-01-16",
+     "days": 673,
+     "state": "IL",
+     "excerpt": "🚗 Are you ready to grease the wheels of your career? Join our fast-paced team as a Quick Lane Specialist! Are you passionate about cars and eager to grow in…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=944685337637588"
+    },
+    {
+     "rank": 2,
+     "since": "2025-03-27",
+     "days": 603,
+     "state": "NJ",
+     "excerpt": "🔥🔥 NEW AND USED TIRE SALE😱😱ALL SIZES HIGH GRADE HIGH QUALITY 😱😱🔥🔥 - $1.00 Come and get your new or used tires SINGLE - PAIRS - SETS - ALL TYPES - ALL…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1196107818528597"
+    },
+    {
+     "rank": 3,
+     "since": "2025-06-30",
+     "days": 508,
+     "state": "MA",
+     "excerpt": "Are you looking for a [business] set of tires? When you buy 3 tires at [business] you get the 4th free! We now offer vehicle inspections for MA! [website] Call…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=9619987064774457"
+    },
+    {
+     "rank": 4,
+     "since": "2025-09-16",
+     "days": 430,
+     "state": "NY",
+     "excerpt": "[website] OVER 60 CARS AVAILABLE - [city], NY LOCATION, REAL PRICE / NO FEES, FREE WARRANTY, CASH OR FINANCE SAME PRICE WE DO PLATES & REGISTRATION ON SPOT. NO…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1483836749494015"
+    },
+    {
+     "rank": 5,
+     "since": "2025-10-30",
+     "days": 386,
+     "state": "TN",
+     "excerpt": "Search for your make & model for a guaranteed perfect fit. 0:00 / 0:55 [website] Premium [business] since 2008 124,000+ 5-Star Ratings Shop now",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1379343566871103"
+    },
+    {
+     "rank": 6,
+     "since": "2025-12-01",
+     "days": 354,
+     "state": "GA",
+     "excerpt": "Wheel alignments are vital to the safety of your vehicle! Save $10 on your next alignment! Save Money With [business] Get Offer",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=860846149770772"
+    },
+    {
+     "rank": 7,
+     "since": "2026-01-22",
+     "days": 302,
+     "state": "CA",
+     "excerpt": "[business] Tire & Automotive [business]. Shop 150,000 wheels and 42,000 tires with expert fitment help. [city], CA. Safety, quality & service first. See deals…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=4168934300088817"
+    },
+    {
+     "rank": 8,
+     "since": "2026-03-03",
+     "days": 262,
+     "state": "FL",
+     "excerpt": "🚨 FREE LEVEL KIT + FREE ALIGNMENT + FREE WHEEL LOCK KIT 📣 With Purchase of Wheel & Tire Package!!! - $1,999.00 The ULTIMATE upgrade for your truck, Jeep, or…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=4443013249309547"
+    },
+    {
+     "rank": 9,
+     "since": "2026-04-18",
+     "days": 216,
+     "state": "TX",
+     "excerpt": "[business] 8534 GULF FREEWAY [city] 77017 call-[phone] ** Best Deals in Town 💥FINANCING AVAILABLE💥 💥100 DAYS NO INTEREST💥 💥MESSAGE ME OR CALL TODAY💥…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=2199859274092822"
+    },
+    {
+     "rank": 10,
+     "since": "2026-06-22",
+     "days": 151,
+     "state": "MD",
+     "excerpt": "Do Not Let Anything Hold You Back From Building Your Dream Truck Today! Shop Huge Selection of Wheel and Tire Packages! ✔ Flexible Financing Options ✔ Perfect…",
+     "libraryUrl": "https://www.facebook.com/ads/library/?id=1680026269948107"
+    }
+   ]
+  }
+ ]
+}

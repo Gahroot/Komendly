@@ -1,11 +1,22 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "komendly",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Turn any website into ready-to-run ads, and make promo videos with Ozzy.",
-  "author": { "name": "Komendly", "email": "nolan@komendly.com", "url": "https://www.komendly.com" },
+  "author": {
+    "name": "Komendly",
+    "email": "nolan@komendly.com",
+    "url": "https://www.komendly.com"
+  },
   "homepage": "https://www.komendly.com/agents",
-  "keywords": ["ads", "marketing", "facebook ads", "instagram ads", "video", "small business"],
+  "keywords": [
+    "ads",
+    "marketing",
+    "facebook ads",
+    "instagram ads",
+    "video",
+    "small business"
+  ],
   "extensions": {
     "com.openai": {
       "interface": {
@@ -14,12 +25,21 @@
         "longDescription": "Komendly turns a business website into ready-to-run ads. Give it your site's address and it reads your brand, offer and audience, then makes an Ad Pack of static ads (image, headline and ad copy) sized for Facebook, Instagram and other social feeds and stories. Ozzy, Komendly's video maker, also makes short promo, launch and explainer videos from a prompt, and edits them on request (\"make it 9:16\", \"add captions\").\n\nWho it's for: small business owners, marketers and founders who need ad creatives without a designer.\n\nHow it works: connect, sign in or create a Komendly account, then ask in chat for ads or a video. Ozzy works on Komendly's servers and returns the finished ads and videos with download links.\n\nLimits: in chat, Komendly makes the creatives and copy; it does not publish ads or spend ad budget from the chat. Websites must be public. Ads take a few minutes; videos a few more.",
         "developerName": "Komendly",
         "category": "Creativity",
-        "capabilities": ["Make ads from a website", "Make promo videos", "Edit videos", "Write ad copy"],
+        "capabilities": [
+          "Make ads from a website",
+          "Make promo videos",
+          "Edit videos",
+          "Write ad copy"
+        ],
         "websiteURL": "https://www.komendly.com",
         "supportURL": "https://www.komendly.com/agents",
         "privacyPolicyURL": "https://www.komendly.com/privacy",
         "termsOfServiceURL": "https://www.komendly.com/terms",
-        "defaultPrompt": ["Make Facebook ads for my website", "Create Instagram ads for my bakery's site", "Make a 20-second promo video for my product"],
+        "defaultPrompt": [
+          "Make Facebook ads for my website",
+          "Create Instagram ads for my bakery's site",
+          "Make a 20-second promo video for my product"
+        ],
         "brandColor": "#5B3DF5",
         "composerIcon": "./assets/logo.png",
         "logo": "./assets/logo.png"
@@ -27,23 +47,62 @@
       "review": {
         "test_cases": {
           "positive": [
-            { "description": "Ads from a website", "prompt": "Make Facebook ads for https://www.komendly.com", "tools_triggered": "ads_create_pack, ads_get_run", "expected_behavior": "Starts an Ad Pack, then returns ready ad images with headlines, copy and a view link on komendly.com." },
-            { "description": "Check progress", "prompt": "Are my ads ready yet?", "tools_triggered": "ads_list_runs, ads_get_run", "expected_behavior": "Reports status and progress of the latest Ad Pack and returns ready ads." },
-            { "description": "Plan and credits", "prompt": "How many Komendly credits do I have left?", "tools_triggered": "get_account", "expected_behavior": "Returns the plan, credits and whether the free Ad Pack and free video were used." },
-            { "description": "Promo video", "prompt": "Make a 15-second promo video for a coffee shop called Bean There", "tools_triggered": "studio_create_video, studio_get_session", "expected_behavior": "Starts an Ozzy video and returns a download link to the finished MP4 when ready." },
-            { "description": "Ad copy for a video", "prompt": "Write Meta ad copy for that video", "tools_triggered": "studio_ad_copy", "expected_behavior": "Returns a headline, primary text, a Meta CTA type and the landing URL." }
+            {
+              "description": "Ads from a website, shown in the ad gallery",
+              "prompt": "Make Facebook ads for https://www.komendly.com",
+              "tools_triggered": "ads_create_pack, ads_get_run",
+              "expected_behavior": "Starts an Ad Pack and shows the Komendly ad gallery (thumbnails, headlines, status, Download and Publish to Meta buttons). When ready, ads_get_run returns 3 ads with headline, primary text and image links; the text reply also lists them and the view link on komendly.com."
+            },
+            {
+              "description": "Check progress",
+              "prompt": "Are my ads ready yet?",
+              "tools_triggered": "ads_list_runs, ads_get_run",
+              "expected_behavior": "Finds the latest Ad Pack and shows its status and progress in the gallery (Refresh re-checks without leaving the chat); ready ads show thumbnails and a working Download button."
+            },
+            {
+              "description": "Hand-off kit for Meta",
+              "prompt": "Give me the image files and ad copy so I can upload these ads to Meta myself",
+              "tools_triggered": "campaign_kit",
+              "expected_behavior": "Returns each ready creative with a direct file link (valid 7 days), size, placements, headline, primary text, Meta CTA type and landing URL. Nothing is published."
+            },
+            {
+              "description": "Plan and credits",
+              "prompt": "How many Komendly credits do I have left?",
+              "tools_triggered": "get_account",
+              "expected_behavior": "Returns the plan, credits and whether the free Ad Pack and free video were used."
+            },
+            {
+              "description": "Promo video",
+              "prompt": "Make a 15-second promo video for a coffee shop called Bean There",
+              "tools_triggered": "studio_create_video, studio_get_session",
+              "expected_behavior": "Starts an Ozzy video and returns a download link to the finished MP4 when ready."
+            }
           ],
           "negative": [
-            { "description": "Publishing ads / spending budget", "prompt": "Launch these ads on my Facebook account with a $500 budget." },
-            { "description": "Private site", "prompt": "Make ads for http://localhost:3000" },
-            { "description": "Unrelated request", "prompt": "What's the weather in Paris?" }
+            {
+              "description": "Publishing ads / spending budget from chat",
+              "prompt": "Launch these ads on my Facebook account with a $500 budget.",
+              "expected_behavior": "Does not publish or spend anything. Explains that publishing happens on komendly.com (the gallery's Publish to Meta opens the pack there) where the user connects Meta and approves the budget, or offers campaign_kit for the user's own Meta Ads tool."
+            },
+            {
+              "description": "Private site",
+              "prompt": "Make ads for http://localhost:3000",
+              "expected_behavior": "Does not start a pack (the server refuses non-public addresses); asks for the business's public website."
+            },
+            {
+              "description": "Unrelated request",
+              "prompt": "What's the weather in Paris?",
+              "expected_behavior": "No Komendly tool is called."
+            }
           ]
         },
         "demo_recording_url": "https://youtu.be/2QlthjWHuoU",
         "commerce": false,
         "commerce_description": "No purchases happen in ChatGPT. When credits run out, the tool returns a link to Komendly's pricing page."
       },
-      "publication": { "release_notes": "Initial release: Ad Packs from a website, Ozzy videos, ad copy and campaign kits." }
+      "publication": {
+        "release_notes": "1.1.0: Ad Pack results now render in an interactive ad gallery (MCP Apps UI ui://komendly/ad-gallery) with thumbnails, status, Download and Publish to Meta (opens the pack on komendly.com). Tools, names and inputs unchanged; plain text and structured results still returned."
+      }
     }
   }
 }

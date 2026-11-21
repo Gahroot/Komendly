@@ -41,6 +41,7 @@ COPY src/lib/ads/coach/table.ts src/lib/ads/coach/table.ts
 COPY src/lib/ads/coach/assess.ts src/lib/ads/coach/assess.ts
 COPY src/lib/ads/coach/match.ts src/lib/ads/coach/match.ts
 COPY src/lib/growth/systems.ts src/lib/growth/systems.ts
+COPY src/lib/growth/ad-check.ts src/lib/growth/ad-check.ts
 COPY src/lib/shopify/store-data.ts src/lib/shopify/store-data.ts
 COPY src/lib/kly/review-video.ts src/lib/kly/review-video.ts
 COPY src/lib/growth/checkout-recovery.ts src/lib/growth/checkout-recovery.ts
@@ -53,7 +54,13 @@ COPY src/lib/growth/vocabulary.ts src/lib/growth/vocabulary.ts
 COPY src/lib/ads/industries.ts src/lib/ads/industries.ts
 COPY src/lib/growth/monitor.ts src/lib/growth/monitor.ts
 COPY src/lib/growth/viral-branding.ts src/lib/growth/viral-branding.ts
+COPY src/lib/growth/ad-watch.ts src/lib/growth/ad-watch.ts
+COPY src/lib/ads/outbound/copy.ts src/lib/ads/outbound/copy.ts
+COPY src/lib/growth/review-gate.ts src/lib/growth/review-gate.ts
+COPY src/lib/growth/adlib-scan.ts src/lib/growth/adlib-scan.ts
+COPY src/lib/growth/adlib-report.ts src/lib/growth/adlib-report.ts
 COPY src/lib/ads/billing-gates.ts src/lib/ads/billing-gates.ts
+COPY src/lib/ads/results/insights.ts src/lib/ads/results/insights.ts
 COPY engine/package.json engine/package-lock.json engine/
 COPY engine/scripts/prisma-generate.mjs engine/scripts/prisma-generate.mjs
 

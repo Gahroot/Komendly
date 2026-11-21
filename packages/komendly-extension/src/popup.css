@@ -1,0 +1,20 @@
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;width:340px;padding:16px;background:#0c0820;color:#f6eee2;font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+header img{border-radius:8px}
+h1{margin:0;font-size:16px;color:#ffcf4a}
+h2{margin:0 0 4px;font-size:13px}
+.sub{margin:0;color:#cbbcff;font-size:12px}
+section{padding:12px 0;border-top:1px solid #2a2050}
+.hint{margin:0 0 8px;color:#b9b0d0;font-size:12px}
+form{display:flex;flex-wrap:wrap;gap:6px}
+input,select{flex:1 1 180px;min-width:0;height:32px;padding:0 8px;border-radius:6px;border:1px solid #3d2f70;background:#160f33;color:#f6eee2;font:inherit}
+input:focus,select:focus{outline:none;border-color:#ffcf4a}
+button{height:32px;padding:0 12px;border:0;border-radius:6px;background:#ffcf4a;color:#2a0f10;font:600 13px/1 inherit;cursor:pointer}
+button:hover{filter:brightness(1.05)}
+select{flex-basis:100%}
+.status{margin:6px 0 0;min-height:1em;font-size:12px;color:#9be3b0}
+.status.err{color:#ff9f8a}
+a{color:#ffcf4a}
+footer{padding-top:10px;border-top:1px solid #2a2050;color:#8f86aa;font-size:11px}

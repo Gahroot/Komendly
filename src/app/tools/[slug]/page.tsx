@@ -13,6 +13,8 @@ import { AD_SIZE_GUIDE, FREE_TOOLS, LEGACY_TOOL_SLUGS, getFreeTool, type FreeToo
 import { alsoCalled, anchorText, vocab, type VocabEntry } from "@/lib/growth/vocabulary";
 import { toolCtaHref } from "@/lib/growth/free-tools-links";
 import { freeToolsEnabled } from "@/lib/growth/free-tools-server";
+import { adCheckEnabled } from "@/lib/growth/ad-check-server";
+import { AD_CHECK_RUBRIC } from "@/lib/growth/ad-check";
 import { absoluteUrl } from "@/lib/site";
 import { breadcrumbJsonLd, faqJsonLd, freeToolJsonLd, graph } from "@/lib/seo/jsonld";
 import "@/components/studio/studio.css";
@@ -48,7 +50,7 @@ export default async function ToolPage({ params }: PageProps) {
   const { t, v } = r;
   const faq = [...v.faq, ...t.faq];
   const also = alsoCalled(v, 6);
-  const on = await freeToolsEnabled();
+  const on = t.slug === "meta-ad-check" ? await adCheckEnabled() : await freeToolsEnabled();
   const path = `/tools/${t.slug}`;
   const others = FREE_TOOLS.filter((x) => x.slug !== t.slug);
   return (
@@ -72,6 +74,7 @@ export default async function ToolPage({ params }: PageProps) {
           </p>
         ) : null}
         {t.slug === "ad-size-guide" && <SizeGuide />}
+        {t.slug === "meta-ad-check" && <AdCheckRubric />}
         <section className="mx-auto mt-14 max-w-3xl" aria-labelledby="tips-title">
           <h2 id="tips-title" className="font-display text-2xl font-medium sm:text-3xl">Tips that make it work</h2>
           <ul className="mt-4 list-disc space-y-2 pl-5 text-muted-foreground">{v.guidance.map((g) => <li key={g}>{g}</li>)}</ul>
@@ -121,6 +124,22 @@ function SizeGuide() {
           </div>
         </div>
       ))}
+    </section>
+  );
+}
+
+function AdCheckRubric() {
+  return (
+    <section className="mx-auto mt-14 max-w-3xl" aria-labelledby="rubric-title">
+      <h2 id="rubric-title" className="font-display text-2xl font-medium sm:text-3xl">How the score works</h2>
+      <p className="mt-3 text-muted-foreground">Every point comes from one fact anyone can check in the public Meta Ad Library (active ads shown in the US, on the day of the scan). No spend, results or industry averages are used.</p>
+      <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+        <table className="w-full text-left text-sm">
+          <thead className="text-muted-foreground"><tr><th className="px-4 py-2 font-medium">Check</th><th className="px-4 py-2 font-medium">Points</th><th className="px-4 py-2 font-medium">Rule</th></tr></thead>
+          <tbody>{AD_CHECK_RUBRIC.map((r) => <tr key={r.id} className="border-t border-border"><td className="px-4 py-2">{r.label}</td><td className="px-4 py-2 font-mono">{r.max}</td><td className="px-4 py-2 text-muted-foreground">{r.rule}</td></tr>)}</tbody>
+        </table>
+      </div>
+      <p className="mt-3 text-sm text-muted-foreground">Local comparison: up to 3 businesses in the same trade and state that run Meta ads, with their live ad count and longest-running ad. They are not scored. Meta Ad Check is a free tool by Komendly; it is not made or endorsed by Meta.</p>
     </section>
   );
 }

@@ -20,6 +20,8 @@ import { comboForIndustry, galleryPage } from "@/lib/growth/ad-pages";
 import { anchorText } from "@/lib/growth/vocabulary";
 import { angleLabel, categoryAngles, category as tradeCategory, ideasPath, templatizeSample, tradePage, type TradePage } from "@/lib/growth/trade-playbooks";
 import { Bullets, ChipLinks, Faq, PaidNote, TemplateAdCard } from "@/components/ad-examples/playbook-parts";
+import { ADLIB_REPORT_PATH, leaderboardPath } from "@/lib/growth/adlib-report";
+import { loadAdlibReport } from "@/lib/growth/adlib-report-server";
 import { breadcrumbJsonLd, faqJsonLd, galleryPageJsonLd, graph } from "@/lib/seo/jsonld";
 import "@/components/studio/studio.css";
 
@@ -100,6 +102,8 @@ export default async function IndustryPage({ params }: PageProps) {
   const related = relatedIndustries(i, available);
   const posts = relatedPosts(i);
   const h1 = trade?.h1 ?? `Facebook ad examples for ${i.plural}`;
+  const adlib = await loadAdlibReport();
+  const adlibTrades = adlib.byTrade.filter((t) => t.playbook === i.slug);
 
   return (
     <StudioRoot className={`${fraunces.variable} min-h-screen bg-[#0c0820]`}>
@@ -239,6 +243,18 @@ export default async function IndustryPage({ params }: PageProps) {
           <section className="mx-auto mt-16 grid max-w-5xl gap-10 px-4 sm:px-6 md:grid-cols-2" aria-label="Related ad ideas">
             <ChipLinks title={`${cat.label} ad ideas`} links={categoryAngles(cat.slug).map((a) => ({ href: a.path, label: angleLabel(a.angle) }))} />
             <ChipLinks title={`More ${cat.label.toLowerCase()} trades`} links={trade.related.map((r) => ({ href: `/ad-examples/${r.slug}`, label: `${r.term} ad examples` }))} />
+          </section>
+        )}
+
+        {adlibTrades.length > 0 && (
+          <section className="mx-auto mt-16 max-w-5xl px-4 sm:px-6" aria-labelledby="adlib-title">
+            <h2 id="adlib-title" className="font-display text-2xl font-medium tracking-[-0.02em] sm:text-3xl">What real {i.singular} advertisers run on Meta</h2>
+            <ul className="mt-4 space-y-2 text-muted-foreground">
+              {adlibTrades.map((t) => (
+                <li key={t.slug}>{t.label} (n = {t.advertisers} in the public Meta Ad Library): median {t.medianLiveAds} live ad{t.medianLiveAds === 1 ? "" : "s"}, the sampled ad running a median {t.medianDays} days, {t.offerShare}% mentioning an offer. <Link href={leaderboardPath(t.slug)} className="text-[var(--studio-gold)] hover:underline">Longest-running {t.label.toLowerCase()} ads</Link></li>
+              ))}
+            </ul>
+            <p className="mt-3 text-sm text-muted-foreground">From our <Link href={ADLIB_REPORT_PATH} className="text-[var(--studio-gold)] hover:underline">State of Local Service Meta Ads</Link> report (collected {adlib.collectedOn}).</p>
           </section>
         )}
 

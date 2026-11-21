@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "komendly": {
+      "type": "http",
+      "url": "https://www.komendly.com/api/mcp"
+    }
+  }
+}

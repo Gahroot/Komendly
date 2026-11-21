@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Komendly: Remake this ad</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="icons/icon-48.png" alt="" width="36" height="36">
+    <div>
+      <h1>Remake this ad</h1>
+      <p class="sub">by Komendly</p>
+    </div>
+  </header>
+
+  <section>
+    <h2>Your business website</h2>
+    <p class="hint">Komendly uses it to make the remake about your business. Asked once, stored in your Chrome profile. Empty it and save to clear.</p>
+    <form id="site-form">
+      <input id="site" type="text" inputmode="url" autocomplete="url" placeholder="yourbusiness.com" aria-label="Your business website">
+      <button type="submit">Save</button>
+    </form>
+    <p id="site-status" class="status" role="status"></p>
+  </section>
+
+  <section>
+    <h2>How to use</h2>
+    <p class="hint">Open the <a href="https://www.facebook.com/ads/library/" target="_blank" rel="noopener">Ad Library</a>, find an ad you like and click <b>Remake for my business</b> on it.</p>
+  </section>
+
+  <section>
+    <h2>Check this advertiser's ads</h2>
+    <form id="check-form">
+      <select id="advertiser" aria-label="Advertiser on this page" hidden></select>
+      <input id="page" type="text" placeholder="Facebook page link or ID" aria-label="Facebook page link or ID">
+      <button type="submit">Check ads</button>
+    </form>
+    <p id="check-status" class="status" role="status"></p>
+  </section>
+
+  <footer>Free. No tracking. Not affiliated with Meta. <a href="https://www.komendly.com/tools/chrome-extension#privacy" target="_blank" rel="noopener">Privacy</a></footer>
+  <script src="popup.js"></script>
+</body>
+</html>

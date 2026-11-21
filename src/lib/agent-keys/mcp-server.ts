@@ -28,8 +28,9 @@ import { loadAutopilot, saveAutopilot } from "@/lib/ads/autopilot-server";
 import { currentAgent } from "./context";
 import { callRoute, type RouteResult } from "./internal-call";
 import { UPGRADE_URL } from "./policy";
-import { instrumentTools, linkForAgent, upgradeUrlForAgent } from "./assistant";
+import { instrumentTools, linkForAgent, upgradePromptAllowed, upgradeUrlForAgent } from "./assistant";
 import { checkJobLimit, JOB_LIMIT_MESSAGE } from "./resolve";
+import { adGalleryToolMeta, GALLERY_RESULT_META, registerAdGallery } from "./ad-gallery";
 import { creativeFilename, metaCtaFor, placementsFor, SHARE_LINK_SECONDS, suggestAdCopy, type AdCopy } from "./meta-kit";
 
 export const MCP_INSTRUCTIONS =
@@ -48,7 +49,7 @@ export interface McpRequestInfo {
 }
 
 type Structured = Record<string, unknown>;
-type ToolResult = { content: { type: "text"; text: string }[]; structuredContent: Structured; isError?: boolean };
+type ToolResult = { content: { type: "text"; text: string }[]; structuredContent: Structured; isError?: boolean; _meta?: Structured };
 
 function ok(text: string, data: Structured): ToolResult {
   return { content: [{ type: "text", text: `${text}\n\n${JSON.stringify(data, null, 2)}` }], structuredContent: data };
@@ -345,7 +346,7 @@ async function packAds(runId: string) {
       assets,
     });
   }
-  return { view, gated, landingUrl, ads };
+  return { view, gated, landingUrl, ads, paid: isPaidWorkspace(workspace) };
 }
 
 async function runOut(info: McpRequestInfo, runId: string) {
@@ -357,7 +358,7 @@ async function runOut(info: McpRequestInfo, runId: string) {
     const confirmed = await callRoute(confirmRunRoute, { ...route(info), method: "POST", path: `/api/ads/runs/${runId}/confirm`, body: { corrections: {} }, params: { id: runId } });
     if (confirmed.status >= 400) throw routeFailure(confirmed);
   }
-  const { view, gated, landingUrl, ads } = await packAds(runId);
+  const { view, gated, landingUrl, ads, paid } = await packAds(runId);
   const ready = view.ads.filter((a) => a.status === "ready").length;
   const failed = view.ads.filter((a) => a.status === "failed" || a.status === "failed_qc").length;
   const total = view.staticCount + view.motionCount;
@@ -379,7 +380,10 @@ async function runOut(info: McpRequestInfo, runId: string) {
   const text = settled
     ? `Ad Pack ${view.status}: ${ready} of ${total} ads ready.${failedNote}${ready ? " Links work for 7 days. To hand them to a Meta Ads tool, call campaign_kit with this run_id." : ""}`
     : `Ad Pack is ${view.status}: ${ready} of ${total} ads ready so far. Check again in a minute.`;
-  return ok(text, data);
+  // The ad gallery UI shows an Upgrade button to free accounts (not in ChatGPT: its guidelines forbid upgrade promotion;
+  // there the button only appears with a paywall/locked upgrade_url). `_meta` reaches the widget, not the model.
+  const promo = !paid && upgradePromptAllowed();
+  return { ...ok(text, data), ...(promo ? { _meta: { [GALLERY_RESULT_META]: { upgrade_url: upgradeUrlForAgent() } } } : {}) };
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -502,6 +506,7 @@ async function campaignKit(info: McpRequestInfo, runId: string | undefined, sess
 export function buildOzzyServer(info: McpRequestInfo): McpServer {
   const server = new McpServer({ name: "ozzy", title: "Ozzy by Komendly", version: "1.0.0" }, { instructions: MCP_INSTRUCTIONS });
   instrumentTools(server);
+  registerAdGallery(server);
 
   server.registerTool("get_account", { title: "Account", description: "Plan, credit balance (or usage_left_percent on 20x/50x plans), free Ozzy Studio videos left and whether the free Ad Pack was used.", inputSchema: {}, annotations: { readOnlyHint: true } }, () =>
     run(async () => {
@@ -694,7 +699,7 @@ export function buildOzzyServer(info: McpRequestInfo): McpServer {
 
   server.registerTool(
     "ads_create_pack",
-    { title: "Make an Ad Pack", description: "Use this when the user asks to make, create or design ads (Facebook, Instagram, Meta or other social ads, ad creatives, ad images) for a business, product or website. Give the business's website URL: Komendly reads the site and makes an Ad Pack of ready-to-run static ads (image, headline and ad copy in the brand's style), plus an animated ad when animated=true on paid plans. New accounts get one free Ad Pack; after that it uses credits. Ads take a few minutes: follow with ads_get_run, which returns the ad images and a link to view them on Komendly.", inputSchema: { website_url: z.string().min(3).max(2048), animated: z.boolean().optional() } },
+    { title: "Make an Ad Pack", description: "Use this when the user asks to make, create or design ads (Facebook, Instagram, Meta or other social ads, ad creatives, ad images) for a business, product or website. Give the business's website URL: Komendly reads the site and makes an Ad Pack of ready-to-run static ads (image, headline and ad copy in the brand's style), plus an animated ad when animated=true on paid plans. New accounts get one free Ad Pack; after that it uses credits. Ads take a few minutes: follow with ads_get_run, which returns the ad images and a link to view them on Komendly.", inputSchema: { website_url: z.string().min(3).max(2048), animated: z.boolean().optional() }, _meta: adGalleryToolMeta() },
     ({ website_url, animated }) =>
       run(async () => {
         await requireJobSlot();
@@ -702,13 +707,13 @@ export function buildOzzyServer(info: McpRequestInfo): McpServer {
         if (r.status >= 400) throw routeFailure(r);
         const runId = String(r.json.runId);
         const out = await runOut(info, runId);
-        return ok(`Ad Pack started${r.json.resumed ? " (your free pack was already in progress)" : ""}. Ads take a few minutes: follow it with ads_get_run.`, out.structuredContent);
+        return { ...out, ...ok(`Ad Pack started${r.json.resumed ? " (your free pack was already in progress)" : ""}. Ads take a few minutes: follow it with ads_get_run.`, out.structuredContent) };
       }),
   );
 
   server.registerTool(
     "ads_get_run",
-    { title: "Ad Pack status", description: "Status, progress and ads (with fresh image/video links) of an Ad Pack.", inputSchema: { run_id: z.string().min(1).max(64) } },
+    { title: "Ad Pack status", description: "Status, progress and ads (with fresh image/video links) of an Ad Pack.", inputSchema: { run_id: z.string().min(1).max(64) }, _meta: adGalleryToolMeta() },
     ({ run_id }) => run(() => runOut(info, run_id)),
   );
 

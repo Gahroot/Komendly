@@ -38,6 +38,11 @@ const mk = (kind: VocabKind, list: Raw[]): VocabEntry[] => list.map((r) => ({ ..
 // ------------------------------------------------------------------------------------------------ tools
 
 export const TOOL_VOCAB: VocabEntry[] = mk("tool", [
+  { slug: "meta-ad-check", primaryQuery: "facebook ad checker", title: "Free Meta Ad Check: Score Your Live Facebook Ads", h1: "Meta Ad Check: how do your live Facebook ads look?",
+    synonyms: ["facebook ad library checker", "meta ad library lookup", "check my facebook ads", "facebook ad fatigue checker", "competitor facebook ads checker"], slang: ["are my facebook ads still running", "how long has my facebook ad been running"],
+    intro: "Paste your Facebook Page or website. We read the public Meta Ad Library and score the ads you run right now: how many are live, how old the oldest one is, which formats you use, which ads may be tired, and how local businesses in your trade compare.",
+    guidance: ["Check after every change: the Ad Library only lists ads that are active right now.", "An ad that has run for months has usually been seen many times by the same people; a new creative gives them something new.", "Run more than one format: image, video and carousel ads reach people in different placements."],
+    faq: [{ q: "How do I see what Facebook ads a business is running?", a: "Open the Meta Ad Library, choose the country and search the business's Page name. Every active ad is public there, with the date it started running." }, { q: "What is ad fatigue?", a: "When the same people see one ad so often that they stop reacting to it. This check flags any live ad that has run more than 45 days." }] },
   { slug: "ad-maker", primaryQuery: "free ad maker", title: "Free Ad Maker: AI Ads From Your Website, No Watermark", h1: "Free ad maker: paste your website, get finished ads",
     synonyms: ["free ad maker ai", "ad maker website", "ad creator website", "ai ad generator from website", "free ad maker for social media"], slang: ["ad maker without watermark", "free ad maker for business"],
     intro: "No design app, no templates to fill in: paste your website link and Ozzy, Komendly's AI ad creator, reads your brand, photos and offers and makes ready-to-post Facebook and Instagram ads. Free, no watermark, no card.",

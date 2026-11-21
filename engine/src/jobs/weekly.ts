@@ -21,6 +21,7 @@ import { siteKey } from "./brand-history";
 import { WEEKLY_COST_CAP_MICROS, weeklyFirstTryMicros } from "./gift-policy";
 import { bestAd, emailImg } from "../lifecycle/studio-drop";
 import type { SendMail } from "../lifecycle/mail";
+import { weeklyResultsParagraphs } from "../growth/meta-results";
 
 const MAX_PER_TICK = 20;
 /** Hold the weekly email this long for the Autopilot video to finish (then send without it). */
@@ -194,7 +195,7 @@ export async function weeklyEmailTick(deps: WeeklyDeps): Promise<WeeklyEmailResu
       appUrl: base,
       subject: copy.subject,
       preheader: copy.preheader,
-      paragraphs: copy.paragraphs,
+      paragraphs: [...copy.paragraphs, ...(await weeklyResultsParagraphs(deps.db, r.workspaceId, week))],
       cta: { label: copy.ctaLabel, href },
       hero: best.assetId ? { src: emailImg(base, secret, best.assetId, best.expiresAt, now), alt: best.alt, href, caption: "", locked: false, position: "top" } : undefined,
       unsubscribeUrl,

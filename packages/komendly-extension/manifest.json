@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Komendly: Remake this ad",
+  "short_name": "Remake this ad",
+  "version": "0.1.0",
+  "description": "Adds a 'Remake for my business' button to ads in the Meta Ad Library. Free. Not affiliated with Meta.",
+  "homepage_url": "https://www.komendly.com/tools/chrome-extension",
+  "icons": { "16": "icons/icon-16.png", "32": "icons/icon-32.png", "48": "icons/icon-48.png", "128": "icons/icon-128.png" },
+  "action": {
+    "default_title": "Komendly: Remake this ad",
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/icon-16.png", "32": "icons/icon-32.png", "48": "icons/icon-48.png" }
+  },
+  "permissions": ["storage"],
+  "host_permissions": ["https://www.facebook.com/ads/library/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.facebook.com/ads/library/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

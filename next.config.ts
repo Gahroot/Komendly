@@ -33,6 +33,7 @@ const nextConfig: NextConfig = {
     "/api/ads/gift-public/[token]/preview": ["./src/lib/og/fonts/**", "./public/brand/**"],
     "/s/[token]/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
     "/ozzy-studio/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
+    "/reports/local-service-meta-ads/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
   },
   // The Ads studio is the homepage; /ads (exact) is kept as a permanent alias. /ads/* routes and assets are untouched.
   async redirects() {
@@ -56,7 +57,7 @@ const nextConfig: NextConfig = {
       },
       {
         // Public marketing pages only: never cache API, account or admin responses
-        source: "/((?!api|ads|admin|dashboard|checkout|oauth|\\.well-known|login|register|ozzy-lab|verify-email|test-video|r/|g/|u/|m/|gift/|partners/apply|studio|s/|_next).+)",
+        source: "/((?!api|ads|admin|dashboard|checkout|oauth|\\.well-known|login|register|ozzy-lab|verify-email|test-video|r/|g/|u/|m/|gift/|ad-check/|partners/apply|studio|s/|_next).+)",
         headers: [
           {
             key: "Cache-Control",
@@ -101,6 +102,11 @@ const nextConfig: NextConfig = {
       {
         // "Made with Komendly" mark short links: per-visit tracking redirect, never cache
         source: "/m/:code",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        // Meta Ad Check reports (private token link about one business): never cached, never indexed
+        source: "/ad-check/:token*",
         headers: [{ key: "Cache-Control", value: "private, no-store" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {

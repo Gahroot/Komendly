@@ -19,7 +19,11 @@ import { startIndustryExamplesLoop } from "./growth/industry-examples";
 import { startViralBrandingLoop } from "./growth/viral-branding";
 import { startAiAssistantLoop } from "./growth/ai-assistant";
 import { startShopifyLoop } from "./growth/shopify";
+import { startAdWatchLoop } from "./growth/ad-watch";
+import { startAdCheckLoop } from "./growth/ad-check";
+import { startAdlibReportLoop } from "./growth/adlib-report";
 import { startMonitorLoop } from "./jobs/monitor";
+import { startMetaResultsLoop } from "./growth/meta-results";
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -55,12 +59,19 @@ async function main(): Promise<void> {
   const stopAiAssistant = startAiAssistantLoop(db);
   // Shopify App Store (sys_shopify): hourly installs/charges count + public endpoint synthetic check.
   const stopShopify = startShopifyLoop(db);
+  // data_report (sys_data_report): monthly Ad Library report refresh from KlyPlace source=adlib, else heartbeat only.
+  const stopAdlibReport = startAdlibReportLoop({ db, provider });
   // System-failure alerts (growth systems + Codex provider) to ADS_ALERT_EMAIL, every 10 min.
   const stopMonitor = startMonitorLoop({ db, send });
   // Abandoned-checkout recovery (growth system checkout_recovery; off until AdsFeatureFlag sys_checkout_recovery).
   const stopRecovery = startCheckoutRecoveryLoop({ db, provider, send });
   // Churn & failed-payment win-back (growth system winback; off until AdsFeatureFlag sys_winback).
   const stopWinback = startWinbackLoop({ db, provider, send });
+  // Meta Ad Check grader (sys_ad_check): fills AdJob adlib_scan rows from the public Ad Library. Stopped on process exit.
+  const stopAdCheck = startAdCheckLoop({ db, provider, worker: config.workerId });
+  const stopAdWatch = startAdWatchLoop({ db, provider, send }); // Competitor ad watch (sys_ad_watch): Monday opt-in emails
+  // "Are my ads working?" weekly Meta results (growth system meta_results; off until AdsFeatureFlag sys_meta_results).
+  const stopMetaResults = startMetaResultsLoop({ db, provider });
   log("info", "engine started", { worker: config.workerId, port: config.port, provider: provider.name, concurrency: config.concurrency, providerOk: runner.providerHealthy });
 
   let shutting = false;
@@ -76,12 +87,16 @@ async function main(): Promise<void> {
       stopWeekly();
       stopRecovery();
       stopWinback();
+      stopAdCheck();
+      stopAdWatch();
       stopFreeTools();
       stopIndustryExamples();
       stopViral();
       stopAiAssistant();
       stopShopify();
+      stopAdlibReport();
       stopMonitor();
+      stopMetaResults();
       await runner.stop();
       await db.$disconnect();
       process.exit(0);

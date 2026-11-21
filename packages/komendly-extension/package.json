@@ -1,0 +1,28 @@
+{
+  "name": "komendly-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Komendly: Remake this ad. A free Chrome extension that adds a 'Remake for my business' button to Meta Ad Library cards.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "e2e": "node scripts/e2e.mjs",
+    "store-assets": "node scripts/store-assets.mjs"
+  },
+  "license": "UNLICENSED",
+  "author": "Komendly",
+  "homepage": "https://www.komendly.com/tools/chrome-extension",
+  "devDependencies": {
+    "@types/chrome": "^0.3.7",
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^26.6.6",
+    "esbuild": "^0.28.2",
+    "fflate": "^0.8.3",
+    "jsdom": "^31.0.1",
+    "playwright-core": "^1.65.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.1"
+  }
+}

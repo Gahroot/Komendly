@@ -14,6 +14,7 @@ export const PRIVATE_PATHS = [
   '/checkout',
   '/test-video',
   '/ozzy-lab',
+  '/ad-check/',
 ] as const
 
 /** Crawlable but not worth indexing (auth forms, email confirmation): noindex via metadata/header, not robots.txt. */

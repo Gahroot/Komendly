@@ -4,10 +4,13 @@ import { CATEGORIES, MIN_INDEXABLE_TAG_POSTS, getAllTags, getBlogPosts, getBlogP
 import { loadIndexableIndustryLinks } from '@/lib/growth/industry-examples-server'
 import { loadAllGalleryPageStates } from '@/lib/growth/ad-pages-server'
 import { FREE_TOOLS } from '@/lib/growth/free-tools'
+import { CHROME_EXTENSION_PATH } from '@/lib/growth/chrome-extension'
 import { SITE_URL } from '@/lib/site'
 import { INTEGRATION_PATHS } from '@/lib/integrations'
 import { REPORT_PATH } from '@/lib/growth/ad-report'
 import { loadAdReport } from '@/lib/growth/ad-report-server'
+import { ADLIB_REPORT_PATH, LEADERBOARD_BASE, leaderboardPath } from '@/lib/growth/adlib-report'
+import { loadAdlibReport } from '@/lib/growth/adlib-report-server'
 import { CATEGORIES as TRADE_CATEGORIES, IDEAS_BASE, allAnglePages, ideasPath } from '@/lib/growth/trade-playbooks'
 
 function latest(dates: string[]): string | undefined {
@@ -33,6 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/ad-examples`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${SITE_URL}/tools`, changeFrequency: 'monthly', priority: 0.8 },
     ...FREE_TOOLS.map((t) => ({ url: `${SITE_URL}/tools/${t.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
+    { url: `${SITE_URL}${CHROME_EXTENSION_PATH}`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${SITE_URL}/ad-of-the-week`, changeFrequency: 'weekly', priority: 0.6 },
     { url: `${SITE_URL}/testimonials`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${SITE_URL}/pricing`, changeFrequency: 'monthly', priority: 0.6 },
@@ -87,6 +91,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const report = await loadAdReport()
   const reportPages: MetadataRoute.Sitemap = report.indexable ? [{ url: `${SITE_URL}${REPORT_PATH}`, lastModified: report.to ?? undefined, changeFrequency: 'weekly' as const, priority: 0.7 }] : []
 
+  // Ad Library data report + monthly trade leaderboards: only when their sample thresholds are met
+  const adlib = await loadAdlibReport()
+  const adlibPages: MetadataRoute.Sitemap = adlib.indexable ? [ADLIB_REPORT_PATH, LEADERBOARD_BASE, ...adlib.leaderboards.filter((l) => l.indexable).map((l) => leaderboardPath(l.slug))].map((p, i) => ({ url: `${SITE_URL}${p}`, lastModified: adlib.collectedOn, changeFrequency: 'monthly' as const, priority: i === 0 ? 0.7 : 0.5 })) : []
+
   // Local-service ad library: ideas hub, category pages and angle pages (hand-written content, always indexable)
   const ideaPages: MetadataRoute.Sitemap = [IDEAS_BASE, ...TRADE_CATEGORIES.map((c) => ideasPath(c.slug)), ...allAnglePages().map((a) => a.path)].map((p) => ({
     url: `${SITE_URL}${p}`,
@@ -94,5 +102,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }))
 
-  return [...reportPages, ...staticPages, ...postPages, ...categoryPages, ...authorPages, ...tagPages, ...galleryPages, ...intentPages, ...ideaPages]
+  return [...reportPages, ...adlibPages, ...staticPages, ...postPages, ...categoryPages, ...authorPages, ...tagPages, ...galleryPages, ...intentPages, ...ideaPages]
 }

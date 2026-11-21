@@ -8,6 +8,7 @@ import { loadAutopilot } from "@/lib/ads/autopilot-server";
 import { WEEKLY_TEASER } from "@/lib/ads/weekly-drop";
 import { WEEKLY_SWAP_STEPS, WEEKLY_SWAP_TITLE } from "@/lib/ads/launch-guide";
 import { AutopilotControls } from "./autopilot-controls";
+import { ResultsSummary } from "./results-summary";
 
 export async function WeeklyDropCard({ workspace }: { workspace: { id: string; adsPlan: string; subscriptionStatus: string; suspendedAt: Date | null } }) {
   const ap = await loadAutopilot(workspace);
@@ -34,6 +35,7 @@ export async function WeeklyDropCard({ workspace }: { workspace: { id: string; a
       </CardHeader>
       <CardContent className="space-y-4">
         <AutopilotControls enabled={ap.enabled} focus={ap.focus} />
+        <ResultsSummary workspaceId={workspace.id} />
         {!d ? (
           <p className="text-sm text-muted-foreground">Your first drop is on its way. Make a run from your website so Ozzy knows your brand.</p>
         ) : (

@@ -5,6 +5,7 @@ import { Check, Copy, Loader2, X } from "lucide-react";
 import { AI_TOOL_FIELDS, AI_TOOL_SECTIONS, CTA_GOALS, CTA_PLATFORMS, LINKEDIN_LIMITS, PLATFORM_LIMITS, RSA_LIMITS, budgetMath, buildHashtags, charCount, checkAdSize, checkLength, gradeAdCopy, isAiTool, keywordHits, pickCta, type AiToolSlug, type CtaGoal, type FreeToolSlug, type Grade, type LinkedInVariant, type ReviewOutput, type RsaOutput, type VideoScriptOutput } from "@/lib/growth/free-tools";
 import { FREE_TRIAL_ADS } from "@/lib/ads/bonus-access";
 import { MockupTool } from "./ad-mockup";
+import { AdCheckTool } from "./ad-check-tool";
 
 const field = "w-full rounded-xl border border-border bg-white/5 px-4 py-3 text-base outline-none focus:border-[var(--studio-gold)]";
 const btn = "inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[var(--studio-gold)] px-6 font-semibold text-[#2a0f10] transition hover:brightness-105 disabled:opacity-60";
@@ -402,6 +403,7 @@ function MakerTool() {
 
 export function ToolRunner({ slug }: { slug: FreeToolSlug }) {
   if (slug === "ad-maker") return <MakerTool />;
+  if (slug === "meta-ad-check") return <AdCheckTool />;
   if (slug === "testimonial-generator") return <ReviewTool />;
   if (slug === "ad-copy-grader") return <GraderTool />;
   if (slug === "ad-size-guide") return <SizeTool />;

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "komendly",
+  "displayName": "Komendly",
+  "version": "1.0.0",
+  "description": "Make ready-to-run Facebook and Instagram ads for a local business from its website, then publish them to Meta from Komendly.",
+  "author": { "name": "Komendly", "email": "nolan@komendly.com", "url": "https://www.komendly.com" },
+  "homepage": "https://www.komendly.com/agents",
+  "documentationUrl": "https://www.komendly.com/agents",
+  "supportUrl": "https://www.komendly.com/agents",
+  "privacyPolicyUrl": "https://www.komendly.com/privacy",
+  "termsOfServiceUrl": "https://www.komendly.com/terms",
+  "license": "LicenseRef-Komendly-Proprietary",
+  "keywords": ["meta ads", "facebook ads", "instagram ads", "local business", "marketing", "ad creatives"]
+}

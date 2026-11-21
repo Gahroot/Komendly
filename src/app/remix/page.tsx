@@ -55,7 +55,7 @@ export default function RemixPage() {
             </p>
             <div className="mt-6" aria-hidden><OzzyLazy size={112} perch="ledge" pose={{ form: "creator", expression: "happy", motion: "idle" }} /></div>
             <div className="studio-rise w-full max-w-2xl" style={{ ["--rise-delay" as string]: "240ms" }}>
-              <RemixForm />
+              <RemixForm showSource />
             </div>
           </div>
         </section>

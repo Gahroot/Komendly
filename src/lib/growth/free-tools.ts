@@ -6,7 +6,8 @@ export type FreeToolSlug =
   | "ad-maker" | "ad-copy-generator" | "ad-copy-grader" | "ad-size-guide" | "ad-budget-calculator" | "ad-character-counter"
   | "slogan-generator" | "hook-generator" | "caption-generator" | "cta-generator" | "hashtag-generator"
   | "testimonial-generator" | "google-review-reply-generator" | "promo-ad-generator" | "business-name-generator"
-  | "ugc-script-generator" | "linkedin-ad-copy-generator" | "google-ads-headline-generator" | "youtube-ad-script-generator" | "ad-mockup-generator";
+  | "ugc-script-generator" | "linkedin-ad-copy-generator" | "google-ads-headline-generator" | "youtube-ad-script-generator" | "ad-mockup-generator"
+  | "meta-ad-check";
 
 /** Job a tool does (hub grouping). */
 export type ToolGroup = "make" | "write" | "check" | "reviews" | "brand";
@@ -201,6 +202,17 @@ export const FREE_TOOLS: readonly FreeTool[] = [
     faq: [
       { q: "Is my image uploaded anywhere?", a: "No. The mockups are drawn in your browser, and the PNG is created on your device." },
       { q: "Is this exactly what Facebook will show?", a: "It is a close mockup of each placement's layout and text cut-offs, good for client approval and spotting crops. Meta's own Ads Manager preview is final, since apps change their layout now and then." },
+    ],
+  },
+  {
+    slug: "meta-ad-check", name: "Meta Ad Check", group: "check", ai: false,
+    description: "Paste your Facebook Page or website and get a free score of the Facebook and Instagram ads you run right now, from the public Meta Ad Library: live ads, oldest ad, format mix, tired ads and local rivals.",
+    blurb: "See your live Facebook ads the way the Meta Ad Library shows them, scored, with tired ads flagged.",
+    related: ["ad-copy-grader", "ad-maker"],
+    faq: [
+      { q: "Where does the data come from?", a: "Only from the public Meta Ad Library (active ads shown in the US). We don't log in to your account and don't see spend or results." },
+      { q: "Who sees my report?", a: "Only people with the private link. Reports are not indexed by search engines and rivals are never shown your score." },
+      { q: "Is the Meta Ad Check made by Meta?", a: "No. It is a free tool by Komendly that reads Meta's public Ad Library." },
     ],
   },
 ];

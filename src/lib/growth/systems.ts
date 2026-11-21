@@ -27,6 +27,14 @@ export const GROWTH_SYSTEMS = [
   { key: "review_gifts", label: "Review-video gifts", stage: "acquire", utmSource: "review_gift", cycleMinutes: 60, silentAlertHours: 72 },
   { key: "new_business", label: "New-business timing", stage: "acquire", utmSource: "new_business", cycleMinutes: 60, silentAlertHours: 72 },
   { key: "shopify", label: "Shopify App Store", stage: "acquire", utmSource: "shopify", cycleMinutes: 60, silentAlertHours: 24 * 14 },
+  { key: "jobber", label: "Jobber App Marketplace", stage: "acquire", utmSource: "jobber", cycleMinutes: 7 * 24 * 60, silentAlertHours: 24 * 14 },
+  { key: "ad_check", label: "Meta Ad Check grader", stage: "acquire", utmSource: "ad_check", cycleMinutes: 15, silentAlertHours: 72 },
+  { key: "chrome_ext", label: "Chrome extension (Remake this ad)", stage: "acquire", utmSource: "chrome_ext", cycleMinutes: 24 * 60, silentAlertHours: 24 * 14 },
+  { key: "ad_watch", label: "Competitor ad watch (weekly email)", stage: "acquire", utmSource: "ad_watch", cycleMinutes: 60, silentAlertHours: 24 * 14 },
+  { key: "meta_results", label: "Weekly Meta results report", stage: "keep", utmSource: "meta_results", cycleMinutes: 60, silentAlertHours: 24 * 8 },
+  { key: "lead_alerts", label: "Instant Meta lead alerts", stage: "keep", utmSource: "lead_alert", cycleMinutes: 60, silentAlertHours: 24 * 30 },
+  { key: "zapier", label: "Zapier integration", stage: "acquire", utmSource: "zapier", cycleMinutes: 60, silentAlertHours: 24 * 14 },
+  { key: "data_report", label: "Ad Library data report", stage: "acquire", utmSource: "data_report", cycleMinutes: 30 * 24 * 60, silentAlertHours: 24 * 95 },
 ] as const satisfies readonly GrowthSystem[];
 
 export type SystemKey = (typeof GROWTH_SYSTEMS)[number]["key"];

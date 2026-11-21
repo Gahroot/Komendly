@@ -2,6 +2,8 @@
 engine
 # Blog engine: separate Railway service
 blog-engine
+# Chrome extension: built and zipped locally, uploaded to the Chrome Web Store
+packages/komendly-extension
 **/__tests__
 **/*.test.ts
 **/*.test.tsx

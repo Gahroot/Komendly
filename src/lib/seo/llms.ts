@@ -58,7 +58,10 @@ export interface IntentLink { path: string; h1: string; also: string }
 /** Data report line (only when indexable). */
 export interface ReportLink { path: string; ads: number; sites: number }
 
-export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryLink[] = [], report: ReportLink | null = null, intents: readonly IntentLink[] = []): string {
+/** Ad Library data report + indexable trade leaderboards (only when the report is indexable). */
+export interface AdlibLink { path: string; advertisers: number; month: string; medianDays: number; medianLiveAds: number; leaderboards: ReadonlyArray<{ path: string; label: string; advertisers: number }> }
+
+export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryLink[] = [], report: ReportLink | null = null, intents: readonly IntentLink[] = [], adlib: AdlibLink | null = null): string {
   const sections = CATEGORIES.map((c) => {
     const inCat = posts.filter((p) => c.types.includes(p.type))
     return inCat.length ? `## Blog: ${c.name}\n\n${inCat.map(postLine).join('\n')}` : ''
@@ -87,6 +90,7 @@ export function buildLlmsTxt(posts: BlogPostMeta[], galleries: readonly GalleryL
     ...INTEGRATIONS.map((i) => `- [${i.title}](${SITE_URL}/integrations/${i.slug}): ${i.description} ${statusLine(i.slug)}`),
     `- [Facebook ad examples by industry](${SITE_URL}/ad-examples): real customer ads made with Komendly, shared with permission, plus what works per industry`,
     ...(report ? [`- [Facebook ad creative statistics](${SITE_URL}${report.path}): original, daily-updated data on ${report.ads} ads made from ${report.sites} real small-business websites (headline length, questions, numbers and offers, CTA verbs, brand colours, image sizes), with a free CSV`] : []),
+    ...(adlib ? [`- [State of Local Service Meta Ads](${SITE_URL}${adlib.path}): original data from the public Meta Ad Library (collected ${adlib.month}) on ${adlib.advertisers} US local service advertisers: live ads per advertiser (median ${adlib.medianLiveAds}), how long ads run (median ${adlib.medianDays} days), offers and hook words, by trade and state, with a free CSV`, ...adlib.leaderboards.map((l) => `- [Longest-running ${l.label.toLowerCase()} ads](${SITE_URL}${l.path}): monthly leaderboard from the public Meta Ad Library (n=${l.advertisers} advertisers)`)] : []),
     `- [Free ad tools](${SITE_URL}/tools): free, no-sign-up tools for small-business ads`,
     ...FREE_TOOLS.map((t) => `- [${t.name}](${SITE_URL}/tools/${t.slug}): ${t.description}`),
     `- [AI video testimonials](${SITE_URL}/testimonials): turn text reviews into AI-avatar videos`,
