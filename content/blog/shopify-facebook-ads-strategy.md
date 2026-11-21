@@ -12,8 +12,9 @@ tags:
   - "Instagram ads"
   - "Ad creative"
   - "Small business"
-published: false
-status: "draft"
+published: true
+status: "approved"
+approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "shopify facebook ads strategy"
 secondary_keywords:
   - "shopify facebook ads"
