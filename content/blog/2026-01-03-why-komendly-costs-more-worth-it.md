@@ -1,214 +1,239 @@
 ---
-title: "Why Komendly Costs More (And Why That Actually Saves You Money)"
-description: "Everyone says Komendly is expensive. But when you factor in the hidden costs of failed AI generations and prompt engineering, the math tells a different story."
-publishDate: "2026-01-03"
-author: "Komendly Team"
-tags: [video testimonials, AI video generation, ROI, cost savings, business value]
-keywords: "AI video generation cost, prompt engineering waste, failed AI generations, video testimonial ROI, reliable AI tools"
-slug: "why-komendly-costs-more-worth-it"
-featured: false
+title: "Komendly Cost: Are AI Video Testimonials Worth It?"
+slug: "2026-01-03-why-komendly-costs-more-worth-it"
+description: "Evaluate Komendly cost for AI video testimonials with a practical framework for comparing production time, review effort, and approved outputs."
+author: "Nolan Grout"
+type: "guide"
+tags:
+  - "video testimonials"
+  - "AI video generation"
+  - "marketing budgets"
+  - "total cost of ownership"
+published: false
+status: "draft"
+primary_keyword: "komendly cost"
+secondary_keywords:
+  - "AI video testimonial cost"
+  - "video production budget"
+  - "total cost of ownership"
+  - "AI avatar testimonials"
+answer: "Komendly is worth the cost for AI video testimonials if its workflow fits your needs and your own evaluation justifies the expense. Komendly turns text reviews into AI-avatar videos. Assess current pricing, preparation, editing, review time, and approved output before deciding. A higher subscription price does not establish better value or guaranteed savings."
+key_takeaways:
+  - "Evaluate Komendly using your own production requirements and measured costs."
+  - "Compare spending per approved video rather than treating every generated draft as a finished asset."
+  - "Use the CLEAR Cost Check to record cash, labor, exceptions, approvals, and release readiness."
+  - "Keep testimonial production decisions separate from Komendly’s free ad offer."
+  - "Choose an existing workflow when it already meets your needs at an acceptable cost."
+cta: "ads"
+faq:
+  - q: "Is Komendly more expensive than other AI video tools?"
+    a: "This guide does not establish that Komendly costs more than another product. Compare current pricing for the relevant product and your intended workload before making that judgment."
+  - q: "How should I calculate AI video testimonial cost?"
+    a: "For this guide’s evaluation framework, add allocated tool spending, production labor, and outside production expenses, then divide by the videos you approve. Record unsuccessful attempts and revision work within those costs."
+  - q: "Does Komendly guarantee videos without errors or revisions?"
+    a: "This guide makes no guarantee of error-free output, revision-free production, or a fixed completion time. Plan a human review before approving a video."
+  - q: "Can I use an AI avatar to invent a customer testimonial?"
+    a: "Do not invent a customer experience. The FTC’s endorsement guidance says endorsements must reflect the endorser’s honest experience or opinion. An AI avatar should not be treated as permission to fabricate that experience.[^2]"
+  - q: "What does Komendly’s free ad trial include?"
+    a: "Komendly’s free ad trial includes 10 static ads + 1 animated ad, no card required. It requires email verification and is limited to one trial per website/device/network. This offer describes ads, not free AI video testimonials."
+sources:
+  - id: 1
+    title: "Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile"
+    publisher: "National Institute of Standards and Technology"
+    url: "https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf"
+    accessed: ""
+  - id: 2
+    title: "FTC’s Endorsement Guides: What People Are Asking"
+    publisher: "Federal Trade Commission"
+    url: "https://www.ftc.gov/business-guidance/resources/ftcs-endorsement-guides-what-people-are-asking"
+    accessed: ""
+  - id: 3
+    title: "Captions/Subtitles"
+    publisher: "World Wide Web Consortium, Web Accessibility Initiative"
+    url: "https://www.w3.org/WAI/media/av/captions/"
+    accessed: ""
+claims:
+  - text: "NIST describes confabulation as generative AI producing confidently presented erroneous or false content."
+    source: 1
+  - text: "NIST recommends avoiding extrapolation of generative AI performance or capabilities from narrow, nonsystematic, anecdotal assessments."
+    source: 1
+  - text: "The FTC’s endorsement guidance says endorsements must reflect the endorser’s honest experience or opinion."
+    source: 2
+  - text: "The FTC’s endorsement guidance says endorsements should not make claims requiring proof the advertiser does not have."
+    source: 2
+  - text: "W3C describes captions as synchronized text conveying speech and non-speech audio information needed to understand the content."
+    source: 3
+  - text: "W3C says automatically generated captions do not meet user needs or accessibility requirements unless confirmed to be fully accurate."
+    source: 3
 ---
 
-Everyone says Komendly is expensive.
+Komendly is worth the cost for AI video testimonials if its workflow fits your needs and your own evaluation justifies the expense. Komendly turns text reviews into AI-avatar videos. Compare current pricing, preparation, editing, review time, and approved output before deciding whether it belongs in your marketing budget.
 
-They compare the per-video price to a cheaper AI tool and do the math in their head: "You want how much per video?"
+I’m Nolan Grout, Komendly’s founder. My recommendation is to evaluate my product with the same discipline you would apply to any production expense. A promise of savings needs evidence. A higher price, by itself, does not establish better quality, faster production, or lower total cost.
 
-But they're comparing price tags, not total cost. And that's the mistake that costs businesses thousands.
+This guide gives you a way to make that decision without assumed hourly rates, invented failure rates, or unsupported customer results.
 
-Here's the real calculation: **Komendly costs 2-3x more per video than free or cheap alternatives. But it saves 10-20x more in wasted time, failed generations, and prompt engineering friction.**
+## What hidden costs should you count in AI video production?
 
-## The Hidden Cost Nobody Talks About: Failed AI Generations
+Start with the work you expect to perform between choosing a review and approving a finished video. For your evaluation, record preparation, generation, inspection, revisions, and final approval separately.
 
-Let's talk about what actually happens when you use a cheap AI video tool.
+Use actual entries rather than estimates copied from a vendor’s marketing. If you spend time rewriting an unsuitable brief, record it. If the first draft meets your requirements, record that too. Give every workflow the same opportunity to succeed.
 
-You write a prompt. It doesn't look right. You edit the prompt. Still off. You try rewording it. Nothing works. You consult the docs. You ask in community Slack. You watch a tutorial on "prompt engineering."
+Keep setup work separate from recurring production. Learning a tool and preparing reusable instructions belong in a setup category. Reviewing the next video belongs in recurring work. When estimating a future budget, state how you allocate setup across the output you expect to approve.
 
-You just spent 2 hours getting one video right.
+Also distinguish active work from elapsed time. Record time spent editing separately from time spent waiting. For your budget, decide whether waiting actually prevents another task or simply affects the delivery schedule.
 
-The data on this is brutal: **47% of enterprise AI users have made major business decisions based on hallucinated content.** The prompt engineering rabbit hole is real—one documented case involved **147 failed ChatGPT prompts** before hitting success. Another team reported **20+ hours per week** just tuning prompts, watching diminishing returns the whole way.
+My recommendation: measure the whole assignment, then inspect the individual stages to understand where the effort went.
 
-Meanwhile, the math on rework time shows why this matters: Each failed generation doesn't just cost money in tokens or credits. It costs your time. At a modest $50/hour effective rate, 2 hours per video is $100. Do that 10 times across your testimonial library and you've just spent $1,000 in hidden labor that nobody budgeted for.
+## How should you account for hallucinations and inaccurate content?
 
-**Komendly doesn't require prompt engineering.** You describe what you want. It works the first time. No hallucinations. No iterations. You don't negotiate with the tool—the tool delivers.
+NIST describes confabulation as generative AI producing confidently presented erroneous or false content. That is a defined risk, not a basis for assigning an invented financial loss to every video project.[^1]
 
-## The Hallucination Cost: $67.4 Billion in Losses (And Counting)
+The [NIST Generative AI Profile](https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf) provides the underlying definition. For a testimonial workflow, my practical recommendation is to compare the finished script and spoken output with the original review.
 
-Cheaper AI tools have a quality problem, and it's not metaphorical—it has a price tag.
+Ask whether the video introduces a result, changes a qualification, or attributes an experience the customer never described. Treat these as review questions, without assuming any particular tool will make those mistakes.
 
-In 2024 alone, AI hallucinations cost businesses **$67.4 billion globally.** That's not venture-backed projects or edge cases. That's Fortune 500 companies publishing false information, employees making decisions on fabricated data, and legal teams cleaning up AI-generated case law that never existed.
+The FTC’s endorsement guidance says endorsements must reflect the endorser’s honest experience or opinion. It also says endorsements should not make claims requiring proof the advertiser does not have.[^2]
 
-The average cost per incident? **$2.4 million,** including legal fees, reputation damage, and corrections.
+Use the [FTC’s endorsement guidance](https://www.ftc.gov/business-guidance/resources/ftcs-endorsement-guides-what-people-are-asking) as a reference when preparing your review process. My recommendation is to retain the source review, document your intended use, and make clear when an avatar is presenting the words rather than depicting the customer.
 
-For video testimonials specifically, this manifests differently than LLM hallucinations, but the principle is the same: **Quality matters more than price because failures are expensive.**
+Do not convert this review step into a claim that Komendly eliminates errors. Budget for inspection and judge the actual output.
 
-A cheap tool generates a video testimonial where the avatar's lip-sync is off-sync with the audio, or the pacing is awkward, or the audio quality degrades partway through. You notice. You don't publish it. Now what?
+## When does prompt preparation become an unreasonable expense?
 
-- Re-generate it (more time, more failed attempts)
-- Publish it anyway (damages brand trust)
-- Hire someone to fix it (now you've bought the expense back)
+Decide what preparation is acceptable before beginning your evaluation. Write a brief that states the intended message, audience, placement, and approval requirements.
 
-**Komendly generates broadcast-quality video on the first try.** 73% of viewers can't distinguish high-quality AI video from traditional production in blind testing. Your videos look professional. They publish as-is. No rework cycle. No quality shame. No reputation risk.
+Then record why you change it. Separate learning the interface from correcting a brief that omitted essential information. Separate those tasks again from revising an output that did not follow your instructions.
 
-## The Time Trap: Prompt Engineering as Technical Debt
+This distinction is part of my proposed evaluation method. It is not a claim about how long Komendly or another product takes.
 
-Here's where it gets really expensive: prompt engineering compounds.
+Set a stopping rule that suits your budget. For example, decide in advance when you will pause, review the brief, or return to your existing workflow. Choose your own limit rather than adopting an unsupported industry benchmark.
 
-The first video takes 2 hours of prompt tuning. The second is faster because you learned something—only 1.5 hours. By the 10th video, you're down to 45 minutes per prompt refinement. But that's **19.5 hours of engineering labor** to produce 10 testimonials. At a reasonable freelancer rate ($50-100/hour), that's $975-1,950 in labor costs before you generate a single video.
+Keep useful instructions for the next assignment. When reviewing costs, ask whether you are measuring repeatable production or an unusually difficult first attempt. Both deserve a place in the record, but identify which you are using to forecast future work.
 
-Now multiply that across a year. Most businesses need 50-100 video testimonials annually to stay competitive. 50 videos at 1.5 hours average = 75 hours of prompt engineering. At $75/hour average, that's **$5,625 in labor just to get the tool to work.**
+## How can you calculate total cost without inventing savings?
 
-**With Komendly, you don't have a prompt engineering tax.** You upload the review. You select the style. You hit generate. 5 minutes, start to finish. 50 videos = 250 minutes = $200 in labor (at $75/hour). The difference is $5,425.
+For this guide, use the following budgeting convention:
 
-## The Math: Total Cost of Ownership
+**Evaluation cost = allocated tool spending + recorded labor cost + outside production expenses.**
 
-Let's compare apples to apples. You want to create 50 video testimonials this year.
+Then calculate:
 
-**Cheap AI Tool ($40/video, but includes hidden costs):**
-- Per-video cost: $40 × 50 = **$2,000**
-- Prompt engineering labor: 75 hours × $75/hr = **$5,625**
-- Failed generations requiring re-work: 15% of videos, 10 hours total × $75/hr = **$750**
-- Video quality issues, re-shoots, or brand risk: Assume 5 bad videos need fixes = **$500** (conservative estimate)
-- **Total cost: $8,875**
-- **Cost per video: $177.50**
+**Cost per approved video = evaluation cost divided by approved videos.**
 
-**Komendly ($120/video, with zero friction):**
-- Per-video cost: $120 × 50 = **$6,000**
-- Prompt engineering labor: 5 minutes × 50 videos = 4 hours × $75/hr = **$300**
-- Failed generations: 0 (Komendly works first-time reliability)
-- Quality issues: 0 (broadcast-quality, no rework)
-- **Total cost: $6,300**
-- **Cost per video: $126**
+These are definitions for your evaluation, not published benchmarks. Choose a consistent accounting period and apply it to every workflow you assess.
 
-**Komendly saves $2,575 on 50 videos.** Or to be direct: **29% cheaper when you calculate actual ROI.**
+| Cost category | What to enter | What to clarify |
+| --- | --- | --- |
+| Tool spending | Actual spending allocated to the project | How you allocate a shared subscription |
+| Preparation | Recorded work on reviews, scripts, and briefs | Setup work versus recurring work |
+| Production and revisions | Recorded work and paid attempts | Include unsuccessful attempts |
+| Review and delivery | Inspection, corrections, and approval | Use the same acceptance standard |
+| Outside expenses | Relevant editing or production invoices | Avoid counting an expense twice |
+| Approved output | Videos accepted for the intended use | Exclude drafts awaiting approval |
 
-And that's ignoring the value of shipping faster, having predictable output, and never having to debug why the avatar's mouth doesn't match the audio.
+Use your own labor valuation. If you are a founder, choose a planning rate you can explain. If you hire a freelancer, use the relevant agreed rate. Do not present either as a market average.
 
-## What You're Actually Paying For
+If no video passes review, record the spending and the unsuccessful outcome. Leave cost per approved video undefined rather than pretending there was a successful delivery.
 
-When people say Komendly is expensive, they're not wrong about the per-video price. But they're pricing without understanding what comes with that:
+Before purchasing, review [Komendly pricing](/pricing) and confirm the terms relevant to the product you intend to use. Do not substitute ad-plan pricing for an assumed testimonial price.
 
-**1. Zero Hallucinations, Zero Surprises**
+## What should you evaluate about Komendly specifically?
 
-Every video works. No hidden failures, no degraded quality, no "well, we'll publish it anyway" compromises. You generate a testimonial and it's ready to publish.
+Komendly’s AI video testimonials product turns text reviews into AI-avatar videos. Evaluate whether that is the output your project requires.
 
-**2. No Prompt Engineering Required**
+Start with the brief. Do you want an avatar presentation of an existing review, or do you specifically need footage of the customer speaking? If customer-recorded footage is essential, choose a production approach that meets that requirement.
 
-We've absorbed the complexity so you don't have to. You don't negotiate with our tool. It works.
+For an avatar-based project, inspect the sample against your own standards. Review the words, pronunciation, pacing, visual presentation, and suitability for the intended placement. Record what you approve and what you would change.
 
-**3. Broadcast-Quality Output**
+Keep Komendly’s products distinct in your purchasing decision. Its main product turns a website URL into on-brand, ready-to-run static and animated ad creatives through Ozzy, its AI ad wizard. Its AI video testimonials product addresses text-review-to-avatar-video production.
 
-73% of viewers can't tell our videos from traditional production. You're not publishing "AI-generated" work—you're publishing professional testimonials. That's worth something.
+Select the product that matches the assignment. Do not count a feature or offer from a different product as evidence that your testimonial project will meet its budget.
 
-**4. Time Saved at Scale**
+## Does a higher price establish better quality?
 
-5 minutes per video vs. 1.5-2 hours with alternatives. Multiply that across 50-100 testimonials and you've freed up 40-100 hours of team time. That's a full-time hire worth of labor. You can redeploy that time to strategy, sales, or literally anything better than prompt engineering.
+My view: price should be an input to the decision, not your quality score.
 
-**5. Reliability as a Moat**
+Create a written definition of acceptable output before reviewing samples. Otherwise, you risk changing the standard to favor whichever result you already prefer.
 
-You're not gambling that this generation will work or require rework. It will work. That predictability is worth money because it lets you plan, scale, and commit to video testimonials as a core marketing strategy—not an experimental side project.
+For a testimonial, I would check fidelity to the original review, intelligible speech, appropriate pacing, readable text, and suitability for the intended placement. Add requirements specific to your brand or project.
 
-## The Market is Choosing Quality Over Cheap
+Include captions in your production brief where needed. W3C describes captions as synchronized text conveying speech and the non-speech audio information needed to understand the content.[^3]
 
-This is playing out in the broader AI space already.
+W3C also says automatically generated captions do not meet user needs or accessibility requirements unless confirmed to be fully accurate. Its [captions guidance](https://www.w3.org/WAI/media/av/captions/) explains that review requirement.[^3]
 
-OpenAI's o1 costs 4-5x more than GPT-4o. Anthropic charges a premium for Claude. Enterprise customers *pay more* for tools with lower hallucination rates and higher reliability. The market is learning that **cheap AI is expensive.**
+This is a recommendation for your production process, not a statement that Komendly includes captioning. Confirm any required capability before buying.
 
-In video generation specifically, Runway, Pika, and newer platforms are winning adoption not because they're the cheapest, but because they produce better output, require fewer iterations, and allow creators to trust the tool.
+## How can the CLEAR Cost Check help you decide?
 
-Komendly is positioning the same way: **Pay more, get a tool that doesn't waste your time.**
+The **CLEAR Cost Check** is my proposed worksheet for evaluating a video workflow. It is an editorial framework, not a validated scoring system or a claim about product performance.
 
-## The Real Question: What's Your Time Worth?
+### C: Cash committed
 
-Here's the framework for deciding:
+Record the actual payment required for the evaluation and the expected ongoing commitment. Check the terms relevant to your intended use. Mark any unanswered question for confirmation rather than filling it with an assumption.
 
-**Use a cheap tool if:**
-- You have freelance budget to burn on prompt engineering
-- You have low quality tolerance
-- You can afford 10-30% of generations to fail
-- Your time is worth less than $30/hour
+### L: Labor recorded
 
-**Use Komendly if:**
-- Your time is worth more than $30/hour (it is)
-- You need to produce 25+ testimonials per year
-- You want predictable, reliable output
-- You can't afford rework cycles or publishing compromises
+Track active preparation, production, inspection, revisions, and delivery work. Identify who performed each task and apply your chosen labor valuation consistently.
 
-For most businesses, that means Komendly.
+### E: Exceptions documented
 
-## Why the Perception Persists
+Write down anything that prevented approval. Describe the issue precisely: an incorrect word, unsuitable delivery, or a requirement that the workflow could not meet. Avoid labeling every rejected creative direction a technical failure.
 
-People default to comparing headline prices because it's easy. A $40 video looks cheaper than a $120 video on a spreadsheet. But that's not how total cost of ownership works.
+### A: Approval defined
 
-**You don't buy a tool for the price tag—you buy it for the output.** When the output of tool A requires 10 hours of refinement and tool B requires 5 minutes, tool A is not $40. Tool A is $40 + (10 hours × your hourly rate).
+Choose the reviewer and acceptance criteria before generating output. Count only videos approved for the intended use. Keep unresolved drafts visible in the worksheet.
 
-Komendly is expensive because we've already baked in the 10 hours of engineering. You're paying for a finished product, not a raw API that requires you to figure out how to use it.
+### R: Release readiness checked
 
-## The Numbers: What Komendly Customers Actually Report
+Confirm the final file meets your brief, the testimonial remains faithful to its source, and the responsible person has approved publication. Record remaining work before declaring the project finished.
 
-- **80% time reduction** vs. manual testimonial production
-- **Zero re-generations** needed due to quality issues (reported by 94% of active users)
-- **15-20 hours/month saved** per marketing team (after first month ramp-up)
-- **Cost per video reaches $50-70** when factoring in labor, vs. $177+ with cheap alternatives
+Use the completed worksheet to decide whether to proceed, adjust the workflow, or keep your existing approach. Do not turn the letters into a numerical rating unless you define and explain your own scoring rules.
 
----
+## When is an existing or lower-cost workflow the better choice?
 
-## FAQ: Cost Questions About Komendly
+I would keep an existing workflow when it already produces acceptable videos within your budget and schedule. Switching needs a reason grounded in the work you actually need to complete.
 
-**Q: Can't I just use free tools and accept lower quality?**
+If your project requires the customer’s recorded presence, prioritize that requirement. If you already have suitable footage, evaluate the work needed to prepare it before commissioning a different presentation.
 
-A: You can. But you'll spend 10-20 hours per month in prompt engineering and quality fixes. That's $1,000-2,000/month in hidden labor. If Komendly saves you half that, it pays for itself. Most customers see payback in the first 2 weeks.
+For an occasional project, my recommendation is to place particular weight on setup effort and the required commitment. For recurring production, examine the repeated workflow as well as the initial evaluation.
 
-**Q: What if we only need a few testimonials?**
+Komendly should earn its place through fit. Being my product does not make it the appropriate choice for every testimonial brief.
 
-A: If you're generating fewer than 5 testimonials, cheap tools might make sense. But if you're serious about video testimonials as a marketing strategy (50+ per year), the cost difference disappears because cheap tools have a scaling penalty. Komendly scales without additional friction.
+## How should you interpret a promising evaluation?
 
-**Q: How does Komendly maintain 0 hallucinations?**
+Keep the result specific. Record the input, brief, time spent, revisions, spending, and reason for approval. Describe what happened in that project.
 
-A: We don't rely on prompts to generate video from scratch. You provide the script (the customer's exact words), and we handle the generation and avatar production. No hallucination because we're not generating the content—we're transcribing known-good testimonials into professional video format.
+NIST recommends avoiding extrapolation of generative AI performance or capabilities from narrow, nonsystematic, anecdotal assessments.[^1]
 
-**Q: Is the avatar thing off-putting to customers?**
+My recommendation is therefore to test the kinds of reviews you actually intend to use before making a wider commitment. Include relevant variations in wording, pronunciation, and presentation requirements. Do not introduce artificial complexity simply to make the evaluation look demanding.
 
-A: Not if the testimonial is real (the customer's actual words). A 2024 study found 72% of customers trust brands more with video testimonials, regardless of whether the avatar is real or AI. The content authenticity matters; the delivery format doesn't.
+Use the findings to plan the next batch. If the work changes, revisit the assumptions. A useful production budget should show what you measured and what remains uncertain.
 
-**Q: What if I only have a small budget?**
+## What should you know before trying Komendly’s free ads?
 
-A: Start with 5-10 testimonials per month using Komendly. As you see ROI (39% higher conversions with video vs. text), reallocate that conversion lift back into budget for more testimonials. The tool pays for itself. Most customers hit profitability on their testimonial investment within 6-8 weeks.
+If your immediate goal is ad creative, you can use the [free ad studio](/). Komendly’s free ad trial includes **10 static ads + 1 animated ad, no card required**. Email verification is required, with one trial per website/device/network.
 
----
+Keep that offer separate from the testimonial budget discussed here. Evaluate each product against its intended assignment and confirm the relevant terms before committing spending.
 
-## Bottom Line: You're Not Buying a Per-Video Price
+## What are the common questions about Komendly cost?
 
-You're buying reliability, speed, and the freedom from prompt engineering purgatory.
+### Is Komendly more expensive than other AI video tools?
 
-Everyone says Komendly is expensive. The math says otherwise—**but only if you count the full picture.**
+This guide does not establish that Komendly costs more than another product. Compare current pricing for the relevant product and your intended workload before making that judgment.
 
-**Ready to stop negotiating with AI tools?**
+### How should I calculate AI video testimonial cost?
 
-[→ Try Komendly Free](https://komendly.com/register)
+For this guide’s evaluation framework, add allocated tool spending, production labor, and outside production expenses, then divide by the videos you approve. Record unsuccessful attempts and revision work within those costs.
 
-No credit card required. Generate your first 5 testimonials and see the difference that reliability makes.
+### Does Komendly guarantee videos without errors or revisions?
 
----
+This guide makes no guarantee of error-free output, revision-free production, or a fixed completion time. Plan a human review before approving a video.
 
-## Internal Linking Opportunities
+### Can I use an AI avatar to invent a customer testimonial?
 
-- Link to [Pricing page](/pricing) - "See exactly how cost-per-video breaks down"
-- Link to [Create page](/dashboard/create) - "Start creating reliable testimonials in minutes"
-- Cross-link to "Why 91% of Businesses Don't Have Enough Video Testimonials" - "The volume problem that cheap tools can't solve"
-- Future blog posts: "Case Study: How [Company] Built 200 Video Testimonials Without Burning Out," "The True Cost of AI Hallucinations in Your Marketing Stack"
+Do not invent a customer experience. The FTC’s endorsement guidance says endorsements must reflect the endorser’s honest experience or opinion. An AI avatar should not be treated as permission to fabricate that experience.[^2]
 
-## Suggested Social Media Posts
+### What does Komendly’s free ad trial include?
 
-**LinkedIn (Professional angle):**
-"'Komendly is expensive' is technically true. It's 2-3x the cost of cheaper tools. But when you factor in prompt engineering labor ($5,625/year for 50 testimonials), failed generations, and quality issues, it's 29% *cheaper* than alternatives. The math on reliable AI looks different. #MarTech #VideoMarketing"
-
-**Twitter/X (Punchy):**
-"You could use a cheap AI video tool. Spend 20 hours/month on prompt engineering, deal with hallucinations, and rework 15% of outputs. Or use Komendly. One costs way more. One is way cheaper. Guess which. #AI"
-
-**Instagram/TikTok (Visual angle):**
-"POV: You're comparing AI video tools by price instead of total cost. [Shows person struggling with prompt engineering for hours] vs. [Shows Komendly: 5 minutes, ship it]. Sometimes expensive = cheaper. #BuildInPublic #MarketingHacks"
-
-**Email (CTA-driven):**
-"Subject: Why our customers spend 3x more on Komendly (and love it)
-
-It's not the price—it's what you stop paying for. No prompt engineering. No failed generations. No rework cycles. See the full cost breakdown → [link to post]"
+Komendly’s free ad trial includes 10 static ads + 1 animated ad, no card required. It requires email verification and is limited to one trial per website/device/network. This offer describes ads, not free AI video testimonials.
