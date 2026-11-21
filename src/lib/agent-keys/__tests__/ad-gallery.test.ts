@@ -60,7 +60,10 @@ describe("ui://komendly/ad-gallery", () => {
   });
 
   it("allows images only from the https storage host", () => {
-    expect(adGalleryCsp("https://t3.storageapi.dev")).toEqual({ connectDomains: [], resourceDomains: ["https://t3.storageapi.dev", "https://*.t3.storageapi.dev"] });
+    expect(adGalleryCsp("https://t3.storageapi.dev", "kmd-ads", "")).toEqual({ connectDomains: [], resourceDomains: ["https://kmd-ads.t3.storageapi.dev"] });
+    expect(adGalleryCsp("https://t3.storageapi.dev", "kmd-ads", "path").resourceDomains).toEqual(["https://t3.storageapi.dev"]);
+    expect(adGalleryCsp("https://t3.storageapi.dev", "", "").resourceDomains).toEqual(["https://t3.storageapi.dev"]);
+    expect(adGalleryCsp("https://t3.storageapi.dev", "kmd-ads", "").resourceDomains.some((d) => d.includes("*"))).toBe(false);
     expect(adGalleryCsp("http://localhost:9000").resourceDomains).toEqual([]);
     expect(adGalleryCsp("").resourceDomains).toEqual([]);
   });

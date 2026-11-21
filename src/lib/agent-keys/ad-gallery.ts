@@ -16,13 +16,22 @@ export interface McpUiCsp {
   resourceDomains: string[];
 }
 
-/** Origins the ad images/videos load from: the S3-compatible storage endpoint (path and virtual-host style). Read at call time. */
-export function adGalleryCsp(endpoint: string | undefined = process.env.S3_ENDPOINT): McpUiCsp {
+/**
+ * The one origin the ad images/videos load from: the bucket's own host (virtual-host style, the default) or the
+ * endpoint origin (path style, S3_URL_STYLE=path). Exact origin only: the storage host is shared, so a wildcard
+ * would be too broad for ChatGPT's review. Read at call time.
+ */
+export function adGalleryCsp(
+  endpoint: string | undefined = process.env.S3_ENDPOINT,
+  bucket: string | undefined = process.env.S3_BUCKET,
+  urlStyle: string | undefined = process.env.S3_URL_STYLE,
+): McpUiCsp {
   const resourceDomains: string[] = [];
   try {
     if (endpoint) {
       const u = new URL(endpoint);
-      if (u.protocol === "https:") resourceDomains.push(u.origin, `https://*.${u.host}`);
+      const b = bucket?.trim();
+      if (u.protocol === "https:") resourceDomains.push(urlStyle === "path" || !b ? u.origin : `https://${b}.${u.host}`);
     }
   } catch {
     // no storage endpoint configured: images can't load, the cards still show copy + links
