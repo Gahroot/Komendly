@@ -11,8 +11,9 @@ tags:
   - "Animated ads"
   - "AI video"
   - "Ad creative"
-published: false
-status: "draft"
+published: true
+status: "approved"
+approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "animate product photos for ads"
 secondary_keywords:
   - "product photo animation"
