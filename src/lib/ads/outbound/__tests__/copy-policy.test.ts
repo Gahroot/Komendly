@@ -203,7 +203,7 @@ describe("gift on click copy", () => {
 import { buildOutboundHtml as bohtml, NOLAN_COPY, NOLAN_SIGNOFF } from "../copy";
 describe("founder rewrite (Nov 21)", () => {
   const base = { businessName: "Denver Gutter Company", city: "Denver, CO", niche: "gutter installers", senderName: "Ozzy at Komendly", claimUrl: "https://www.komendly.com/g/abc", unsubscribeUrl: "https://www.komendly.com/u/def", postalAddress: "2211 Cole St, Birmingham, MI 48009" };
-  it("3 bodies + a follow-up, signed by Nolan only, pitching the fixed offer with 3 free ads", () => {
+  it("3 bodies + a follow-up, signed by Nolan only, pitching the fixed offer with 10 free ads", () => {
     expect(NOLAN_COPY.filter((c) => c.dimension === "body")).toHaveLength(3);
     expect(NOLAN_COPY.filter((c) => c.dimension === "followup")).toHaveLength(1);
     for (const v of NOLAN_COPY) {
@@ -217,7 +217,7 @@ describe("founder rewrite (Nov 21)", () => {
       expect(e.text).toContain("$97");
       expect(e.text).not.toMatch(/\b(leads|sales|customers)\b/i);
       if (v.dimension === "body") expect(e.text).toMatch(/\$197\/mo/);
-      if (v.dimension === "body") expect(e.text).toMatch(/\b3 (free )?ads\b.*no card|first 3 ads are free, no card/i);
+      if (v.dimension === "body") expect(e.text).toMatch(/\b10 (free )?ads\b.*no card|first 10 ads are free, no card/i);
       const html = bohtml(c, { adImageUrl: null, businessName: base.businessName });
       expect(html).not.toContain("font-style:italic;color:#fff1d6;\">Ozzy<");
     }
@@ -227,8 +227,8 @@ describe("founder rewrite (Nov 21)", () => {
     expect(checkVariant("followup", "Only $49 today. {link}")).toBe("banned phrase");
     expect(checkVariant("followup", "Just $97.50. {link}")).toBe("banned phrase");
   });
-  it("no live seed claims 10 free ads", () => {
-    for (const s of SEED_COPY.filter((x) => !x.retired)) expect(s.template, s.key).not.toMatch(/\b(10|ten) (free|more)\b|first 10/i);
-    expect(DEFAULT_BODY).not.toMatch(/\b10\b/);
+  it("no live seed claims the old 3-ad free pack", () => {
+    for (const s of SEED_COPY.filter((x) => !x.retired)) expect(s.template, s.key).not.toMatch(/\b(3|three) (free|more)\b|first 3\b/i);
+    expect(DEFAULT_BODY).toMatch(/10 more free ads/);
   });
 });

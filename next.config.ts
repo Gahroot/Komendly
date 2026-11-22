@@ -129,11 +129,11 @@ const nextConfig: NextConfig = {
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
-        source: "/ads/:area(app|billing|brands|runs|start|login|signup|refer|gifts|partner|coach)/:path*",
+        source: "/ads/:area(app|billing|brands|runs|start|login|signup|refer|gifts|partner|coach|team)/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
-        source: "/ads/:area(app|billing|brands|runs|start|login|signup|refer|gifts|partner|coach)",
+        source: "/ads/:area(app|billing|brands|runs|start|login|signup|refer|gifts|partner|coach|team)",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {

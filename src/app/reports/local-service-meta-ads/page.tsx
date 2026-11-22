@@ -164,7 +164,7 @@ export default async function LocalServiceMetaAdsReport() {
             More data: our <Gold href="/reports/facebook-ad-statistics">Facebook ad creative statistics</Gold>. Want ideas instead of numbers? Browse <Gold href="/ad-examples">ad examples by trade</Gold>.
           </p>
         </article>
-        <div className="py-16"><CtaBlock title="Get fresh ads for your business" campaign="local-service-meta-ads" content="end" label="Make 3 free ads" href={ctaHref("end")} /></div>
+        <div className="py-16"><CtaBlock title="Get fresh ads for your business" campaign="local-service-meta-ads" content="end" label="Make 10 free ads" href={ctaHref("end")} /></div>
       </main>
       <StudioFooter />
     </StudioRoot>

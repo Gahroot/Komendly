@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { checkAdmin } from "@/lib/ads/billing-auth";
 import { prisma } from "@/lib/prisma";
+import { stopTeamFor } from "@/lib/ads/team/stop";
 
 const Body = z.object({ suspended: z.boolean() });
 
@@ -13,5 +14,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   const res = await prisma.adsWorkspace.updateMany({ where: { id }, data: { suspendedAt: parsed.data.suspended ? new Date() : null } });
   if (res.count === 0) return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
+  if (parsed.data.suspended) await stopTeamFor(id, { status: "paused", reason: "suspended", summary: "Your account is on hold, so the team paused your ads." });
   return NextResponse.json({ ok: true });
 }

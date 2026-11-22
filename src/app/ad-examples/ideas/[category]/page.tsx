@@ -40,7 +40,7 @@ export default async function CategoryPage({ params }: Props) {
       items={trades.map((t) => ({ name: `${t.term} ad examples`, url: `/ad-examples/${t.slug}` }))}
       faq={faq}
       campaign={`ideas-${c.slug}`}
-      ctaTitle={`Get 3 free ads for your ${c.label.toLowerCase()} business`}
+      ctaTitle={`Get 10 free ads for your ${c.label.toLowerCase()} business`}
     >
       <section className="mx-auto mt-14 grid max-w-5xl gap-10 px-4 sm:px-6 md:grid-cols-2">
         <div>

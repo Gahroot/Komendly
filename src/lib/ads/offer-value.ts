@@ -16,11 +16,13 @@ export function offerPerAdCents(offer: AdsLaunchOffer = LAUNCH_QUARTER): { offer
 export function launchQuarterValueStack(bonus: BonusSummary | null, offer: AdsLaunchOffer = LAUNCH_QUARTER): string[] {
   const plan = getPlan(offer.plan);
   if (plan?.weeklyDrop) {
-    // Hormozi stack: stated value per line, then the price today.
+    // Hire Ozzy's AI Marketing Team (prd.md §3): the team's real work with stated values, then price, renewal,
+    // cancel path, ad spend and the refund. Never a promise of leads or sales.
     const lines = AD_DEPARTMENT_STACK.map((i) => `${i.bonus ? "Bonus: " : ""}${i.label}: ${i.detail} (worth $${i.valueUsd}/month)`);
     if (bonus?.locked) lines.push(`Unlocks your ${bonusLabel(bonus)} right away`);
-    lines.push(`Total value $${stackTotalUsd().toLocaleString("en-US")}/month. Your first month: ${usd(offerFirstPaymentCents(offer))} (save ${usd(offerSavingsCents(offer))}), then ${usd(plan.priceCents)}/month`);
-    lines.push("Post Ozzy's ads for 30 days. Not happy? One click, full refund.");
+    lines.push(`Total value $${stackTotalUsd().toLocaleString("en-US")}/month. Your first month: ${usd(offerFirstPaymentCents(offer))} (save ${usd(offerSavingsCents(offer))}), then ${usd(plan.priceCents)}/month, renews monthly. Cancel anytime online`);
+    lines.push("Ad spend is paid by you directly to Meta and never goes over the monthly limit you set");
+    lines.push("Not happy in your first 30 days? One click on your billing page, full refund. Results vary: we don't promise a number of leads or sales.");
     return lines;
   }
   const per = offerPerAdCents(offer);

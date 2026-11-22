@@ -41,7 +41,7 @@ export function verificationEmail(name: string | null, code: string, link: strin
   const hi = `Hi${name ? ` ${name}` : " there"},`;
   return {
     subject: `Your Komendly code: ${code}`,
-    text: `${hi}\n\nYour Komendly code is: ${code}\n\nType it on the "Check your inbox" screen, or click this link to confirm your email:\n${link}\n\nYour free ads work either way: 3 ads made from your website. No card needed.\n\nThe code and link expire in 24 hours. If you didn't sign up, ignore this email.`,
+    text: `${hi}\n\nYour Komendly code is: ${code}\n\nType it on the "Check your inbox" screen, or click this link to confirm your email:\n${link}\n\nYour free ads work either way: 10 ads made from your website. No card needed.\n\nThe code and link expire in 24 hours. If you didn't sign up, ignore this email.`,
     html: verificationEmailHtml(name, link, baseUrl, undefined, code),
   };
 }
@@ -58,7 +58,7 @@ export function verificationEmailHtml(name: string | null, link: string, baseUrl
   return renderEmailLayout({
     appUrl: baseUrl,
     imageUrl,
-    preheader: code ? `Your code is ${code}. Confirm your email to unlock your free ads.` : "Confirm your email to unlock your 3 free ads.",
+    preheader: code ? `Your code is ${code}. Confirm your email to unlock your free ads.` : "Confirm your email to unlock your 10 free ads.",
     heading: code ? `Your code: ${code}` : "One click and Ozzy gets to work",
     paragraphs: [
       `Hi${name ? ` ${name}` : " there"},`,

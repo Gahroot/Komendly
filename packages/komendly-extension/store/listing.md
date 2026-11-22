@@ -26,7 +26,7 @@ How it works
 
 Also in the popup: a shortcut to Komendly's free Meta ad check for the advertiser you're looking at.
 
-Made for local service businesses (plumbers, roofers, cleaners, salons, contractors and more) that want Facebook and Instagram ads without a designer. Making ads on Komendly starts with a free pack of 3 ads, no card. If you want Komendly to run your ads in your own Meta account, the Ozzy Ad Department is $97 the first month, then $197/month, cancel anytime. The extension itself is free.
+Made for local service businesses (plumbers, roofers, cleaners, salons, contractors and more) that want Facebook and Instagram ads without a designer. Making ads on Komendly starts with a free pack of 10 ads, no card. If you want Komendly to run your ads in your own Meta account, the Ozzy Ad Department is $97 the first month, then $197/month, cancel anytime. The extension itself is free.
 
 Privacy: no tracking, no analytics, no account. The extension only runs on Meta Ad Library pages and only sends the ad you click (and the website you saved) when you click the button.
 

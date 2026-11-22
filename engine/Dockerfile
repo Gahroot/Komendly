@@ -61,6 +61,11 @@ COPY src/lib/growth/adlib-scan.ts src/lib/growth/adlib-scan.ts
 COPY src/lib/growth/adlib-report.ts src/lib/growth/adlib-report.ts
 COPY src/lib/ads/billing-gates.ts src/lib/ads/billing-gates.ts
 COPY src/lib/ads/results/insights.ts src/lib/ads/results/insights.ts
+# Ozzy's AI marketing team (prd.md): shared rules, report wording, lead forms/alerts/retention.
+COPY src/lib/ads/team/ src/lib/ads/team/
+COPY src/lib/ads/leads/ src/lib/ads/leads/
+COPY src/lib/ads/meta/readiness.ts src/lib/ads/meta/readiness.ts
+COPY src/lib/ads/leads/retention.ts src/lib/ads/leads/retention.ts
 COPY engine/package.json engine/package-lock.json engine/
 COPY engine/scripts/prisma-generate.mjs engine/scripts/prisma-generate.mjs
 

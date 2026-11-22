@@ -19,6 +19,9 @@ import { extractJob } from "./jobs/extract/index";
 import { failRun, maybeFinalizeRun, syncRunCost } from "./jobs/finalize";
 import { planJob } from "./jobs/plan";
 import { handlePublishMeta } from "./jobs/publish-meta";
+import { handleActivateMeta } from "./jobs/activate-meta";
+import { handleTeamPause } from "./jobs/team-ops";
+import { TEAM_PAUSE_JOB } from "../../src/lib/ads/team/contracts";
 import { qcJob } from "./jobs/qc";
 import { renderJob } from "./jobs/render";
 import { bonusJob, onBonusTerminal } from "./jobs/bonus";
@@ -46,6 +49,8 @@ export const HANDLERS: Record<string, JobHandler> = {
   [BONUS_JOB_TYPE]: bonusGenerateJob,
   cleanup: cleanupJob,
   publish_meta: (c) => handlePublishMeta(c),
+  activate_meta: (c) => handleActivateMeta(c),
+  [TEAM_PAUSE_JOB]: (c) => handleTeamPause(c),
   [TESTIMONIAL_JOB_TYPE]: testimonialJob,
   [TESTIMONIAL_RECOMMEND_JOB_TYPE]: recommendActorsJob,
   [STUDIO_TURN_JOB_TYPE]: createStudioTurnHandler(),
@@ -58,7 +63,7 @@ export const HANDLERS: Record<string, JobHandler> = {
 /** Job types that need the AI provider. */
 export const AI_TYPES = ["extract", "plan", "render_static", "render_motion", "qc", "bonus", BONUS_JOB_TYPE, STUDIO_TURN_JOB_TYPE, COACH_JOB_TYPE];
 // Testimonial jobs degrade to the free template without Codex, so they never wait on provider health.
-export const NON_AI_TYPES = ["cleanup", "publish_meta", TESTIMONIAL_JOB_TYPE, TESTIMONIAL_RECOMMEND_JOB_TYPE, STUDIO_PROBE_JOB_TYPE, STUDIO_INGEST_JOB_TYPE, STUDIO_CAPTURE_JOB_TYPE, REVIEW_QUOTE_JOB_TYPE];
+export const NON_AI_TYPES = ["cleanup", "publish_meta", "activate_meta", TEAM_PAUSE_JOB, TESTIMONIAL_JOB_TYPE, TESTIMONIAL_RECOMMEND_JOB_TYPE, STUDIO_PROBE_JOB_TYPE, STUDIO_INGEST_JOB_TYPE, STUDIO_CAPTURE_JOB_TYPE, REVIEW_QUOTE_JOB_TYPE];
 const START_TYPES = new Set(DEFAULT_FAIRNESS.start);
 
 export interface RunnerDeps {

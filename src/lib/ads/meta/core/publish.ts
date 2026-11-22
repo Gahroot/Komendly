@@ -12,7 +12,12 @@ export interface PublishJobPayload {
   budget?: number;
   ratios: Ratio[];
   countries?: string[];
+  /** User's pick in the publish flow; overrides the run goal for the campaign objective. */
+  goal?: PublishGoal;
 }
+
+export const PUBLISH_GOALS = ["leads", "sales", "traffic", "awareness"] as const;
+export type PublishGoal = (typeof PUBLISH_GOALS)[number];
 
 export interface PublishableAsset { ratio: string; storageKey: string; mime: string }
 export interface PublishableAd {
@@ -43,7 +48,8 @@ export function parsePublishPayload(raw: Record<string, unknown>): PublishJobPay
   }
   const budget = typeof raw.budget === "number" && raw.budget > 0 ? Math.round(raw.budget) : undefined;
   const countries = Array.isArray(raw.countries) ? raw.countries.filter((c): c is string => typeof c === "string" && /^[A-Z]{2}$/.test(c)) : undefined;
-  return { adIds, adAccountId: raw.adAccountId, pageId: raw.pageId, budget, ratios, countries: countries?.length ? countries : undefined };
+  const goal = PUBLISH_GOALS.find((g) => g === raw.goal);
+  return { adIds, adAccountId: raw.adAccountId, pageId: raw.pageId, budget, ratios, countries: countries?.length ? countries : undefined, goal };
 }
 
 function errText(e: unknown): string {
@@ -59,7 +65,7 @@ export async function publishToMeta(o: {
 }): Promise<PublishSummary> {
   const { publisher, store, payload, signal } = o;
   const run = await store.loadRun();
-  const objective = objectiveForGoal(run.goal);
+  const objective = objectiveForGoal(payload.goal ?? run.goal);
   const ads = await store.loadAds(payload.adIds);
   const work = ads.flatMap((ad) =>
     payload.ratios.flatMap((ratio) => {

@@ -4,7 +4,7 @@
 // user token (the MCP authorization server issues Graph user tokens: token endpoint is graph.facebook.com).
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { GraphClient, uploadViaGraph } from "./graph-publisher";
+import { GraphClient, activateViaGraph, uploadViaGraph } from "./graph-publisher";
 import { actId, adSetPayload, campaignPayload, creativePayload } from "./mapping";
 import { MetaApiError, type FetchLike, type MetaAdAccount, type MetaPage, type MetaPublisher, type UploadedMedia } from "./types";
 
@@ -76,6 +76,11 @@ function listOf(v: unknown): Array<Record<string, unknown>> {
   return [];
 }
 
+function numOrUndef(v: unknown): number | undefined {
+  const n = typeof v === "string" && v.trim() !== "" ? Number(v) : v;
+  return typeof n === "number" && Number.isFinite(n) ? n : undefined;
+}
+
 export class McpMetaPublisher implements MetaPublisher {
   readonly mode = "mcp" as const;
   private client: McpToolClient | null;
@@ -124,6 +129,8 @@ export class McpMetaPublisher implements MetaPublisher {
   async listAdAccounts(): Promise<MetaAdAccount[]> {
     return listOf(await this.call("adAccounts", {})).map((a) => ({
       id: String(a.id ?? a.account_id ?? ""), name: String(a.name ?? a.id ?? ""), currency: typeof a.currency === "string" ? a.currency : undefined,
+      status: numOrUndef(a.account_status), disableReason: numOrUndef(a.disable_reason),
+      hasPayment: "funding_source" in a || "funding_source_details" in a ? !!(a.funding_source ?? a.funding_source_details) : undefined,
     })).filter((a) => a.id);
   }
 
@@ -151,6 +158,11 @@ export class McpMetaPublisher implements MetaPublisher {
       await this.call("ad", { ad_account_id: actId(adAccountId), name: input.name, adset_id: input.adSetId, creative_id: creativeId, creative: { creative_id: creativeId }, status: "PAUSED" }),
       ["ad_id"]);
     return { adId, creativeId };
+  }
+
+  // The MCP activate tool's arguments aren't documented; the same user token works on the Marketing API (as for uploads).
+  activate(objectIds: string[], signal?: AbortSignal): Promise<void> {
+    return activateViaGraph(this.graph, objectIds, signal);
   }
 
   async close(): Promise<void> {

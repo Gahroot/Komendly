@@ -132,3 +132,62 @@ separate use case, once the product does it. Reviewers approve what the video sh
 - Privacy policy: effective 19 November 2026, contact nolan@komendly.com, `#meta-data` deletion section.
 - Not requested yet: Marketing API Access Tier upgrade (currently Limited). Request it after this approval.
 - After approval: turn `meta_publish` on globally (or for each workspace) and remove the reviewer flag/credits when done.
+
+## 9. Second submission (team service): NOT SUBMITTED
+
+> **Status: NOT SUBMITTED** (draft, 2026-11-22). Submit only after §8 is approved. Until then these permissions work only
+> for app-role users, via `META_EXTRA_SCOPES` (see below).
+
+**Permissions to request (exactly these three):** `ads_read`, `leads_retrieval`, `pages_manage_metadata`.
+The §8 permissions stay as they are. Don't add anything else (unused permissions get rejected).
+
+**OAuth setup before recording:** set `META_EXTRA_SCOPES=ads_read,leads_retrieval,pages_manage_metadata` on the
+environment used for the screencast (appended to the dialog `scope`; read on each connect). If `META_LOGIN_CONFIG_ID` is
+set, the env var is ignored: add the three permissions to that Facebook Login for Business configuration instead. Check
+live that the consent screen lists all 8 permissions. Disconnect the reviewer's Meta first so the grant starts fresh.
+
+### Use-case text (paste into the review form)
+
+**ads_read:** Komendly runs Facebook and Instagram lead ads for local service businesses as a managed service ("Ozzy's
+AI marketing team"). The business owner connects their own ad account and authorizes a monthly ad budget limit; within
+that limit Komendly creates, runs and pauses the ads. Every day we read ad-level insights (spend, impressions, clicks,
+leads, cost per lead, ad status) for the ads Komendly created, and only those. We use them to keep the month's spend
+under the owner's limit, pause ads that spend without bringing leads, and show the owner honest numbers on their
+dashboard and in a weekly email. We never share this data.
+
+**leads_retrieval:** When someone submits the instant form on an ad Komendly runs for a business, Meta sends a `leadgen`
+webhook. We read that lead (name, email, phone if asked, ZIP and the answers to the business's questions) with the Page
+token, store it once so the owner can see it on their dashboard and it is never sent twice, and email it within a
+minute to the lead email the owner chose. Email to the owner only: Komendly never contacts the lead. Leads are deleted
+180 days after receipt, or when the owner deletes them or their workspace.
+
+**pages_manage_metadata:** When the managed service launches the owner's first campaign, Komendly subscribes our app to
+the `leadgen` field of the Page the owner chose (POST /{page-id}/subscribed_apps). Without it no lead events reach us and
+the owner's leads would not be delivered. We subscribe only the Page the owner selected, and only to `leadgen`.
+
+### Screencast (one video covering all three)
+1. Log in as the reviewer test account (Ad Department plan). Open `/ads/team`.
+2. Connect Meta: show the consent screen listing ads_read, leads_retrieval and pages_manage_metadata; pick the ad account
+   and Page.
+3. Set ZIP codes, a monthly limit (e.g. $300) and the lead email; tick the authorization box (show the exact text).
+4. Show the team page after launch: the campaign, the activity feed ("Launch & Budget Desk" lines), spend vs limit.
+5. Graph API Explorer: GET /{page-id}/subscribed_apps shows Komendly with `subscribed_fields: leadgen`
+   (pages_manage_metadata).
+6. Lead Ads Testing Tool (developers.facebook.com/tools/lead-ads-testing): submit a test lead on the Page/form. Show the
+   lead email inbox receiving "New lead from your Meta ad: <name>" within a minute, and the "New lead: <name> from <ZIP>"
+   line on the dashboard (leads_retrieval).
+7. Resubmit or let Meta retry: no second email, no second dashboard row.
+8. Show Ads Manager's numbers for the Komendly ads next to the dashboard's spend/impressions/clicks/leads (ads_read).
+9. Pause from the team page and show the campaign paused in Ads Manager.
+
+### Webhook setup checklist (do before recording)
+- [ ] App dashboard → Webhooks → object **Page** → callback URL `https://www.komendly.com/api/meta-webhooks/leadgen`,
+      verify token = `META_WEBHOOK_VERIFY_TOKEN` (set in Vercel production env first; the GET handshake returns 403
+      without it).
+- [ ] Subscribe the Page object to field **`leadgen`**.
+- [ ] `META_APP_SECRET` set in Vercel (POSTs without a valid `X-Hub-Signature-256` get 401).
+- [ ] `LIFECYCLE_EMAIL_SECRET` set (alerts are skipped without an unsubscribe link) and AdsFeatureFlag
+      `sys_lead_alerts` enabled (off = webhook accepted, nothing stored or sent).
+- [ ] The Page is subscribed to the app (`subscribePageToLeadgen`, needs pages_manage_metadata); verify with
+      GET /{page-id}/subscribed_apps.
+- [ ] Meta's Webhooks "Test" button for `leadgen` returns 200.

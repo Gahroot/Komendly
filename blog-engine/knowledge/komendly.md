@@ -8,12 +8,12 @@ when that file can't be read. Never state any Komendly fact that is not on this 
 - Komendly turns a website URL into on-brand, ready-to-run ad creatives (static + animated) via Ozzy, its AI ad wizard.
 - Ad sizes: 4:5, 1:1, 9:16.
 - Ads for all 5 awareness stages (unaware, problem aware, solution aware, product aware, most aware).
-- Lead paid plan: Ozzy Ad Department, $97 the first month, then $197/month. The promise: the customer's ads go live in their own Meta ad account (Ozzy walks them through it step by step) and the losing ads get replaced every week: 6 fresh ads every Monday, plus Ozzy Ad Coach, which reads their uploaded Ads Manager results and says which ads to turn off.
+- Lead paid plan: Ozzy's AI Marketing Team (plan "Ozzy Ad Department"), $97 the first month, then $197/month. The owner connects Meta once, sets a monthly ad budget limit and authorizes the team; the team then makes fresh ads every week, launches and runs Meta lead ads in the owner's own ad account, pauses ads that waste money, emails each lead within minutes and sends a weekly plain-English report. Ad spend is paid to Meta directly and never exceeds the owner's limit. Never promise lead numbers, sales or ROI.
 - Never describe it as "one-click publishing" or tie publishing to Growth/Scale plans.
 - Second product: AI video testimonials (komendly.com/testimonials) turns text reviews into AI-avatar videos.
 
 ## Free trial
-- 3 free ads made from the business's website, no card required. The rest of the pack unlocks once with "Unlock this pack" ($9) or with any paid plan.
+- 10 free ads made from the business's website, no card required. "Unlock this pack" ($9) only unlocks the bonus ads; any paid plan includes them.
 - People who sign up through a referral link get 20 free ads.
 - One trial per website/device/network; email verification.
 

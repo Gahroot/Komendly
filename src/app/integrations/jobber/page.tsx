@@ -24,7 +24,7 @@ const APP_DOES = [
 ];
 
 const FAQ = [
-  { q: "What does the Komendly Jobber app cost?", a: "Connecting is free and your first pack of 3 ads is free. Ozzy Ad Department, with fresh ads every week, is $97 for the first month and $197 a month after that." },
+  { q: "What does the Komendly Jobber app cost?", a: "Connecting is free and your first 10 ads are free. Ozzy Ad Department, with fresh ads every week, is $97 for the first month and $197 a month after that." },
   { q: "Does it read my reviews?", a: "Jobber's API doesn't share reviews with apps today, so Komendly uses the jobs you finish. Reviews on your own website are read when Ozzy makes your ads from it." },
   { q: "Which ad platforms does it work with?", a: "Meta only: Facebook and Instagram. You can download the ads or publish them from Komendly." },
   { q: "Will it change anything in Jobber?", a: "No. The app has read-only access and never creates or edits clients, jobs, quotes or invoices." },
@@ -57,8 +57,8 @@ export default async function JobberIntegration({ searchParams }: { searchParams
         kicker="Jobber app"
         title="Facebook ads for your Jobber business"
         also="For roofers, HVAC, plumbers, cleaners, landscapers and every home-service business that runs on Jobber."
-        intro={<p>You already do great work. Komendly turns your website and the jobs you finish in Jobber into Facebook and Instagram ads that bring in the next customer. Your first 3 ads are free.</p>}
-        cta={<ConnectButton>Connect Jobber, get 3 free ads</ConnectButton>}
+        intro={<p>You already do great work. Komendly turns your website and the jobs you finish in Jobber into Facebook and Instagram ads that bring in the next customer. Your first 10 ads are free.</p>}
+        cta={<ConnectButton>Connect Jobber, get 10 free ads</ConnectButton>}
       />
       {notice ? <p role="status" className="mx-auto max-w-3xl px-4 text-sm text-muted-foreground sm:px-6">{notice}</p> : null}
       <Section id="how-title" title="How it works">
@@ -73,7 +73,7 @@ export default async function JobberIntegration({ searchParams }: { searchParams
         <p className="mt-6 text-sm text-muted-foreground">See finished ads for your trade in <Link href="/ad-examples" className={LINK}>ad examples</Link>, or skip the app and <Link href="/free-ads?utm_source=jobber" className={LINK}>paste your website for a free ad pack</Link>.</p>
       </Section>
       <Faq items={FAQ} />
-      <FinalCta title="Your finished jobs, as ads." line="First 3 ads free, no card." cta={<ConnectButton>Connect Jobber</ConnectButton>} />
+      <FinalCta title="Your finished jobs, as ads." line="First 10 ads free, no card." cta={<ConnectButton>Connect Jobber</ConnectButton>} />
     </Shell>
   );
 }

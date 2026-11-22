@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ADS_GUARANTEE } from "@/lib/ads/billing-config";
-import { HERO_OUTCOME, PUBLIC_OFFER } from "@/lib/ads/public-offer";
+import { HERO_OUTCOME, NO_GUARANTEE_LINE, PUBLIC_OFFER } from "@/lib/ads/public-offer";
 import { StudioPose } from "./studio-pose";
 
 /** Pricing teaser + a last call to action that jumps back to the spell bar. */
@@ -11,15 +11,16 @@ export function StudioClosing() {
         <div aria-hidden className="pointer-events-none absolute -bottom-24 left-1/2 h-64 w-[80%] -translate-x-1/2 rounded-full bg-[oklch(0.62_0.17_45/0.35)] blur-3xl" />
         <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-xl space-y-3">
-            <h2 id="closing-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-4xl">Start free, upgrade when the ads work</h2>
-            <p className="text-muted-foreground">Free: {PUBLIC_OFFER.freeAds} ads from your website, no card. Then {PUBLIC_OFFER.heroName}: {HERO_OUTCOME.charAt(0).toLowerCase()}{HERO_OUTCOME.slice(1, -1)}, with 6 fresh ads every Monday. {PUBLIC_OFFER.heroFirstMonth} the first month, then {PUBLIC_OFFER.heroPrice}/month.</p>
-            <p className="text-xs text-muted-foreground">{ADS_GUARANTEE}</p>
+            <h2 id="closing-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-4xl">See your free ads first. Then hire the team.</h2>
+            <p className="text-muted-foreground">Free: {PUBLIC_OFFER.freeAds} ads from your website, no card. Like them? {PUBLIC_OFFER.heroName} runs them for you: {HERO_OUTCOME.charAt(0).toLowerCase()}{HERO_OUTCOME.slice(1)}</p>
+            <p className="text-sm text-muted-foreground">{PUBLIC_OFFER.heroFirstMonth} the first month if you hire within {PUBLIC_OFFER.launchWindowHours} hours of your free ads, then {PUBLIC_OFFER.heroPrice}/month, renews monthly. Cancel anytime online. Ad spend is paid to Meta separately.</p>
+            <p className="text-xs text-muted-foreground">{ADS_GUARANTEE} {NO_GUARANTEE_LINE}</p>
           </div>
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-end">
             <div className="-mb-2 hidden md:block"><StudioPose form="ascended" expression="happy" size={112} /></div>
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Link href="/#studio-url" className="spellbar__cta inline-flex h-12 items-center justify-center whitespace-nowrap rounded-2xl px-6 font-semibold">Make my free ads</Link>
-            <Link href="/ads/pricing" className="inline-flex h-12 items-center justify-center whitespace-nowrap rounded-2xl border border-border px-6 font-medium text-foreground transition-colors hover:bg-accent">See plans</Link>
+            <Link href="/ads/pricing" className="inline-flex h-12 items-center justify-center whitespace-nowrap rounded-2xl border border-border px-6 font-medium text-foreground transition-colors hover:bg-accent">See pricing</Link>
             </div>
           </div>
         </div>

@@ -13,6 +13,8 @@ import { grantPlanTestimonials, planTestimonialsFor } from "@/lib/hub/plan-testi
 import { recordCheckoutRecovered } from "@/lib/growth/checkout-recovery";
 import { recordCheckoutSession } from "@/lib/growth/checkout-recovery-server";
 import { recordPaymentFailed, recordWinbackPayment } from "@/lib/growth/winback";
+import { recordTeamHired, stopTeamFor } from "./team/stop";
+import { hiresTeam } from "./team/rules";
 
 
 type Meta = Stripe.Metadata | null | undefined;
@@ -78,6 +80,8 @@ async function onCheckoutCompleted(s: Stripe.Checkout.Session) {
     });
     await recordFreeMonthClaim(ws.id, ws.ownerId, s.metadata, s.id);
     if (s.metadata?.legacySwitch && s.payment_status === "paid") await endLegacyTestimonialPlan(s.metadata.legacySwitch, ws.ownerId);
+    // Ozzy's team: hired once per workspace (Ad Department / Agency, incl. the founding first-month offer).
+    if (s.payment_status === "paid" && hiresTeam(s.metadata?.kind ?? "", s.metadata?.plan)) await recordTeamHired(ws.id, ws.ownerId, { plan: s.metadata?.plan, checkoutSessionId: s.id });
   }
 }
 
@@ -205,6 +209,8 @@ async function onSubscriptionChanged(sub: Stripe.Subscription, deleted: boolean)
       ...(becameCanceled ? { canceledAt: sub.canceled_at ? new Date(sub.canceled_at * 1000) : new Date() } : {}),
     },
   });
+  // Ozzy's team: subscription over (canceled at period end, or now) -> stop and pause the campaign. Idempotent on retries.
+  if (status === "canceled") await stopTeamFor(ws.id, { status: "stopped", reason: "subscription_ended", summary: "Your team subscription ended, so the team paused your ads." });
   if (becameCanceled) {
     await trackAdsEvent("churned", {
       workspaceId: ws.id,
@@ -223,6 +229,8 @@ async function onSubscriptionChanged(sub: Stripe.Subscription, deleted: boolean)
 async function onChargeRefunded(ch: Stripe.Charge) {
   const ws = await findWorkspace(ch.metadata, idOf(ch.customer));
   if (!ws) return;
+  // Ozzy's team: a full refund of a subscription payment (Stripe dashboard, admin or self-refund) pauses the campaign now.
+  if (ch.refunded && ch.metadata?.kind !== "topup") await stopTeamFor(ws.id, { status: "stopped", reason: "refund", summary: "Your payment was refunded, so the team paused your ads." });
   const refundIds = (ch.refunds?.data ?? []).map((r) => r.id);
   const known = await prisma.adsRefund.findFirst({ where: { stripeRefundId: { in: refundIds } } });
   if (known) return; // issued from admin: credits already handled

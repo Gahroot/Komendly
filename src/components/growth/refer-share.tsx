@@ -6,7 +6,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import { ShareButtons } from "./share-buttons";
 
 export function ReferShare({ link }: { link: string }) {
-  const text = `I make my Facebook & Instagram ads with Komendly: paste your website and it designs them for you. This link gets you 20 free ads (the normal free pack is 3): ${link}`;
+  const text = `I make my Facebook & Instagram ads with Komendly: paste your website and it designs them for you. This link gets you 20 free ads (the normal free pack is 10): ${link}`;
   return <ShareButtons link={link} text={text} subject="20 free ads for your business" />;
 }
 

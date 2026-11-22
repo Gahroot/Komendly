@@ -13,7 +13,7 @@ module.exports = {
       label: 'API Key',
       type: 'password',
       required: true,
-      helpText: `Your Komendly API key (starts with \`kmd_\`). [Get your key](${KEY_URL}). No account yet? [Start free: your first 3 ads are on us](${SIGNUP_URL}).`,
+      helpText: `Your Komendly API key (starts with \`kmd_\`). [Get your key](${KEY_URL}). No account yet? [Start free: your first 10 ads are on us](${SIGNUP_URL}).`,
     },
   ],
   test: async (z) => (await z.request({ url: url('/api/ads/me') })).data,

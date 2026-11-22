@@ -35,6 +35,7 @@ export const GROWTH_SYSTEMS = [
   { key: "lead_alerts", label: "Instant Meta lead alerts", stage: "keep", utmSource: "lead_alert", cycleMinutes: 60, silentAlertHours: 24 * 30 },
   { key: "zapier", label: "Zapier integration", stage: "acquire", utmSource: "zapier", cycleMinutes: 60, silentAlertHours: 24 * 14 },
   { key: "data_report", label: "Ad Library data report", stage: "acquire", utmSource: "data_report", cycleMinutes: 30 * 24 * 60, silentAlertHours: 24 * 95 },
+  { key: "team_ops", label: "Ozzy's team: campaign operations", stage: "keep", utmSource: "team", cycleMinutes: 15, silentAlertHours: 24 * 7 },
 ] as const satisfies readonly GrowthSystem[];
 
 export type SystemKey = (typeof GROWTH_SYSTEMS)[number]["key"];

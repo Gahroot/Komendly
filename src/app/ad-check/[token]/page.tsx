@@ -81,7 +81,7 @@ function NoReport({ input, reason }: { input: string; reason: string }) {
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href="/tools/meta-ad-check" className="inline-flex h-12 items-center rounded-xl border border-border px-6">Check another Page</Link>
-        <Link href={relUtm("/free-ads", reason === "not_found" ? "no_ads" : "error")} className="inline-flex h-12 items-center rounded-xl bg-[var(--studio-gold)] px-6 font-semibold text-[#2a0f10]">Get 3 free ads from your website</Link>
+        <Link href={relUtm("/free-ads", reason === "not_found" ? "no_ads" : "error")} className="inline-flex h-12 items-center rounded-xl bg-[var(--studio-gold)] px-6 font-semibold text-[#2a0f10]">Get 10 free ads from your website</Link>
       </div>
     </>
   );

@@ -33,7 +33,7 @@ export const AD_WATCH_POSTAL_DEFAULT = DEFAULT_POSTAL_ADDRESS;
 
 /** The true public offer (review-gate HARD_RULES). Shown in every weekly email footer. */
 export const AD_WATCH_OFFER =
-  "Komendly's Ozzy Ad Department makes ads for your business, puts them live in your own Meta account and replaces the losers every week: $97 the first month, then $197/month, cancel anytime. Or start with a free pack of 3 ads.";
+  "Komendly's Ozzy Ad Department makes ads for your business, puts them live in your own Meta account and replaces the losers every week: $97 the first month, then $197/month, cancel anytime. Or start with a free pack of 10 ads.";
 
 // Scanner contract lives in ./adlib-scan (type-only import: erased at runtime).
 import type { AdlibAd, AdlibPageScan } from "./adlib-scan";

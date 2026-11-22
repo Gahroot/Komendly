@@ -20,7 +20,7 @@ Webhook URL for the app's Page subscription (field `leadgen`): `https://www.kome
 
 ## leads_retrieval
 
-**Use case text:** When someone submits the instant form on an ad Komendly runs for a business, Meta sends us a `leadgen` webhook. We read that one lead (name, email, ZIP and the answers to the business's qualifying questions) with the Page token, and within a minute we email it to the business owner who connected the Page. We send an email only: Komendly never calls or texts the lead. Each lead is sent once, and we keep only the lead ID to prevent duplicates. The lead stays in Meta's Leads Center.
+**Use case text:** When someone submits the instant form on an ad Komendly runs for a business, Meta sends us a `leadgen` webhook. We read that one lead (name, email, ZIP and the answers to the business's qualifying questions) with the Page token, and within a minute we email it to the business owner who connected the Page (or the lead email they set for Komendly's marketing team service). We send an email only: Komendly never calls or texts the lead. Each lead is stored once (so the owner can see it on their dashboard and it is never emailed twice) and deleted 180 days after receipt, or right away when the owner deletes it. The lead stays in Meta's Leads Center.
 
 **Screencast:**
 1. Show the connected Page in Komendly (test business).
@@ -38,6 +38,23 @@ Webhook URL for the app's Page subscription (field `leadgen`): `https://www.kome
 2. Show (in Graph API Explorer, GET /{page-id}/subscribed_apps) that the Komendly app is now subscribed with `subscribed_fields: leadgen`.
 3. Continue with the leads_retrieval test lead above to show the alert arriving.
 
+## Requesting the scopes before approval
+
+`GRAPH_SCOPES` (`src/lib/ads/meta/core/oauth.ts`) is exactly the first, pending submission. The three permissions above
+are added per environment with `META_EXTRA_SCOPES=ads_read,leads_retrieval,pages_manage_metadata` (comma list, read on
+each connect, appended to the `scope` of the OAuth dialog). This only applies when `META_LOGIN_CONFIG_ID` is unset: with a
+Facebook Login for Business configuration the permissions come from that configuration, so add them there instead.
+Until App Review #2 is approved only app-role users (admins, developers, testers) can grant them. Owners who connected
+before the scopes were added must reconnect Meta to grant them.
+
+## Lead storage (MetaLead)
+
+Each lead is created in `MetaLead` before any email (`leadgenId` unique, so a replayed webhook stops there). The email
+sets `notifiedAt`; if sending fails it is reset to null and Meta's retry sends it without a second row. Team-service
+pages (a `MarketingMandate` with this `pageId`) also get a Lead Desk `MarketingAction` (`lead:<leadgenId>`) and, once per
+workspace, the `team_first_lead` AdsEvent. Retention: `purgeOldLeads(now, db)` in `src/lib/ads/leads/retention.ts`
+(engine: `engine/src/jobs/lead-retention.ts`).
+
 ## Notes for the coordinator
-- The Page subscription call is available as `subscribePageToLeadgen` (`src/lib/ads/leads/alert.ts`), but nothing calls it yet. It must be wired into the Meta connect/page-selection flow, which belongs to the other agent's files.
+- The Page subscription call is `subscribePageToLeadgen` (`src/lib/ads/leads/alert.ts`); it needs `pages_manage_metadata` and must be called at team launch (prd.md R6). Not wired yet (as of 2026-11-22): that belongs to the launch code.
 - Lead-form questions for the publish code: `leadFormQuestions(niche)` in `src/lib/ads/leads/questions.ts`.

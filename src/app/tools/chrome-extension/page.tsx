@@ -24,7 +24,7 @@ const STEPS = [
 ] as const;
 
 const FAQ = [
-  { q: "Is it free?", a: "Yes. The extension is free. Making ads on Komendly starts with a free pack of 3 ads, no card. If you want Komendly to run your ads, the Ozzy Ad Department is $97 the first month, then $197/month, cancel anytime." },
+  { q: "Is it free?", a: "Yes. The extension is free. Making ads on Komendly starts with a free pack of 10 ads, no card. If you want Komendly to run your ads, the Ozzy Ad Department is $97 the first month, then $197/month, cancel anytime." },
   { q: "Which sites does it run on?", a: "Only the Meta Ad Library (facebook.com/ads/library). It does nothing on any other page, including the rest of Facebook." },
   { q: "Will it copy someone else's ad?", a: "No. Your version keeps the structure and style only. Wording, logos, people and photos come from your own business." },
   { q: "Is it made by Meta?", a: "No. Komendly is not affiliated with, endorsed by or sponsored by Meta." },
@@ -85,7 +85,7 @@ export default function ChromeExtensionPage() {
           </div>
         </section>
         <section className="mx-auto max-w-3xl py-16 text-center text-sm text-muted-foreground">
-          <p>No extension needed to start: paste your website and get a free pack of 3 ads.</p>
+          <p>No extension needed to start: paste your website and get a free pack of 10 ads.</p>
           <Link href="/free-ads?utm_source=chrome_ext&utm_medium=acquire&utm_content=tool_page" className="mt-2 inline-block font-medium text-[var(--studio-gold)] hover:underline">Make my free ads</Link>
         </section>
       </main>

@@ -122,7 +122,7 @@ describe("weekly email", () => {
     expect(links.every((u) => u.searchParams.get("utm_source") === "ad_watch")).toBe(true);
     expect(links[0]!.searchParams.get("ad")).toBe("https://www.facebook.com/ads/library/?id=a1");
     expect(text).toContain(AD_WATCH_OFFER);
-    expect(AD_WATCH_OFFER).toMatch(/\$97 the first month, then \$197\/month, cancel anytime.*free pack of 3 ads/);
+    expect(AD_WATCH_OFFER).toMatch(/\$97 the first month, then \$197\/month, cancel anytime.*free pack of 10 ads/);
     expect(text).toContain("Unsubscribe: https://www.komendly.com/api/ad-watch/unsubscribe?t=abc");
     expect(text).toContain("2211 Cole St, Birmingham, MI 48009");
     expect(text).toContain('"Call us today for 20% off"');

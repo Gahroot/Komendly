@@ -38,7 +38,7 @@ export function IdeasShell(props: {
         </header>
         {props.children}
         <div className="px-4 pt-20 sm:px-6">
-          <CtaBlock title={props.ctaTitle} campaign={props.campaign} content="end" label="Get my 3 free ads" />
+          <CtaBlock title={props.ctaTitle} campaign={props.campaign} content="end" label="Get my 10 free ads" />
         </div>
         <PaidNote />
         <div className="pb-20" />

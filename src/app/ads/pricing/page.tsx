@@ -5,11 +5,11 @@ import { OzzyPricing, TestimonialPackLinks } from "@/components/billing/ozzy-pri
 import { StudioFooter } from "@/components/studio/studio-footer";
 import { getCurrentUser } from "@/lib/auth";
 import { planCheckoutPath } from "@/lib/ads/plan-checkout";
-import { HERO_OUTCOME, HERO_PRICE_LINE, PUBLIC_OFFER } from "@/lib/ads/public-offer";
+import { HERO_HEADLINE, HERO_OUTCOME, HERO_PRICE_LINE, PUBLIC_OFFER } from "@/lib/ads/public-offer";
 
 export const metadata: Metadata = {
-  title: "Pricing",
-  description: `${HERO_OUTCOME} ${HERO_PRICE_LINE}. Start free with ${PUBLIC_OFFER.freeAds} ads, no card.`,
+  title: `Pricing: ${HERO_HEADLINE}`,
+  description: `${HERO_HEADLINE}. ${HERO_OUTCOME} ${HERO_PRICE_LINE}. Ad spend is paid to Meta separately. Start free with ${PUBLIC_OFFER.freeAds} ads, no card.`,
   alternates: { canonical: "/pricing" },
 };
 
@@ -25,8 +25,8 @@ export default async function AdsPricingPage({ searchParams }: { searchParams: P
       <OzzyPricing
         yearly={yearly}
         basePath="/ads/pricing"
-        planHref={(plan) => {
-          const path = plan ? planCheckoutPath(plan, yearly) : billingPath;
+        planHref={(plan, y = yearly) => {
+          const path = plan ? planCheckoutPath(plan, y) : billingPath;
           return signedIn ? path : `/ads/signup?next=${encodeURIComponent(path)}`;
         }}
         freeHref={signedIn ? "/studio" : "/ads/signup?next=%2Fstudio"}

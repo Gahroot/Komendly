@@ -136,7 +136,7 @@ export async function GalleryLanding({ pageKey }: { pageKey: string }) {
         )}
 
         <div className="mt-16 px-4 sm:px-6">
-          <CtaBlock title={industry ? `Get 3 free Facebook ads for your ${industry.singular} business` : "Make yours free from your website"} campaign={page.key} content="mid" label="Make my free ads" href={ctaHref(page, "mid")} />
+          <CtaBlock title={industry ? `Get 10 free Facebook ads for your ${industry.singular} business` : "Make yours free from your website"} campaign={page.key} content="mid" label="Make my free ads" href={ctaHref(page, "mid")} />
         </div>
 
         <section className="mx-auto mt-20 max-w-3xl px-4 sm:px-6" aria-labelledby="faq-title">

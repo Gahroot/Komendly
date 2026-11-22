@@ -11,6 +11,7 @@ import { FREE_MONTH_KIND, freeMonthCheckoutParams } from "@/lib/ads/referral-bil
 import { referralSummary } from "@/lib/ads/referrals";
 import { isStudioLaunchOfferOpen, STUDIO_LAUNCH_OFFER } from "@/lib/hub/money-model";
 import { isLegacyTestimonialSubscriber } from "@/lib/first-video-offer";
+import { hiresTeam } from "@/lib/ads/team/rules";
 
 // Studio launch offer: {plan: "growth", offer: "studio_launch"} (or {kind: "plan", key: "growth", offer: "studio_launch"}):
 // the existing Growth monthly price + bonus credits on the first invoice (webhook), only inside the 72h window.
@@ -100,7 +101,8 @@ export async function POST(request: NextRequest) {
         : { payment_intent_data: { metadata } }),
       ...(launchCoupon ? { discounts: [{ coupon: launchCoupon }] } : unlockCredit && couponId ? { discounts: [{ coupon: couponId }] } : {}),
       ...(freeMonth ? { payment_method_collection: freeMonthCheckoutParams().payment_method_collection } : {}),
-      success_url: `${appUrl()}/ads/billing?checkout=success${kind === "topup" && key === UNLOCK_PACK.key ? `&bought=${UNLOCK_PACK.key}` : ""}&session_id={CHECKOUT_SESSION_ID}`,
+      // Hiring Ozzy's team (Ad Department / Agency) lands on the team page; everything else on billing.
+      success_url: `${appUrl()}${hiresTeam(kind, kind === "offer" ? offer?.plan : key) ? "/ads/team" : "/ads/billing"}?checkout=success${kind === "topup" && key === UNLOCK_PACK.key ? `&bought=${UNLOCK_PACK.key}` : ""}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl()}/ads/billing?checkout=canceled${kind === "topup" || freeMonth ? "" : `&declined=${encodeURIComponent(key)}`}`,
     });
     await trackAdsEvent("checkout_started", { workspaceId: ws.id, userId: user.id, props: { kind, key, sessionId: session.id, ...(studioLaunch ? { offer: STUDIO_LAUNCH_OFFER.key, app: "studio", amountCents: item.priceCents, currency: "USD" } : {}), ...(annual ? { interval: "year" } : {}), ...(placement ? { placement } : {}), ...(unlockCredit ? { coupon: "unlock_pack_credit" } : {}) } });

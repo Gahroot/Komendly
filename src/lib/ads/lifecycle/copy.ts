@@ -1,6 +1,7 @@
 // Lifecycle email copy: facts the AI may use, the strict prompt, a validator, and fixed fallbacks.
 // Pure; shared by engine (writes/sends) and tests.
-import { ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS, PLAN_USAGE_NOTE, planUsageLine, getPlan, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE, offerFirstPaymentCents, offerSavingsCents, UNLOCK_PACK } from "../billing-config";
+import { ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS, PLAN_USAGE_NOTE, planDisplayName, planUsageLine, getPlan, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE, offerFirstPaymentCents, offerSavingsCents, UNLOCK_PACK } from "../billing-config";
+import { FREE_TRIAL_ADS } from "../bonus-access";
 import { REFERRAL_FACTS } from "./facts";
 import { isFreshKind, isStartKind, type LifecycleKind } from "./select";
 
@@ -56,18 +57,21 @@ function brandFit(name: string | null, room: number): string | null {
   return n.length <= room ? n : `${n.slice(0, Math.max(1, room - 1)).trimEnd()}…`;
 }
 
-/** The one-line offer every paid pitch leads with (autopilot plan s1). Truthful today: setup is step-by-step until Meta approves one-click publishing. */
+/** The hero plan's public name ("Ozzy's AI Marketing Team"; the plan key stays ad_department). */
+const TEAM = planDisplayName(getPlan(LAUNCH_QUARTER.plan) ?? { name: "Ozzy's AI Marketing Team" });
+
+/** The one-line offer every paid pitch leads with (prd.md §1-§4): hire the team after the free ads. Only real work. */
 export const OFFER_PROMISE =
-  "The promise: their ads go live in their own Meta ad account (Ozzy walks them through it step by step) and the losers get replaced every week: each Monday brings fresh ads, and when they upload their Ads Manager results Ozzy says which to turn off and makes more like the winners. Lead with this, not with 'more ads'. Never promise leads, sales or results.";
+  `The promise: hire ${TEAM}. They make your ads, launch your campaigns and keep working to bring you more customers. You run your business; Ozzy runs your marketing. What the team really does: makes fresh ads every week, launches them as Facebook and Instagram lead ads in the owner's own Meta account, checks results every day and pauses ads that waste money, emails every new lead to the owner within minutes, and sends a weekly plain-English report. The owner connects Meta once, sets a monthly ad budget limit and calls their leads. Ad spend is paid by the owner directly to Meta, never through Komendly, and never goes over their monthly limit. Lead with hiring the team, not with 'more ads'. Never promise a number of leads, sales or results.`;
 
 export const PRICE_FACTS = {
-  launchQuarter: `Launch offer: the first month of Ozzy Ad Department for ${usd(offerFirstPaymentCents(LAUNCH_QUARTER))} instead of ${usd(LAUNCH_QUARTER.priceCents)} (then ${usd(LAUNCH_QUARTER.priceCents)}/month, cancel anytime), only within ${LAUNCH_QUARTER.windowHours} hours after the free ads were ready. ${OFFER_PROMISE} Ozzy Ad Department = their AI ad department: 6 fresh ads every Monday (5 static + 1 animated), ${PLAN_USAGE_NOTE.charAt(0).toLowerCase()}${PLAN_USAGE_NOTE.slice(1, -1)} (never call it unlimited), and Ozzy Ad Coach (upload Ads Manager results, Ozzy says what to keep or kill and makes more like the winners)`,
+  launchQuarter: `Launch offer: the first month of ${TEAM} for ${usd(offerFirstPaymentCents(LAUNCH_QUARTER))} instead of ${usd(LAUNCH_QUARTER.priceCents)} (then ${usd(LAUNCH_QUARTER.priceCents)}/month, renews monthly, cancel anytime online), only within ${LAUNCH_QUARTER.windowHours} hours after the free ads were ready. ${OFFER_PROMISE} Also included: Ozzy Ad Coach, a website check-up, a 30-day ad plan, a hook and caption library, and ${PLAN_USAGE_NOTE.charAt(0).toLowerCase()}${PLAN_USAGE_NOTE.slice(1, -1)} (never call it unlimited)`,
   starter: starter ? `${starter.name}: ${usd(starter.priceCents)}/month, ${starter.monthlyCredits} credits/month, cancel anytime` : "",
   topup: topup ? `One-time pack: ${topup.name} for ${usd(topup.priceCents)}, no subscription` : "",
   guarantee: LAUNCH_QUARTER_GUARANTEE,
   planGuarantee: ADS_GUARANTEE,
   paidUnlocks: "Paid plans unlock all sizes (4:5, 1:1, 9:16), all 5 awareness levels and animated ads.",
-  referral: `Give 10, get 10: a friend who signs up with their personal invite link gets ${REFERRAL_FACTS.referredTrial} free ads instead of 3; they get ${REFERRAL_FACTS.reward} credits when the friend's free ads are ready (credits last ${REFERRAL_FACTS.expiryDays} days, up to ${REFERRAL_FACTS.monthlyCap} friends a month; ${REFERRAL_FACTS.freeMonthAfter} friends = a free month of Starter, card required).`,
+  referral: `Give 10, get 10: a friend who signs up with their personal invite link gets ${REFERRAL_FACTS.referredTrial} free ads instead of the usual ${FREE_TRIAL_ADS}; they get ${REFERRAL_FACTS.reward} credits when the friend's free ads are ready (credits last ${REFERRAL_FACTS.expiryDays} days, up to ${REFERRAL_FACTS.monthlyCap} friends a month; ${REFERRAL_FACTS.freeMonthAfter} friends = a free month of Starter, card required).`,
   giftTrial: "Gift a pack: they paste another business's website and Ozzy makes that business 3 free ads from them. Trial users get 1 gift.",
   giftPaid: "Gift a pack: they paste another business's website and Ozzy makes that business 3 free ads from them. Paid plans get 1 gift a month, Agency 4.",
   partner: "Partner program: earn 30% of what the businesses they refer pay, for 12 months.",
@@ -75,7 +79,7 @@ export const PRICE_FACTS = {
   agency: agency ? `${agency.name}: ${usd(agency.priceCents)}/month, ${planUsageLine(agency)}, all client brands in one workspace, 4 gift packs a month to pitch new clients.` : "",
   gallery: "Komendly has a public gallery of real ads made with it (Ad examples) and picks an Ad of the week. They can opt in to have their own ad featured from their results page. Do not invent numbers about other customers.",
   freshLocked: "Ozzy made one new ad for their brand from their current website. It is locked (shown blurred) and unlocks with any paid plan or credit pack.",
-  freeTrial: "Free pack: Ozzy reads their website and makes a pack of ads in their brand, usually in a few minutes; 3 are free to download, the rest unlock with any plan or a one-time unlock. No card needed. They only need their website address.",
+  freeTrial: `Free pack: Ozzy reads their website and makes a pack of ads in their brand, usually in a few minutes; ${FREE_TRIAL_ADS} are free to download, the rest unlock with any plan or a one-time unlock. No card needed. They only need their website address.`,
   freshNone: "Ozzy can make fresh ads from their current website any time they come back.",
   unlockPack: `Unlock this pack: ${usd(UNLOCK_PACK.priceCents)} one time, no subscription. It unlocks every locked ad in their pack and adds ${UNLOCK_PACK.credits} credits for new ads. The button opens their results page. It is the only offer in this email.`,
   topupOnly: topup ? `One-time pack: ${topup.name} for ${usd(topup.priceCents)}, no subscription. It is the only offer in this email.` : "",
@@ -98,8 +102,8 @@ const STAGE: Record<LifecycleKind, string> = {
   start_nudge_1d: "Confirmed their email a day ago and still has not started their free ads. Goal: remove friction: they only need their website address (homepage is fine, no logo or photos needed); Ozzy reads the site and makes the ads in their brand. No prices.",
   start_nudge_3d: "Confirmed their email 3 days ago, never started their free ads. Last friendly reminder: the free pack is still waiting. Short. Say this is the last reminder. No prices.",
   ads_ready: "Their free trial ads just finished; their best ad is shown as a big image above your text, with 3 more under it. Goal: get them to open their ads. Subject like \"Your N ads for <brand> are ready\". One short line on the launch offer being open for 72 hours.",
-  how_to_run: "Their best ad is shown as a big image above your text. Their free ads were ready ~24 hours ago and they have not bought. Goal: one concrete, practical tip on how to test these ads on Meta for THEIR brand (e.g. run 3-5 ads in one ad set with a small daily budget, kill losers after a few days), then what a paid plan unlocks for them. Mention the launch offer is still open. The button opens a step-by-step launch guide on their results page; their ZIP download includes the text to paste for each ad.",
-  offer_24h: "Their best ad is shown as a big image above your text. The launch offer closes in about 24 hours. Goal: a clear, calm reminder of the promise in FACTS for <brand> (ads live in their own Meta account, losers replaced weekly), the real price and the guarantee. No hype. Subject names the brand.",
+  how_to_run: "Their best ad is shown as a big image above your text. Their free ads were ready ~24 hours ago and they have not bought. Goal: one concrete, practical tip on how to test these ads on Meta for THEIR brand (e.g. run 3-5 ads in one ad set with a small daily budget, kill losers after a few days), then that Ozzy's team can do all of this for them (see FACTS). Mention the launch offer is still open. The button opens a step-by-step launch guide on their results page; their ZIP download includes the text to paste for each ad.",
+  offer_24h: "Their best ad is shown as a big image above your text. The launch offer closes in about 24 hours. Goal: a clear, calm reminder of the promise in FACTS for <brand> (hire Ozzy's team to run their ads for them: fresh ads weekly, launched in their own Meta account, daily checks, leads emailed fast), the real price, that ad spend is paid to Meta separately, and the 30-day refund. No hype. Subject names the brand.",
   last_chance: "Their best ad is shown as a big image above your text. The launch offer closes in about 2 hours (real deadline). Goal: last reminder; also mention the Starter monthly plan as the smaller option that stays available after. Subject names the brand.",
   day7_downsell: "Their best ad is shown as a big image above your text. A week since their free ads; the launch offer has ended. Goal: one small, low-pressure offer from FACTS (the one-time pack), nothing else. Do NOT mention the launch offer or monthly plans. Subject names the brand.",
   day10_free_ads: "10 days since their free ads; they have not bought. Goal: tell them how to earn more free ads without paying: Give 10, get 10 with their own invite link, and Gift a pack. Friendly, no pressure, no prices.",
@@ -120,8 +124,8 @@ const STAGE: Record<LifecycleKind, string> = {
 /** Kinds that may talk about the Launch Quarter (it is open for 72h after the trial only). */
 const LQ_KINDS: ReadonlySet<LifecycleKind> = new Set(["ads_ready", "how_to_run", "offer_24h", "last_chance"]);
 
-export const COPY_SYSTEM = `You write short, plain, friendly lifecycle emails for Komendly (Website2ads: turns a brand's website into ad creatives). The sender voice is Ozzy, Komendly's helpful wizard mascot, but keep it human and low-key.
-When a paid plan is pitched, sell the outcome (their ads running in their own Meta account, losers replaced every week), not "more ads".
+export const COPY_SYSTEM = `You write short, plain, friendly lifecycle emails for Komendly (makes ads from a business's website; its main plan is Ozzy's AI Marketing Team, which runs those ads for the owner). The sender voice is Ozzy, Komendly's helpful wizard mascot, but keep it human and low-key.
+When a paid plan is pitched, sell hiring Ozzy's AI Marketing Team to run their ads for them (fresh ads weekly, launched in their own Meta account, daily checks, leads emailed fast, a weekly report), not "more ads". Ad spend is always paid to Meta separately. Never promise a number of leads, sales or results.
 Hard rules:
 - Truthful only. Use ONLY the facts given. Never invent results, stats, testimonials, discounts, deadlines, bonuses or features.
 - Prices: only the exact prices given in FACTS. No percentages, no coupons.
@@ -180,6 +184,7 @@ export function checkCopy(c: EmailCopy, ctx: CopyContext): string | null {
   if (!LQ_KINDS.has(ctx.kind) && ctx.kind !== "refreshed_pack" && ctx.kind !== "verify_nudge" && /launch quarter|launch offer/i.test(all)) return "mentions closed offer";
   if (isFreshKind(ctx.kind) && !ctx.freshAd && /\bnew ad\b|made you|made (a|one) (new )?ad/i.test(all)) return "claims a fresh ad that wasn't made";
   if (/\b\d{2,}\s*(\+\s*)?(businesses|customers|brands|users|companies)\b/i.test(all)) return "invented social proof";
+  if (/\bguarantee[sd]?\b[^.]*\b(leads?|sales|customers|results|roi)\b|\b(get|bring|deliver)s? you \d+ (leads?|customers|sales)\b/i.test(all)) return "promises results";
   if (ctx.kind === "verify_nudge" && ctx.code && !all.includes(ctx.code)) {
     // the code is rendered in its own box anyway; fine either way
   }
@@ -190,7 +195,7 @@ export function checkCopy(c: EmailCopy, ctx: CopyContext): string | null {
 export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCopy {
   const hi = `Hi ${ctx.firstName ?? "there"},`;
   const brand = ctx.brandName ?? "your brand";
-  const lq = `launch offer (your first month of ${getPlan(LAUNCH_QUARTER.plan)?.name ?? "Ozzy Ad Department"} for ${usd(offerFirstPaymentCents(LAUNCH_QUARTER))})`;
+  const lq = `launch offer (your first month of ${TEAM} for ${usd(offerFirstPaymentCents(LAUNCH_QUARTER))})`;
   const st = starter ? `${starter.name} at ${usd(starter.priceCents)}/month` : "the Starter plan";
   const left = hoursLeft(ctx, now);
   /** Subject around the brand (cut to fit MAX_SUBJECT), or `plain` when there is no brand. */
@@ -255,7 +260,7 @@ export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCop
       return {
         subject: sub((x) => `Your ${n} ads for ${x} are ready`, `Your ${n} free ads are ready`),
         preheader: `Made from your website${ctx.lockedLabel ? `, plus ${ctx.lockedLabel} you can unlock` : ""}.`,
-        paragraphs: [hi, `Here's my favourite of the ${n} free ads I made for ${brand}${ctx.lockedLabel ? `, plus ${ctx.lockedLabel} you can unlock` : ""}.`, `Want them running? With Ozzy Ad Department your ads go live in your own Meta account and the losers get replaced every week. The ${lq} is open for ${LAUNCH_QUARTER.windowHours} hours.`],
+        paragraphs: [hi, `Here's my favourite of the ${n} free ads I made for ${brand}${ctx.lockedLabel ? `, plus ${ctx.lockedLabel} you can unlock` : ""}.`, `Want them running for you? Hire my team: we launch your ads in your own Meta account, check them every day and email you every lead. The ${lq} is open for ${LAUNCH_QUARTER.windowHours} hours. Ad spend goes to Meta separately.`],
         ctaLabel: "See all my ads",
       };
     }
@@ -270,7 +275,7 @@ export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCop
       return {
         subject: sub((x) => `${x}: launch offer ends tomorrow`, "Your launch offer ends tomorrow"),
         preheader: `${lq} closes in about ${left ?? 24} hours.`,
-        paragraphs: [hi, `Want ${brand}'s ads live in your own Meta account, with the losers replaced every week? The ${lq} closes in about ${left ?? 24} hours.`, `Ozzy walks you through going live, brings 6 fresh ads every Monday, and tells you which to turn off from your results. ${LAUNCH_QUARTER_GUARANTEE}`],
+        paragraphs: [hi, `Want ${brand}'s ads running without doing it yourself? The ${lq} closes in about ${left ?? 24} hours, then ${usd(LAUNCH_QUARTER.priceCents)}/month. Cancel anytime online.`, `My team makes fresh ads every week, launches them in your own Meta account, pauses the ones that waste money and emails you every lead. You set a monthly ad budget limit and pay Meta directly. ${LAUNCH_QUARTER_GUARANTEE}`],
         ctaLabel: "Get the launch offer",
       };
     case "last_chance":
@@ -301,7 +306,7 @@ export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCop
       return {
         subject: "Earn more free ads",
         preheader: `Invite a friend: they get ${REFERRAL_FACTS.referredTrial} free ads, you get ${REFERRAL_FACTS.reward}.`,
-        paragraphs: [hi, `Want more ads for ${brand} without paying? Share your invite link: friends who sign up with it get ${REFERRAL_FACTS.referredTrial} free ads instead of 3, and you get ${REFERRAL_FACTS.reward} credits when their ads are ready.`, "You can also gift a pack: paste another business's website and Ozzy makes them 3 free ads from you. Your links are below."],
+        paragraphs: [hi, `Want more ads for ${brand} without paying? Share your invite link: friends who sign up with it get ${REFERRAL_FACTS.referredTrial} free ads, double the usual ${FREE_TRIAL_ADS}, and you get ${REFERRAL_FACTS.reward} credits when their ads are ready.`, "You can also gift a pack: paste another business's website and Ozzy makes them 3 free ads from you. Your links are below."],
         ctaLabel: "Get my invite link",
       };
     case "day14_tip":
@@ -339,7 +344,7 @@ export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCop
         paragraphs: [
           hi,
           ctx.paid ? "Thanks for being a Komendly customer. There are now a few ways to get more ads without spending more:" : "There are now a few ways to get more free ads from Komendly:",
-          `Invite a friend: they get ${REFERRAL_FACTS.referredTrial} free ads instead of 3, and you get ${REFERRAL_FACTS.reward} credits when their ads are ready. Or gift a pack: Ozzy makes 3 free ads for another business, from you. Your links are below.`,
+          `Invite a friend: they get ${REFERRAL_FACTS.referredTrial} free ads, double the usual ${FREE_TRIAL_ADS}, and you get ${REFERRAL_FACTS.reward} credits when their ads are ready. Or gift a pack: Ozzy makes 3 free ads for another business, from you. Your links are below.`,
         ],
         ctaLabel: "Get my invite link",
       };

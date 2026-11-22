@@ -21,6 +21,15 @@ export async function metaAccess(ws: AdsWorkspace): Promise<MetaAccess> {
   return metaAccessFor(ws, flags.length > 0);
 }
 
+/** "Turn on now" (spends money): its own flag, global or `meta_activate:<workspaceId>`. Off unless enabled. */
+export function metaActivateFlagKeys(workspaceId: string): string[] {
+  return ["meta_activate", `meta_activate:${workspaceId}`];
+}
+
+export async function metaActivateEnabled(ws: Pick<AdsWorkspace, "id">): Promise<boolean> {
+  return (await prisma.adsFeatureFlag.count({ where: { key: { in: metaActivateFlagKeys(ws.id) }, enabled: true } })) > 0;
+}
+
 export async function requireMetaAccess(ws: AdsWorkspace): Promise<void> {
   const a = await metaAccess(ws);
   if (a === "disabled") throw new AdsHttpError(404, "not_found", "Not found.");

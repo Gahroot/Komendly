@@ -51,7 +51,7 @@
               "description": "Ads from a website, shown in the ad gallery",
               "prompt": "Make Facebook ads for https://www.komendly.com",
               "tools_triggered": "ads_create_pack, ads_get_run",
-              "expected_behavior": "Starts an Ad Pack and shows the Komendly ad gallery (thumbnails, headlines, status, Download and Publish to Meta buttons). When ready, ads_get_run returns 3 ads with headline, primary text and image links; the text reply also lists them and the view link on komendly.com."
+              "expected_behavior": "Starts an Ad Pack and shows the Komendly ad gallery (thumbnails, headlines, status, Download and Publish to Meta buttons). When ready, ads_get_run returns the pack's ads (10 on a new account's free pack) with headline, primary text and image links; the text reply also lists them and the view link on komendly.com."
             },
             {
               "description": "Check progress",

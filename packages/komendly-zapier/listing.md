@@ -6,7 +6,7 @@
 - **Category:** Ads & Conversion (secondary: Marketing Automation)
 - **Homepage:** https://www.komendly.com/?utm_source=zapier&utm_medium=integration
 - **Logo:** `logo-256.png` (256×256 PNG, copied from `public/brand/komendly-mark-256.png`)
-- **Auth:** API key (Settings → API, https://www.komendly.com/dashboard/api). New accounts get a free pack of 3 ads. After that, Ozzy Ad Department costs $97 for the first month, then $197/mo.
+- **Auth:** API key (Settings → API, https://www.komendly.com/dashboard/api). New accounts get a free pack of 10 ads. After that, Ozzy Ad Department costs $97 for the first month, then $197/mo.
 - **Upgrade link in every output:** https://www.komendly.com/pricing?utm_source=zapier&utm_medium=integration
 
 ## What it does

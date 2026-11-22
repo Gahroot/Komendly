@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { RATIOS, type Ratio } from "@/lib/ads/contracts";
 import { enqueueJob } from "@/lib/ads/jobs";
 import { AdsHttpError } from "@/lib/ads/workspace";
-import type { PublishJobPayload } from "./core/publish";
+import { PUBLISH_GOALS, type PublishJobPayload } from "./core/publish";
 
 export const PublishRequestSchema = z.object({
   runId: z.string().min(1),
@@ -14,6 +14,7 @@ export const PublishRequestSchema = z.object({
   budget: z.number().int().positive().max(100_000_000).optional(), // minor units, ad set daily budget
   ratios: z.array(z.enum(RATIOS)).min(1).optional(),
   countries: z.array(z.string().regex(/^[A-Z]{2}$/)).max(25).optional(),
+  goal: z.enum(PUBLISH_GOALS).optional(),
 });
 export type PublishRequest = z.infer<typeof PublishRequestSchema>;
 
@@ -31,7 +32,7 @@ export async function enqueueMetaPublish(req: PublishRequest, ctx: { workspaceId
   if (!ratios.length) throw new AdsHttpError(400, "no_ratios", "Pick at least one format.");
   const payload: PublishJobPayload & { requestedBy: string } = {
     adIds: eligible.map((a) => a.id).sort(), adAccountId: req.adAccountId, pageId: req.pageId,
-    budget: req.budget, ratios, countries: req.countries, requestedBy: ctx.userId,
+    budget: req.budget, ratios, countries: req.countries, goal: req.goal, requestedBy: ctx.userId,
   };
   const job = await enqueueJob({ type: "publish_meta", runId: req.runId, workspaceId: ctx.workspaceId, payload: { ...payload }, priority: 5, maxAttempts: 1 });
   const rows = eligible.flatMap((a) => ratios.filter((r) => a.assets.some((x) => x.ratio === r)).map((ratio) => ({ adId: a.id, ratio, jobId: job.id, adAccountId: req.adAccountId })));

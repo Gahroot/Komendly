@@ -43,7 +43,7 @@ describe("McpMetaPublisher", () => {
       close: async () => undefined,
     };
     const p = new McpMetaPublisher({ accessToken: "t", client });
-    expect(await p.listAdAccounts()).toEqual([{ id: "act_1", name: "A", currency: undefined }]);
+    expect(await p.listAdAccounts()).toEqual([{ id: "act_1", name: "A", currency: undefined, status: undefined, disableReason: undefined, hasPayment: undefined }]);
     expect(await p.createCampaign("1", { name: "c", objective: "OUTCOME_SALES" })).toBe("ads_create_campaign-id");
     const r = await p.createAd("1", { name: "a", adSetId: "s", pageId: "9", objective: "OUTCOME_SALES", copy: { headline: "h", body: "b", cta: "Shop now", link: "https://x.com" }, media: { kind: "image", imageHash: "H" } });
     expect(r).toEqual({ adId: "ads_create_ad-id", creativeId: "ads_create_creative-id" });
@@ -54,5 +54,56 @@ describe("McpMetaPublisher", () => {
   it("defaults to graph mode", () => {
     expect(publishModeFromEnv(undefined)).toBe("graph");
     expect(publishModeFromEnv("mcp")).toBe("mcp");
+  });
+});
+
+describe("listAdAccounts readiness fields", () => {
+  it("Graph requests and maps account_status, disable_reason, funding_source", async () => {
+    let requested = "";
+    const f = vi.fn(async (input: string | URL) => {
+      requested = String(input);
+      return new Response(JSON.stringify({ data: [
+        { id: "act_1", name: "A", currency: "EUR", account_status: 1, disable_reason: 0, funding_source: "123" },
+        { id: "act_2", name: "B", account_status: 3 },
+      ] }), { status: 200 });
+    });
+    const p = new GraphMetaPublisher({ accessToken: "t", fetch: f });
+    const accounts = await p.listAdAccounts();
+    expect(decodeURIComponent(requested)).toContain("account_status,disable_reason,funding_source");
+    expect(accounts).toEqual([
+      { id: "act_1", name: "A", currency: "EUR", status: 1, disableReason: 0, hasPayment: true },
+      { id: "act_2", name: "B", currency: undefined, status: 3, disableReason: undefined, hasPayment: false },
+    ]);
+  });
+
+  it("MCP maps the same keys when present", async () => {
+    const client: McpToolClient = {
+      listTools: async () => ({ tools: [{ name: "ads_get_ad_accounts" }] }),
+      callTool: async () => ({ content: [{ type: "text", text: JSON.stringify({ data: [{ id: "act_1", name: "A", account_status: "2", disable_reason: 1, funding_source: null }] }) }] }),
+      close: async () => undefined,
+    };
+    const p = new McpMetaPublisher({ accessToken: "t", client });
+    expect(await p.listAdAccounts()).toEqual([{ id: "act_1", name: "A", currency: undefined, status: 2, disableReason: 1, hasPayment: false }]);
+  });
+});
+
+describe("activate", () => {
+  it("Graph sets each id ACTIVE in order and rejects non-numeric ids", async () => {
+    const { f, calls } = fakeFetch();
+    const p = new GraphMetaPublisher({ accessToken: "t", fetch: f });
+    await p.activate(["301", "201", "100"]);
+    expect(calls.map((c) => new URL(c.url).pathname.split("/").pop())).toEqual(["301", "201", "100"]);
+    expect(calls.every((c) => c.body.get("status") === "ACTIVE")).toBe(true);
+    await expect(p.activate(["act_1/campaigns"])).rejects.toThrow(/Invalid Meta object id/);
+  });
+
+  it("MCP mode activates through the Marketing API with the same token", async () => {
+    const { f, calls } = fakeFetch();
+    const client: McpToolClient = { listTools: async () => ({ tools: [] }), callTool: async () => { throw new Error("no MCP call expected"); }, close: async () => undefined };
+    const p = new McpMetaPublisher({ accessToken: "t", fetch: f, client });
+    await p.activate(["100"]);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.url).toContain("graph.facebook.com");
+    expect(calls[0]?.body.get("status")).toBe("ACTIVE");
   });
 });

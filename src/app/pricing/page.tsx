@@ -1,4 +1,4 @@
-// The ONE Ozzy pricing page (Ad Packs + Ozzy Studio + Testimonials). Public and CDN-cached: no session reads on the
+// The ONE Ozzy pricing page: leads with "Hire Ozzy's AI Marketing Team", then Starter/Agency, Studio and Testimonials. Public and CDN-cached: no session reads on the
 // server; per-user parts (grandfathered plan notice, Launch Kit claim after registration) are client components.
 import { Suspense } from "react";
 import { ShieldCheck } from "lucide-react";
@@ -20,7 +20,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
       <OzzyPricing
         yearly={yearly}
         basePath="/pricing"
-        planHref={(plan) => (plan ? planCheckoutPath(plan, yearly) : billingPath)}
+        planHref={(plan, y = yearly) => (plan ? planCheckoutPath(plan, y) : billingPath)}
         freeHref="/ads/signup?next=%2Fstudio"
         notice={<Suspense fallback={null}><LegacyPlanNotice /></Suspense>}
         testimonialActions={<Suspense fallback={null}><LaunchKitActions /></Suspense>}

@@ -9,7 +9,7 @@ Komendly makes ready-to-run Facebook and Instagram ads for a local business from
 
 ## Pricing
 
-New accounts get one free Ad Pack with 3 ads (no card). More ads need a paid plan; Ozzy Ad Department is $97 for the first month, then $197/month. See https://www.komendly.com/pricing.
+New accounts get one free Ad Pack with 10 ads (no card). More ads need a paid plan; Ozzy Ad Department is $97 for the first month, then $197/month. See https://www.komendly.com/pricing.
 
 ## Try it
 

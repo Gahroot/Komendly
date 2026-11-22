@@ -22,7 +22,7 @@ secondary_keywords: ["adcreative.ai review", "adcreative.ai pricing"]
 answer: "40-70 word direct answer to the title question. Rendered as a 'Quick answer' box at the top; used by AI answer engines."
 key_takeaways: ["optional bullet", "optional bullet"]
 competitors: ["AdCreative.ai"]             # comparison/alternatives only
-cta: ads                                   # ads (3 free ads from your website, no card) | motion (lead with the animated video ad)
+cta: ads                                   # ads (10 free ads from your website, no card) | motion (lead with the animated video ad)
 faq:
   - q: "Question people ask?"
     a: "Short, self-contained answer.[^1]"
@@ -42,7 +42,7 @@ claims:                                    # engine/gate bookkeeping, not render
 
 ## Product facts (single source of truth: `src/lib/ads/billing-config.ts` on main, read by the engine at runtime; the prices below are examples only, never invent others)
 - Komendly turns a website URL into on-brand, ready-to-run ad creatives (static + animated) via Ozzy, its AI ad wizard.
-- Free pack: 3 free ads from your website, no card required (20 for people who come through a referral link; one free pack per website/device/network; email verification). The $9 one-time "Unlock this pack" unlocks the rest of that pack.
+- Free pack: 10 free ads from your website, no card required (20 for people who come through a referral link; one free pack per website/device/network; email verification). The $9 one-time "Unlock this pack" unlocks the bonus ads in that pack (extra formats such as the animated ad).
 - Lead paid plan: Ozzy Ad Department, $97 the first month, then $197/month: your ads go live in your own Meta account and the losers get replaced every week; 6 fresh ads every Monday; Ozzy Ad Coach.
 - Other plans for new buyers: `PLANS_FOR_SALE` in billing-config (Starter and Agency at the time of writing). Growth and Scale are not sold to new buyers. Never call a plan "unlimited". Top-ups: `ADS_TOPUPS`.
 - Sizes 4:5, 1:1, 9:16; ads for all 5 awareness stages.

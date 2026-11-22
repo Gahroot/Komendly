@@ -8,7 +8,7 @@
 // AdCreative.ai / Creatify / Canva / freelancer / agency prices): overall PMC $48, OPP $64, IPP $69, PME $95.
 // Each tier is the revenue-max price inside its own segment's acceptable range (Starter $29-59, Growth
 // $66-133, Scale $121-246); credits are the most that keep the 70% floor.
-// Hormozi money model: attraction = free pack (3 free ads, 20 via referral; $9 "Unlock this pack" for the rest); continuity = monthly plans with Scale
+// Hormozi money model: attraction = free pack (10 free ads, 20 via referral; $9 "Unlock this pack" for the rest); continuity = monthly plans with Scale
 // as the anchor; downsell = one-time credit packs, priced per credit above every plan, no subscription;
 // guarantee = 30-day one-click refund of the first payment (self-serve, src/lib/ads/self-refund.ts).
 // Price IDs come from env (created by scripts/ads-stripe-setup.ts); a missing ID = not purchasable.
@@ -21,6 +21,8 @@ export type AdsTopupKey = "topup_10" | "topup_30" | "unlock_pack" | "unlimited_w
 export interface AdsPlanTier {
   key: AdsPlanKey;
   name: string;
+  /** Public sales name when it differs from `name`. `name` is NOT purely display (Shopify charge-name matching, Stripe product names), so it stays. */
+  displayName?: string;
   priceCents: number;
   monthlyCredits: number;
   priceEnv: string;
@@ -60,11 +62,20 @@ export const PLAN_USAGE_NOTE = `${AD_DEPARTMENT_USAGE_MULTIPLE}x the usage of St
 export const FOUNDING_TERMS = "Founding offer for the first 100 members or until we end it. Cancel anytime in one click.";
 export const FOUNDING_PRICE_LOCK = "Founding members keep their price for as long as they stay subscribed.";
 
-/** The Hormozi value stack shown next to the hero plan (values are stated monthly worth, in dollars). */
+/** The public name of the hero plan (ad_department). Display only: plan key, Stripe prices and `name` are unchanged. */
+export const AD_DEPARTMENT_DISPLAY_NAME = "Ozzy's AI Marketing Team";
+
+/**
+ * The value stack shown next to the hero plan (stated monthly worth, in dollars; kept modest). Every line is real work
+ * the team does (prd.md §4): no line promises leads, sales or results. Bonus titles/values must match BONUS_META.
+ */
 export const AD_DEPARTMENT_STACK: readonly { label: string; detail: string; valueUsd: number; bonus?: boolean }[] = [
-  { label: `${AD_DEPARTMENT_USAGE_MULTIPLE}x Starter usage for ads + Ozzy Studio videos`, detail: "Far more Ad Packs and videos than most businesses ever make", valueUsd: 500 },
-  { label: "Weekly Drop", detail: "Ozzy Autopilot: 6 new ads + a new 15s video every Monday, steered by your one-sentence focus", valueUsd: 300 },
-  { label: "Ozzy Ad Coach", detail: "Show him your Ads Manager results; he says what to keep, what to kill, and makes more winners", valueUsd: 200 },
+  { label: "Fresh ads every week", detail: "Creative Studio writes and designs new ads (and a short video) for you every Monday, steered by what's working", valueUsd: 300 },
+  { label: "Your ads launched and run for you", detail: "Launch & Budget Desk sets up your Facebook and Instagram lead ads in your own Meta account and keeps spend inside your monthly limit", valueUsd: 300 },
+  { label: "Daily checks", detail: "Performance Analyst looks at results every day, pauses ads that waste money and keeps the ones that work", valueUsd: 200 },
+  { label: "Leads to your inbox in minutes", detail: "Lead Desk emails you each new inquiry as soon as Meta sends it", valueUsd: 100 },
+  { label: "Weekly plain-English report", detail: "Ozzy tells you what the team did, what you spent and what came of it", valueUsd: 100 },
+  { label: "Ozzy Ad Coach", detail: "Ask him about any ad and he says what to keep, what to drop, and makes more like the winners", valueUsd: 100, bonus: true },
   { label: "Website check-up", detail: "Ozzy checks the page your ads send people to", valueUsd: 300, bonus: true },
   { label: "30-day ad plan", detail: "What to post, when, and what to test, day by day", valueUsd: 250, bonus: true },
   { label: "Hook & caption library", detail: "Proven openers and captions written for your brand", valueUsd: 150, bonus: true },
@@ -100,6 +111,7 @@ export const ADS_PLANS: readonly AdsPlanTier[] = [
   {
     key: "ad_department",
     name: "Ozzy Ad Department",
+    displayName: AD_DEPARTMENT_DISPLAY_NAME,
     priceCents: AD_DEPARTMENT_PRICE_CENTS,
     monthlyCredits: STARTER_MONTHLY_CREDITS * AD_DEPARTMENT_USAGE_MULTIPLE,
     usageMultiple: AD_DEPARTMENT_USAGE_MULTIPLE,
@@ -108,7 +120,14 @@ export const ADS_PLANS: readonly AdsPlanTier[] = [
     giftsPerMonth: 1,
     recommended: true,
     weeklyDrop: true,
-    highlights: [`${AD_DEPARTMENT_USAGE_MULTIPLE}x Starter usage: far more ads and Studio videos than most businesses ever make`, "Ozzy Autopilot: fresh ads + a new video every Monday (5 static + 1 animated + a 15s video), steered by one sentence from you", "Ozzy Ad Coach: show him your results, he says what to keep and kill", "Bonuses: website check-up, 30-day ad plan, hook & caption library", "Post Ozzy's ads for 30 days. Not happy? One click, full refund."],
+    highlights: [
+      "Fresh ads every week, launched for you as Facebook and Instagram lead ads in your own Meta account",
+      "Checked every day: ads that waste money get paused, the ones that work keep running",
+      "Every new lead emailed to you within minutes, plus a weekly plain-English report",
+      "Ad spend is paid by you directly to Meta and never goes over your monthly limit",
+      `Bonuses: website check-up, 30-day ad plan, hook & caption library, Ad Coach, ${AD_DEPARTMENT_USAGE_MULTIPLE}x Starter usage for your own ads and videos`,
+      "Post Ozzy's ads for 30 days. Not happy? One click, full refund.",
+    ],
   },
   {
     key: "growth",
@@ -290,6 +309,11 @@ export function unlockPackCouponId(env: Record<string, string | undefined> = pro
 export const ADS_GUARANTEE = "Post Ozzy's ads for 30 days. Not happy? One click, full refund.";
 /** Self-serve refund window after the first paid invoice of a workspace's first subscription. */
 export const GUARANTEE_DAYS = 30;
+
+/** The name to show buyers (displayName, else name). */
+export function planDisplayName(p: Pick<AdsPlanTier, "name" | "displayName">): string {
+  return p.displayName ?? p.name;
+}
 
 export function getPlan(key: string): AdsPlanTier | undefined {
   return ADS_PLANS.find((p) => p.key === key);

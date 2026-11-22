@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { checkAdmin } from "@/lib/ads/billing-auth";
 import { prisma } from "@/lib/prisma";
+import { stopTeamFor } from "@/lib/ads/team/stop";
 
 const Body = z.object({ action: z.enum(["dismiss", "action", "suspend", "unsuspend"]) });
 
@@ -26,5 +27,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       data: action === "unsuspend" ? { status: "dismissed", ...resolved } : { status: action === "dismiss" ? "dismissed" : "actioned", ...resolved },
     }),
   ]);
+  if (action === "suspend" && flag.workspaceId) await stopTeamFor(flag.workspaceId, { status: "paused", reason: "suspended", summary: "Your account is on hold, so the team paused your ads." });
   return NextResponse.json({ ok: true });
 }

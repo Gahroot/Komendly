@@ -10,7 +10,7 @@ Komendly reads a business's public website and makes an Ad Pack: ready-to-run st
 ## Steps
 
 1. **Get the website.** Ask for the business's public website if the user hasn't given it. Komendly can't read `localhost`, staging or pages behind a login; ask for the live address instead.
-2. **Check the account (optional).** `get_account` shows the plan, credits and whether the free Ad Pack was used. New accounts get one free Ad Pack (3 ads, no card).
+2. **Check the account (optional).** `get_account` shows the plan, credits and whether the free Ad Pack was used. New accounts get one free Ad Pack (10 ads, no card).
 3. **Make the ads.** Call `ads_create_pack` with `website_url`. Only set `animated: true` if the user asks for animated or video ads (paid plans).
 4. **Follow progress.** Ads take a few minutes. Call `ads_get_run` with the `run_id` until the status is `completed` or `partial`. Don't start a second pack while one is running. In Claude and ChatGPT the result shows as an interactive ad gallery (thumbnails, headlines, status, Download, Publish to Meta, Upgrade); elsewhere, list each ready ad's headline, primary text and image link.
 5. **Review with the user.** Show the headlines and copy. Suggest edits in plain words, but don't invent claims, prices or offers the website doesn't make.

@@ -115,7 +115,18 @@ export type AdsEventName =
   // Shopify App Store (props.system = "shopify", shop)
   | "shopify_installed"
   | "shopify_uninstalled"
-  | "shopify_charge_activated";
+  | "shopify_charge_activated"
+  // Guided Publish to Meta (props.step | props.code; meta_activated props.campaignId)
+  | "meta_step_viewed"
+  | "meta_readiness_issue"
+  | "meta_activated"
+  // Ozzy's AI marketing team (prd.md R8; TEAM_EVENTS in src/lib/ads/team/contracts.ts)
+  | "team_hired"
+  | "team_meta_connected"
+  | "team_authorized"
+  | "team_launched"
+  | "team_first_lead"
+  | "team_paused";
 
 /** Fire-and-forget funnel event. Never throws. */
 export async function trackAdsEvent(

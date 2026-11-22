@@ -211,13 +211,13 @@ export default async function IndustryPage({ params }: PageProps) {
 
         <section className="mx-auto mt-16 max-w-3xl px-4 text-center sm:px-6" aria-labelledby="url-title">
           <h2 id="url-title" className="font-display text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Make yours from your website</h2>
-          <p className="mt-3 text-muted-foreground">Paste your {i.singular} website. Ozzy reads it and makes ads with your brand, offers and photos. 3 free ads, no card.</p>
+          <p className="mt-3 text-muted-foreground">Paste your {i.singular} website. Ozzy reads it and makes ads with your brand, offers and photos. 10 free ads, no card.</p>
           <div className="mt-6"><MakeYoursUrlBox href={galleryCtaHref(i.slug, "url_box")} /></div>
           <p className="mt-4 text-sm text-muted-foreground">Or try the free <Link href="/tools/ad-copy-generator" className="text-[var(--studio-gold)] hover:underline">ad copy generator</Link> and <Link href="/tools/ad-copy-grader" className="text-[var(--studio-gold)] hover:underline">ad copy grader</Link>.</p>
         </section>
 
         <div className="mt-16 px-4 sm:px-6">
-          <CtaBlock title={`Get 3 free ads for your ${i.singular} business`} campaign={i.slug} content="mid" label="Get my 3 free ads" />
+          <CtaBlock title={`Get 10 free ads for your ${i.singular} business`} campaign={i.slug} content="mid" label="Get my 10 free ads" />
         </div>
         <PaidNote />
 
@@ -293,7 +293,7 @@ export default async function IndustryPage({ params }: PageProps) {
         )}
 
         <div className="px-4 py-20 sm:px-6">
-          <CtaBlock title={`Your ${i.singular} ads, made from your website`} campaign={i.slug} content="end" label="Get my 3 free ads" />
+          <CtaBlock title={`Your ${i.singular} ads, made from your website`} campaign={i.slug} content="end" label="Get my 10 free ads" />
         <p className="mt-4 text-center text-sm text-muted-foreground">More ideas: <Link href={ideasPath(cat?.slug ?? "home-services")} className="text-[var(--studio-gold)] hover:underline">{cat?.label ?? "Home service"} ad ideas</Link></p>
         </div>
       </main>

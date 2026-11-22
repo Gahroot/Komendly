@@ -11,6 +11,7 @@ export const PRIVATE_PATHS = [
   '/ads/refer',
   '/ads/gifts',
   '/ads/coach',
+  '/ads/team',
   '/checkout',
   '/test-video',
   '/ozzy-lab',

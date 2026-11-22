@@ -135,7 +135,7 @@ export function reportSummaryLines(r: AdCheckReport): string[] {
     const most = Math.max(...r.rivals.map((x) => x.liveCount));
     out.push(`${plural(r.rivals.length, "local advertiser")} in the same trade and state ${r.rivals.length === 1 ? "was" : "were"} scanned too; the most active one shows ${plural(most, "active ad")}.`);
   }
-  out.push("Komendly's Ozzy Ad Department can make 3 free replacement ads from your website.");
+  out.push("Komendly can make 10 free replacement ads from your website, no card.");
   return out;
 }
 
@@ -146,7 +146,7 @@ export function reportFacts(r: AdCheckReport): string {
     ...r.checks.map((c) => `${c.label}: ${c.points}/${c.max}. ${c.fact}`),
     `Active ads: ${r.liveCount}; oldest ${r.oldestDays ?? "n/a"} days; fatigued (> ${FATIGUE_DAYS} days): ${r.fatigued.length}.`,
     ...r.rivals.map((x, i) => `Rival ${i + 1}: ${x.liveCount} active ads, longest ${x.longestRunDays ?? "n/a"} days.`),
-    "Offer: free pack = 3 ads; Ozzy Ad Department $97 the first month then $197/month, cancel anytime; ads go live in the customer's own Meta account, losers replaced weekly.",
+    "Offer: free pack = 10 ads, no card (20 via a referral link); Ozzy Ad Department $97 the first month then $197/month, cancel anytime; ads go live in the customer's own Meta account, losers replaced weekly.",
   ].join("\n");
 }
 

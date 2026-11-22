@@ -46,10 +46,10 @@ export function CtaBlock({ title, campaign, content, label, href }: { title: str
     <section className="studio-frame mx-auto flex max-w-3xl flex-col items-center gap-4 rounded-2xl px-5 py-10 text-center sm:px-10" aria-label="Make your own ads">
       <Image src="/brand/ozzy-creator-focused.png" alt="" width={88} height={88} unoptimized className="[image-rendering:pixelated]" />
       <h2 className="font-display text-balance text-3xl font-medium tracking-[-0.02em] sm:text-4xl">{title}</h2>
-      <p className="max-w-xl text-muted-foreground">Paste your website and Ozzy makes ready-to-run Facebook &amp; Instagram ads from your own brand, photos and offers. 3 free ads, no card.</p>
+      <p className="max-w-xl text-muted-foreground">Paste your website and Ozzy makes ready-to-run Facebook &amp; Instagram ads from your own brand, photos and offers. 10 free ads, no card.</p>
       <CtaButton href={href ?? galleryCtaHref(campaign, content)}>{label}</CtaButton>
       <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-        {["3 free ads, no card", "Ready in minutes", "Your brand, your photos"].map((t) => (
+        {["10 free ads, no card", "Ready in minutes", "Your brand, your photos"].map((t) => (
           <li key={t} className="inline-flex items-center gap-1.5"><Check className="size-3.5 text-[var(--studio-gold)]" aria-hidden />{t}</li>
         ))}
       </ul>

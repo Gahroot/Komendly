@@ -1,7 +1,9 @@
-// Instant lead alerts (growth system lead_alerts): a Meta `leadgen` webhook -> fetch the lead (leads_retrieval, page
-// token) -> email the business owner. Email only (no SMS/calls). Idempotent by leadgen_id: an AdsEvent
-// `meta_lead_alerted` {leadgenId} is claimed before sending and released if the send fails (Meta then retries).
-// Framework-free; Prisma/Next glue lives in ./server.ts.
+// Instant lead alerts (growth system lead_alerts; Lead Desk of the team service, prd.md R6): a Meta `leadgen` webhook ->
+// fetch the lead (leads_retrieval, page token) -> store it once in MetaLead -> email the lead email of the page's
+// MarketingMandate (else the workspace owner). Email only: we never contact the lead.
+// Idempotency (like CreditPurchase): the MetaLead create runs before any email and `leadgenId @unique` makes a replay
+// fail there. `notifiedAt` is claimed (null -> now) right before sending and reset to null if the send fails, so Meta's
+// retry sends it without a second row. Framework-free; Prisma/Next glue lives in ./server.ts.
 import { precheck } from "../../growth/review-gate";
 import { renderLifecycleHtml, renderLifecycleText, unsubscribeHeaders, type LifecycleEmailInput } from "../lifecycle/template";
 import { answerText, questionLabel } from "./questions";
@@ -78,41 +80,104 @@ export function leadAlertEmail(lead: MetaLead, o: { businessName: string | null;
   };
 }
 
-export interface LeadOwner { workspaceId: string; userId: string; email: string; businessName: string | null; userToken: string }
+/** Contact fields + answers pulled out of a Meta lead (what MetaLead stores). */
+export interface LeadContact { name: string | null; email: string | null; phone: string | null; zip: string | null; answers: Array<{ label: string; text: string }> }
+
+const firstValue = (lead: MetaLead, ...names: string[]): string | null => {
+  for (const n of names) {
+    const v = lead.fields.find((f) => f.name === n)?.values.map((x) => x.trim()).find(Boolean);
+    if (v) return v;
+  }
+  return null;
+};
+
+export function extractLeadContact(lead: MetaLead): LeadContact {
+  const joined = [firstValue(lead, "first_name"), firstValue(lead, "last_name")].filter(Boolean).join(" ");
+  return {
+    name: firstValue(lead, "full_name") ?? (joined || null),
+    email: firstValue(lead, "email")?.toLowerCase() ?? null,
+    phone: firstValue(lead, "phone_number", "phone"),
+    zip: firstValue(lead, "zip_code", "post_code", "zip", "postal_code"),
+    answers: lead.fields.map((f) => ({ label: questionLabel(f.name), text: answerText(f.values) })).filter((a) => a.text),
+  };
+}
+
+/** Owner-facing activity line: "New lead: Jane from 94110" (first name only). */
+export function leadSummary(c: Pick<LeadContact, "name" | "zip">): string {
+  const first = c.name?.trim().split(/\s+/)[0] || "someone";
+  return `New lead: ${first}${c.zip ? ` from ${c.zip}` : ""}`.slice(0, 120);
+}
+
+export { leadActionKey } from "./retention";
+
+export interface LeadOwner {
+  workspaceId: string;
+  userId: string;
+  /** Where the lead goes: the mandate's lead email, else the workspace owner's email. */
+  email: string;
+  businessName: string | null;
+  userToken: string;
+  /** True when the page belongs to a MarketingMandate (team service): the lead is also recorded as team activity. */
+  mandate: boolean;
+}
+export interface StoredLead { id: string; notifiedAt: Date | null }
+export interface NewLeadRow extends LeadContact { workspaceId: string; leadgenId: string; metaAdId: string | null; formId: string | null; pageId: string; receivedAt: Date }
 export interface LeadAlertDeps {
-  /** The workspace whose Meta connection uses this page (null = not ours). */
+  /** The mandate (else Meta connection) whose page this is (null = not ours). */
   ownerForPage(pageId: string): Promise<LeadOwner | null>;
+  findLead(leadgenId: string): Promise<StoredLead | null>;
+  /** Plain create (never an upsert). Returns null when the leadgenId already exists (unique violation). */
+  storeLead(row: NewLeadRow): Promise<StoredLead | null>;
+  /** Atomically set notifiedAt where it is still null; false = someone else is sending / sent it. */
+  claimNotify(id: string): Promise<boolean>;
+  /** Reset notifiedAt to null after a failed send so a retry can deliver it. */
+  releaseNotify(id: string): Promise<void>;
+  /** Team activity: MarketingAction (dedupeKey lead:<id>) + AdsEvent team_first_lead once per workspace. Idempotent. */
+  recordTeamLead(o: { workspaceId: string; leadgenId: string; summary: string }): Promise<void>;
   optedOut(userId: string): Promise<boolean>;
-  /** Claim the leadgen id; returns a claim id, or null when it was already alerted. Must be race-safe. */
-  claim(leadgenId: string, owner: LeadOwner, change: LeadgenChange): Promise<string | null>;
-  release(claimId: string): Promise<void>;
   getLead(owner: LeadOwner, change: LeadgenChange): Promise<MetaLead>;
   unsubscribeUrl(userId: string): string | null;
   send(m: { to: string; subject: string; text: string; html: string; headers: Record<string, string> }): Promise<void>;
   appUrl: string;
+  now?: () => Date;
 }
 
 export type LeadAlertOutcome = "sent" | "duplicate" | "not_ours" | "opted_out" | "no_unsubscribe" | "blocked";
 
-/** One leadgen change end to end. Throws (after releasing the claim) when fetching or sending fails, so Meta retries. */
+/**
+ * One leadgen change end to end. Throws when fetching, storing or sending fails, so Meta retries; a stored lead whose
+ * email failed keeps notifiedAt null and is sent by the retry. Opted-out / blocked leads stay stored (dashboard) unsent.
+ */
 export async function processLeadgen(change: LeadgenChange, d: LeadAlertDeps): Promise<{ outcome: LeadAlertOutcome; reasons?: string[] }> {
   const owner = await d.ownerForPage(change.pageId);
   if (!owner) return { outcome: "not_ours" };
+  const existing = await d.findLead(change.leadgenId);
+  if (existing?.notifiedAt) return { outcome: "duplicate" };
+  const lead = await d.getLead(owner, change);
+  const contact = extractLeadContact(lead);
+  let row = existing;
+  if (!row) {
+    const when = change.createdTime ? new Date(change.createdTime * 1000) : d.now?.() ?? new Date();
+    row = await d.storeLead({ ...contact, workspaceId: owner.workspaceId, leadgenId: change.leadgenId, metaAdId: change.adId, formId: change.formId, pageId: change.pageId, receivedAt: when });
+    if (!row) return { outcome: "duplicate" }; // a concurrent delivery stored it first and is sending it
+  }
+  if (owner.mandate) {
+    await d.recordTeamLead({ workspaceId: owner.workspaceId, leadgenId: change.leadgenId, summary: leadSummary(contact) })
+      .catch((e) => console.warn("[lead_alerts] team activity failed", change.leadgenId, e instanceof Error ? e.message : e));
+  }
   if (await d.optedOut(owner.userId)) return { outcome: "opted_out" };
   const unsub = d.unsubscribeUrl(owner.userId);
   if (!unsub) return { outcome: "no_unsubscribe" };
-  const claimId = await d.claim(change.leadgenId, owner, change);
-  if (!claimId) return { outcome: "duplicate" };
+  const base = { businessName: owner.businessName, appUrl: d.appUrl, unsubscribeUrl: unsub };
+  const reasons = precheck({ system: "lead_alerts", kind: "email", itemKey: `lead:${change.leadgenId}`, content: renderLifecycleText(leadAlertEmail(lead, { ...base, mask: true })) });
+  if (reasons.length) return { outcome: "blocked", reasons }; // stored, not sent: our template is wrong, retrying would not help
+  if (!(await d.claimNotify(row.id))) return { outcome: "duplicate" };
+  const input = leadAlertEmail(lead, base);
   try {
-    const lead = await d.getLead(owner, change);
-    const base = { businessName: owner.businessName, appUrl: d.appUrl, unsubscribeUrl: unsub };
-    const reasons = precheck({ system: "lead_alerts", kind: "email", itemKey: `lead:${change.leadgenId}`, content: renderLifecycleText(leadAlertEmail(lead, { ...base, mask: true })) });
-    if (reasons.length) return { outcome: "blocked", reasons }; // claim kept: our template is wrong, retrying would not help
-    const input = leadAlertEmail(lead, base);
     await d.send({ to: owner.email, subject: input.subject, text: renderLifecycleText(input), html: renderLifecycleHtml(input), headers: unsubscribeHeaders(unsub) });
-    return { outcome: "sent" };
   } catch (e) {
-    await d.release(claimId).catch(() => undefined);
+    await d.releaseNotify(row.id).catch(() => undefined);
     throw e;
   }
+  return { outcome: "sent" };
 }

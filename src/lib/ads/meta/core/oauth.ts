@@ -7,6 +7,20 @@ import { MetaApiError, type FetchLike, type StoredMetaToken } from "./types";
 export const GRAPH_SCOPES = ["ads_management", "business_management", "pages_show_list", "pages_read_engagement", "pages_manage_ads"];
 export const MCP_SCOPES = ["ads_management", "ads_read", "business_management", "pages_show_list", "pages_manage_ads", "ads_mcp_management"];
 
+/**
+ * Extra Graph scopes from META_EXTRA_SCOPES (comma list), read per call (never at module load). Used for permissions that
+ * are not yet in an approved App Review submission, e.g. the team service's ads_read, leads_retrieval and
+ * pages_manage_metadata (pages_manage_metadata is what subscribePageToLeadgen needs). Only applies to the plain `scope`
+ * dialog: with a Facebook Login for Business config (META_LOGIN_CONFIG_ID) the permissions are set in that config.
+ */
+export function metaExtraScopes(env: Record<string, string | undefined> = process.env): string[] {
+  return (env.META_EXTRA_SCOPES ?? "").split(",").map((s) => s.trim().toLowerCase()).filter((s) => /^[a-z_]+$/.test(s));
+}
+
+export function graphScopes(env: Record<string, string | undefined> = process.env): string[] {
+  return [...new Set([...GRAPH_SCOPES, ...metaExtraScopes(env)])];
+}
+
 export function randomToken(bytes = 32): string {
   return randomBytes(bytes).toString("base64url");
 }
@@ -26,7 +40,7 @@ export function graphAuthorizeUrl(c: MetaAppConfig, state: string, verifier: str
   u.searchParams.set("code_challenge", pkceChallenge(verifier));
   u.searchParams.set("code_challenge_method", "S256");
   if (c.loginConfigId) u.searchParams.set("config_id", c.loginConfigId); // Facebook Login for Business configuration
-  else u.searchParams.set("scope", GRAPH_SCOPES.join(","));
+  else u.searchParams.set("scope", graphScopes().join(","));
   return u.toString();
 }
 

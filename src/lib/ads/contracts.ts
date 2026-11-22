@@ -110,6 +110,7 @@ export const JOB_TYPES = [
   "render_motion",
   "qc",
   "publish_meta",
+  "activate_meta",
   "cleanup",
 ] as const;
 export type JobType = (typeof JOB_TYPES)[number];

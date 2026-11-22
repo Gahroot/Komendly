@@ -7,10 +7,10 @@ Growth system `jobber` (kill switch AdsFeatureFlag `sys_jobber`, missing row = O
 - **App name:** Komendly: Facebook Ads
 - **Tagline (short):** Free Facebook & Instagram ads from your website, then fresh ad ideas from every job you finish.
 - **Description:**
-  Komendly makes Facebook and Instagram ads for home-service businesses: roofers, HVAC, plumbers, electricians, cleaners, landscapers. Connect Jobber, paste your website, and Ozzy (Komendly's AI ad maker) makes your first 3 ads free in a few minutes, in your brand's look, with headlines and ad copy.
+  Komendly makes Facebook and Instagram ads for home-service businesses: roofers, HVAC, plumbers, electricians, cleaners, landscapers. Connect Jobber, paste your website, and Ozzy (Komendly's AI ad maker) makes your first 10 ads free in a few minutes, in your brand's look, with headlines and ad copy.
   After that, the jobs you close in Jobber become ad ideas. When you finish a "roof replacement in Austin, TX", Komendly uses it to steer your next weekly ads, so your ads always show the work you're doing right now.
   Read-only. Komendly never changes anything in Jobber and doesn't keep client names, phone numbers or street addresses, only the service and the city.
-  Pricing: connecting and the first 3 ads are free. Ozzy Ad Department (fresh ads every week) is $97 for the first month, then $197/month, billed by Komendly.
+  Pricing: connecting and the first 10 ads are free. Ozzy Ad Department (fresh ads every week) is $97 for the first month, then $197/month, billed by Komendly.
 - **Category:** Marketing
 - **App website / learn more:** https://www.komendly.com/integrations/jobber
 - **Support URL:** https://www.komendly.com/integrations/jobber (FAQ) and nolan@komendly.com
@@ -69,7 +69,7 @@ Housecall Pro's public API (docs.housecallpro.com) uses a per-company API key cr
 
 1. Komendly landing for Jobber users: "Facebook ads for your Jobber business" with the Connect button.
 2. The `/ads/jobber` page: "Your free ads for <Business>" with the website field.
-3. A finished free pack for a roofing site: 3 ads in the run view.
+3. A finished free pack for a roofing site: 10 ads in the run view.
 4. The Autopilot card showing a focus written from Jobber ("Fresh proof from Jobber, just finished: roof replacement in Austin, TX...").
 5. An ad from the weekly drop built on that finished job.
 Use a demo roofing/HVAC business and a Jobber tester account; no real client data.

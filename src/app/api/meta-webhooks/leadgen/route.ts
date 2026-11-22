@@ -1,7 +1,9 @@
 // Public Meta webhook for page `leadgen` events (growth system lead_alerts, kill switch AdsFeatureFlag sys_lead_alerts).
 // GET: subscription handshake (META_WEBHOOK_VERIFY_TOKEN). POST: raw body read first, X-Hub-Signature-256 verified with
-// META_APP_SECRET, then each lead is fetched and emailed to the business owner (idempotent by leadgen_id).
-// Listed in publicPrefixes (src/middleware.ts). 500 on a failed fetch/send so Meta retries; duplicates are skipped.
+// META_APP_SECRET, then each lead is fetched, stored once in MetaLead (leadgenId unique) and emailed to the page's
+// MarketingMandate lead email, else the workspace owner (src/lib/ads/leads/alert.ts).
+// Listed in publicPrefixes (src/middleware.ts). 500 on a failed fetch/store/send so Meta retries; a stored lead whose
+// email failed (notifiedAt null) is sent by the retry, duplicates are skipped.
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { recordSystemRun, systemEnabled } from "@/lib/growth/systems";

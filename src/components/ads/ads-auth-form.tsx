@@ -43,7 +43,7 @@ export function AdsAuthForm({ mode, referrerName }: { mode: "signup" | "login"; 
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-semibold tracking-tight">{isSignup ? (referrerName ? `${referrerName} sent you 20 free ads` : "Create your free account") : "Welcome back"}</CardTitle>
         <CardDescription>
-          {isSignup ? (referrerName ? "20 free ads from your website, instead of the usual 3. No card needed." : "3 free ads from your website. No card needed.") : params.get("verified") === "1" ? "Your email is confirmed. Sign in to get your free ads." : "Sign in to continue to your ads."}
+          {isSignup ? (referrerName ? "20 free ads from your website, double the usual 10. No card needed." : "10 free ads from your website. No card needed.") : params.get("verified") === "1" ? "Your email is confirmed. Sign in to get your free ads." : "Sign in to continue to your ads."}
         </CardDescription>
       </CardHeader>
       <CardContent>

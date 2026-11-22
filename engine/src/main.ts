@@ -24,6 +24,7 @@ import { startAdCheckLoop } from "./growth/ad-check";
 import { startAdlibReportLoop } from "./growth/adlib-report";
 import { startMonitorLoop } from "./jobs/monitor";
 import { startMetaResultsLoop } from "./growth/meta-results";
+import { startTeamOpsLoop } from "./jobs/team-ops";
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -72,6 +73,8 @@ async function main(): Promise<void> {
   const stopAdWatch = startAdWatchLoop({ db, provider, send }); // Competitor ad watch (sys_ad_watch): Monday opt-in emails
   // "Are my ads working?" weekly Meta results (growth system meta_results; off until AdsFeatureFlag sys_meta_results).
   const stopMetaResults = startMetaResultsLoop({ db, provider });
+  // Ozzy's team campaign operations (sys_team_ops; team_ops_kill pauses everything): launch, budget guard, daily analyst.
+  const stopTeamOps = startTeamOpsLoop({ db, storage });
   log("info", "engine started", { worker: config.workerId, port: config.port, provider: provider.name, concurrency: config.concurrency, providerOk: runner.providerHealthy });
 
   let shutting = false;
@@ -97,6 +100,7 @@ async function main(): Promise<void> {
       stopAdlibReport();
       stopMonitor();
       stopMetaResults();
+      stopTeamOps();
       await runner.stop();
       await db.$disconnect();
       process.exit(0);

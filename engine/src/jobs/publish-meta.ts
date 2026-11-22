@@ -52,7 +52,7 @@ export function prismaPublishStore(db: Db, storage: Storage, o: { runId: string;
   };
 }
 
-async function workspaceToken(db: Db, workspaceId: string, now: number): Promise<StoredMetaToken> {
+export async function workspaceToken(db: Db, workspaceId: string, now: number): Promise<StoredMetaToken> {
   const conn = await db.metaConnection.findUnique({ where: { workspaceId } });
   if (!conn) throw new PermanentJobError("Meta account is not connected");
   const key = tokenKey(process.env.ADS_TOKEN_KEY);

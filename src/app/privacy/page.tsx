@@ -138,6 +138,22 @@ const SECTIONS: readonly LegalSection[] = [
     ),
   },
   {
+    id: "ad-leads",
+    title: "Leads from ads we run for you",
+    body: (
+      <>
+        <p>If a business hires Ozzy&apos;s AI Marketing Team, we run Facebook and Instagram lead ads for it. When someone fills in the lead form on one of those ads, Meta sends us what they entered.</p>
+        <ul>
+          <li><strong>What we receive:</strong> what the person typed into the form, such as their name, email address, phone number and answers to the business&apos;s questions, plus which ad and form it came from and when.</li>
+          <li><strong>Why:</strong> only to deliver the lead to the business that ran the ad. We store it once, email it to the business&apos;s lead email and show it on its dashboard. We never contact the lead ourselves, never use leads for our own marketing and never sell them.</li>
+          <li><strong>How long:</strong> we delete each lead 180 days after we receive it, or sooner when the business deletes it or closes its account. Copies the business has received by email are under its control.</li>
+          <li><strong>Deletion:</strong> the business can delete any lead from its dashboard. If you filled in a form and want your details deleted, contact the business, or email <a href="mailto:nolan@komendly.com">nolan@komendly.com</a> and we will delete what we hold within 30 days.</li>
+        </ul>
+        <p>Each lead form links to the business&apos;s own privacy policy, or to our <Link href="/lead-privacy">lead notice</Link> when the business has none.</p>
+      </>
+    ),
+  },
+  {
     id: "rights",
     title: "Your rights",
     body: (

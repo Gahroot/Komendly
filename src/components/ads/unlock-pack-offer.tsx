@@ -41,7 +41,7 @@ export function UnlockPackCard({ runId, bonus }: { runId: string; bonus: BonusSu
       <div className="flex flex-col gap-4 pr-8 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <p className="flex items-center gap-2 text-sm font-semibold"><Lock className="size-4 text-primary" aria-hidden /> Your {bonusLabel(bonus)} {bonus.stories + bonus.videos + (bonus.fresh ?? 0) === 1 ? "is" : "are"} waiting</p>
-          <p className="text-sm text-muted-foreground">Unlock the whole pack for {usd(UNLOCK_PACK.priceCents)}, once. You also get {UNLOCK_PACK.credits} credits for {UNLOCK_PACK.credits} brand-new ads. No subscription.</p>
+          <p className="text-sm text-muted-foreground">Unlock your bonus ads for {usd(UNLOCK_PACK.priceCents)}, once. You also get {UNLOCK_PACK.credits} credits for {UNLOCK_PACK.credits} brand-new ads. No subscription.</p>
         </div>
         <div className="w-full shrink-0 sm:w-56" onClickCapture={() => postOfferEvent("offer_clicked", { placement: "unlock_pack", offer: UNLOCK_PACK.key, runId })}>
           <BillingActionButton endpoint="/api/ads-billing/checkout" body={{ kind: "topup", key: UNLOCK_PACK.key, placement: "unlock_pack" }} label={`Unlock this pack for ${usd(UNLOCK_PACK.priceCents)}`} />

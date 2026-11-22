@@ -17,7 +17,7 @@ export const TESTIMONIALS_PER_MONTH: Record<AdsPlanKey, number> = { starter: 0, 
 
 /** Attraction offers (free, no card). */
 export const ATTRACTION = {
-  adPack: "3 free ads from your website",
+  adPack: "10 free ads from your website",
   studio: "1 free Ozzy Studio video, no watermark, made by chatting with Ozzy",
   studioInvite: "Give a friend 2 free Studio videos; get 1 more free video when they join",
 } as const;

@@ -88,7 +88,7 @@ export default async function LongestRunningTrade({ params }: PageProps) {
             </nav>
           )}
         </article>
-        <div className="py-16"><CtaBlock title={`Fresh ads for your ${l.singular} business`} campaign={`longest-running-${l.slug}`} content="end" label="Make 3 free ads" href={`${u.pathname}${u.search}`} /></div>
+        <div className="py-16"><CtaBlock title={`Fresh ads for your ${l.singular} business`} campaign={`longest-running-${l.slug}`} content="end" label="Make 10 free ads" href={`${u.pathname}${u.search}`} /></div>
       </main>
       <StudioFooter />
     </StudioRoot>

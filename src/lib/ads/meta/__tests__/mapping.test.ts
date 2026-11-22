@@ -34,3 +34,16 @@ describe("paused by default", () => {
     expect(adsManagerUrl("act_123", "9")).toContain("act=123");
   });
 });
+
+describe("activation targets", () => {
+  it("only uses published rows of that campaign", async () => {
+    const { activationTargets } = await import("../core/activate");
+    const rows = [
+      { campaignId: "1", adSetId: "s1", metaAdId: "a1", status: "published" },
+      { campaignId: "1", adSetId: "s1", metaAdId: null, status: "failed" },
+      { campaignId: "2", adSetId: "s2", metaAdId: "a2", status: "published" },
+    ];
+    expect(activationTargets(rows, "1")).toEqual({ campaignId: "1", adSetIds: ["s1"], adIds: ["a1"] });
+    expect(activationTargets(rows, "3")).toBeNull();
+  });
+});

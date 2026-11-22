@@ -2,7 +2,7 @@
 
 Make Ozzy Studio videos and Ad Packs from the command line, from scripts, or from any AI agent
 (Claude Code, Claude Desktop, Cursor, ChatGPT…). Same account, plan and credits as
-[komendly.com](https://www.komendly.com): the free Studio video and the free ad pack (3 free ads, no card) work here too.
+[komendly.com](https://www.komendly.com): the free Studio video and the free ad pack (10 free ads, no card) work here too.
 
 Two binaries, same thing: `komendly` and `ozzy`.
 
@@ -98,7 +98,7 @@ Tell your agent things like:
 - Send follow-up edits with `say <session_id> "..."`; Ozzy works on one message per session at a time (409 = still busy: wait, then retry).
 - Asset and render `url`s need the API key; use `komendly download <id>` to save files.
 - If a command exits with code `4`, show the human the `upgrade_url` from the JSON. Don't retry.
-- A free account includes one free Studio video (no watermark) and one free ad pack (3 free ads; the rest of the pack unlocks with a plan or a one-time $9 unlock).
+- A free account includes one free Studio video (no watermark) and one free ad pack (10 free ads; locked bonus ads unlock with a plan or a one-time $9 unlock).
 
 ## Develop
 

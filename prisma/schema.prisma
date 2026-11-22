@@ -125,12 +125,12 @@ model AgentApiKey {
 
 // OAuth 2.1 for the hosted Ozzy MCP server (src/lib/oauth). Codes and tokens are stored as sha256 hashes only.
 model OAuthClient {
-  id                      String    @id // client_id ("kmc_" + 32 base62)
+  id                      String   @id // client_id ("kmc_" + 32 base62)
   name                    String
   redirectUris            String[]
-  tokenEndpointAuthMethod String    @default("none") // none | client_secret_post | client_secret_basic
+  tokenEndpointAuthMethod String   @default("none") // none | client_secret_post | client_secret_basic
   secretHash              String? // sha256 hex of client_secret (confidential clients only)
-  createdAt               DateTime  @default(now())
+  createdAt               DateTime @default(now())
 
   grants OAuthGrant[]
 }
@@ -490,6 +490,10 @@ model AdsWorkspace {
   refunds        AdsRefund[]
   metaConnection MetaConnection?
   autopilot      AdsAutopilot?
+  mandate        MarketingMandate?
+  teamActions    MarketingAction[]
+  adPerformance  AdPerformanceDay[]
+  metaLeads      MetaLead[]
 
   @@index([ownerId])
   @@index([adsPlan])
@@ -701,7 +705,7 @@ enum AdJobStatus {
 // Postgres-backed queue. Engine claims with FOR UPDATE SKIP LOCKED.
 model AdJob {
   id          String      @id @default(cuid())
-  type        String // extract | plan | render_static | render_motion | qc | publish_meta | cleanup
+  type        String // extract | plan | render_static | render_motion | qc | publish_meta | activate_meta | cleanup
   runId       String?
   adId        String?
   workspaceId String?
@@ -1260,68 +1264,68 @@ model OutboundRun {
 }
 
 model OutboundLead {
-  id            String    @id @default(cuid())
-  runId         String?
-  businessName  String
-  website       String
-  domain        String    @unique // registrable domain: dedupe key
-  niche         String
-  city          String
-  region        String?
-  timezone      String    @default("America/New_York")
-  email         String // public business address found on the business's own site
-  emailFoundOn  String // page URL it was found on
-  emailCheck     String? // kly/src/verify.ts: valid | catch_all | unknown | invalid | retry (null = not checked yet)
-  emailCheckedAt DateTime?
-  source        String    @default("osm") // osm | search | codex_search | manual
+  id                String    @id @default(cuid())
+  runId             String?
+  businessName      String
+  website           String
+  domain            String    @unique // registrable domain: dedupe key
+  niche             String
+  city              String
+  region            String?
+  timezone          String    @default("America/New_York")
+  email             String // public business address found on the business's own site
+  emailFoundOn      String // page URL it was found on
+  emailCheck        String? // kly/src/verify.ts: valid | catch_all | unknown | invalid | retry (null = not checked yet)
+  emailCheckedAt    DateTime?
+  source            String    @default("osm") // osm | search | codex_search | manual
   /// found -> ad_made -> queued -> sent -> opened -> clicked -> replied -> signed_up -> paid | bounced | unsubscribed | complained | failed
-  status        String    @default("found")
-  giftId        String?   @unique
-  giftToken     String?   @unique
-  adId          String?
-  claimToken    String    @unique
-  unsubToken    String    @unique
-  mailboxId     String?
-  step          Int       @default(0) // emails sent (max 2: first + one follow-up)
-  nextSendAt    DateTime?
-  lastSentAt    DateTime?
-  clickedAt     DateTime?
-  repliedAt     DateTime?
-  error         String?
+  status            String    @default("found")
+  giftId            String?   @unique
+  giftToken         String?   @unique
+  adId              String?
+  claimToken        String    @unique
+  unsubToken        String    @unique
+  mailboxId         String?
+  step              Int       @default(0) // emails sent (max 2: first + one follow-up)
+  nextSendAt        DateTime?
+  lastSentAt        DateTime?
+  clickedAt         DateTime?
+  repliedAt         DateTime?
+  error             String?
   // Kly (acquisition service) fields
-  score         Int? // 0-100 fit score from qualification
-  qualification Json? // { isLocalSmb, sellsToConsumers, chain, reasons[] } from the qualifier
-  qualityScore  Int? // 0-10 judge score of the hook ad (Kly's auto review)
-  qualityNotes  String?
-  giftAttempts  Int       @default(0) // hook-ad generations tried (regenerate once on a weak ad)
-  armIds        String[]  @default([]) // KlyArm ids this lead was assigned (subject, body, angle, ...)
-  replyIntent   String? // interested | question | not_now | not_interested | unsubscribe | auto_reply | other
-  userId        String? // Komendly user that signed up from this lead
-  workspaceId   String?
-  signedUpAt    DateTime?
-  paidAt        DateTime?
-  revenueCents  Int       @default(0) // lifetime paid revenue from the converted workspace
-  costMicros    BigInt    @default(0) // AI + generation cost attributed to this lead
-  purgedAt      DateTime? // PII removed by retention (row kept for stats)
+  score             Int? // 0-100 fit score from qualification
+  qualification     Json? // { isLocalSmb, sellsToConsumers, chain, reasons[] } from the qualifier
+  qualityScore      Int? // 0-10 judge score of the hook ad (Kly's auto review)
+  qualityNotes      String?
+  giftAttempts      Int       @default(0) // hook-ad generations tried (regenerate once on a weak ad)
+  armIds            String[]  @default([]) // KlyArm ids this lead was assigned (subject, body, angle, ...)
+  replyIntent       String? // interested | question | not_now | not_interested | unsubscribe | auto_reply | other
+  userId            String? // Komendly user that signed up from this lead
+  workspaceId       String?
+  signedUpAt        DateTime?
+  paidAt            DateTime?
+  revenueCents      Int       @default(0) // lifetime paid revenue from the converted workspace
+  costMicros        BigInt    @default(0) // AI + generation cost attributed to this lead
+  purgedAt          DateTime? // PII removed by retention (row kept for stats)
   // Voice bridge (Kly -> The Tribunal AI calls)
-  phone         String? // US E.164 business phone (+1XXXXXXXXXX)
-  phoneSource   String? // osm | site | codex_search (third-party listing, used only when the own site has none) | reply
+  phone             String? // US E.164 business phone (+1XXXXXXXXXX)
+  phoneSource       String? // osm | site | codex_search (third-party listing, used only when the own site has none) | reply
   /// queued | rejected | called | gift_yes | info_requested | not_interested | opt_out | callback_requested | no_answer | failed ...
-  voiceStatus   String?
-  voiceReason   String? // Tribunal reject reason / last event detail
-  voiceSyncedAt DateTime? // suppression pushed to Tribunal (null while one is pending)
-  calledAt      DateTime?
-  voicePushedAt DateTime? // handed to The Tribunal (daily call cap counts these)
+  voiceStatus       String?
+  voiceReason       String? // Tribunal reject reason / last event detail
+  voiceSyncedAt     DateTime? // suppression pushed to Tribunal (null while one is pending)
+  calledAt          DateTime?
+  voicePushedAt     DateTime? // handed to The Tribunal (daily call cap counts these)
   voiceDelivery     String? // v1.1: delivery asked for on the call ("sms" | "email")
   voiceSmsPhone     String? // v1.1: number to text the gift to
   voiceDeliveredAt  DateTime? // gift link delivered after the call (exactly once)
   voiceDeliveredVia String? // sms | email
   voiceSmsFailedAt  DateTime? // first failed SMS attempt (retried for 24 h when no email fallback)
   // --- autopilot: review_gifts / new_business --- growth system that owns this lead (null = classic Kly) + its data
-  system        String?
-  systemData    Json?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  system            String?
+  systemData        Json?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   sends OutboundSend[]
 
@@ -1723,7 +1727,6 @@ model KlyReviewGift {
   @@index([startedAt])
 }
 
-
 // --- autopilot: shopify ---
 /// Shopify App Store install: one row per shop (myshopify domain), linked to the Komendly user + ads workspace it created.
 model ShopifyShop {
@@ -1788,4 +1791,99 @@ model GalleryPage {
   indexNowAt  DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+/// Ozzy's AI marketing team: the owner's delegation + monthly ad-spend authorization (one per workspace). prd.md R1.
+/// The engine reads it; only owner-facing web routes write limit/zips/authorization. Engine code must never raise monthlyLimitMinor.
+model MarketingMandate {
+  id                    String    @id @default(cuid())
+  workspaceId           String    @unique
+  status                String    @default("active") // active | paused | stopped (owner/billing intent)
+  state                 String    @default("pending") // engine state: pending | blocked | live | capped | paused | stopped | needs_reconnect
+  stateReason           String? // owner-facing reason for blocked/capped/paused/needs_reconnect
+  monthlyLimitMinor     Int // owner-authorized max ad spend per calendar month, ad account currency minor units
+  currency              String    @default("USD")
+  zips                  String[] // service-area ZIP codes (US)
+  leadEmail             String
+  privacyUrl            String? // business privacy policy for the lead form; null = Komendly lead notice page
+  adAccountId           String
+  pageId                String
+  authorizedAt          DateTime
+  authorizedByUserId    String
+  authorizationText     String // exact text the owner agreed to
+  termsVersion          String
+  leadFormId            String?
+  campaignId            String?
+  spendBeforeMonthMinor Int? // campaign lifetime spend at the start of capMonth (for spend_cap)
+  capMonth              String? // YYYY-MM the current spend_cap was set for
+  spendCapMinor         Int? // last spend_cap written to Meta
+  launchedAt            DateTime?
+  lastCheckedAt         DateTime?
+  lastAnalyzedOn        String? // YYYY-MM-DD of the last daily analyst pass
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  workspace AdsWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([status, state])
+}
+
+/// Real work done by Ozzy's team (activity feed + audit log). Written only by the code that did the work.
+model MarketingAction {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  role         String // director | strategy | creative | launch | analyst | leads
+  kind         String // see TEAM_ACTION_KINDS in src/lib/ads/team/contracts.ts
+  summary      String // plain-English line for the owner
+  outcome      String   @default("done") // done | failed | skipped
+  evidence     Json? // numbers/thresholds behind a decision
+  metaObjectId String?
+  dedupeKey    String?  @unique // idempotency for retried ticks
+  createdAt    DateTime @default(now())
+
+  workspace AdsWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+}
+
+/// Daily ad-level Meta insights for ads Komendly runs (measured data).
+model AdPerformanceDay {
+  id          String   @id @default(cuid())
+  workspaceId String
+  metaAdId    String
+  adId        String? // Komendly Ad.id when known
+  day         String // YYYY-MM-DD (ad account time zone as reported by Meta)
+  spendMinor  Int      @default(0)
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  leads       Int      @default(0) // Meta-reported lead actions
+  status      String? // Meta effective_status at fetch time
+  updatedAt   DateTime @updatedAt
+
+  workspace AdsWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([metaAdId, day])
+  @@index([workspaceId, day])
+}
+
+/// A lead received through the Meta leadgen webhook (verified count). Deleted 180 days after receipt.
+model MetaLead {
+  id          String    @id @default(cuid())
+  workspaceId String
+  leadgenId   String    @unique
+  metaAdId    String?
+  formId      String?
+  pageId      String?
+  name        String?
+  email       String?
+  phone       String?
+  zip         String?
+  answers     Json      @default("[]") // [{label, text}]
+  receivedAt  DateTime  @default(now())
+  notifiedAt  DateTime?
+  deletedAt   DateTime?
+
+  workspace AdsWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, receivedAt])
 }

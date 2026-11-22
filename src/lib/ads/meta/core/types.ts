@@ -3,7 +3,16 @@ import type { MetaObjective, PlacementGroup, CreativeCopy } from "./mapping";
 
 export type MetaPublishMode = "mcp" | "graph";
 
-export interface MetaAdAccount { id: string; name: string; currency?: string }
+export interface MetaAdAccount {
+  id: string;
+  name: string;
+  currency?: string;
+  /** Meta account_status (1 active, 2 disabled, 3 unsettled, 7 pending review, 9 grace period, 101 closed...). Undefined = unknown. */
+  status?: number;
+  disableReason?: number;
+  /** Whether a payment method (funding_source) is set. Undefined = unknown. */
+  hasPayment?: boolean;
+}
 export interface MetaPage { id: string; name: string }
 
 export type MetaMedia =
@@ -28,6 +37,8 @@ export interface MetaPublisher {
     input: { name: string; adSetId: string; pageId: string; objective: MetaObjective; copy: CreativeCopy; media: UploadedMedia },
     signal?: AbortSignal,
   ): Promise<{ adId: string; creativeId: string }>;
+  /** Sets each object (ad, ad set or campaign id) to ACTIVE, in the given order. Spends money. */
+  activate(objectIds: string[], signal?: AbortSignal): Promise<void>;
   close?(): Promise<void>;
 }
 

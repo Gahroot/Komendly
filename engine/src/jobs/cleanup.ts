@@ -3,6 +3,7 @@
 import { isBrandKey } from "../storage/keys";
 import { reapOrphans, reaperOptionsFromEnv } from "../queue/reaper";
 import type { JobContext } from "./context";
+import { purgeLeadsJob } from "./lead-retention";
 
 export async function cleanupJob(ctx: JobContext): Promise<unknown> {
   const { db, storage } = ctx;
@@ -18,5 +19,7 @@ export async function cleanupJob(ctx: JobContext): Promise<unknown> {
     await db.adAsset.updateMany({ where: { id: { in: rows.filter((r) => isBrandKey(r.storageKey)).map((r) => r.id) } }, data: { expiresAt: null } });
     deleted += keys.length;
   }
-  return { deleted, ...reaped };
+  // Meta leads: 180-day retention (prd.md R6).
+  const leads = await purgeLeadsJob(ctx).catch(() => null);
+  return { deleted, ...reaped, leads };
 }

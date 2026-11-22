@@ -30,3 +30,56 @@ describe("meta results gate", () => {
     expect(await gatedResultsBlock(async () => ({ approved: false, content: null }), report, "k")).toEqual({ paragraphs: [], gated: null });
   });
 });
+
+describe("team weekly report (Codex-only polish)", async () => {
+  const { codexOnly, teamReportBlock } = await import("../src/growth/meta-results");
+  const { buildTeamReport, reportWindow, teamReportParagraphs } = await import("../../src/lib/ads/team/report");
+  type P = import("../src/providers/types").AIProvider;
+  const team = buildTeamReport({
+    window: reportWindow("2026-11-23"),
+    mandate: { state: "live", monthlyLimitMinor: 600_00, currency: "USD" },
+    days: [{ metaAdId: "m1", adId: "a1", day: "2026-11-17", spendMinor: 140_00, impressions: 5000, clicks: 50, leads: 7 }],
+    leadDays: ["2026-11-17"], actions: [],
+  });
+  const fixed = teamReportParagraphs(team);
+  const provider = (name: "codex" | "openai", reply: (prompt: string) => unknown, extra: object = {}) => {
+    const calls: string[] = [];
+    const p = { name, calls, text: async (r: { prompt: string; model?: string }) => { calls.push(r.model ?? ""); return { text: "", json: reply(r.prompt), usage: { costMicros: 0, latencyMs: 1 } }; }, image: async () => { throw new Error("no"); }, health: async () => ({ ok: true }), ...extra };
+    return p as unknown as P & { calls: string[] };
+  };
+  const approve = async () => ({ approved: true, content: null });
+
+  it("non-Codex provider: no AI call at all, deterministic text", async () => {
+    const openai = provider("openai", () => ({ paragraphs: ["x", "y"] }));
+    expect(codexOnly(openai)).toBeNull();
+    expect(codexOnly(null)).toBeNull();
+    const b = await teamReportBlock(team, { codex: codexOnly(openai), gate: approve, itemKey: "k" });
+    expect(b).toMatchObject({ paragraphs: fixed, source: "fixed" });
+    expect(openai.calls).toEqual([]);
+  });
+  it("Codex wording is used only with identical numbers and an approved gate", async () => {
+    const reworded = fixed.map((p) => `Hey! ${p}`);
+    const ok = await teamReportBlock(team, { codex: codexOnly(provider("codex", () => ({ paragraphs: reworded }))), gate: approve, itemKey: "k" });
+    expect(ok).toEqual({ paragraphs: reworded, source: "ai" });
+    const changed = fixed.map((p) => p.replace("$140", "$150"));
+    const bad = await teamReportBlock(team, { codex: codexOnly(provider("codex", () => ({ paragraphs: changed }))), gate: approve, itemKey: "k" });
+    expect(bad).toMatchObject({ paragraphs: fixed, source: "fixed", reason: "numbers changed" });
+    const rejected = await teamReportBlock(team, { codex: codexOnly(provider("codex", () => ({ paragraphs: reworded }))), gate: async () => ({ approved: false, content: null }), itemKey: "k" });
+    expect(rejected).toMatchObject({ paragraphs: fixed, source: "fixed" });
+  });
+  it("Codex failure falls back to the deterministic text", async () => {
+    const broken = provider("codex", () => { throw new Error("codex down"); });
+    const b = await teamReportBlock(team, { codex: codexOnly(broken), gate: approve, itemKey: "k" });
+    expect(b).toMatchObject({ paragraphs: fixed, source: "fixed" });
+  });
+  it("bypasses a MiMo text wrapper: uses the Codex fallbackText, never the wrapped text", async () => {
+    const codexCalls: string[] = [];
+    const mimo = provider("codex", () => { throw new Error("mimo must not be called"); }, {
+      fallbackText: async (r: { model?: string }) => { codexCalls.push(r.model ?? ""); return { text: "", json: { paragraphs: fixed }, usage: { costMicros: 0, latencyMs: 1 } }; },
+    });
+    const b = await teamReportBlock(team, { codex: codexOnly(mimo, {}), gate: approve, itemKey: "k" });
+    expect(b.source).toBe("ai");
+    expect(mimo.calls).toEqual([]);
+    expect(codexCalls[0]).toBe("gpt-6-luna");
+  });
+});

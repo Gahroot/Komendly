@@ -1,5 +1,6 @@
 // Pure mapping from Komendly runs/ads to Meta Marketing API payloads. Framework-free.
-// Safety invariant: every object we create is PAUSED. Nothing here can spend money.
+// Safety invariant: every object we create is PAUSED. Only activatePayload turns things on, and only the explicit
+// activate_meta job (user confirmed, meta_activate flag) uses it.
 import type { AdGoalValue, Ratio } from "../../contracts";
 
 export const META_OBJECTIVES = {
@@ -64,6 +65,10 @@ export function ctaType(cta: string | null | undefined, objective: MetaObjective
 }
 
 export const PAUSED = "PAUSED" as const;
+
+export function activatePayload() {
+  return { status: "ACTIVE" as const };
+}
 
 export function campaignPayload(input: { name: string; objective: MetaObjective }) {
   return {

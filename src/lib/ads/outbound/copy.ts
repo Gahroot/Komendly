@@ -85,7 +85,7 @@ export const DEFAULT_BODY = [
   "",
   "{link}",
   "",
-  "Built it from your website. It's yours to run, free, no catch. Want more? That page gets you 3 more free ads, no card.",
+  "Built it from your website. It's yours to run, free, no catch. Want more? That page gets you 10 more free ads, no card.",
 ].join("\n");
 export const DEFAULT_FOLLOWUP = ["Your ad's still here if you want it: {link}", "", "No pressure either way."].join("\n");
 
@@ -116,10 +116,10 @@ export function hasOwnSignOff(text: string): boolean {
  * Department. Timing "any": the wording is true whether the gift ad is pre-made or drawn when they open {link}.
  */
 export const NOLAN_COPY: SeedCopy[] = [
-  { dimension: "body", key: "nolan-meta-live", timing: "any", template: ["Here's a Facebook ad for {business}, drawn from your website:", "", "{link}", "", "I'm Nolan, I run Komendly. Our Ozzy Ad Department puts ads like this live in your own Meta account and replaces the losers every week. $97 the first month, then $197/mo.", "", "Your first 3 ads are free, no card.", "", NOLAN_SIGNOFF].join("\n") },
-  { dimension: "body", key: "nolan-would-you-run", timing: "any", template: ["Would you run this ad for {business}?", "", "{link}", "", "It comes straight from your website. If you like it, Komendly's Ozzy Ad Department takes it from there: your ads go live in your own Meta account and the losers get replaced every week. $97 for the first month, $197/mo after.", "", "The first 3 ads are free, no card needed.", "", NOLAN_SIGNOFF].join("\n") },
-  { dimension: "body", key: "nolan-no-agency", timing: "any", template: ["Ozzy, Komendly's ad tool, turns {business}'s website into Facebook ads. Yours is here:", "", "{link}", "", "Want them running without hiring an agency? Your ads go live in your own Meta account and the losers get replaced every week. Month to month: $97 the first month, then $197/mo.", "", "3 free ads to start, no card.", "", NOLAN_SIGNOFF].join("\n") },
-  { dimension: "followup", key: "nolan-followup", timing: "any", template: ["The ad for {business} is one tap away: {link}", "", "If you'd rather not run ads yourself, Ozzy Ad Department puts them live in your own Meta account and swaps out the losers every week. $97 the first month, 3 ads free first.", "", NOLAN_SIGNOFF].join("\n") },
+  { dimension: "body", key: "nolan-meta-live", timing: "any", template: ["Here's a Facebook ad for {business}, drawn from your website:", "", "{link}", "", "I'm Nolan, I run Komendly. Our Ozzy Ad Department puts ads like this live in your own Meta account and replaces the losers every week. $97 the first month, then $197/mo.", "", "Your first 10 ads are free, no card.", "", NOLAN_SIGNOFF].join("\n") },
+  { dimension: "body", key: "nolan-would-you-run", timing: "any", template: ["Would you run this ad for {business}?", "", "{link}", "", "It comes straight from your website. If you like it, Komendly's Ozzy Ad Department takes it from there: your ads go live in your own Meta account and the losers get replaced every week. $97 for the first month, $197/mo after.", "", "The first 10 ads are free, no card needed.", "", NOLAN_SIGNOFF].join("\n") },
+  { dimension: "body", key: "nolan-no-agency", timing: "any", template: ["Ozzy, Komendly's ad tool, turns {business}'s website into Facebook ads. Yours is here:", "", "{link}", "", "Want them running without hiring an agency? Your ads go live in your own Meta account and the losers get replaced every week. Month to month: $97 the first month, then $197/mo.", "", "10 free ads to start, no card.", "", NOLAN_SIGNOFF].join("\n") },
+  { dimension: "followup", key: "nolan-followup", timing: "any", template: ["The ad for {business} is one tap away: {link}", "", "If you'd rather not run ads yourself, Ozzy Ad Department puts them live in your own Meta account and swaps out the losers every week. $97 the first month, 10 ads free first.", "", NOLAN_SIGNOFF].join("\n") },
 ];
 
 /** Old local-business body/follow-up seeds, retired by the Nov 21 rewrite (agency copy keeps running). */
@@ -131,7 +131,7 @@ export const SEED_COPY: SeedCopy[] = ([
   { dimension: "subject", key: "your-free-ad", timing: "prebuilt", template: "here's your free ad" },
   { dimension: "subject", key: "new-fb-ad", timing: "prebuilt", template: "your new facebook ad" },
   { dimension: "body", key: "made-this", timing: "prebuilt", template: DEFAULT_BODY },
-  { dimension: "body", key: "would-you-run", timing: "prebuilt", template: ["Would you run this ad?", "", "{link}", "", "I made it from {business}'s website. Free to keep, no catch. If the angle's off, that page gets you 3 more free ads, no card."].join("\n") },
+  { dimension: "body", key: "would-you-run", timing: "prebuilt", template: ["Would you run this ad?", "", "{link}", "", "I made it from {business}'s website. Free to keep, no catch. If the angle's off, that page gets you 10 more free ads, no card."].join("\n") },
   { dimension: "body", key: "headline-hook", timing: "prebuilt", template: ["\"{headline}\"", "", "That's your new Facebook ad. Made it from {business}'s website:", "", "{link}", "", "Yours to use, free. Tweak it or ignore it, totally up to you."].join("\n") },
   { dimension: "body", key: "too-busy", timing: "prebuilt", template: ["Most {niche} are too busy doing the actual work to make ads. So I made {business} one.", "", "{link}", "", "Free to keep. No call, no catch."].join("\n") },
   { dimension: "followup", key: "still-here", timing: "prebuilt", template: DEFAULT_FOLLOWUP },
@@ -141,14 +141,14 @@ export const SEED_COPY: SeedCopy[] = ([
   { dimension: "subject", key: "agency-for-your-clients", timing: "any", audience: "agency", template: "for your clients" },
   { dimension: "subject", key: "agency-made-this", timing: "prebuilt", audience: "agency", template: "made this from your site" },
   { dimension: "subject", key: "agency-creative", timing: "any", audience: "agency", template: "client ads, in minutes" },
-  { dimension: "body", key: "agency-roster", timing: "prebuilt", audience: "agency", template: ["Made this for {business}, straight from your website \u2193", "", "{link}", "", "Now picture that for every client on your roster. Point Ozzy at any client's site and he makes a full pack of ready-to-run Meta ads. Your first 3 are free."].join("\n") },
-  { dimension: "body", key: "agency-how-long", timing: "prebuilt", audience: "agency", template: ["How long does your team spend on one client's ad creative?", "", "{link}", "", "Ozzy made that from your website in a couple of minutes. Give him any client's site and you get a full pack. First 3 ads are free, no card."].join("\n") },
-  { dimension: "body", key: "agency-headline", timing: "prebuilt", audience: "agency", template: ["\"{headline}\"", "", "That's an ad Ozzy made for {business} from your site:", "", "{link}", "", "Komendly turns any client's website into ready-to-run Facebook and Instagram ads. Your first 3 are free."].join("\n") },
+  { dimension: "body", key: "agency-roster", timing: "prebuilt", audience: "agency", template: ["Made this for {business}, straight from your website \u2193", "", "{link}", "", "Now picture that for every client on your roster. Point Ozzy at any client's site and he makes a full pack of ready-to-run Meta ads. Your first 10 are free."].join("\n") },
+  { dimension: "body", key: "agency-how-long", timing: "prebuilt", audience: "agency", template: ["How long does your team spend on one client's ad creative?", "", "{link}", "", "Ozzy made that from your website in a couple of minutes. Give him any client's site and you get a full pack. First 10 ads are free, no card."].join("\n") },
+  { dimension: "body", key: "agency-headline", timing: "prebuilt", audience: "agency", template: ["\"{headline}\"", "", "That's an ad Ozzy made for {business} from your site:", "", "{link}", "", "Komendly turns any client's website into ready-to-run Facebook and Instagram ads. Your first 10 are free."].join("\n") },
   { dimension: "followup", key: "agency-still-here", timing: "prebuilt", audience: "agency", template: ["Still here if you want it: {link}", "", "Worth a look before your next client creative sprint."].join("\n") },
   { dimension: "followup", key: "agency-last-note", timing: "prebuilt", audience: "agency", template: ["Last note from me. If your team already has creative covered, all good.", "", "The ad's yours either way: {link}"].join("\n") },
   // Partner program (real terms: AdsPartner.commissionPct 30, 12 months; see /partners). "%" is banned, so "percent".
-  { dimension: "body", key: "agency-partner-roster", timing: "prebuilt", audience: "agency", template: ["Made this for {business}, straight from your website \u2193", "", "{link}", "", "Ozzy can do the same for any client's site. And if your clients sign up through our partner program, you earn 30 percent of what they pay for 12 months. Your first 3 ads are free."].join("\n") },
-  { dimension: "body", key: "oc-agency-partner", timing: "on-click", audience: "agency", template: ["Want to see what Ozzy draws from your website?", "", "{link}", "", "Tap it and he makes three ready-to-run Meta ads live. If your clients like them too, our partner program pays you 30 percent of what they pay for 12 months. First 3 ads are free, no card."].join("\n") },
+  { dimension: "body", key: "agency-partner-roster", timing: "prebuilt", audience: "agency", template: ["Made this for {business}, straight from your website \u2193", "", "{link}", "", "Ozzy can do the same for any client's site. And if your clients sign up through our partner program, you earn 30 percent of what they pay for 12 months. Your first 10 ads are free."].join("\n") },
+  { dimension: "body", key: "oc-agency-partner", timing: "on-click", audience: "agency", template: ["Want to see what Ozzy draws from your website?", "", "{link}", "", "Tap it and he makes three ready-to-run Meta ads live. If your clients like them too, our partner program pays you 30 percent of what they pay for 12 months. Your own first 10 ads are free, no card."].join("\n") },
   { dimension: "followup", key: "agency-partner-note", timing: "any", audience: "agency", template: ["One more thing: if your clients sign up through our partner program, you earn 30 percent of what they pay for 12 months.", "", "Ozzy's still here for you: {link}"].join("\n") },
   // Gift on click: no ad exists yet when the email goes out; Ozzy draws 3 live when they open the link. So the copy
   // must never say "made you" / "your ad" (it isn't made yet): it offers the drawing instead.
@@ -157,7 +157,7 @@ export const SEED_COPY: SeedCopy[] = ([
   { dimension: "body", key: "oc-tap-to-draw", timing: "on-click", template: ["Ozzy draws free Facebook ads straight from a business's website. He's got {business}'s site open and is ready to make yours.", "", "{link}", "", "Tap that and watch him draw 3 ads for you, live, in about two minutes. Free to keep, no card, no catch."].join("\n") },
   { dimension: "body", key: "oc-want-one", timing: "on-click", template: ["Want a free Facebook ad for {business}?", "", "{link}", "", "Open that and Ozzy draws three from your website while you watch. Takes a couple of minutes. Yours to keep, no catch."].join("\n") },
   { dimension: "body", key: "oc-too-busy", timing: "on-click", template: ["Most {niche} are too busy doing the actual work to make ads. So Ozzy will make {business} a few, free.", "", "{link}", "", "Tap it and he draws them live from your website. No call, no card."].join("\n") },
-  { dimension: "body", key: "oc-agency", timing: "on-click", audience: "agency", template: ["Want to see what Ozzy makes from your website?", "", "{link}", "", "Tap it and he draws three ready-to-run Meta ads live. Then point him at any client's site. First 3 ads are free, no card."].join("\n") },
+  { dimension: "body", key: "oc-agency", timing: "on-click", audience: "agency", template: ["Want to see what Ozzy makes from your website?", "", "{link}", "", "Tap it and he draws three ready-to-run Meta ads live. Then point him at any client's site. Your first 10 ads are free, no card."].join("\n") },
   { dimension: "followup", key: "oc-still-ready", timing: "on-click", template: ["Ozzy's still ready to draw your ads: {link}", "", "Takes two minutes, free either way."].join("\n") },
   { dimension: "followup", key: "oc-last-note", timing: "on-click", template: ["Last note from me. If ads aren't a priority right now, totally get it.", "", "Ozzy's offer stands: {link}"].join("\n") },
 ] as SeedCopy[]).map((c): SeedCopy => (RETIRED_KEYS.has(c.key) ? { ...c, retired: true } : c)).concat(NOLAN_COPY);
@@ -266,7 +266,7 @@ export function unsubscribeHeaders(unsubscribeUrl: string, mailbox: string): Rec
 export const COPY_STYLE_GUIDE = [
   "Write like one real person typing a quick note to a local business owner, not marketing.",
   "Subjects: 2-6 words, lowercase, curiosity or gift framing (e.g. 'made you something', 'a free gift for you'); never the business name, never 're:', no '!'.",
-  "Prices may appear only as the real ones: $97 the first month, then $197/mo (Ozzy Ad Department); 3 free ads, no card. Never promise leads, sales or outcomes.",
+  "Prices may appear only as the real ones: $97 the first month, then $197/mo (Ozzy Ad Department); 10 free ads, no card (gift packs drawn from the link are 3 ads). Never promise leads, sales or outcomes.",
   "Bodies: under 70 words, short lines. The FIRST LINE is the inbox preview, so it must be the hook (the gift, a question, their ad's headline), never a greeting like 'Hey X team' or 'Hi there'. Exactly one {link}, no summary of their own website back to them, no buzzwords, no claims about results.",
   "Follow-ups: 1-3 short lines, exactly one {link}, friendly, zero guilt.",
   "Agency variants (audience agency) pitch speed across all their clients and the Agency plan, never claim we work with other agencies.",

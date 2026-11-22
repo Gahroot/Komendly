@@ -1,5 +1,5 @@
 // MetaPublisher over the Marketing API (Graph) with the user's Facebook Login for Business token.
-import { actId, adPayload, adSetPayload, campaignPayload, creativePayload } from "./mapping";
+import { actId, activatePayload, adPayload, adSetPayload, campaignPayload, creativePayload } from "./mapping";
 import { MetaApiError, type FetchLike, type MetaAdAccount, type MetaPage, type MetaPublisher, type UploadedMedia } from "./types";
 
 export const DEFAULT_GRAPH_VERSION = "v25.0";
@@ -48,9 +48,15 @@ export class GraphMetaPublisher implements MetaPublisher {
   }
 
   async listAdAccounts(signal?: AbortSignal): Promise<MetaAdAccount[]> {
-    const r = await this.graph.request<{ data: Array<{ id: string; name?: string; currency?: string }> }>(
-      "GET", "me/adaccounts", { fields: "id,name,currency", limit: "100" }, signal);
-    return r.data.map((a) => ({ id: a.id, name: a.name ?? a.id, currency: a.currency }));
+    const r = await this.graph.request<{ data: Array<{ id: string; name?: string; currency?: string; account_status?: number; disable_reason?: number; funding_source?: string }> }>(
+      "GET", "me/adaccounts", { fields: "id,name,currency,account_status,disable_reason,funding_source", limit: "100" }, signal);
+    // Graph omits funding_source when no payment method is set, so absence is meaningful here.
+    return r.data.map((a) => ({
+      id: a.id, name: a.name ?? a.id, currency: a.currency,
+      status: typeof a.account_status === "number" ? a.account_status : undefined,
+      disableReason: typeof a.disable_reason === "number" ? a.disable_reason : undefined,
+      hasPayment: !!a.funding_source,
+    }));
   }
 
   async listPages(signal?: AbortSignal): Promise<MetaPage[]> {
@@ -77,6 +83,18 @@ export class GraphMetaPublisher implements MetaPublisher {
     const ad = await this.graph.request<{ id: string }>(
       "POST", `${actId(adAccountId)}/ads`, adPayload({ name: input.name, adSetId: input.adSetId, creativeId: creative.id }), signal);
     return { adId: ad.id, creativeId: creative.id };
+  }
+
+  async activate(objectIds: string[], signal?: AbortSignal): Promise<void> {
+    await activateViaGraph(this.graph, objectIds, signal);
+  }
+}
+
+/** POST {id} status=ACTIVE one by one (order matters: the caller turns the campaign on last). */
+export async function activateViaGraph(graph: GraphClient, objectIds: string[], signal?: AbortSignal): Promise<void> {
+  for (const id of objectIds) {
+    if (!/^\d+$/.test(id)) throw new MetaApiError(`Invalid Meta object id: ${id}`);
+    await graph.request("POST", id, activatePayload(), signal);
   }
 }
 

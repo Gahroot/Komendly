@@ -36,6 +36,7 @@ const REFUSED_PREFIXES = [
   "/api/admin",
   "/api/auth/", // login/logout/register, profile + email changes, email verification
   "/api/ads/auth/",
+  "/api/ads/team/authorize", // ad spend authorization: a person signed in on komendly.com only
 ];
 
 /** Routes an API key may never be used on (the human must use the web app). */

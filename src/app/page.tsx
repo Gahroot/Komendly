@@ -14,15 +14,18 @@ import { StudioNav } from "@/components/studio/studio-nav";
 import { StudioRoot } from "@/components/studio/studio-spell";
 import "@/components/studio/studio.css";
 import { graph, jsonLdString, softwareApplicationJsonLd } from "@/lib/seo/jsonld";
-import { PUBLIC_OFFER } from "@/lib/ads/public-offer";
+import { HERO_HEADLINE, HERO_OUTCOME, PUBLIC_OFFER } from "@/lib/ads/public-offer";
+import { planCheckoutPath } from "@/lib/ads/plan-checkout";
+import { TeamOffer } from "@/components/billing/team-offer";
 
 export const metadata: Metadata = {
-  title: { absolute: "Komendly — Your website in, ready-to-run ads out" },
-  description: `Paste your website. Ozzy builds on-brand, ready-to-run ads in minutes: ${PUBLIC_OFFER.freeAds} free, no card required. Then your ads go live in your own Meta account and the losers get replaced every week.`,
+  title: { absolute: `Komendly — ${HERO_HEADLINE}` },
+  description: `${HERO_HEADLINE}. ${HERO_OUTCOME} Start with ${PUBLIC_OFFER.freeAds} free ads from your website, no card.`,
   alternates: { canonical: "/" },
 };
 
 const jsonLd = graph(softwareApplicationJsonLd());
+const hirePath = planCheckoutPath("ad_department", false);
 
 export default async function HomePage() {
   const [user, heroVariant] = await Promise.all([getCurrentUser(), getVariant("home_hero")]);
@@ -36,8 +39,11 @@ export default async function HomePage() {
       <main>
         <StudioHero signedIn={signedIn} variant={heroVariant} />
         <div className="relative bg-[linear-gradient(180deg,#140818,#0c0820_30%)]">
-          <StudioTeaser />
+          <section className="mx-auto max-w-6xl px-4 pt-16 sm:px-6 sm:pt-20">
+            <TeamOffer hireHref={signedIn ? hirePath : `/ads/signup?next=${encodeURIComponent(hirePath)}`} freeHref="/#studio-url" />
+          </section>
           <StudioJourney />
+          <StudioTeaser />
           <StudioGallery />
           <StudioClosing />
           <StudioFooter />

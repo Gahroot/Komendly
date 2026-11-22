@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { issueAdsRefund } from "./billing-admin";
 import { getAdsStripe } from "./billing-stripe";
 import { trackAdsEvent } from "./events";
+import { stopTeamFor } from "./team/stop";
 import { selfRefundEligibility, SELF_REFUND_MESSAGES, type SelfRefundEligibility, type SelfRefundReason } from "./self-refund-rules";
 
 const LIVE = ["active", "trialing", "past_due"];
@@ -60,6 +61,8 @@ export async function runSelfRefund(ws: AdsWorkspace, user: Pick<User, "id" | "e
   const amountCents = charge.amount - charge.amount_refunded;
   const res = await issueAdsRefund({ workspaceId: ws.id, actorId: user.id, amountCents, credits: granted._sum.delta ?? 0, reason: `self_refund${reason ? `: ${reason}` : ""}`, viaStripe: true, chargeId: charge.id });
   if (!res.ok) return { ok: false, error: "The refund didn't go through. Please try again in a minute." };
+  // Ozzy's team stops at once (the charge.refunded webhook does the same, idempotently).
+  await stopTeamFor(ws.id, { status: "stopped", reason: "refund", summary: "Your payment was refunded, so the team paused your ads." }).catch((e) => console.error("[ads/team] stop after self-refund failed", e));
   await trackAdsEvent("self_refund", { workspaceId: ws.id, userId: user.id, props: { reason, invoiceId: pre.invoiceId, amountCents, email: norm(user.email), cardFingerprint: fingerprint, plan: ws.adsPlan, refundId: res.refundId } });
   // Cancel now; the customer.subscription.deleted webhook records the churn. Mark it here too so the page is right at once.
   await stripe.subscriptions.cancel(ws.stripeSubscriptionId, { prorate: false }).catch(() => null);

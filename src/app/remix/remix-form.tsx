@@ -91,7 +91,7 @@ export function RemixForm({ id = "remix-url", showSource = false }: { id?: strin
             />
             {site && (
               <a href={freeAdsFromWebsiteHref(site)} className="inline-flex h-11 items-center justify-center rounded-2xl border border-[var(--studio-gold)] px-4 text-sm font-semibold text-[var(--studio-gold)] hover:bg-white/5">
-                Get 3 free ads from my site
+                Get 10 free ads from my site
               </a>
             )}
           </div>

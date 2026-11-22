@@ -2,6 +2,7 @@
 // ads and, optionally, one short Studio video, steered by the member's one-sentence focus and upcoming US retail dates.
 // Pure: shared by the engine (engine/src/jobs/weekly.ts, engine/src/jobs/autopilot-video.ts) and the web (card, API, MCP).
 import { isAdDepartment, localParts, WEEKLY_DEFAULT_TZ, WEEKLY_HOUR } from "./weekly-drop";
+import { winner, type AdStats } from "./team/contracts";
 
 export const AUTOPILOT_FOCUS_MAX = 200;
 /**
@@ -203,4 +204,43 @@ export function autopilotVideoPrompt(o: { focus: string | null; brandName: strin
   lines.push("Give it an upbeat music bed that fits the brand, and bold on-screen captions so it works muted too.");
   lines.push("Don't ask me questions: make your best version and deliver the finished video. I can ask for changes after.");
   return lines.join("\n");
+}
+
+// ---------- learning loop (prd.md R5): evidence-based focus when the owner hasn't set one ----------
+/** Look-back window for the winner ad. */
+export const EVIDENCE_FOCUS_DAYS = 28;
+export const FOCUS_STEERED_KIND = "focus_steered";
+
+export interface EvidenceFocus { focus: string; metaAdId: string; adId: string; angle: string; leads: number; spendMinor: number; cplMinor: number }
+
+/**
+ * The winner ad over the window (team contracts `winner`: >= 3 Meta-reported leads, lowest cost per lead), summed per
+ * Komendly ad (one ad can run as several Meta ads), turned into a focus line. null = no winner or no angle: no steering.
+ */
+export function evidenceFocus(
+  days: ReadonlyArray<{ metaAdId: string; adId: string | null; spendMinor: number; impressions: number; clicks: number; leads: number }>,
+  ads: ReadonlyArray<{ id: string; angle: string | null; hook?: string | null }>,
+): EvidenceFocus | null {
+  const by = new Map<string, AdStats>();
+  for (const d of days) {
+    if (!d.adId) continue; // no Komendly ad = no angle to steer by
+    const a = by.get(d.adId) ?? { metaAdId: d.metaAdId, adId: d.adId, label: d.adId, launchedAt: new Date(0), active: true, spendMinor: 0, impressions: 0, clicks: 0, leads: 0 };
+    a.spendMinor += d.spendMinor; a.impressions += d.impressions; a.clicks += d.clicks; a.leads += d.leads;
+    by.set(d.adId, a);
+  }
+  const best = winner([...by.values()]);
+  if (!best?.adId) return null;
+  const ad = ads.find((a) => a.id === best.adId);
+  const angle = cleanFocus(ad?.angle) ?? cleanFocus(ad?.hook);
+  if (!angle) return null;
+  const focus = cleanFocus(`More ads like the one that brings the cheapest leads: ${angle}`);
+  if (!focus) return null;
+  return { focus, metaAdId: best.metaAdId, adId: best.adId, angle, leads: best.leads, spendMinor: best.spendMinor, cplMinor: Math.round(best.spendMinor / best.leads) };
+}
+
+/** Owner focus always wins; otherwise the evidence focus (or none). */
+export function steeredFocus(ownerFocus: string | null, evidence: EvidenceFocus | null): { focus: string | null; source: "owner" | "evidence" | null } {
+  const own = cleanFocus(ownerFocus);
+  if (own) return { focus: own, source: "owner" };
+  return evidence ? { focus: evidence.focus, source: "evidence" } : { focus: null, source: null };
 }

@@ -12,7 +12,9 @@ import {
   isAdDepartment, WEEKLY_EMAIL_KIND, WEEKLY_EXTRACTION_MAX_AGE_MS, WEEKLY_KIND, WEEKLY_MOTION, WEEKLY_RATIOS, WEEKLY_STARTED, WEEKLY_STATICS,
   weeklyAvoidList, weeklyAwarenessMix, weeklyDropDecision, weeklyDropEmailCopy, weeklyDropEnabled,
 } from "../../../src/lib/ads/weekly-drop";
-import { autopilotPlanPrompt, autopilotSettings, cleanFocus, upcomingMoments } from "../../../src/lib/ads/autopilot";
+import {
+  autopilotPlanPrompt, autopilotSettings, cleanFocus, EVIDENCE_FOCUS_DAYS, evidenceFocus, FOCUS_STEERED_KIND, steeredFocus, upcomingMoments, type EvidenceFocus,
+} from "../../../src/lib/ads/autopilot";
 import type { Db } from "../db";
 import { startAutopilotVideo } from "./autopilot-video";
 import { errMsg, log } from "../log";
@@ -47,7 +49,7 @@ async function weeksDone(db: Db, workspaceId: string): Promise<string[]> {
 }
 
 /** Create this week's drop for one workspace (no-op if another tick/replica already did). `focus` = Autopilot focus, snapshotted on the run's event. */
-export async function startWeeklyRun(db: Db, ws: { id: string; ownerId: string }, week: string, now: Date, focus: string | null = null): Promise<WeeklyStart> {
+export async function startWeeklyRun(db: Db, ws: { id: string; ownerId: string }, week: string, now: Date, focus: string | null = null, focusSource: "owner" | "evidence" | null = null): Promise<WeeklyStart> {
   return db.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`weekly:${ws.id}:${week}`}))`;
     const prior = await tx.adsEvent.findFirst({ where: { name: WEEKLY_STARTED, workspaceId: ws.id, props: { path: ["week"], equals: week } }, select: { id: true } });
@@ -87,8 +89,35 @@ export async function startWeeklyRun(db: Db, ws: { id: string; ownerId: string }
       select: { id: true },
     });
     if (!fresh) await enqueue(tx, { type: "extract", runId: run.id, workspaceId: ws.id, priority: priorityFor(false), payload: { url: src.url } });
-    await tx.adsEvent.create({ data: { name: WEEKLY_STARTED, workspaceId: ws.id, userId: ws.ownerId, runId: run.id, props: { week, runId: run.id, reextract: !fresh, ...(focus ? { focus } : {}) } } });
+    await tx.adsEvent.create({ data: { name: WEEKLY_STARTED, workspaceId: ws.id, userId: ws.ownerId, runId: run.id, props: { week, runId: run.id, reextract: !fresh, ...(focus ? { focus, ...(focusSource ? { focusSource } : {}) } : {}) } } });
     return { created: true as const, runId: run.id, week };
+  });
+}
+
+/**
+ * Learning loop (prd.md R5): the winner ad (>= 3 leads, lowest cost per lead) over the last 28 days of stored Meta results
+ * (AdPerformanceDay, filled for team workspaces), joined to its Komendly ad's angle. null = no winner, no steering.
+ */
+export async function loadEvidenceFocus(db: Db, workspaceId: string, now: Date): Promise<EvidenceFocus | null> {
+  const since = new Date(now.getTime() - EVIDENCE_FOCUS_DAYS * 86_400_000).toISOString().slice(0, 10);
+  const days = await db.adPerformanceDay.findMany({ where: { workspaceId, day: { gte: since } }, select: { metaAdId: true, adId: true, spendMinor: true, impressions: true, clicks: true, leads: true } });
+  if (!days.some((d) => d.leads > 0)) return null;
+  const ids = [...new Set(days.flatMap((d) => (d.adId ? [d.adId] : [])))];
+  const ads = ids.length ? await db.ad.findMany({ where: { id: { in: ids }, workspaceId }, select: { id: true, angle: true, hook: true } }) : [];
+  return evidenceFocus(days, ads);
+}
+
+/** Record the steering as Creative Studio work (one per workspace + week; a retried tick is a no-op). */
+async function recordFocusSteered(db: Db, workspaceId: string, week: string, e: EvidenceFocus): Promise<void> {
+  await db.marketingAction.createMany({
+    data: [{
+      workspaceId, role: "creative", kind: FOCUS_STEERED_KIND,
+      summary: `Steered this week's new ads toward your cheapest-lead ad: ${e.angle}`.slice(0, 300),
+      evidence: { metaAdId: e.metaAdId, adId: e.adId, leads: e.leads, spendMinor: e.spendMinor, cplMinor: e.cplMinor, windowDays: EVIDENCE_FOCUS_DAYS, week },
+      metaObjectId: e.metaAdId,
+      dedupeKey: `focus_steered:${workspaceId}:${week}`,
+    }],
+    skipDuplicates: true,
   });
 }
 
@@ -109,11 +138,20 @@ export async function weeklyScheduleTick(deps: WeeklyDeps): Promise<WeeklyStart[
     // Time zone: Autopilot setting, else US Eastern.
     const d = weeklyDropDecision({ now, tz: ap.timezone, enabled: ap.enabled, subscribed: isAdDepartment(ws), weeksDone: await weeksDone(deps.db, ws.id), dayOfWeek: ap.dayOfWeek, hour: ap.hour });
     if (!d.due) continue;
-    const r = await startWeeklyRun(deps.db, ws, d.week, now, ap.focus);
+    // Owner focus always wins; without one, steer by evidence (winner ad), else no focus at all.
+    const evidence = ap.focus ? null : await loadEvidenceFocus(deps.db, ws.id, now).catch((e: unknown) => {
+      log("warn", "evidence focus failed", { workspaceId: ws.id, error: errMsg(e) });
+      return null;
+    });
+    const steer = steeredFocus(ap.focus, evidence);
+    const r = await startWeeklyRun(deps.db, ws, d.week, now, steer.focus, steer.source);
     if (r.created) {
-      log("info", "weekly drop created", { workspaceId: ws.id, runId: r.runId, week: r.week, reason: d.reason });
+      log("info", "weekly drop created", { workspaceId: ws.id, runId: r.runId, week: r.week, reason: d.reason, focusSource: steer.source });
+      if (steer.source === "evidence" && evidence) {
+        await recordFocusSteered(deps.db, ws.id, r.week, evidence).catch((e: unknown) => log("warn", "focus_steered not recorded", { workspaceId: ws.id, error: errMsg(e) }));
+      }
       if (ap.includeVideo) {
-        const v = await startAutopilotVideo(deps.db, ws, { week: r.week, focus: ap.focus, tz: ap.timezone, now }).catch((e: unknown) => {
+        const v = await startAutopilotVideo(deps.db, ws, { week: r.week, focus: steer.focus, tz: ap.timezone, now }).catch((e: unknown) => {
           log("warn", "autopilot video not started", { workspaceId: ws.id, week: r.week, error: errMsg(e) });
           return null;
         });
