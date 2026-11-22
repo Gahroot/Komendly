@@ -5,11 +5,13 @@ import { adsErrorResponse, getOrCreateWorkspace, requireUser, requireWorkspaceMe
 
 export async function POST() {
   try {
-    const workspace = await getOrCreateWorkspace(await requireUser());
+    const user = await requireUser();
+    const workspace = await getOrCreateWorkspace(user);
     await requireWorkspaceMember({ workspaceId: workspace.id });
     // Ozzy's team: mark needs_reconnect and pause the campaign while the token still works, then revoke.
     await pauseTeamBeforeDisconnect(workspace.id);
-    await disconnectMeta(workspace.id);
+    // Partner rows are never revoked (disconnectMeta); an admin's own grant backs every partner customer, so keep it too.
+    await disconnectMeta(workspace.id, { revoke: !user.isAdmin });
     return NextResponse.json({ ok: true });
   } catch (error) {
     return adsErrorResponse(error);

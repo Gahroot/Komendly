@@ -94,7 +94,9 @@ function ConnectStep({ status, refresh, loading, ready, onNext }: { status: Team
         <CardDescription>Use the Facebook login that manages your business&apos;s ads account and Facebook Page.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
-        {meta.access === "disabled" ? (
+        {meta.access === "disabled" && meta.partner.offered && !meta.connected ? (
+          <FoundingSetup status={status} refresh={refresh} />
+        ) : meta.access === "disabled" ? (
           <p role="status" className="rounded-lg border border-border bg-muted/50 px-3 py-2">
             Meta is still reviewing Komendly&apos;s access, so connecting is switched on one account at a time for now. Write to{" "}
             <a className="text-primary underline-offset-4 hover:underline" href="mailto:nolan@komendly.com">nolan@komendly.com</a> and we&apos;ll switch it on for you.
@@ -108,7 +110,12 @@ function ConnectStep({ status, refresh, loading, ready, onNext }: { status: Team
             </ul>
             <Button className="spellbar__cta" onClick={openMetaConnect}>Connect Meta</Button>
             <p className="text-xs text-muted-foreground">A Meta window opens. When you&apos;re done there, this page moves on by itself.</p>
+            {meta.partner.offered && <FoundingSetup status={status} refresh={refresh} />}
           </>
+        ) : meta.partner.viaPartner && !(meta.selection?.adAccountId && meta.selection?.pageId) ? (
+          <p role="status" className="rounded-lg border border-border bg-muted/50 px-3 py-2">
+            Your partner access is in. Komendly is picking your ad account and Facebook Page now; we&apos;ll email you when step 2 is ready.
+          </p>
         ) : !meta.accounts ? (
           <Loader2 className="size-5 animate-spin text-muted-foreground" aria-label="Loading your Meta accounts" />
         ) : "error" in meta.accounts ? (
@@ -139,6 +146,44 @@ function ConnectStep({ status, refresh, loading, ready, onNext }: { status: Team
         )}
       </CardContent>
     </Card>
+  );
+}
+
+/** Founding setup while Meta reviews Komendly: the owner adds Komendly's Business as a partner, then tells us. */
+function FoundingSetup({ status, refresh }: { status: TeamStatus; refresh: () => Promise<void> }) {
+  const { businessId, requested } = status.meta.partner;
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(requested);
+  const tell = async () => {
+    setSending(true);
+    const r = await teamFetch("/api/ads/team/partner-request", { method: "POST" });
+    setSending(false);
+    if (!r.ok) { toast.error(r.error); return; }
+    setSent(true);
+    toast.success(businessId ? "Thanks! We'll connect your account and email you." : "Thanks! We'll email you our Business ID.");
+    await refresh();
+  };
+  return (
+    <div className="space-y-3 rounded-lg border border-[var(--studio-gold)]/40 bg-[var(--studio-gold)]/5 px-4 py-3">
+      <p className="font-medium">Founding setup: give Komendly partner access</p>
+      <p className="text-muted-foreground">
+        Meta is still reviewing Komendly&apos;s app, so for our founding customers we set things up with you. You add Komendly as a partner
+        in your Meta business portfolio and we connect the rest. You need full control of your business portfolio.
+      </p>
+      <ol className="list-decimal space-y-1 pl-5">
+        <li>Open <a className="text-primary underline-offset-4 hover:underline" href="https://business.facebook.com/latest/settings" target="_blank" rel="noreferrer">Settings in Meta Business Suite</a>.</li>
+        <li>Under <b>Users</b>, click <b>Partners</b>, then <b>Add</b> and <b>Give a partner access to your assets</b>.</li>
+        {businessId
+          ? <li>Enter Komendly&apos;s business portfolio ID: <code className="rounded bg-muted px-1 font-mono">{businessId}</code>, then click <b>Next</b>.</li>
+          : <li>Enter Komendly&apos;s business portfolio ID. We&apos;ll send you our Business ID by email: click the button below.</li>}
+        <li>Pick your <b>ad account</b> and allow <b>Manage campaigns</b> (manage ads).</li>
+        <li>Pick your <b>Facebook Page</b> and allow <b>Create ads</b> and <b>Leads access</b>.</li>
+        <li>Click <b>Assign assets</b>.</li>
+      </ol>
+      {sent
+        ? <p role="status" className="flex items-center gap-2"><CheckCircle2 className="size-4 text-primary" /> {businessId ? "Got it. We'll connect your account and email you when step 2 is ready." : "Got it. Watch your inbox for our Business ID."}</p>
+        : <Button variant="outline" disabled={sending} onClick={() => void tell()}>{sending && <Loader2 className="animate-spin" />} {businessId ? "Tell us when done" : "Send me Komendly's Business ID"}</Button>}
+    </div>
   );
 }
 

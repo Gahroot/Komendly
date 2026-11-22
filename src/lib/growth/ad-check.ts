@@ -146,7 +146,7 @@ export function reportFacts(r: AdCheckReport): string {
     ...r.checks.map((c) => `${c.label}: ${c.points}/${c.max}. ${c.fact}`),
     `Active ads: ${r.liveCount}; oldest ${r.oldestDays ?? "n/a"} days; fatigued (> ${FATIGUE_DAYS} days): ${r.fatigued.length}.`,
     ...r.rivals.map((x, i) => `Rival ${i + 1}: ${x.liveCount} active ads, longest ${x.longestRunDays ?? "n/a"} days.`),
-    "Offer: free pack = 10 ads, no card (20 via a referral link); Ozzy Ad Department $97 the first month then $197/month, cancel anytime; ads go live in the customer's own Meta account, losers replaced weekly.",
+    "Offer: free pack = 10 ads, no card (20 via a referral link); Ozzy Ad Department $97 the first month then $197/month, cancel anytime; fresh ads every week + Ad Coach, the customer posts them (do it yourself). Growth Autopilot $297/month founding price (10 founding spots): Ozzy's team runs the customer's Meta lead ads.",
   ].join("\n");
 }
 

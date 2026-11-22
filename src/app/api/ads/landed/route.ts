@@ -4,6 +4,7 @@ import { trackAdsEvent } from "@/lib/ads/events";
 import { BOT_UA } from "@/lib/ads/pricing-funnel";
 import { clientIpFromHeaders, coarseIpNet, isMetaIp } from "@/lib/ads/meta-ip";
 import { ANON_ID_COOKIE, EXP_COOKIE, parseAssignments } from "@/lib/analytics/experiments";
+import { normalizeTrade, TRADE_COOKIE, tradeFromPath } from "@/lib/ads/trade";
 import { FBC_COOKIE, FIRST_TOUCH_COOKIE, LAST_TOUCH_COOKIE, parseFirstTouch } from "@/lib/analytics/first-touch";
 
 const LANDED_COOKIE = "kmd_ld";
@@ -36,6 +37,8 @@ export async function POST(request: NextRequest) {
     });
     if (seen) return ok;
     const ip = clientIpFromHeaders(request.headers);
+    // Trade landing pages (/free-ads/roofers): the path decides; else a trade cookie set on an earlier visit.
+    const trade = tradeFromPath(body.path) ?? normalizeTrade(request.cookies.get(TRADE_COOKIE)?.value);
     await trackAdsEvent(name, {
       props: {
         anonId,
@@ -45,6 +48,7 @@ export async function POST(request: NextRequest) {
         hasFbc: request.cookies.has(FBC_COOKIE),
         exp: parseAssignments(request.cookies.get(EXP_COOKIE)?.value),
         ipNet: coarseIpNet(ip),
+        ...(trade ? { trade } : {}),
         ...(isMetaIp(ip) ? { bot: "meta_review" } : {}),
       },
     });

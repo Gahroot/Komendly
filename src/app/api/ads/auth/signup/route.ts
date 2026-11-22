@@ -15,6 +15,8 @@ import { prisma } from "@/lib/prisma";
 import { linkKlyLeadAtSignup } from "@/lib/kly/attribution";
 import { claimOutboundGift } from "@/lib/kly/gift-claim";
 import { ANON_ID_COOKIE, EXP_COOKIE, parseAssignments } from "@/lib/analytics/experiments";
+import { normalizeTrade, TRADE_COOKIE } from "@/lib/ads/trade";
+import { tagWorkspaceTrade } from "@/lib/ads/trade-server";
 
 const BodySchema = z.object({
   /** Optional: the landing sign-up asks only for email + password. Emails greet "Hi there" without it. */
@@ -49,7 +51,10 @@ export async function POST(request: NextRequest) {
     // Same inbox we emailed (they clicked our link from it): already proven, so skip the confirmation step.
     const preVerified = klyLead ? await prisma.outboundLead.findUnique({ where: { id: klyLead }, select: { email: true } }).then((l) => sameInbox(l?.email, user.email)).catch(() => false) : false;
     if (preVerified) await prisma.user.update({ where: { id: user.id }, data: { emailVerifiedAt: new Date() } });
-    await trackAdsEvent("signed_up", { workspaceId: workspace.id, userId: user.id, props: { firstTouch, ...(klyLead ? { klyLead } : {}), anonId: request.cookies.get(ANON_ID_COOKIE)?.value, exp: parseAssignments(request.cookies.get(EXP_COOKIE)?.value) } });
+    // Trade landing page (/free-ads/roofers sets kmd_trade): count roofer sign-ups and payers separately.
+    const trade = normalizeTrade(request.cookies.get(TRADE_COOKIE)?.value);
+    if (trade) await tagWorkspaceTrade(workspace.id, trade, { userId: user.id, via: "signup" });
+    await trackAdsEvent("signed_up", { workspaceId: workspace.id, userId: user.id, props: { firstTouch, ...(trade ? { trade } : {}), ...(klyLead ? { klyLead } : {}), anonId: request.cookies.get(ANON_ID_COOKIE)?.value, exp: parseAssignments(request.cookies.get(EXP_COOKIE)?.value) } });
     await recordReferralAtSignup({
       code: request.cookies.get(REFERRAL_COOKIE)?.value ?? parsed.data.ref,
       giftId: request.cookies.get(GIFT_COOKIE)?.value ?? null,

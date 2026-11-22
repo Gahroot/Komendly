@@ -6,12 +6,13 @@ import { CheckoutPending } from "@/components/ads/team/checkout-pending";
 import { TeamApp } from "@/components/ads/team/team-app";
 import { TeamOffer, type TeamOfferProps } from "@/components/ads/team/team-offer";
 import { getCurrentUser } from "@/lib/auth";
-import { LAUNCH_QUARTER, getPlan, offerCouponId, offerFirstPaymentCents, priceIdFor } from "@/lib/ads/billing-config";
+import { AUTOPILOT_REGULAR_PRICE_CENTS, getPlan, priceIdFor } from "@/lib/ads/billing-config";
 import { formatCents } from "@/lib/ads/billing-format";
 import { isPaidWorkspace } from "@/lib/ads/billing-gates";
 import { isBillingConfigured } from "@/lib/ads/billing-stripe";
 import { loadCheckoutPixel } from "@/lib/ads/checkout-pixel";
-import { getLaunchOfferState } from "@/lib/ads/launch-offer";
+import { foundingSpotsLeft } from "@/lib/ads/founding-spots";
+import { prisma } from "@/lib/prisma";
 import { loadTeamStatus, requireTeamAccess } from "@/lib/ads/team/server";
 
 export const metadata: Metadata = { title: "Your marketing team", robots: { index: false, follow: false } };
@@ -27,14 +28,16 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
 
   let offer: TeamOfferProps | null = null;
   if (!status.hired) {
-    const plan = getPlan("ad_department");
+    // Pre-hire: sell Growth Autopilot (the team). Ad Department (DIY) members switch in the billing portal.
+    const plan = getPlan("autopilot");
     const paid = isPaidWorkspace(ws);
     const configured = isBillingConfigured() && !!plan && !!priceIdFor(plan);
-    const launch = !paid && configured && !!offerCouponId(LAUNCH_QUARTER) && (await getLaunchOfferState(ws.id)).open;
+    const spotsLeft = await foundingSpotsLeft(prisma);
     offer = {
       priceLabel: formatCents(plan?.priceCents ?? 0),
-      firstMonthLabel: launch ? formatCents(offerFirstPaymentCents(LAUNCH_QUARTER)) : null,
-      checkout: !configured ? null : launch ? { kind: "offer", key: LAUNCH_QUARTER.key } : { kind: "plan", key: "ad_department" },
+      regularPriceLabel: formatCents(AUTOPILOT_REGULAR_PRICE_CENTS),
+      spotsFull: spotsLeft <= 0,
+      checkout: !configured ? null : { kind: "plan", key: "autopilot" },
       switchInPortal: paid && !!ws.stripeCustomerId,
       blockedReason: ws.suspendedAt ? "This account is on hold. Write to nolan@komendly.com." : !status.isOwner ? "Ask the account owner to hire the team." : null,
     };

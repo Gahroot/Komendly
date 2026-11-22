@@ -213,7 +213,8 @@ describe("founder rewrite (Nov 21)", () => {
       expect(checkOutboundEmail(e, c), v.key).toBeNull();
       expect(e.text).toContain(NOLAN_SIGNOFF);
       expect(e.text).not.toMatch(/the ad wizard at Komendly/);
-      expect(e.text).toMatch(/Meta account/);
+      expect(e.text).toMatch(/every (week|Monday)/);
+      expect(e.text).not.toMatch(/live in your (own )?Meta account/);
       expect(e.text).toContain("$97");
       expect(e.text).not.toMatch(/\b(leads|sales|customers)\b/i);
       if (v.dimension === "body") expect(e.text).toMatch(/\$197\/mo/);

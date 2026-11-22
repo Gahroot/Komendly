@@ -4,6 +4,7 @@ import {
   type LabeledNumber, type MandateInput, type TeamRole,
 } from "./contracts";
 import type { Readiness } from "../meta/readiness";
+import { TEAM_PLAN_KEYS } from "../billing-config";
 
 /** Kinds written for the owner's own choices (shown as "You", not as a team role). */
 export const OWNER_ACTION_KINDS = new Set(["authorized", "limit_changed", "owner_paused", "owner_resumed"]);
@@ -62,6 +63,12 @@ export interface TeamMetaView {
   currency: string;
   /** Readiness of the chosen account + Page (null = unknown: nothing chosen or Meta unreachable). */
   readiness: Readiness | null;
+  /**
+   * Founding setup while Meta App Review is pending: the owner adds Komendly's Business as a partner and Komendly connects.
+   * `offered` = show the path; `businessId` = Komendly's Business portfolio ID (null: we email it); `viaPartner` = Komendly's
+   * token is connected; `requested` = the owner already said it's done.
+   */
+  partner: { offered: boolean; businessId: string | null; viaPartner: boolean; requested: boolean };
 }
 export interface TeamStatus {
   hired: boolean;
@@ -224,7 +231,7 @@ export function adAccountNameFromText(text: string): string | null {
   return /in my ad account "(.*)"\. Ad spend/.exec(text)?.[1] ?? null;
 }
 
-/** Checkouts that hire the team land on /ads/team (Ad Department or Agency, incl. the founding first-month offer). */
+/** Checkouts that hire the team land on /ads/team (Growth Autopilot or Agency). Ad Department (DIY) goes back to billing. */
 export function hiresTeam(kind: string, planKey: string | null | undefined): boolean {
-  return (kind === "plan" || kind === "offer") && (planKey === "ad_department" || planKey === "agency");
+  return (kind === "plan" || kind === "offer") && (TEAM_PLAN_KEYS as readonly string[]).includes(planKey ?? "");
 }

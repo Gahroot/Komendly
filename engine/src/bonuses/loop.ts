@@ -30,7 +30,7 @@ export async function enqueueBonus(db: Db, workspaceId: string, kind: AdsBonusKi
 export async function bonusTick(db: Db, now: Date, env: NodeJS.ProcessEnv = process.env): Promise<number> {
   if (!bonusesEnabled(env)) return 0;
   const candidates = await db.adsWorkspace.findMany({
-    where: { adsPlan: "ad_department", suspendedAt: null },
+    where: { adsPlan: { in: ["ad_department", "autopilot"] }, suspendedAt: null },
     select: { id: true, adsPlan: true, subscriptionStatus: true, suspendedAt: true },
     orderBy: { id: "asc" },
   });

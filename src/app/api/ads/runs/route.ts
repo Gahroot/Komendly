@@ -5,6 +5,8 @@ import { startRun, StartRunSchema } from "@/lib/ads/run-start";
 import type { RunSummary } from "@/lib/ads/run-types";
 import { isWeeklyRun, weeklyDropTitle } from "@/lib/ads/weekly-drop";
 import { adsErrorResponse, AdsHttpError, getOrCreateWorkspace, requireUser } from "@/lib/ads/workspace";
+import { TRADE_COOKIE } from "@/lib/ads/trade";
+import { tagWorkspaceTrade } from "@/lib/ads/trade-server";
 
 export async function GET() {
   try {
@@ -39,6 +41,9 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) throw new AdsHttpError(400, "invalid_input", "Enter a valid website URL.");
     const workspace = await getOrCreateWorkspace(user);
     const result = await startRun(parsed.data, { user, workspace, fp: fingerprintFrom(request) });
+    // Signed-in owner who came in through a trade page (kmd_trade): tag the workspace once. Never throws.
+    const tradeCookie = request.cookies.get(TRADE_COOKIE)?.value;
+    if (tradeCookie) await tagWorkspaceTrade(workspace.id, tradeCookie, { userId: user.id, via: "run_start" });
     const response = NextResponse.json(result, { status: result.resumed ? 200 : 201 });
     if (!request.cookies.get(DEVICE_COOKIE)) {
       response.cookies.set(DEVICE_COOKIE, crypto.randomUUID(), { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: 60 * 60 * 24 * 365 });

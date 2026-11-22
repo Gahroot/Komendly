@@ -9,7 +9,7 @@ export { CATEGORIES, PLAYBOOKS, SEASONS };
 export type { CategoryDef, Playbook, SeasonDef, SeasonKey, TradeCategory };
 
 export const FREE_OFFER = "10 free ads, no card";
-export const PAID_OFFER = "Ozzy Ad Department: $97 for the first month, then $197/mo. Your ads go live in your own Meta account and the losers get replaced every week.";
+export const PAID_OFFER = "Ozzy Ad Department: $97 for the first month, then $197/mo. Fresh ads from your website every week and a coach that tells you what's working; you post them yourself.";
 export const IDEAS_BASE = "/ad-examples/ideas";
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

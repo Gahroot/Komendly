@@ -12,6 +12,7 @@ import {
 } from "../../../src/lib/ads/meta/core/team-graph";
 import { placementGroupForRatio, type PlacementGroup } from "../../../src/lib/ads/meta/core/mapping";
 import { uploadViaGraph } from "../../../src/lib/ads/meta/core/graph-publisher";
+import { PARTNER_RECONNECT_REASON } from "../../../src/lib/ads/meta/core/partner";
 import type { FetchLike, MetaMedia, StoredMetaToken, UploadedMedia } from "../../../src/lib/ads/meta/core/types";
 import { subscribePageToLeadgen } from "../../../src/lib/ads/leads/alert";
 import {
@@ -19,7 +20,7 @@ import {
   TARGET_ACTIVE_ADS, TEAM_EVENTS, TEAM_KILL_FLAG, TEAM_PAUSE_JOB, TEAM_SYSTEM_KEY, formatMoney,
   type AdStats, type MandateState, type TeamActionKind, type TeamRole,
 } from "../../../src/lib/ads/team/contracts";
-import { hasAdDepartment } from "../../../src/lib/ads/billing-config";
+import { hasTeam } from "../../../src/lib/ads/billing-config";
 import { classifyIndustry } from "../../../src/lib/ads/industries";
 import { isoWeekKey } from "../../../src/lib/ads/weekly-drop";
 import { recordSystemRun, systemEnabled } from "../../../src/lib/growth/systems";
@@ -62,6 +63,8 @@ export interface TeamStore {
   mandate(workspaceId: string): Promise<TeamMandate | null>;
   /** null = not connected. Throws when the token is unusable (expired/undecryptable). */
   token(workspaceId: string, now: Date): Promise<StoredMetaToken | null>;
+  /** True when the workspace runs on Komendly's partner token (Komendly reconnects it, not the owner). */
+  viaPartner?(workspaceId: string): Promise<boolean>;
   brand(workspaceId: string): Promise<Brand>;
   readyAds(workspaceId: string, excludeAdIds: string[], limit: number): Promise<ReadyAd[]>;
   media(ad: ReadyAd, asset: ReadyAsset): Promise<MetaMedia>;
@@ -96,9 +99,15 @@ const PAUSE_REASONS: Record<string, string> = {
 };
 
 async function notifyOwner(d: TeamDeps, m: TeamMandate, state: MandateState, reason: string): Promise<void> {
-  if (!d.notify || !m.leadEmail) return;
+  // Partner connection expired: Komendly reconnects, so the founder gets the notice (with the admin page), not the owner.
+  const partner = state === "needs_reconnect" && reason === PARTNER_RECONNECT_REASON;
+  if (!d.notify || (!partner && !m.leadEmail)) return;
   try {
-    await d.notify({ to: m.leadEmail, workspaceId: m.workspaceId, state, reason, teamUrl: `${appUrl(d)}/ads/team` });
+    if (partner) {
+      await d.notify({ to: process.env.ADMIN_NOTIFY_EMAIL?.trim() || "nolan@komendly.com", workspaceId: m.workspaceId, state, reason: `Partner token expired for workspace ${m.workspaceId}: click "Reconnect via partner access" (one reconnect renews every partner workspace).`, teamUrl: `${appUrl(d)}/admin/ads/workspaces/${m.workspaceId}` });
+      return;
+    }
+    await d.notify({ to: m.leadEmail!, workspaceId: m.workspaceId, state, reason, teamUrl: `${appUrl(d)}/ads/team` });
   } catch (e) {
     log("warn", "team notice email failed", { workspaceId: m.workspaceId, state, error: errMsg(e) });
   }
@@ -151,6 +160,12 @@ class Ctx {
 
 class NeedsReconnect extends Error {}
 
+/** needs_reconnect reason: partner connections are Komendly's to fix, so the owner isn't asked to reconnect. */
+async function reconnectReason(d: TeamDeps, workspaceId: string): Promise<{ reason: string; partner: boolean }> {
+  const partner = await d.store.viaPartner?.(workspaceId).catch(() => false) ?? false;
+  return { reason: partner ? PARTNER_RECONNECT_REASON : RECONNECT_REASON, partner };
+}
+
 export interface TeamOpsTick { enabled: boolean; mandates: number; actions: number; errors: number }
 
 // ---------- tick ----------
@@ -195,7 +210,7 @@ async function runMandate(c: Ctx, kill: boolean): Promise<void> {
   const verdict = stopVerdict({
     killSwitch: kill,
     mandateStatus: m.status === "paused" || m.status === "stopped" ? m.status : "active",
-    subscriptionLive: hasAdDepartment({ adsPlan: ws.adsPlan, subscriptionStatus: ws.subscriptionStatus, suspendedAt: null }),
+    subscriptionLive: hasTeam({ adsPlan: ws.adsPlan, subscriptionStatus: ws.subscriptionStatus, suspendedAt: null }),
     suspended: !!ws.suspendedAt,
     metaConnected: !!token || tokenBad,
   });
@@ -207,7 +222,7 @@ async function runMandate(c: Ctx, kill: boolean): Promise<void> {
     else await operate(c, graph);
   } catch (e) {
     if (e instanceof NeedsReconnect || isMetaAuthError(e)) {
-      await c.setState("needs_reconnect", RECONNECT_REASON, { role: "director", kind: "needs_reconnect" });
+      await c.setState("needs_reconnect", (await reconnectReason(d, m.workspaceId)).reason, { role: "director", kind: "needs_reconnect" });
       return;
     }
     throw e;
@@ -508,7 +523,7 @@ export async function teamPause(d: TeamDeps, workspaceId: string, reason: string
   if (!error || !isMetaAuthError(error)) {
     await c.patch({ state: "paused", stateReason: why });
   } else {
-    await c.patch({ state: "needs_reconnect", stateReason: RECONNECT_REASON });
+    await c.patch({ state: "needs_reconnect", stateReason: (await reconnectReason(d, workspaceId)).reason });
   }
   await c.act({ role: "launch", kind: "service_paused", outcome: error ? "failed" : "done", summary: error ? `Tried to pause your campaign but Meta answered: ${error.slice(0, 120)}. Meta's spend cap still holds.` : m.campaignId ? `Paused your campaign. ${why}` : why, metaObjectId: m.campaignId, dedupeKey: `team_pause:${jobId}` });
   await d.store.event(TEAM_EVENTS.paused, workspaceId, null, { campaignId: m.campaignId, reason: code, jobId, paused });
@@ -557,6 +572,9 @@ export function prismaTeamStore(db: Db, storage: Storage): TeamStore {
     },
     async mandate(workspaceId) {
       return db.marketingMandate.findUnique({ where: { workspaceId }, include: mandateSelect });
+    },
+    async viaPartner(workspaceId) {
+      return !!(await db.metaConnection.findUnique({ where: { workspaceId }, select: { viaPartner: true } }))?.viaPartner;
     },
     async token(workspaceId, now) {
       const conn = await db.metaConnection.findUnique({ where: { workspaceId }, select: { id: true } });

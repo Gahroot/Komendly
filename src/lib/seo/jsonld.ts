@@ -1,5 +1,5 @@
 import { ADS_GUARANTEE, PLANS_FOR_SALE, planUsageLine, type AdsPlanTier } from '@/lib/ads/billing-config'
-import { HERO_INCLUDES, HERO_OUTCOME, HERO_PLAN, PUBLIC_OFFER, UNLOCK_LINE } from '@/lib/ads/public-offer'
+import { DIY_INCLUDES, DIY_PLAN, FOUNDING_SPOTS_LINE, HERO_INCLUDES, HERO_OUTCOME, HERO_PLAN, PUBLIC_OFFER, UNLOCK_LINE } from '@/lib/ads/public-offer'
 import { authorUrl, type Author } from '@/lib/authors'
 import type { BlogPostMeta, FaqItem } from '@/lib/blog'
 import { stripFootnotes } from '@/lib/blog-content'
@@ -46,9 +46,10 @@ export function websiteJsonLd(description: string): JsonLd {
   return { '@type': 'WebSite', '@id': WEBSITE_ID, url: SITE_URL, name: SITE_NAME, description, publisher: { '@id': ORG_ID } }
 }
 
-/** Offer text for a plan: the hero plan leads with its outcome and first-month price. */
+/** Offer text for a plan: the hero plan leads with its outcome and founding price; Ad Department is the DIY plan. */
 function planOfferDescription(p: AdsPlanTier, creditsLine: string): string {
-  if (p.key === HERO_PLAN.key) return `${HERO_OUTCOME} ${PUBLIC_OFFER.heroFirstMonth} the first month, then ${PUBLIC_OFFER.heroPrice}/month. ${planUsageLine(p)}, ${HERO_INCLUDES}. ${ADS_GUARANTEE}`
+  if (p.key === HERO_PLAN.key) return `${HERO_OUTCOME} ${PUBLIC_OFFER.heroPrice}/month founding price, locked while subscribed (regular ${PUBLIC_OFFER.heroRegularPrice}/month). Includes ${HERO_INCLUDES}. ${FOUNDING_SPOTS_LINE} ${ADS_GUARANTEE}`
+  if (p.key === DIY_PLAN.key) return `${planUsageLine(p)}: ${DIY_INCLUDES}. ${PUBLIC_OFFER.diyFirstMonth} the first month within ${PUBLIC_OFFER.launchWindowHours} hours of the free ads, then ${PUBLIC_OFFER.diyPrice}/month. ${ADS_GUARANTEE}`
   return `${p.usageMultiple ? `${planUsageLine(p)}, 6 fresh ads every Monday and Ozzy Ad Coach` : creditsLine}. ${ADS_GUARANTEE}`
 }
 

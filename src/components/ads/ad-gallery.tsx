@@ -21,7 +21,7 @@ import { AdSkeletonCard } from "./ad-skeleton-card";
 import { FirstAdTimer } from "./first-ad-timer";
 import { MetaPublishDialog } from "./meta-publish-dialog";
 
-export function AdGallery({ run, offerOpen = false, remainingMs = null, unlockPack = false, offerReady = true, unlockAvailable = false }: { run: RunView; offerOpen?: boolean; remainingMs?: number | null; unlockPack?: boolean; offerReady?: boolean; unlockAvailable?: boolean }) {
+export function AdGallery({ run, offerOpen = false, remainingMs = null, unlockPack = false, offerReady = true, unlockAvailable = false, lockedUpsell = true }: { run: RunView; offerOpen?: boolean; remainingMs?: number | null; unlockPack?: boolean; offerReady?: boolean; unlockAvailable?: boolean; lockedUpsell?: boolean }) {
   const ratios = RATIOS.filter((r) => run.ratios.includes(r));
   const gate = useDownloadGate();
   const [ratio, setRatio] = useState<Ratio>(ratios.includes("4:5") ? "4:5" : (ratios[0] ?? "4:5"));
@@ -88,7 +88,7 @@ export function AdGallery({ run, offerOpen = false, remainingMs = null, unlockPa
           </div>
         </div>
       ))}
-      {offerReady && <LockedPackSection runId={run.id} ads={packLocked} unlockAvailable={unlockAvailable} freeAds={run.freeAds} />}
+      {offerReady && <LockedPackSection runId={run.id} ads={packLocked} unlockAvailable={unlockAvailable} freeAds={run.freeAds} upsellLine={lockedUpsell} />}
       <BonusSection runId={run.id} ads={bonusAds} bonus={bonus} ratio={ratio} offerOpen={offerOpen} remainingMs={remainingMs} unlockPack={unlockPack} offerReady={offerReady} />
       {!done && missing > 0 && (
         <div className="space-y-4">

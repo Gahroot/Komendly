@@ -57,12 +57,13 @@ function brandFit(name: string | null, room: number): string | null {
   return n.length <= room ? n : `${n.slice(0, Math.max(1, room - 1)).trimEnd()}…`;
 }
 
-/** The hero plan's public name ("Ozzy's AI Marketing Team"; the plan key stays ad_department). */
-const TEAM = planDisplayName(getPlan(LAUNCH_QUARTER.plan) ?? { name: "Ozzy's AI Marketing Team" });
+/** The launch-offer plan's public name ("Ozzy Ad Department": the do-it-yourself plan since 2026-11-22). */
+const TEAM = planDisplayName(getPlan(LAUNCH_QUARTER.plan) ?? { name: "Ozzy Ad Department" });
+const autopilot = getPlan("autopilot");
 
-/** The one-line offer every paid pitch leads with (prd.md §1-§4): hire the team after the free ads. Only real work. */
+/** The one-line offer every paid pitch leads with (split 2026-11-22): Ad Department = DIY, Growth Autopilot = done for you. Only real work. */
 export const OFFER_PROMISE =
-  `The promise: hire ${TEAM}. They make your ads, launch your campaigns and keep working to bring you more customers. You run your business; Ozzy runs your marketing. What the team really does: makes fresh ads every week, launches them as Facebook and Instagram lead ads in the owner's own Meta account, checks results every day and pauses ads that waste money, emails every new lead to the owner within minutes, and sends a weekly plain-English report. The owner connects Meta once, sets a monthly ad budget limit and calls their leads. Ad spend is paid by the owner directly to Meta, never through Komendly, and never goes over their monthly limit. Lead with hiring the team, not with 'more ads'. Never promise a number of leads, sales or results.`;
+  `The launch offer is ${TEAM}, the do-it-yourself plan: fresh ads made from their website every week, and a coach (Ozzy Ad Coach) that tells them what's working; they post the ads themselves. Never say ${TEAM} launches or runs ads.${autopilot ? ` Done for you is a separate plan: ${planDisplayName(autopilot)} (${autopilot.name}), ${usd(autopilot.priceCents)}/month founding price, locked while subscribed, only 10 founding spots: the team runs their Facebook and Instagram lead ads in their own Meta account inside a monthly limit, and we set up the Meta connection with them when they join. Ad spend is paid directly to Meta.` : ""} Never promise a number of leads, sales or results.`;
 
 export const PRICE_FACTS = {
   launchQuarter: `Launch offer: the first month of ${TEAM} for ${usd(offerFirstPaymentCents(LAUNCH_QUARTER))} instead of ${usd(LAUNCH_QUARTER.priceCents)} (then ${usd(LAUNCH_QUARTER.priceCents)}/month, renews monthly, cancel anytime online), only within ${LAUNCH_QUARTER.windowHours} hours after the free ads were ready. ${OFFER_PROMISE} Also included: Ozzy Ad Coach, a website check-up, a 30-day ad plan, a hook and caption library, and ${PLAN_USAGE_NOTE.charAt(0).toLowerCase()}${PLAN_USAGE_NOTE.slice(1, -1)} (never call it unlimited)`,
@@ -102,8 +103,8 @@ const STAGE: Record<LifecycleKind, string> = {
   start_nudge_1d: "Confirmed their email a day ago and still has not started their free ads. Goal: remove friction: they only need their website address (homepage is fine, no logo or photos needed); Ozzy reads the site and makes the ads in their brand. No prices.",
   start_nudge_3d: "Confirmed their email 3 days ago, never started their free ads. Last friendly reminder: the free pack is still waiting. Short. Say this is the last reminder. No prices.",
   ads_ready: "Their free trial ads just finished; their best ad is shown as a big image above your text, with 3 more under it. Goal: get them to open their ads. Subject like \"Your N ads for <brand> are ready\". One short line on the launch offer being open for 72 hours.",
-  how_to_run: "Their best ad is shown as a big image above your text. Their free ads were ready ~24 hours ago and they have not bought. Goal: one concrete, practical tip on how to test these ads on Meta for THEIR brand (e.g. run 3-5 ads in one ad set with a small daily budget, kill losers after a few days), then that Ozzy's team can do all of this for them (see FACTS). Mention the launch offer is still open. The button opens a step-by-step launch guide on their results page; their ZIP download includes the text to paste for each ad.",
-  offer_24h: "Their best ad is shown as a big image above your text. The launch offer closes in about 24 hours. Goal: a clear, calm reminder of the promise in FACTS for <brand> (hire Ozzy's team to run their ads for them: fresh ads weekly, launched in their own Meta account, daily checks, leads emailed fast), the real price, that ad spend is paid to Meta separately, and the 30-day refund. No hype. Subject names the brand.",
+  how_to_run: "Their best ad is shown as a big image above your text. Their free ads were ready ~24 hours ago and they have not bought. Goal: one concrete, practical tip on how to test these ads on Meta for THEIR brand (e.g. run 3-5 ads in one ad set with a small daily budget, kill losers after a few days), then that the launch offer gives them fresh ads every week and a coach (see FACTS). Mention the launch offer is still open. The button opens a step-by-step launch guide on their results page; their ZIP download includes the text to paste for each ad.",
+  offer_24h: "Their best ad is shown as a big image above your text. The launch offer closes in about 24 hours. Goal: a clear, calm reminder of the launch offer in FACTS for <brand> (fresh ads every week and a coach that says what's working; they post the ads themselves), the real price, and the 30-day refund. No hype. Subject names the brand.",
   last_chance: "Their best ad is shown as a big image above your text. The launch offer closes in about 2 hours (real deadline). Goal: last reminder; also mention the Starter monthly plan as the smaller option that stays available after. Subject names the brand.",
   day7_downsell: "Their best ad is shown as a big image above your text. A week since their free ads; the launch offer has ended. Goal: one small, low-pressure offer from FACTS (the one-time pack), nothing else. Do NOT mention the launch offer or monthly plans. Subject names the brand.",
   day10_free_ads: "10 days since their free ads; they have not bought. Goal: tell them how to earn more free ads without paying: Give 10, get 10 with their own invite link, and Gift a pack. Friendly, no pressure, no prices.",
@@ -124,8 +125,8 @@ const STAGE: Record<LifecycleKind, string> = {
 /** Kinds that may talk about the Launch Quarter (it is open for 72h after the trial only). */
 const LQ_KINDS: ReadonlySet<LifecycleKind> = new Set(["ads_ready", "how_to_run", "offer_24h", "last_chance"]);
 
-export const COPY_SYSTEM = `You write short, plain, friendly lifecycle emails for Komendly (makes ads from a business's website; its main plan is Ozzy's AI Marketing Team, which runs those ads for the owner). The sender voice is Ozzy, Komendly's helpful wizard mascot, but keep it human and low-key.
-When a paid plan is pitched, sell hiring Ozzy's AI Marketing Team to run their ads for them (fresh ads weekly, launched in their own Meta account, daily checks, leads emailed fast, a weekly report), not "more ads". Ad spend is always paid to Meta separately. Never promise a number of leads, sales or results.
+export const COPY_SYSTEM = `You write short, plain, friendly lifecycle emails for Komendly (makes ads from a business's website; Ozzy Ad Department gives fresh ads every week plus a coach and the owner posts them; Growth Autopilot, Ozzy's AI Marketing Team, runs the ads for the owner). The sender voice is Ozzy, Komendly's helpful wizard mascot, but keep it human and low-key.
+When the launch offer is pitched, it is Ozzy Ad Department (do it yourself): never say it launches or runs ads. Only say the team runs ads when naming Growth Autopilot from FACTS. Ad spend is always paid to Meta separately. Never promise a number of leads, sales or results.
 Hard rules:
 - Truthful only. Use ONLY the facts given. Never invent results, stats, testimonials, discounts, deadlines, bonuses or features.
 - Prices: only the exact prices given in FACTS. No percentages, no coupons.
@@ -260,7 +261,7 @@ export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCop
       return {
         subject: sub((x) => `Your ${n} ads for ${x} are ready`, `Your ${n} free ads are ready`),
         preheader: `Made from your website${ctx.lockedLabel ? `, plus ${ctx.lockedLabel} you can unlock` : ""}.`,
-        paragraphs: [hi, `Here's my favourite of the ${n} free ads I made for ${brand}${ctx.lockedLabel ? `, plus ${ctx.lockedLabel} you can unlock` : ""}.`, `Want them running for you? Hire my team: we launch your ads in your own Meta account, check them every day and email you every lead. The ${lq} is open for ${LAUNCH_QUARTER.windowHours} hours. Ad spend goes to Meta separately.`],
+        paragraphs: [hi, `Here's my favourite of the ${n} free ads I made for ${brand}${ctx.lockedLabel ? `, plus ${ctx.lockedLabel} you can unlock` : ""}.`, `Want fresh ones every week? ${TEAM} makes new ads from your website every Monday and coaches you on what's working. The ${lq} is open for ${LAUNCH_QUARTER.windowHours} hours.`],
         ctaLabel: "See all my ads",
       };
     }
@@ -275,7 +276,7 @@ export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCop
       return {
         subject: sub((x) => `${x}: launch offer ends tomorrow`, "Your launch offer ends tomorrow"),
         preheader: `${lq} closes in about ${left ?? 24} hours.`,
-        paragraphs: [hi, `Want ${brand}'s ads running without doing it yourself? The ${lq} closes in about ${left ?? 24} hours, then ${usd(LAUNCH_QUARTER.priceCents)}/month. Cancel anytime online.`, `My team makes fresh ads every week, launches them in your own Meta account, pauses the ones that waste money and emails you every lead. You set a monthly ad budget limit and pay Meta directly. ${LAUNCH_QUARTER_GUARANTEE}`],
+        paragraphs: [hi, `Want fresh ads for ${brand} every week? The ${lq} closes in about ${left ?? 24} hours, then ${usd(LAUNCH_QUARTER.priceCents)}/month. Cancel anytime online.`, `I make new ads from your website every Monday, ready for you to post, and my Ad Coach tells you what's working. ${LAUNCH_QUARTER_GUARANTEE}`],
         ctaLabel: "Get the launch offer",
       };
     case "last_chance":

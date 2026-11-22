@@ -127,7 +127,7 @@ export async function weeklyScheduleTick(deps: WeeklyDeps): Promise<WeeklyStart[
   if (!weeklyDropEnabled(env)) return [];
   const now = deps.now?.() ?? new Date();
   const wss = await deps.db.adsWorkspace.findMany({
-    where: { adsPlan: { in: ["ad_department", "agency"] }, subscriptionStatus: { in: ["active", "trialing", "past_due"] }, suspendedAt: null },
+    where: { adsPlan: { in: ["ad_department", "autopilot", "agency"] }, subscriptionStatus: { in: ["active", "trialing", "past_due"] }, suspendedAt: null },
     orderBy: { id: "asc" },
     select: { id: true, ownerId: true, adsPlan: true, subscriptionStatus: true, suspendedAt: true, autopilot: { select: { enabled: true, focus: true, dayOfWeek: true, hour: true, timezone: true, includeVideo: true } } },
   });

@@ -126,7 +126,11 @@ export type AdsEventName =
   | "team_authorized"
   | "team_launched"
   | "team_first_lead"
-  | "team_paused";
+  | "team_paused"
+  // Founding setup (before Meta App Review): owner says they added Komendly's Business as a partner (props.businessId)
+  | "partner_access_requested"
+  // Trade landing pages (/free-ads/roofers): one per workspace, props.trade + props.via (signup | run_start). Read by workspaceTrade().
+  | "trade_tagged";
 
 /** Fire-and-forget funnel event. Never throws. */
 export async function trackAdsEvent(

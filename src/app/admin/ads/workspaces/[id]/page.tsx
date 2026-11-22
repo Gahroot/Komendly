@@ -6,7 +6,9 @@ import { formatDate } from "@/lib/ads/billing-format";
 import { prisma } from "@/lib/prisma";
 import { AdjustCreditsForm } from "../../_components/adjust-credits-form";
 import { AdminAdsShell } from "../../_components/admin-ads-shell";
+import { PartnerMetaCard } from "../../_components/partner-meta-card";
 import { PostActionButton } from "../../_components/post-action-button";
+import { partnerSystemToken } from "@/lib/ads/meta/core/partner";
 import { StatCard } from "../../_components/stat-card";
 import { AdminEmpty } from "../../../_components/admin-empty";
 
@@ -24,12 +26,16 @@ export default async function AdminAdsWorkspacePage({ params }: { params: Promis
 }
 
 async function Detail({ id }: { id: string }) {
-  const [ws, ledger, runs, flags] = await Promise.all([
+  const [ws, ledger, runs, flags, conn, partnerRequest] = await Promise.all([
     prisma.adsWorkspace.findUniqueOrThrow({ where: { id } }),
     prisma.creditLedger.findMany({ where: { workspaceId: id }, orderBy: { createdAt: "desc" }, take: 50 }),
     prisma.adRun.findMany({ where: { workspaceId: id }, orderBy: { createdAt: "desc" }, take: 30 }),
     prisma.abuseFlag.findMany({ where: { workspaceId: id }, orderBy: { createdAt: "desc" }, take: 30 }),
+    prisma.metaConnection.findUnique({ where: { workspaceId: id }, select: { viaPartner: true, tokenExpiresAt: true, adAccountId: true, pageId: true } }),
+    prisma.adsEvent.findFirst({ where: { workspaceId: id, name: "partner_access_requested" }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
   ]);
+  const expiryLabel = partnerSystemToken() ? "is the system user token (META_PARTNER_SYSTEM_TOKEN, never expires)"
+    : conn?.tokenExpiresAt ? `expires on ${formatDate(conn.tokenExpiresAt)}${conn.tokenExpiresAt < new Date() ? " (EXPIRED: reconnect now)" : ""}` : "has no known expiry";
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -49,6 +55,8 @@ async function Detail({ id }: { id: string }) {
               <PostActionButton url={`/api/admin/ads/workspaces/${ws.id}/suspend`} body={{ suspended: true }} label="Suspend workspace" variant="destructive"
                 confirm={{ title: `Suspend ${ws.name}?`, description: "Blocks runs, trials and checkouts until unsuspended." }} />
             )}
+            <PartnerMetaCard workspaceId={ws.id} connected={!!conn} viaPartner={!!conn?.viaPartner} expiryLabel={expiryLabel}
+              selection={conn ? { adAccountId: conn.adAccountId, pageId: conn.pageId } : null} requestedAt={partnerRequest ? formatDate(partnerRequest.createdAt) : null} />
           </CardContent>
         </Card>
         <Card className="lg:col-span-2">

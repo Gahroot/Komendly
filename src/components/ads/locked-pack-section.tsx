@@ -29,8 +29,11 @@ function LockedAdCard({ ad }: { ad: AdView }) {
   );
 }
 
-/** Trial ads past the free pack limit: blurred, with the $9 unlock and the Ad Department offer. Renders nothing when none are locked. */
-export function LockedPackSection({ runId, ads, unlockAvailable, freeAds }: { runId: string; ads: AdView[]; unlockAvailable: boolean; freeAds?: number | null }) {
+/**
+ * Trial ads past the free pack limit: blurred, with the $9 unlock and the Ad Department offer. Renders nothing when none are locked.
+ * upsellLine=false hides the Ad Department line (roofer workspaces while Growth Autopilot is the offer on screen).
+ */
+export function LockedPackSection({ runId, ads, unlockAvailable, freeAds, upsellLine = true }: { runId: string; ads: AdView[]; unlockAvailable: boolean; freeAds?: number | null; upsellLine?: boolean }) {
   const ready = ads.filter((a) => a.status === "ready");
   useEffect(() => {
     if (ready.length === 0 || !firstInSession(`locked_pack_shown:${runId}`)) return;
@@ -50,10 +53,10 @@ export function LockedPackSection({ runId, ads, unlockAvailable, freeAds }: { ru
           <p className="text-sm text-muted-foreground">
             Your free pack includes {freeAds ?? FREE_TRIAL_ADS} ads. {unlockAvailable ? `Unlock the other ${n} for ${usd(UNLOCK_PACK.priceCents)}, once. No subscription.` : "Any plan unlocks the rest."}
           </p>
-          <p className="text-sm text-muted-foreground">
-            Or let Ozzy run it: your ads go live in your own Meta account and the losers get replaced every week. {usd(offerFirstPaymentCents(LAUNCH_QUARTER))} the first month.{" "}
+          {upsellLine && <p className="text-sm text-muted-foreground">
+            Or keep them coming: fresh ads from your website every week, and a coach that tells you what&apos;s working. {usd(offerFirstPaymentCents(LAUNCH_QUARTER))} the first month.{" "}
             <Link href="/ads/billing" className="font-medium text-foreground underline-offset-4 hover:underline" onClick={() => postOfferEvent("offer_clicked", { placement: "locked_pack", runId, offer: "plans" })}>See Ozzy Ad Department</Link>
-          </p>
+          </p>}
         </div>
         {unlockAvailable && (
           <div className="w-full shrink-0 sm:w-60" onClickCapture={() => postOfferEvent("offer_clicked", { placement: "locked_pack", runId, offer: UNLOCK_PACK.key })}>

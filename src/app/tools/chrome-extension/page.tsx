@@ -24,7 +24,7 @@ const STEPS = [
 ] as const;
 
 const FAQ = [
-  { q: "Is it free?", a: "Yes. The extension is free. Making ads on Komendly starts with a free pack of 10 ads, no card. If you want Komendly to run your ads, the Ozzy Ad Department is $97 the first month, then $197/month, cancel anytime." },
+  { q: "Is it free?", a: "Yes. The extension is free. Making ads on Komendly starts with a free pack of 10 ads, no card. If you want fresh ads every week, the Ozzy Ad Department is $97 the first month, then $197/month, cancel anytime. If you want Komendly to run your ads, that's Growth Autopilot ($297/month founding price, 10 founding spots)." },
   { q: "Which sites does it run on?", a: "Only the Meta Ad Library (facebook.com/ads/library). It does nothing on any other page, including the rest of Facebook." },
   { q: "Will it copy someone else's ad?", a: "No. Your version keeps the structure and style only. Wording, logos, people and photos come from your own business." },
   { q: "Is it made by Meta?", a: "No. Komendly is not affiliated with, endorsed by or sponsored by Meta." },

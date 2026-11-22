@@ -30,7 +30,7 @@ const STEPS = [
 const FAQ = [
   { q: "Where do the ads come from?", a: "From Meta's public Ad Library, which shows every active ad a Facebook Page runs. We only look at the Pages you add." },
   { q: "What if my competitors launch nothing new?", a: "Then there's no email that week. You only hear from us when there's something new." },
-  { q: "Does it cost anything?", a: "No. The weekly email is free. If you want Komendly to make and run ads for you, that's the Ozzy Ad Department, and it's optional." },
+  { q: "Does it cost anything?", a: "No. The weekly email is free. If you want fresh ads every week, that's the Ozzy Ad Department; if you want Komendly to run your ads too, that's Growth Autopilot. Both are optional." },
   { q: "How do I stop it?", a: "Every email has a one-click unsubscribe link at the bottom." },
 ] as const;
 

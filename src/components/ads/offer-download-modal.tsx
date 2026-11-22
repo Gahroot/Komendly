@@ -11,24 +11,28 @@ import { postOfferEvent } from "@/lib/ads/offer-client";
 import { AD_DOWNLOADED_EVENT, modalShownForRun, modalShowsThisSession, recordModalShown } from "@/lib/ads/offer-session";
 import { shouldShowOfferModal } from "@/lib/ads/offer-value";
 import { LaunchQuarterCard, trackOfferView } from "./launch-quarter-card";
+import { AutopilotOfferCard } from "./autopilot-offer-card";
 
 /**
  * Peak intent: right after the first download of a finished trial, once per run and max one modal per session.
  * With ads past the free pack limit it leads with the $9 unlock (autopilot plan funnel fix 2), even after the Launch window.
+ * Roofer workspaces (src/lib/ads/roofer-offer.ts) pass `autopilot` while Growth Autopilot is their offer: it leads instead,
+ * and the caller passes unlockAvailable only once it's the $9 stage.
  */
-export function OfferDownloadModal({ runId, bonus, offerOpen, remainingMs, lockedAds = 0, unlockAvailable = false, freeAds = null }: { runId: string; bonus: BonusSummary | null; offerOpen: boolean; remainingMs: number | null; lockedAds?: number; unlockAvailable?: boolean; freeAds?: number | null }) {
+export function OfferDownloadModal({ runId, bonus, offerOpen, remainingMs, lockedAds = 0, unlockAvailable = false, freeAds = null, autopilot = null }: { runId: string; bonus: BonusSummary | null; offerOpen: boolean; remainingMs: number | null; lockedAds?: number; unlockAvailable?: boolean; freeAds?: number | null; autopilot?: { spotsLeft: number | null; onDecline: () => void } | null }) {
   const [open, setOpen] = useState(false);
-  const unlockFirst = lockedAds > 0 && unlockAvailable;
+  const autopilotFirst = autopilot !== null;
+  const unlockFirst = !autopilotFirst && lockedAds > 0 && unlockAvailable;
   useEffect(() => {
     let timer: number | undefined;
     function onDownload() {
-      if (!shouldShowOfferModal({ shownForRun: modalShownForRun(runId), shownThisSession: modalShowsThisSession(), offerOpen: offerOpen || unlockFirst })) return;
+      if (!shouldShowOfferModal({ shownForRun: modalShownForRun(runId), shownThisSession: modalShowsThisSession(), offerOpen: offerOpen || unlockFirst || autopilotFirst })) return;
       recordModalShown(runId);
       // Let the browser start the download first.
       timer = window.setTimeout(() => {
         setOpen(true);
         trackOfferView("post_download");
-        postOfferEvent("offer_modal_shown", { placement: "post_download", runId, locked: Boolean(bonus?.locked), lockedAds, unlockPack: unlockFirst });
+        postOfferEvent("offer_modal_shown", { placement: "post_download", runId, locked: Boolean(bonus?.locked), lockedAds, unlockPack: unlockFirst, ...(autopilotFirst ? { offer: "autopilot" } : {}) });
       }, 1200);
     }
     window.addEventListener(AD_DOWNLOADED_EVENT, onDownload);
@@ -36,7 +40,7 @@ export function OfferDownloadModal({ runId, bonus, offerOpen, remainingMs, locke
       window.removeEventListener(AD_DOWNLOADED_EVENT, onDownload);
       if (timer) window.clearTimeout(timer);
     };
-  }, [runId, offerOpen, bonus?.locked, lockedAds, unlockFirst]);
+  }, [runId, offerOpen, bonus?.locked, lockedAds, unlockFirst, autopilotFirst]);
 
   function onOpenChange(next: boolean) {
     if (!next) postOfferEvent("offer_dismissed", { placement: "post_download", runId });
@@ -46,7 +50,13 @@ export function OfferDownloadModal({ runId, bonus, offerOpen, remainingMs, locke
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[95dvh] overflow-y-auto rounded-3xl sm:max-w-md">
-        {unlockFirst ? (
+        {autopilot ? (
+          <>
+            <DialogTitle className="sr-only">Growth Autopilot founding offer</DialogTitle>
+            <DialogDescription className="sr-only">Ozzy&apos;s team runs your Facebook and Instagram lead ads for you.</DialogDescription>
+            <AutopilotOfferCard bare runId={runId} placement="post_download" spotsLeft={autopilot.spotsLeft} onDecline={() => { autopilot.onDecline(); setOpen(false); }} />
+          </>
+        ) : unlockFirst ? (
           <>
             <DialogTitle>Downloaded your {freeAds ?? FREE_TRIAL_ADS} free ads. {lockedAds} more {lockedAds === 1 ? "is" : "are"} ready.</DialogTitle>
             <DialogDescription>
@@ -57,21 +67,21 @@ export function OfferDownloadModal({ runId, bonus, offerOpen, remainingMs, locke
             </div>
             {offerOpen ? (
               <>
-                <p className="text-sm text-muted-foreground">Or let Ozzy run it: your ads go live in your own Meta account and the losers get replaced every week.</p>
+                <p className="text-sm text-muted-foreground">Or keep them coming: fresh ads from your website every week, and a coach that tells you what&apos;s working.</p>
                 <LaunchQuarterCard placement="post_download" bonus={bonus} remainingMs={remainingMs} runId={runId} />
               </>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Or let Ozzy run it: your ads go live in your own Meta account and the losers get replaced every week.{" "}
+                Or keep them coming: fresh ads from your website every week, and a coach that tells you what&apos;s working.{" "}
                 <Link href="/ads/billing" className="font-medium text-foreground underline-offset-4 hover:underline">See Ozzy Ad Department</Link>
               </p>
             )}
           </>
         ) : (
           <>
-            <DialogTitle>Downloaded. Want Ozzy to run your ads?</DialogTitle>
+            <DialogTitle>Downloaded. Want fresh ads every week?</DialogTitle>
             <DialogDescription>
-              Ozzy Ad Department puts your ads live in your own Meta account and replaces the losers every week{bonus?.locked ? ". It also unlocks your bonus ads now" : ""}.
+              Ozzy Ad Department makes fresh ads from your website every week and coaches you on what&apos;s working; you post them yourself{bonus?.locked ? ". It also unlocks your bonus ads now" : ""}.
             </DialogDescription>
             <LaunchQuarterCard placement="post_download" bonus={bonus} remainingMs={remainingMs} runId={runId} />
           </>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ADS_GUARANTEE } from "@/lib/ads/billing-config";
-import { HERO_OUTCOME, NO_GUARANTEE_LINE, PUBLIC_OFFER } from "@/lib/ads/public-offer";
+import { FOUNDING_SPOTS_LINE, HERO_OUTCOME, NO_GUARANTEE_LINE, PUBLIC_OFFER } from "@/lib/ads/public-offer";
 import { StudioPose } from "./studio-pose";
 
 /** Pricing teaser + a last call to action that jumps back to the spell bar. */
@@ -13,7 +13,8 @@ export function StudioClosing() {
           <div className="max-w-xl space-y-3">
             <h2 id="closing-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-4xl">See your free ads first. Then hire the team.</h2>
             <p className="text-muted-foreground">Free: {PUBLIC_OFFER.freeAds} ads from your website, no card. Like them? {PUBLIC_OFFER.heroName} runs them for you: {HERO_OUTCOME.charAt(0).toLowerCase()}{HERO_OUTCOME.slice(1)}</p>
-            <p className="text-sm text-muted-foreground">{PUBLIC_OFFER.heroFirstMonth} the first month if you hire within {PUBLIC_OFFER.launchWindowHours} hours of your free ads, then {PUBLIC_OFFER.heroPrice}/month, renews monthly. Cancel anytime online. Ad spend is paid to Meta separately.</p>
+            <p className="text-sm text-muted-foreground">{PUBLIC_OFFER.heroPlanName}: {PUBLIC_OFFER.heroPrice}/month founding price (regular {PUBLIC_OFFER.heroRegularPrice}), locked while you stay subscribed, renews monthly. Cancel anytime online. Ad spend is paid to Meta separately. {FOUNDING_SPOTS_LINE}</p>
+            <p className="text-sm text-muted-foreground">Rather post them yourself? {PUBLIC_OFFER.diyName}: fresh ads every week and a coach, {PUBLIC_OFFER.diyFirstMonth} the first month within {PUBLIC_OFFER.launchWindowHours} hours of your free ads, then {PUBLIC_OFFER.diyPrice}/month.</p>
             <p className="text-xs text-muted-foreground">{ADS_GUARANTEE} {NO_GUARANTEE_LINE}</p>
           </div>
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-end">

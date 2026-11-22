@@ -17,6 +17,8 @@ import { graph, jsonLdString, softwareApplicationJsonLd } from "@/lib/seo/jsonld
 import { HERO_HEADLINE, HERO_OUTCOME, PUBLIC_OFFER } from "@/lib/ads/public-offer";
 import { planCheckoutPath } from "@/lib/ads/plan-checkout";
 import { TeamOffer } from "@/components/billing/team-offer";
+import { foundingSpotsLeft } from "@/lib/ads/founding-spots";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: { absolute: `Komendly — ${HERO_HEADLINE}` },
@@ -25,10 +27,10 @@ export const metadata: Metadata = {
 };
 
 const jsonLd = graph(softwareApplicationJsonLd());
-const hirePath = planCheckoutPath("ad_department", false);
+const hirePath = planCheckoutPath("autopilot", false);
 
 export default async function HomePage() {
-  const [user, heroVariant] = await Promise.all([getCurrentUser(), getVariant("home_hero")]);
+  const [user, heroVariant, spotsLeft] = await Promise.all([getCurrentUser(), getVariant("home_hero"), foundingSpotsLeft(prisma).catch(() => null)]);
   const signedIn = Boolean(user);
   return (
     <StudioRoot className={`${fraunces.variable} min-h-screen`}>
@@ -40,7 +42,7 @@ export default async function HomePage() {
         <StudioHero signedIn={signedIn} variant={heroVariant} />
         <div className="relative bg-[linear-gradient(180deg,#140818,#0c0820_30%)]">
           <section className="mx-auto max-w-6xl px-4 pt-16 sm:px-6 sm:pt-20">
-            <TeamOffer hireHref={signedIn ? hirePath : `/ads/signup?next=${encodeURIComponent(hirePath)}`} freeHref="/#studio-url" />
+            <TeamOffer hireHref={signedIn ? hirePath : `/ads/signup?next=${encodeURIComponent(hirePath)}`} freeHref="/#studio-url" spotsLeft={spotsLeft} />
           </section>
           <StudioJourney />
           <StudioTeaser />

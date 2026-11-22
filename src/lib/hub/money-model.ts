@@ -13,7 +13,7 @@
 import { ADS_PLANS, type AdsPlanKey, planUsageLine } from "../ads/billing-config";
 
 /** Testimonial videos (1 video = up to 60s = 1 testimonial minute) included per month by plan. */
-export const TESTIMONIALS_PER_MONTH: Record<AdsPlanKey, number> = { starter: 0, ad_department: 0, growth: 0, scale: 1, agency: 3 };
+export const TESTIMONIALS_PER_MONTH: Record<AdsPlanKey, number> = { starter: 0, ad_department: 0, autopilot: 0, growth: 0, scale: 1, agency: 3 };
 
 /** Attraction offers (free, no card). */
 export const ATTRACTION = {

@@ -144,7 +144,7 @@ function Report({ r, token }: { r: AdCheckPublicReport; token: string }) {
 
       <section className="mt-10 rounded-2xl border border-[var(--studio-gold)]/40 p-6 text-center">
         <h2 className="font-display text-2xl font-medium">{r.fatigued.length ? "Replace your tired ads" : "Add fresh ads to the mix"}</h2>
-        <p className="mt-2 text-muted-foreground">Ozzy reads your website and makes 3 new ads for free. With the Ozzy Ad Department ($97 the first month, then $197/month, cancel anytime) ads go live in your own Meta account and the losers are replaced every week.</p>
+        <p className="mt-2 text-muted-foreground">Ozzy reads your website and makes 3 new ads for free. With the Ozzy Ad Department ($97 the first month, then $197/month, cancel anytime) you get fresh ads every week and a coach that tells you what&apos;s working; you post them yourself.</p>
         <Link href={replace} className="mt-5 inline-flex h-12 items-center justify-center rounded-xl bg-[var(--studio-gold)] px-6 font-semibold text-[#2a0f10]">Get 3 replacement ads</Link>
       </section>
 

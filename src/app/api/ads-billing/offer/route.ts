@@ -3,7 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { trackAdsEvent } from "@/lib/ads/events";
 import { getLaunchOfferState } from "@/lib/ads/launch-offer";
-import { priceIdFor, UNLOCK_PACK } from "@/lib/ads/billing-config";
+import { getPlan, priceIdFor, UNLOCK_PACK } from "@/lib/ads/billing-config";
+import { AUTOPILOT_PLAN_KEY, autopilotForSale, usesAutopilotOffer } from "@/lib/ads/roofer-offer";
+import { workspaceTrade } from "@/lib/ads/trade-server";
+import { foundingSpotsLeft } from "@/lib/ads/founding-spots";
+import { prisma } from "@/lib/prisma";
 import { adsErrorResponse, getOrCreateWorkspace, isPaidWorkspace, requireUser } from "@/lib/ads/workspace";
 
 export async function GET() {
@@ -12,10 +16,16 @@ export async function GET() {
     const ws = await getOrCreateWorkspace(user);
     const state = await getLaunchOfferState(ws.id);
     const eligible = !isPaidWorkspace(ws) && !ws.suspendedAt;
+    // Trade workspaces (roofers) lead with Growth Autopilot when it can be bought (src/lib/ads/roofer-offer.ts).
+    const trade = await workspaceTrade(ws.id);
+    const autopilotPlan = getPlan(AUTOPILOT_PLAN_KEY);
+    const sellable = eligible && usesAutopilotOffer(trade) && autopilotForSale() && Boolean(autopilotPlan && priceIdFor(autopilotPlan));
+    const spotsLeft = sellable ? await foundingSpotsLeft(prisma).catch(() => null) : null;
+    const autopilot = sellable && spotsLeft !== 0;
     // serverNow lets the client run a real countdown against server time (expiresAt = 3rd ready trial ad + 72h).
     // unlockPack = the $9 downsell can be bought (the run screen shows it only after the Launch Quarter).
     return NextResponse.json(
-      { open: eligible && state.open, expiresAt: state.expiresAt?.toISOString() ?? null, serverNow: new Date().toISOString(), unlockPack: eligible && Boolean(priceIdFor(UNLOCK_PACK)) },
+      { open: eligible && state.open, expiresAt: state.expiresAt?.toISOString() ?? null, serverNow: new Date().toISOString(), unlockPack: eligible && Boolean(priceIdFor(UNLOCK_PACK)), trade, autopilot, spotsLeft },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
@@ -34,7 +44,8 @@ export async function POST(request: NextRequest) {
     const parsed = Body.safeParse(await request.json().catch(() => null));
     if (!parsed.success) return NextResponse.json({ error: "Invalid request", code: "invalid" }, { status: 400 });
     const ws = await getOrCreateWorkspace(user);
-    const props = parsed.data.props ?? {};
+    const trade = await workspaceTrade(ws.id);
+    const props: Record<string, string | number | boolean> = { ...(parsed.data.props ?? {}), ...(trade ? { trade } : {}) };
     const runId = typeof props.runId === "string" ? props.runId : undefined;
     await trackAdsEvent(parsed.data.name, { workspaceId: ws.id, userId: user.id, ...(runId ? { runId } : {}), props });
     return NextResponse.json({ ok: true });

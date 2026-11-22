@@ -22,6 +22,8 @@ import { OfferDownloadModal } from "./offer-download-modal";
 import { OfferNudge } from "./offer-nudge";
 import { TrialUpsell } from "./trial-upsell";
 import { UnlockPackCard } from "./unlock-pack-offer";
+import { AutopilotOfferCard } from "./autopilot-offer-card";
+import { rooferOfferStage, usesAutopilotOffer } from "@/lib/ads/roofer-offer";
 import { LAUNCH_OFFER_MIN_READY } from "@/lib/ads/billing-config";
 import { dismissedInSession, dismissInSession, noopSubscribe } from "@/lib/ads/offer-session";
 import { freelancerValueLine, offerStateSettled, trialOfferStage } from "@/lib/ads/offer-value";
@@ -57,8 +59,20 @@ export function RunScreen({ initial }: { initial: RunView }) {
     dismissInSession(lqKey);
     setLqDismissed(true);
   }, [lqKey]);
+  // Roofer workspaces lead with Growth Autopilot; "No thanks" hands over to the usual order (src/lib/ads/roofer-offer.ts).
+  const roofer = usesAutopilotOffer(offer.trade);
+  const apKey = `autopilot:${run.id}`;
+  const apDeclinedStored = useSyncExternalStore(noopSubscribe, () => dismissedInSession(apKey), () => false);
+  const [apDeclinedLocal, setApDeclined] = useState(false);
+  const declineAutopilot = useCallback(() => {
+    dismissInSession(apKey);
+    setApDeclined(true);
+  }, [apKey]);
   // One offer at a time: Launch Quarter while open (and not dismissed), then the $9 unlock while bonus ads are locked.
-  const stage = trialOfferStage({ trialUnpaid, readyAds: readyMain, minReady: LAUNCH_OFFER_MIN_READY, launchOpen: offer.open, launchDismissed: lqDismissedStored || lqDismissedLocal, bonusLocked: Boolean(run.bonus?.locked) || (run.lockedAds ?? 0) > 0, unlockAvailable: offer.unlockPack });
+  const stageArgs = { trialUnpaid, readyAds: readyMain, minReady: LAUNCH_OFFER_MIN_READY, launchOpen: offer.open, launchDismissed: lqDismissedStored || lqDismissedLocal, bonusLocked: Boolean(run.bonus?.locked) || (run.lockedAds ?? 0) > 0, unlockAvailable: offer.unlockPack };
+  const stage = roofer ? rooferOfferStage({ ...stageArgs, autopilotAvailable: offer.autopilot, autopilotDeclined: apDeclinedStored || apDeclinedLocal }) : trialOfferStage(stageArgs);
+  // Roofers see the $9 unlock only as the last step.
+  const unlockNow = offer.unlockPack && (!roofer || stage === "unlock_pack");
   const offerOpen = stage === "launch_quarter";
   // Wait for the server's offer state before any offer UI renders or logs "shown" (else it reads closed on first paint).
   const offerReady = offerStateSettled({ isTrial: run.isTrial, workspaceLoaded: ws !== undefined, isPaid: Boolean(ws?.isPaid), offerSettled: offer.settled });
@@ -85,7 +99,7 @@ export function RunScreen({ initial }: { initial: RunView }) {
         <CardFooter><Button asChild><Link href="/ads/app">Back to home</Link></Button></CardFooter>
       </Card>
     );
-  } else body = <AdGallery run={run} offerOpen={offerOpen} remainingMs={offer.remainingMs} unlockPack={stage === "unlock_pack"} offerReady={offerReady} unlockAvailable={trialUnpaid && offer.unlockPack} />;
+  } else body = <AdGallery run={run} offerOpen={offerOpen} remainingMs={offer.remainingMs} unlockPack={stage === "unlock_pack"} offerReady={offerReady} unlockAvailable={trialUnpaid && unlockNow} lockedUpsell={stage !== "autopilot"} />;
   const showEarlyOffer = offerReady && offerOpen && !done && run.ads.length > 0 && ["queued", "generating"].includes(run.status);
 
   return (
@@ -108,10 +122,11 @@ export function RunScreen({ initial }: { initial: RunView }) {
         </div>
         {body}
         {done && readyMain > 0 && <LaunchGuideCard runId={run.id} ready={readyMain} defaultOpen={!trialUnpaid} />}
+        {offerReady && stage === "autopilot" && <AutopilotOfferCard runId={run.id} spotsLeft={offer.spotsLeft} onDecline={declineAutopilot} />}
         {showEarlyOffer && <OfferNudge runId={run.id} ready={readyMain} bonus={run.bonus ?? null} remainingMs={offer.remainingMs} onDismiss={dismissLaunch} valueLine={valueLine} />}
         {offerReady && stage === "unlock_pack" && run.bonus && <UnlockPackCard runId={run.id} bonus={run.bonus} />}
-        {offerReady && done && trialUnpaid && stage !== "unlock_pack" && <TrialUpsell runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} onDecline={offerOpen ? dismissLaunch : undefined} valueLine={valueLine} />}
-        {offerReady && done && trialUnpaid && <OfferDownloadModal runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} lockedAds={run.lockedAds ?? 0} unlockAvailable={offer.unlockPack} freeAds={run.freeAds} />}
+        {offerReady && done && trialUnpaid && stage !== "unlock_pack" && stage !== "autopilot" && <TrialUpsell runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} onDecline={offerOpen ? dismissLaunch : undefined} valueLine={valueLine} />}
+        {offerReady && done && trialUnpaid && <OfferDownloadModal runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} lockedAds={run.lockedAds ?? 0} unlockAvailable={unlockNow} freeAds={run.freeAds} autopilot={stage === "autopilot" ? { spotsLeft: offer.spotsLeft, onDecline: declineAutopilot } : null} />}
         {done && ws?.isPaid && <GenerateMoreForm url={run.url} brandProfileId={run.brandProfileId} />}
         {bridgeOn && <StudioBridgeCard placement="run_card" data={{ runId: run.id, domain, bestAdId: bridgeAd?.id ?? null, hasLogo: Boolean(run.logoUrl), freeVideosLeft: run.studio?.freeVideosLeft ?? 0 }} />}
         {done && run.ads.length > 0 && <GiftPackCard />}

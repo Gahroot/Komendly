@@ -16,7 +16,8 @@ const TrialUsedDialog = dynamic(() => import("./trial-used-dialog").then((m) => 
  * Cold-traffic (/free-ads) URL form: one field, one button. Same contract as StudioUrlForm (pending run survives
  * sign-up and resumes at /ads/start) without the goal picker, Ozzy or zod, so the page hydrates fast in the Facebook app.
  */
-export function FreeAdsUrlForm({ id, cta = "Get my free ads" }: { id: string; cta?: string }) {
+/** trade: set on trade landing pages (/free-ads/roofers); only tags analytics here (TradeCookie carries it to sign-up). */
+export function FreeAdsUrlForm({ id, cta = "Get my free ads", trade }: { id: string; cta?: string; trade?: string }) {
   const router = useRouter();
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +48,7 @@ export function FreeAdsUrlForm({ id, cta = "Get my free ads" }: { id: string; ct
       return;
     }
     savePendingRun({ url: trimmed, goal: "auto" });
-    track("url_submit", { signed_in: false, goal: "auto", placement: id });
+    track("url_submit", { signed_in: false, goal: "auto", placement: id, ...(trade ? { trade } : {}) });
     router.push(startHref(trimmed, "auto", false));
   }
 

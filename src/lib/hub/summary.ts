@@ -96,10 +96,19 @@ export interface HubPlan {
   offerEndsAt: string | null;
 }
 
-const PLAN_NAMES: Record<string, string> = { starter: "Starter", ad_department: "Ad Department", growth: "Growth", scale: "Scale", agency: "Agency" };
+const PLAN_NAMES: Record<string, string> = { starter: "Starter", ad_department: "Ad Department", autopilot: "Growth Autopilot", growth: "Growth", scale: "Scale", agency: "Agency" };
 
 /** Which plan card + upgrade CTA the hub shows. Paid Ozzy plan wins over a legacy testimonial plan. */
 export function planView(u: HubUserInput, w: HubWorkspaceInput, now: Date): HubPlan {
+  if (isPaidOzzyPlan(w) && w.adsPlan === "autopilot") {
+    return {
+      kind: "paid",
+      label: "Ozzy's AI Marketing Team",
+      line: "Your team runs your Facebook and Instagram lead ads inside your monthly limit. Fresh ads land every Monday.",
+      cta: { label: "See your team", href: "/ads/team" },
+      offerEndsAt: null,
+    };
+  }
   if (isPaidOzzyPlan(w) && w.adsPlan === "ad_department") {
     return {
       kind: "paid",

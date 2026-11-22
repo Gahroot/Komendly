@@ -22,6 +22,12 @@ export function qcPassed(qcReport: unknown): boolean {
   return !!qcReport && typeof qcReport === "object" && (qcReport as { pass?: unknown }).pass === true;
 }
 
+/** Partner connections (Komendly's token) may only publish to the ad account + Page an admin picked. */
+export function partnerSelectionMatches(conn: { adAccountId: string | null; pageId: string | null }, req: { adAccountId: string; pageId: string }): boolean {
+  const strip = (id: string) => id.replace(/^act_/, "");
+  return !!conn.adAccountId && !!conn.pageId && strip(conn.adAccountId) === strip(req.adAccountId) && conn.pageId === req.pageId;
+}
+
 export async function enqueueMetaPublish(req: PublishRequest, ctx: { workspaceId: string; userId: string }) {
   const run = await prisma.adRun.findUnique({ where: { id: req.runId }, select: { workspaceId: true, ratios: true, status: true } });
   if (!run || run.workspaceId !== ctx.workspaceId) throw new AdsHttpError(404, "not_found", "Not found.");
@@ -30,6 +36,10 @@ export async function enqueueMetaPublish(req: PublishRequest, ctx: { workspaceId
   if (eligible.length !== req.adIds.length) throw new AdsHttpError(400, "ads_not_ready", "Only finished ads that passed quality checks can be published.");
   const ratios: Ratio[] = (req.ratios ?? RATIOS.filter((r) => run.ratios.includes(r))).filter((r) => run.ratios.includes(r));
   if (!ratios.length) throw new AdsHttpError(400, "no_ratios", "Pick at least one format.");
+  const conn = await prisma.metaConnection.findUnique({ where: { workspaceId: ctx.workspaceId }, select: { viaPartner: true, adAccountId: true, pageId: true } });
+  if (conn?.viaPartner && !partnerSelectionMatches(conn, req)) {
+    throw new AdsHttpError(403, "partner_managed", "Komendly set up this Meta connection for one ad account and Page. Publish to those, or write to nolan@komendly.com.");
+  }
   const payload: PublishJobPayload & { requestedBy: string } = {
     adIds: eligible.map((a) => a.id).sort(), adAccountId: req.adAccountId, pageId: req.pageId,
     budget: req.budget, ratios, countries: req.countries, goal: req.goal, requestedBy: ctx.userId,

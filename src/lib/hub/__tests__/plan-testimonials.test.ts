@@ -55,7 +55,7 @@ function fakeDb(user: { minutesLimit: number; minutesUsed: number; bonusMinutes:
 
 describe("money model", () => {
   it("only Scale and Agency include testimonials (never Ad Department)", () => {
-    expect(TESTIMONIALS_PER_MONTH).toEqual({ starter: 0, ad_department: 0, growth: 0, scale: 1, agency: 3 });
+    expect(TESTIMONIALS_PER_MONTH).toEqual({ starter: 0, ad_department: 0, autopilot: 0, growth: 0, scale: 1, agency: 3 });
     expect(planAppsSummary("ad_department").join(" ")).toMatch(/20x Starter usage for ads and Studio videos/);
     expect(planTestimonialsFor("agency", true)).toBe(36);
     expect(planAppsSummary("growth").join(" ")).toMatch(/Scale and Agency only/);

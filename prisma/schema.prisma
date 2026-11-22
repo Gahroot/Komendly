@@ -851,6 +851,9 @@ model MetaConnection {
   tokenExpiresAt DateTime?
   adAccountId    String?
   pageId         String?
+  /// Token borrowed from Komendly's own Meta login (customer shared their ad account + Page with Komendly's Business as a partner).
+  /// Never revoke it on disconnect: it is the founder's token, not the customer's.
+  viaPartner     Boolean   @default(false)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

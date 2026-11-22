@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getCurrentUser } from "@/lib/auth";
-import { AD_DEPARTMENT_STACK, ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS, PLAN_USAGE_NOTE, FOUNDING_PRICE_LOCK, FOUNDING_TERMS, LAUNCH_QUARTER, offerCouponId, offerFirstPaymentCents, stackTotalUsd, ANNUAL_MONTHS, ANNUAL_MONTHS_PAID, annualCredits, annualPriceCents, annualPriceIdFor, getPlan, priceIdFor, UNLOCK_PACK, unlockPackCouponId, planUsageLine } from "@/lib/ads/billing-config";
+import { AD_DEPARTMENT_STACK, AUTOPILOT_STACK, AUTOPILOT_FULL_MESSAGE, AUTOPILOT_FOUNDING_LINE, AUTOPILOT_REGULAR_PRICE_CENTS, ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS, PLAN_USAGE_NOTE, FOUNDING_PRICE_LOCK, FOUNDING_TERMS, LAUNCH_QUARTER, offerCouponId, offerFirstPaymentCents, stackTotalUsd, ANNUAL_MONTHS, ANNUAL_MONTHS_PAID, annualCredits, annualPriceCents, annualPriceIdFor, getPlan, priceIdFor, UNLOCK_PACK, unlockPackCouponId, planUsageLine } from "@/lib/ads/billing-config";
 import { UsageBar } from "@/components/ads/usage-bar";
 import { canBuyUnlimitedWeek, UNLIMITED_WEEK, UNLIMITED_WEEK_LINE, unlimitedPassActive, usageMeter } from "@/lib/ads/billing-config";
 import { isBonusUnlocked } from "@/lib/ads/bonus-unlock";
@@ -20,6 +20,8 @@ import { isPaidWorkspace } from "@/lib/ads/billing-gates";
 import { isBillingConfigured } from "@/lib/ads/billing-stripe";
 import { getOrCreateWorkspace } from "@/lib/ads/workspace";
 import { prisma } from "@/lib/prisma";
+import { foundingSpotsLeft } from "@/lib/ads/founding-spots";
+import { checkoutTerms } from "@/lib/ads/public-offer";
 import { expiringCredits } from "@/lib/ads/referrals";
 import { AutoCheckout, BillingActionButton } from "./_components/billing-action-button";
 import { autoCheckoutPlan, signedOutBillingRedirect } from "@/lib/ads/plan-checkout";
@@ -71,7 +73,9 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
   const growth = getPlan(STUDIO_LAUNCH_OFFER.plan);
   // New buyers see only plans for sale (Growth/Scale hidden during the founding offer); a subscriber on a hidden
   // plan still sees their own plan card.
-  const shownPlans = ADS_PLANS.filter((p) => !p.hiddenForNewBuyers || (paid && ws.adsPlan === p.key));
+  // Monthly-only plans (Growth Autopilot) are left out of the yearly view.
+  const shownPlans = ADS_PLANS.filter((p) => (!p.hiddenForNewBuyers || (paid && ws.adsPlan === p.key)) && !(yearly && !p.annualPriceEnv));
+  const autopilotFull = (await foundingSpotsLeft(prisma)) <= 0;
   const onDepartment = paid && Boolean(plan?.weeklyDrop);
   const passOn = unlimitedPassActive(ws, now);
   const passBuyable = canBuyUnlimitedWeek(ws) && Boolean(priceIdFor(UNLIMITED_WEEK));
@@ -164,12 +168,12 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
         {onDepartment && plan && (
           <Card className="border-2 border-primary">
             <CardHeader>
-              <CardDescription>{plan.key === "agency" ? `Your Ozzy Agency plan · ${planUsageLine(plan)}` : `Your Ozzy Ad Department${plan.usageMultiple ? ` · ${plan.usageMultiple}x Starter usage` : ""}`}</CardDescription>
-              <CardTitle className="font-display text-2xl">Fresh ads every Monday, a coach that tells you what&apos;s working</CardTitle>
+              <CardDescription>{plan.key === "agency" ? `Your Ozzy Agency plan · ${planUsageLine(plan)}` : plan.key === "autopilot" ? "Your Growth Autopilot · Ozzy's AI Marketing Team" : `Your Ozzy Ad Department${plan.usageMultiple ? ` · ${plan.usageMultiple}x Starter usage` : ""}`}</CardDescription>
+              <CardTitle className="font-display text-2xl">{plan.key === "autopilot" ? "Your team runs your Facebook and Instagram lead ads" : "Fresh ads every Monday, a coach that tells you what's working"}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <ul className="space-y-2">{AD_DEPARTMENT_STACK.map((i) => <li key={i.label} className="flex items-start gap-2"><Check className="mt-0.5 size-4 shrink-0 text-primary" /><span><span className="font-medium">{i.bonus ? "Bonus: " : ""}{i.label}</span> · {i.detail}</span></li>)}</ul>
-              {plan.usageMultiple && <p className="text-muted-foreground">{PLAN_USAGE_NOTE} {FOUNDING_TERMS} {FOUNDING_PRICE_LOCK}</p>}
+              <ul className="space-y-2">{(plan.key === "autopilot" ? AUTOPILOT_STACK : AD_DEPARTMENT_STACK).map((i) => <li key={i.label} className="flex items-start gap-2"><Check className="mt-0.5 size-4 shrink-0 text-primary" /><span><span className="font-medium">{i.bonus ? "Bonus: " : ""}{i.label}</span> · {i.detail}</span></li>)}</ul>
+              {plan.usageMultiple && plan.key !== "autopilot" && <p className="text-muted-foreground">{PLAN_USAGE_NOTE} {FOUNDING_TERMS} {FOUNDING_PRICE_LOCK}</p>}
             </CardContent>
           </Card>
         )}
@@ -187,26 +191,29 @@ export default async function AdsBillingPage({ searchParams }: { searchParams: P
               return (
                 <Card key={p.key} className={current || (!paid && p.recommended) ? "glow-primary border-2 border-primary md:-my-2" : undefined}>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">{p.name}{current ? <Badge>current</Badge> : !paid && p.recommended && <Badge>{p.usageMultiple ? `Founding · ${p.usageMultiple}x` : "Recommended"}</Badge>}</CardTitle>
+                    <CardTitle className="flex items-center gap-2">{p.name}{current ? <Badge>current</Badge> : !paid && p.recommended && <Badge>{p.key === "autopilot" ? "Founding · done for you" : p.usageMultiple ? `Founding · ${p.usageMultiple}x` : "Recommended"}</Badge>}</CardTitle>
                     <CardDescription>
                       {yearly ? (
                         <><span className="text-3xl font-semibold text-foreground">{formatCents(annualPriceCents(p))}</span> / year
                           <span className="mt-1 block text-xs">{p.usageMultiple ? planUsageLine(p) : `${annualCredits(p)} credits up front · ${perCredit(annualPriceCents(p), annualCredits(p))}`} · save {formatCents(p.priceCents * (ANNUAL_MONTHS - ANNUAL_MONTHS_PAID))}</span></>
                       ) : (
                         <><span className="text-3xl font-semibold text-foreground">{formatCents(p.priceCents)}</span> / month
-                          <span className="mt-1 block text-xs">{p.usageMultiple ? (p.key === "agency" ? planUsageLine(p) : `${p.usageMultiple}x Starter usage · stacked value $${stackTotalUsd().toLocaleString("en-US")}/month`) : perCredit(p.priceCents, p.monthlyCredits)}</span></>
+                          <span className="mt-1 block text-xs">{p.key === "autopilot" ? `Founding price · regular ${formatCents(AUTOPILOT_REGULAR_PRICE_CENTS)}/month · ${AUTOPILOT_FOUNDING_LINE}` : p.usageMultiple ? (p.key === "agency" ? planUsageLine(p) : `${p.usageMultiple}x Starter usage · do it yourself · stacked value $${stackTotalUsd().toLocaleString("en-US")}/month`) : perCredit(p.priceCents, p.monthlyCredits)}</span></>
                       )}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2 text-sm">{p.highlights.map((h) => <li key={h} className="flex items-center gap-2"><Check className="size-4 shrink-0 text-primary" />{h}</li>)}</ul>
                   </CardContent>
-                  <CardFooter>
-                    {paid ? (
+                  <CardFooter className="flex-col items-stretch gap-2">
+                    {p.key === "autopilot" && autopilotFull && !current ? (
+                      <p role="status" className="text-sm font-medium">{AUTOPILOT_FULL_MESSAGE}</p>
+                    ) : paid ? (
                       <BillingActionButton endpoint="/api/ads-billing/portal" label={current ? "Manage" : "Switch plan"} variant="outline" disabled={!configured} />
                     ) : (
                       <BillingActionButton endpoint="/api/ads-billing/checkout" body={{ kind: "plan", key: p.key, interval: yearly ? "year" : "month" }} label={yearly ? `Choose ${p.name} yearly` : `Choose ${p.name}`} disabled={!configured || !(yearly ? annualPriceIdFor(p) : priceIdFor(p)) || Boolean(ws.suspendedAt)} />
                     )}
+                    {!paid && <p className="text-center text-xs text-muted-foreground">{checkoutTerms(p, { yearly })}</p>}
                   </CardFooter>
                 </Card>
               );

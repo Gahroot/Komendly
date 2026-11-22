@@ -8,7 +8,8 @@ when that file can't be read. Never state any Komendly fact that is not on this 
 - Komendly turns a website URL into on-brand, ready-to-run ad creatives (static + animated) via Ozzy, its AI ad wizard.
 - Ad sizes: 4:5, 1:1, 9:16.
 - Ads for all 5 awareness stages (unaware, problem aware, solution aware, product aware, most aware).
-- Lead paid plan: Ozzy's AI Marketing Team (plan "Ozzy Ad Department"), $97 the first month, then $197/month. The owner connects Meta once, sets a monthly ad budget limit and authorizes the team; the team then makes fresh ads every week, launches and runs Meta lead ads in the owner's own ad account, pauses ads that waste money, emails each lead within minutes and sends a weekly plain-English report. Ad spend is paid to Meta directly and never exceeds the owner's limit. Never promise lead numbers, sales or ROI.
+- Lead paid plan (done for you): Ozzy's AI Marketing Team (plan "Growth Autopilot"), founding price $297/month, locked for as long as the business stays subscribed (regular price $497/month). Founding spots: 10 businesses; when they're gone there is a waitlist. We set up the Meta connection with the owner when they join (never call it self-serve or one-click). The owner sets a monthly ad budget limit and authorizes the team; the team then makes fresh ads every week, launches and runs Meta lead ads in the owner's own ad account, pauses ads that waste money, emails each lead within minutes and sends a weekly plain-English report. Ad spend is paid by the owner directly to Meta and never goes over their monthly limit. No guaranteed leads or sales.
+- Do-it-yourself plan: Ozzy Ad Department, $97 the first month (within 72 hours of the free ads), then $197/month: fresh ads made from the website every week, and a coach (Ozzy Ad Coach) that tells you what's working; the owner posts the ads themselves. Never say Ad Department launches or runs ads.
 - Never describe it as "one-click publishing" or tie publishing to Growth/Scale plans.
 - Second product: AI video testimonials (komendly.com/testimonials) turns text reviews into AI-avatar videos.
 
@@ -36,7 +37,8 @@ when that file can't be read. Never state any Komendly fact that is not on this 
 ## Links
 - Pricing: internal link `/pricing`. Free studio: `/`.
 
-## Fallback prices (only if billing-config.ts on main can't be read; updated 2026-11-20)
+## Fallback prices (only if billing-config.ts on main can't be read; updated 2026-11-22)
+- plan: Growth Autopilot | price: 297 | credits: 1200
 - plan: Ozzy Ad Department | price: 197 (first month 97) | credits: 1200
 - plan: Starter | price: 49 | credits: 20
 - plan: Growth | price: 119 | credits: 55

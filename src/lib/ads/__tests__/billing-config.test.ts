@@ -191,3 +191,39 @@ describe("Unlimited week pass (one-time add-on, never a plan)", () => {
     expect(canBuyUnlimitedWeek({ adsPlan: "starter", subscriptionStatus: "active", suspendedAt: new Date() })).toBe(false);
   });
 });
+
+describe("Growth Autopilot split (2026-11-22)", () => {
+  it("adds the autopilot tier: $297 founding, Ad Department credits, weekly drop, monthly only, maps its price id", async () => {
+    const cfg = await import("@/lib/ads/billing-config");
+    const ap = cfg.getPlan("autopilot")!;
+    expect(ap.name).toBe(cfg.AUTOPILOT_PLAN_NAME);
+    expect(ap.priceCents).toBe(cfg.AUTOPILOT_PRICE_CENTS);
+    expect(ap.priceCents).toBe(29700);
+    expect(ap.monthlyCredits).toBe(cfg.getPlan("ad_department")!.monthlyCredits);
+    expect(ap.weeklyDrop).toBe(true);
+    expect(ap.annualPriceEnv).toBeUndefined();
+    expect(cfg.isPlanForSale("autopilot")).toBe(true);
+    expect(cfg.planFromPriceId("price_ap", { STRIPE_ADS_AUTOPILOT_PRICE_ID: "price_ap" })?.key).toBe("autopilot");
+    expect(cfg.getPlan("ad_department")!.highlights.join(" ")).not.toMatch(/launch|lead ads|run for you/i);
+    expect(cfg.planDisplayName(cfg.getPlan("ad_department")!)).toBe("Ozzy Ad Department");
+  });
+  it("hasAdDepartment includes autopilot; hasTeam is autopilot or agency, live only", async () => {
+    const { hasAdDepartment, hasTeam } = await import("@/lib/ads/billing-config");
+    const w = (adsPlan: string, subscriptionStatus = "active") => ({ adsPlan, subscriptionStatus });
+    expect(hasAdDepartment(w("autopilot"))).toBe(true);
+    expect(hasTeam(w("autopilot"))).toBe(true);
+    expect(hasTeam(w("agency", "past_due"))).toBe(true);
+    expect(hasTeam(w("ad_department"))).toBe(false);
+    expect(hasTeam(w("autopilot", "canceled"))).toBe(false);
+    expect(hasTeam({ adsPlan: "autopilot", subscriptionStatus: "active", suspendedAt: new Date() })).toBe(false);
+  });
+  it("founding spots: 10, counted on live autopilot subscriptions, never below 0", async () => {
+    const { foundingSpotsLeft, spotsLeftFrom } = await import("@/lib/ads/founding-spots");
+    expect(spotsLeftFrom(0)).toBe(10);
+    expect(spotsLeftFrom(12)).toBe(0);
+    let where: unknown;
+    const left = await foundingSpotsLeft({ adsWorkspace: { count: async (a) => { where = a.where; return 7; } } });
+    expect(left).toBe(3);
+    expect(where).toEqual({ adsPlan: "autopilot", subscriptionStatus: { in: ["active", "trialing", "past_due"] } });
+  });
+});

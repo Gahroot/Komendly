@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { teamOpsTick, teamPause, type ActionInput, type MandatePatch, type PublishRow, type ReadyAd, type TeamMandate, type TeamStore } from "../src/jobs/team-ops";
 import { dayKey } from "../../src/lib/ads/team/contracts";
 import type { StoredMetaToken } from "../../src/lib/ads/meta/core/types";
+import { PARTNER_RECONNECT_REASON } from "../../src/lib/ads/meta/core/partner";
 
 const NOW = new Date("2026-11-22T17:00:00Z");
 const TODAY = dayKey(NOW, "America/New_York");
@@ -66,7 +67,7 @@ function mandate(over: Partial<TeamMandate> = {}): TeamMandate {
     id: "m1", workspaceId: "w1", status: "active", state: "pending", stateReason: null, monthlyLimitMinor: 60000, currency: "USD",
     zips: ["94110", "94114"], privacyUrl: "https://roof.example/privacy", adAccountId: "act_1", pageId: "555", authorizedAt: new Date("2026-11-20T00:00:00Z"),
     leadFormId: null, campaignId: null, spendBeforeMonthMinor: null, capMonth: null, spendCapMinor: null, launchedAt: null, lastCheckedAt: null, lastAnalyzedOn: null,
-    workspace: { ownerId: "u1", adsPlan: "ad_department", subscriptionStatus: "active", suspendedAt: null },
+    workspace: { ownerId: "u1", adsPlan: "autopilot", subscriptionStatus: "active", suspendedAt: null },
     ...over,
   };
 }
@@ -179,8 +180,8 @@ describe("team ops: stop conditions pause within one cycle", () => {
     ["kill switch", {}, { kill: true }, "paused"],
     ["owner paused", { status: "paused" }, {}, "paused"],
     ["owner stopped", { status: "stopped" }, {}, "stopped"],
-    ["suspended", { workspace: { ownerId: "u1", adsPlan: "ad_department", subscriptionStatus: "active", suspendedAt: new Date() } }, {}, "paused"],
-    ["subscription ended", { workspace: { ownerId: "u1", adsPlan: "ad_department", subscriptionStatus: "canceled", suspendedAt: null } }, {}, "stopped"],
+    ["suspended", { workspace: { ownerId: "u1", adsPlan: "autopilot", subscriptionStatus: "active", suspendedAt: new Date() } }, {}, "paused"],
+    ["subscription ended", { workspace: { ownerId: "u1", adsPlan: "autopilot", subscriptionStatus: "canceled", suspendedAt: null } }, {}, "stopped"],
     ["starter plan", { workspace: { ownerId: "u1", adsPlan: "starter", subscriptionStatus: "active", suspendedAt: null } }, {}, "stopped"],
   ];
   for (const [name, over, o, state] of cases) {
@@ -282,6 +283,18 @@ describe("team ops: Meta errors", () => {
     expect(m.state).toBe("needs_reconnect");
     expect(w.meta.calls).toHaveLength(0);
   });
+  it("partner connection: needs_reconnect says Komendly reconnects, and the founder (not the owner) is emailed", async () => {
+    const m = live({ leadEmail: "owner@roof.example" });
+    const w = world(m, { token: "throw" });
+    w.store.viaPartner = async () => true;
+    const sent: Array<{ to: string; teamUrl: string }> = [];
+    await teamOpsTick({ store: w.store, fetch: w.meta.fetch, now: () => NOW, graphVersion: "v25.0", appUrl: "https://app.example", notify: async (n) => { sent.push(n); } });
+    expect(m.state).toBe("needs_reconnect");
+    expect(m.stateReason).toBe(PARTNER_RECONNECT_REASON);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.to).not.toBe("owner@roof.example");
+    expect(sent[0]!.teamUrl).toBe("https://app.example/admin/ads/workspaces/w1");
+  });
   it("Graph token error mid-run -> needs_reconnect, stops changing things", async () => {
     const m = live();
     const w = world(m);
@@ -315,7 +328,7 @@ describe("team owner notices", () => {
 
   it("emails on a billing pause but not on the owner's own pause, with human reason text", async () => {
     const sent: Array<{ state: string; reason: string; to: string }> = [];
-    const mk = () => ({ id: "m1", workspaceId: "w1", status: "stopped", state: "live", stateReason: null, monthlyLimitMinor: 60000, currency: "USD", zips: ["94110"], leadEmail: "joe@example.com", privacyUrl: null, adAccountId: "act_1", pageId: "p1", authorizedAt: new Date(), leadFormId: null, campaignId: null, spendBeforeMonthMinor: null, capMonth: null, spendCapMinor: null, launchedAt: null, lastCheckedAt: null, lastAnalyzedOn: null, workspace: { ownerId: "u", adsPlan: "ad_department", subscriptionStatus: "canceled", suspendedAt: null } });
+    const mk = () => ({ id: "m1", workspaceId: "w1", status: "stopped", state: "live", stateReason: null, monthlyLimitMinor: 60000, currency: "USD", zips: ["94110"], leadEmail: "joe@example.com", privacyUrl: null, adAccountId: "act_1", pageId: "p1", authorizedAt: new Date(), leadFormId: null, campaignId: null, spendBeforeMonthMinor: null, capMonth: null, spendCapMinor: null, launchedAt: null, lastCheckedAt: null, lastAnalyzedOn: null, workspace: { ownerId: "u", adsPlan: "autopilot", subscriptionStatus: "canceled", suspendedAt: null } });
     const patches: Array<Record<string, unknown>> = [];
     const store = { mandate: async () => mk(), updateMandate: async (_: string, p: Record<string, unknown>) => { patches.push(p); }, action: async () => true, event: async () => undefined, token: async () => null } as never;
     const notify = async (n: { state: string; reason: string; to: string }) => { sent.push(n); };

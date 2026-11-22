@@ -8,6 +8,21 @@ import { MCP_SCOPES, exchangeGraphCode, graphAuthorizeUrl, randomToken } from ".
 import type { MetaAppConfig } from "./core/oauth";
 import type { MetaPublishMode, StoredMetaToken } from "./core/types";
 import { OAUTH_STATE_TTL_MS, saveMetaToken } from "./connection";
+import { metaPublishFlagKeys } from "./access";
+
+/** State prefix for an admin "connect via partner access" sign-in: the token lands on the target workspace with viaPartner. */
+export const PARTNER_STATE_PREFIX = "partner.";
+
+/**
+ * `forWorkspace` on /api/ads/meta/connect: admin only (checked server-side from the DB user), and the workspace must exist.
+ * Returns the target workspace id.
+ */
+export async function partnerConnectTarget(user: { id: string; isAdmin?: boolean | null }, forWorkspace: string): Promise<string> {
+  if (!user.isAdmin) throw new AdsHttpError(403, "forbidden", "Only Komendly admins can connect a workspace via partner access.");
+  const ws = await prisma.adsWorkspace.findUnique({ where: { id: forWorkspace }, select: { id: true } });
+  if (!ws) throw new AdsHttpError(404, "not_found", "Workspace not found.");
+  return ws.id;
+}
 
 /**
  * MCP auth-spec client backed by our pre-registered Meta app (Meta's DCR endpoint rejects
@@ -30,8 +45,8 @@ class MetaMcpOAuthProvider implements OAuthClientProvider {
   codeVerifier() { return this.verifier; }
 }
 
-export async function startMetaConnect(o: { config: MetaAppConfig; mode: MetaPublishMode; workspaceId: string; userId: string }): Promise<string> {
-  const state = randomToken();
+export async function startMetaConnect(o: { config: MetaAppConfig; mode: MetaPublishMode; workspaceId: string; userId: string; viaPartner?: boolean }): Promise<string> {
+  const state = (o.viaPartner ? PARTNER_STATE_PREFIX : "") + randomToken();
   await prisma.metaOAuthState.deleteMany({ where: { expiresAt: { lt: new Date() } } });
   let url: string;
   let verifier: string;
@@ -58,6 +73,11 @@ export async function finishMetaConnect(o: { config: MetaAppConfig; state: strin
   if (!row || row.userId !== o.userId || row.expiresAt < new Date()) {
     throw new AdsHttpError(400, "meta_bad_state", "This Meta sign-in link expired. Please try again.");
   }
+  const viaPartner = row.state.startsWith(PARTNER_STATE_PREFIX);
+  if (viaPartner) {
+    const user = await prisma.user.findUnique({ where: { id: o.userId }, select: { isAdmin: true } });
+    if (!user?.isAdmin) throw new AdsHttpError(403, "forbidden", "Only Komendly admins can connect a workspace via partner access.");
+  }
   const now = Date.now();
   let token: StoredMetaToken;
   if (row.mode === "mcp") {
@@ -69,6 +89,11 @@ export async function finishMetaConnect(o: { config: MetaAppConfig; state: strin
   } else {
     token = await exchangeGraphCode(o.config, o.code, row.codeVerifier, now);
   }
-  await saveMetaToken(row.workspaceId, token);
+  await saveMetaToken(row.workspaceId, token, { viaPartner });
+  if (viaPartner) {
+    // Partner customers are hand-picked: switch Meta on for this workspace (same per-workspace flag as live testing).
+    const key = metaPublishFlagKeys(row.workspaceId)[1]!;
+    await prisma.adsFeatureFlag.upsert({ where: { key }, create: { key, enabled: true }, update: { enabled: true } });
+  }
   return row.workspaceId;
 }

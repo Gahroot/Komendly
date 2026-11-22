@@ -1,21 +1,22 @@
 // The ONE Ozzy pricing section: leads with the flagship offer, "Hire Ozzy's AI Marketing Team" (prd.md §1-§4; the
-// ad_department plan), then the other plans (Starter ads-only, Agency) and the self-serve apps on one credit wallet.
+// autopilot plan, Growth Autopilot, founding price + 10 founding spots), then Ozzy Ad Department (do it yourself),
+// Starter and Agency, and the self-serve apps on one credit wallet.
 // Server component (no hooks): used by /pricing and /ads/pricing. Growth and Scale are hidden from new buyers.
 // Next to every checkout button: price, renewal, cancel path, ad spend (checkoutTerms). Copy only states what we deliver.
 import Link from "next/link";
 import { Check, Clapperboard, Clock, Gem, Megaphone, ShieldCheck, Sparkles, Wallet, Wand2 } from "lucide-react";
 import type { ReactNode } from "react";
-import { AD_DEPARTMENT_STACK, ADS_GUARANTEE, ADS_TOPUPS, PLAN_USAGE_NOTE, FOUNDING_PRICE_LOCK, FOUNDING_TERMS, PLANS_FOR_SALE, stackTotalUsd, ANNUAL_MONTHS, ANNUAL_MONTHS_PAID, annualCredits, annualPriceCents, type AdsPlanKey, type AdsPlanTier, planDisplayName, planUsageLine } from "@/lib/ads/billing-config";
+import { ADS_GUARANTEE, ADS_TOPUPS, AUTOPILOT_FULL_MESSAGE, AUTOPILOT_PRICE_LOCK, AUTOPILOT_STACK, PLAN_USAGE_NOTE, FOUNDING_PRICE_LOCK, FOUNDING_TERMS, PLANS_FOR_SALE, stackTotalUsd, ANNUAL_MONTHS, ANNUAL_MONTHS_PAID, annualCredits, annualPriceCents, type AdsPlanKey, type AdsPlanTier, planDisplayName, planUsageLine } from "@/lib/ads/billing-config";
 import { formatCents } from "@/lib/ads/billing-format";
 import { FIRST_VIDEO_OFFER, perVideoUsd, VIDEO_PACK_OFFER } from "@/lib/first-video-offer";
 import { ATTRACTION, planAppsSummary, TESTIMONIALS_PER_MONTH } from "@/lib/hub/money-model";
 import { STUDIO_INVITE, STUDIO_PRICE } from "@/lib/studio/contracts";
-import { AD_SPEND_LINE, checkoutTerms, HERO_PLAN, LAUNCH_PRICE_NOTE, NO_GUARANTEE_LINE, PUBLIC_OFFER } from "@/lib/ads/public-offer";
+import { AD_SPEND_LINE, checkoutTerms, DIY_INCLUDES, FOUNDING_SPOTS_LINE, HERO_PLAN, LAUNCH_PRICE_NOTE, NO_GUARANTEE_LINE, PUBLIC_OFFER } from "@/lib/ads/public-offer";
 import { TeamOffer } from "./team-offer";
 import { cn } from "@/lib/utils";
 
-/** Display order for new buyers: Starter (ads only), Ozzy's AI Marketing Team (hero), Scale, Agency; hidden plans are skipped. */
-export const PRICING_ORDER: readonly AdsPlanKey[] = ["starter", "ad_department", "scale", "agency"];
+/** Display order for new buyers: Growth Autopilot (hero, done for you), Ozzy Ad Department (DIY), Starter, Scale, Agency; hidden plans are skipped. */
+export const PRICING_ORDER: readonly AdsPlanKey[] = ["autopilot", "ad_department", "starter", "scale", "agency"];
 
 export interface OzzyPricingProps {
   yearly: boolean;
@@ -25,6 +26,8 @@ export interface OzzyPricingProps {
   planHref: (plan?: AdsPlanKey, yearly?: boolean) => string;
   /** Start-free link (Studio / free ad pack). */
   freeHref: string;
+  /** Growth Autopilot founding spots left (0 = waitlist line instead of the button; null = unknown). */
+  spotsLeft: number | null;
   /** Testimonial packs actions (Launch Kit claim / 5-pack), page-specific. */
   testimonialActions: ReactNode;
   /** Optional banner above the plans (e.g. grandfathered plan notice). */
@@ -40,15 +43,17 @@ const APPS = [
 const STACK = [
   { icon: Sparkles, title: "What you get", body: "A team that makes your ads, runs them in your own Meta account, checks them every day and sends you every lead." },
   { icon: ShieldCheck, title: "Why you can trust it", body: "You see 10 free ads from your website before you pay. Spend never goes over your monthly limit, and you can pause any time." },
-  { icon: Clock, title: "How fast", body: "Free ads in a few minutes. Once you connect Meta and set your limit, the team launches your ads without more clicks from you." },
-  { icon: Wand2, title: "How much effort", body: "Connect Meta once, set a monthly limit, read the weekly report, call your leads. No ad jargon to learn." },
+  { icon: Clock, title: "How fast", body: "Free ads in a few minutes. When you join, we set up your Meta connection with you; once your limit is set, the team launches your ads without more clicks from you." },
+  { icon: Wand2, title: "How much effort", body: "Set up Meta with us once, set a monthly limit, read the weekly report, call your leads. No ad jargon to learn." },
 ] as const;
 
 const FAQ = [
   { q: "What does Ozzy's team actually do?", a: "Every week it makes fresh ads from your website, launches them as Facebook and Instagram lead ads in your own Meta account, checks results every day, pauses ads that waste money, emails you each new lead within minutes and sends you a plain-English report. Everything it did shows up in your dashboard." },
   { q: "Who pays for the ads?", a: `${AD_SPEND_LINE} The ${PUBLIC_OFFER.heroPrice}/month is only for the team. You can lower your limit or pause your ads any time.` },
   { q: "How many leads will I get?", a: `${NO_GUARANTEE_LINE} You see every lead and every dollar spent, so you can judge it yourself.` },
-  { q: "What do I need to do?", a: "Connect your Facebook and Instagram account once, set a monthly ad budget limit, read the weekly report and call your leads." },
+  { q: "What do I need to do?", a: "When you join, we set up your Facebook and Instagram (Meta) connection with you. Then you set a monthly ad budget limit, read the weekly report and call your leads." },
+  { q: "What is a founding spot?", a: `${FOUNDING_SPOTS_LINE} Founding members pay ${PUBLIC_OFFER.heroPrice}/month instead of the regular ${PUBLIC_OFFER.heroRegularPrice}/month, locked for as long as they stay subscribed. When the spots are gone, there's a waitlist.` },
+  { q: "What's the difference with Ozzy Ad Department?", a: `${PUBLIC_OFFER.diyName} is the do-it-yourself plan: ${DIY_INCLUDES}. ${PUBLIC_OFFER.heroPlanName} is done for you: Ozzy's team also launches and runs your Facebook and Instagram lead ads.` },
   { q: "Who is it not for (yet)?", a: "Businesses whose ads Meta treats as a special category (housing, loans and credit, jobs, politics). You can still get free ads and make your own, but the team won't run those campaigns." },
   { q: "What does 20x Starter mean?", a: `${PLAN_USAGE_NOTE} ${FOUNDING_TERMS} ${FOUNDING_PRICE_LOCK}` },
   { q: "What is an Ozzy credit?", a: `One wallet for Ad Packs and Ozzy Studio. A static ad costs 1 credit, an animated ad 5. A new Studio video costs ${STUDIO_PRICE.newShort} credits (${STUDIO_PRICE.newLong} if longer than ${STUDIO_PRICE.longOverSeconds}s), with ${STUDIO_PRICE.includedRevisions} revisions included and ${STUDIO_PRICE.revision} credit per revision after that.` },
@@ -60,23 +65,25 @@ const FAQ = [
 ] as const;
 
 function priceOf(p: AdsPlanTier, yearly: boolean) {
-  if (p.usageMultiple) return yearly ? { price: formatCents(annualPriceCents(p)), note: "/ year", sub: `${planUsageLine(p)} · save ${formatCents(p.priceCents * (ANNUAL_MONTHS - ANNUAL_MONTHS_PAID))}` } : { price: formatCents(p.priceCents), note: "/ month", sub: p.key === "agency" ? `${planUsageLine(p)} · 3 testimonials / month` : `${p.usageMultiple}x Starter usage · stacked value $${stackTotalUsd().toLocaleString("en-US")}/month` };
+  if (p.key === "autopilot") return { price: formatCents(p.priceCents), note: "/ month", sub: `Founding price · regular ${PUBLIC_OFFER.heroRegularPrice}/month${yearly ? " · monthly only" : ""}` };
+  if (p.usageMultiple) return yearly ? { price: formatCents(annualPriceCents(p)), note: "/ year", sub: `${planUsageLine(p)} · save ${formatCents(p.priceCents * (ANNUAL_MONTHS - ANNUAL_MONTHS_PAID))}` } : { price: formatCents(p.priceCents), note: "/ month", sub: p.key === "agency" ? `${planUsageLine(p)} · 3 testimonials / month` : `${p.usageMultiple}x Starter usage · do it yourself · stacked value $${stackTotalUsd().toLocaleString("en-US")}/month` };
   return yearly ? { price: formatCents(annualPriceCents(p)), note: "/ year", sub: `${annualCredits(p)} credits up front · save ${formatCents(p.priceCents * (ANNUAL_MONTHS - ANNUAL_MONTHS_PAID))}` } : { price: formatCents(p.priceCents), note: "/ month", sub: `${formatCents(Math.round(p.priceCents / p.monthlyCredits))} per credit` };
 }
 
-export function OzzyPricing({ yearly, basePath, planHref, freeHref, testimonialActions, notice }: OzzyPricingProps) {
+export function OzzyPricing({ yearly, basePath, planHref, freeHref, spotsLeft, testimonialActions, notice }: OzzyPricingProps) {
+  const full = spotsLeft !== null && spotsLeft <= 0;
   const plans = PRICING_ORDER.map((k) => PLANS_FOR_SALE.find((p) => p.key === k)).filter((p): p is AdsPlanTier => Boolean(p));
   const hero = plans.find((p) => p.recommended);
   const toggle = "rounded-lg px-4 py-2 text-sm font-medium transition-colors";
   return (
     <main className="mx-auto max-w-6xl px-4 pb-24 pt-16 sm:px-6 sm:pt-20">
-      <TeamOffer as="h1" hireHref={planHref(HERO_PLAN.key, false)} freeHref={freeHref} />
+      <TeamOffer as="h1" hireHref={planHref(HERO_PLAN.key, false)} freeHref={freeHref} spotsLeft={spotsLeft} diyHref={`${basePath}#all-plans`} />
 
       {notice ? <div className="mt-10">{notice}</div> : null}
 
       <div className="mx-auto mt-20 max-w-2xl text-center">
-        <h2 className="font-display text-3xl font-medium tracking-[-0.01em]">All plans</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Want to run ads yourself? Starter gives you the ads without the team. Agency is for marketers with client brands.</p>
+        <h2 id="all-plans" className="font-display text-3xl font-medium tracking-[-0.01em]">All plans</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Want to post ads yourself? {PUBLIC_OFFER.diyName} gives you {DIY_INCLUDES}. Starter gives you ads on credits. Agency is for marketers with client brands.</p>
       </div>
 
       <div className="mt-6 flex justify-center">
@@ -89,20 +96,31 @@ export function OzzyPricing({ yearly, basePath, planHref, freeHref, testimonialA
       <div className={cn("mt-8 grid gap-5 md:grid-cols-2", plans.length >= 4 ? "lg:grid-cols-4" : "lg:grid-cols-3")}>
         {plans.map((p) => {
           const featured = Boolean(p.recommended);
+          const monthlyOnly = !p.annualPriceEnv;
+          const y = yearly && !monthlyOnly;
           const pr = priceOf(p, yearly);
           return (
             <section key={p.key} aria-label={p.name} className={cn("glass relative flex flex-col rounded-2xl p-6", featured && "order-first ring-2 ring-[var(--studio-gold)] lg:order-none")}>
               {featured && <span className="absolute -top-3 left-6 rounded-full bg-[var(--studio-gold)] px-2.5 py-0.5 text-xs font-semibold text-[#2a0f10]">Done for you</span>}
+              {p.key === "ad_department" && <span className="absolute -top-3 left-6 rounded-full border border-border bg-background px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">Do it yourself</span>}
               {TESTIMONIALS_PER_MONTH[p.key] > 0 && !featured && <span className="absolute -top-3 left-6 rounded-full border border-[var(--studio-gold)] bg-background px-2.5 py-0.5 text-xs font-semibold text-[var(--studio-gold)]">Includes testimonials</span>}
               <h3 className="font-display text-xl font-medium">{planDisplayName(p)}</h3>
+              {p.displayName && p.displayName !== p.name ? <p className="text-sm text-muted-foreground">{p.name}</p> : null}
               <p className="mt-3 flex items-baseline gap-1"><span className="text-4xl font-semibold tabular-nums">{pr.price}</span><span className="text-sm text-muted-foreground">{pr.note}</span></p>
               <p className="mt-1 text-xs text-muted-foreground">{pr.sub}</p>
               <ul className="mt-5 flex-1 space-y-2.5 text-sm">
                 {(featured ? p.highlights.slice(0, -1) : [...planAppsSummary(p.key), ...p.highlights.slice(-1)]).map((i) => <li key={i} className="flex gap-2"><Check aria-hidden className="mt-0.5 size-4 shrink-0 text-[var(--studio-gold)]" />{i}</li>)}
               </ul>
-              <Link href={planHref(p.key)} data-pricing-plan={p.key} data-pricing-interval={yearly ? "year" : "month"} className={cn("mt-6 inline-flex h-11 items-center justify-center rounded-xl font-semibold", featured ? "spellbar__cta" : "border border-border text-foreground transition-colors hover:bg-accent")}>{featured ? "Hire the team" : `Choose ${p.name}`}{yearly ? " yearly" : ""}</Link>
-              <p className="mt-2 text-center text-xs text-muted-foreground">{checkoutTerms(p, { yearly })}</p>
-              {featured && !yearly ? <p className="mt-1 text-center text-xs text-[var(--studio-gold)]">{LAUNCH_PRICE_NOTE}</p> : null}
+              {p.key === "autopilot" && full ? (
+                <p role="status" className="mt-6 rounded-xl border border-border px-4 py-3 text-center text-sm font-medium">{AUTOPILOT_FULL_MESSAGE}</p>
+              ) : (
+                <>
+                  <Link href={planHref(p.key, y)} data-pricing-plan={p.key} data-pricing-interval={y ? "year" : "month"} className={cn("mt-6 inline-flex h-11 items-center justify-center rounded-xl font-semibold", featured ? "spellbar__cta" : "border border-border text-foreground transition-colors hover:bg-accent")}>{p.key === "autopilot" ? "Claim a founding spot" : `Choose ${p.name}`}{y ? " yearly" : ""}</Link>
+                  <p className="mt-2 text-center text-xs text-muted-foreground">{checkoutTerms(p, { yearly: y })}</p>
+                </>
+              )}
+              {p.key === "autopilot" ? <p className="mt-1 text-center text-xs text-[var(--studio-gold)]">{AUTOPILOT_PRICE_LOCK} {FOUNDING_SPOTS_LINE}</p> : null}
+              {p.key === "ad_department" && !yearly ? <p className="mt-1 text-center text-xs text-[var(--studio-gold)]">{LAUNCH_PRICE_NOTE}</p> : null}
             </section>
           );
         })}
@@ -113,16 +131,16 @@ export function OzzyPricing({ yearly, basePath, planHref, freeHref, testimonialA
         <section aria-labelledby="hero-stack-h" className="glass mx-auto mt-12 max-w-3xl rounded-2xl p-6">
           <h2 id="hero-stack-h" className="font-display text-2xl font-medium">Everything {planDisplayName(hero)} does for you</h2>
           <ul className="mt-4 space-y-2.5 text-sm">
-            {AD_DEPARTMENT_STACK.map((i) => (
+            {AUTOPILOT_STACK.map((i) => (
               <li key={i.label} className="flex items-start justify-between gap-4">
                 <span className="flex gap-2"><Check aria-hidden className="mt-0.5 size-4 shrink-0 text-[var(--studio-gold)]" /><span><span className="font-medium">{i.bonus ? "Bonus: " : ""}{i.label}</span> · <span className="text-muted-foreground">{i.detail}</span></span></span>
                 <span className="shrink-0 tabular-nums text-muted-foreground">${i.valueUsd}/mo</span>
               </li>
             ))}
           </ul>
-          <p className="mt-4 border-t border-border pt-4 text-sm"><span className="font-semibold">Total value ${stackTotalUsd().toLocaleString("en-US")}/month.</span> Yours for {formatCents(hero.priceCents)}/month ({PUBLIC_OFFER.heroFirstMonth} the first month with the launch offer).</p>
+          <p className="mt-4 border-t border-border pt-4 text-sm"><span className="font-semibold">Total value ${stackTotalUsd(AUTOPILOT_STACK).toLocaleString("en-US")}/month.</span> Yours for {formatCents(hero.priceCents)}/month, the founding price (regular {PUBLIC_OFFER.heroRegularPrice}/month). {AUTOPILOT_PRICE_LOCK}</p>
           <p className="mt-2 flex gap-2 text-xs text-muted-foreground"><Wallet aria-hidden className="mt-0.5 size-3.5 shrink-0 text-[var(--studio-gold)]" />{AD_SPEND_LINE} {NO_GUARANTEE_LINE}</p>
-          {hero.usageMultiple && <p className="mt-2 text-xs text-muted-foreground">{PLAN_USAGE_NOTE} {FOUNDING_TERMS} {FOUNDING_PRICE_LOCK}</p>}
+          <p className="mt-2 text-xs text-muted-foreground">{FOUNDING_SPOTS_LINE}</p>
         </section>
       )}
 

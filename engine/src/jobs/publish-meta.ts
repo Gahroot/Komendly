@@ -4,6 +4,7 @@ import type { Ratio } from "../../../src/lib/ads/contracts";
 import { decryptToken, encryptToken, tokenKey } from "../../../src/lib/ads/meta/core/crypto";
 import { createMetaPublisher } from "../../../src/lib/ads/meta/core/factory";
 import { META_MCP_TOKEN_ENDPOINT_FALLBACK, refreshMcpToken } from "../../../src/lib/ads/meta/core/oauth";
+import { systemTokenFor } from "../../../src/lib/ads/meta/core/partner";
 import { parsePublishPayload, publishToMeta, type PublishStore, type PublishableAd } from "../../../src/lib/ads/meta/core/publish";
 import type { MetaPublisher, StoredMetaToken } from "../../../src/lib/ads/meta/core/types";
 import type { Db } from "../db";
@@ -52,12 +53,16 @@ export function prismaPublishStore(db: Db, storage: Storage, o: { runId: string;
   };
 }
 
-export async function workspaceToken(db: Db, workspaceId: string, now: number): Promise<StoredMetaToken> {
+/** Decrypted token; partner connections (viaPartner) use META_PARTNER_SYSTEM_TOKEN when it is set (read per call). */
+export async function workspaceToken(db: Db, workspaceId: string, now: number, env: Record<string, string | undefined> = process.env): Promise<StoredMetaToken> {
   const conn = await db.metaConnection.findUnique({ where: { workspaceId } });
   if (!conn) throw new PermanentJobError("Meta account is not connected");
+  const system = systemTokenFor(conn, env);
+  if (system) return system;
   const key = tokenKey(process.env.ADS_TOKEN_KEY);
   let token = JSON.parse(decryptToken(conn.encryptedToken, key)) as StoredMetaToken;
   if (token.expiresAt && token.expiresAt - now < 5 * 60 * 1000) {
+    if (conn.viaPartner) throw new PermanentJobError("Komendly's partner Meta connection expired; Komendly will reconnect it");
     if (token.mode !== "mcp" || !process.env.META_APP_ID) throw new PermanentJobError("Meta connection expired; reconnect");
     token = await refreshMcpToken(META_MCP_TOKEN_ENDPOINT_FALLBACK, process.env.META_APP_ID, token, now);
     await db.metaConnection.update({ where: { workspaceId }, data: { encryptedToken: encryptToken(JSON.stringify(token), key), tokenExpiresAt: token.expiresAt ? new Date(token.expiresAt) : null } });

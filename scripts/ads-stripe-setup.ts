@@ -1,9 +1,10 @@
 // Creates Website2ads products + prices in Stripe (TEST mode by default) and prints the env vars.
 // Idempotent: reuses prices found by lookup_key. Refuses live keys unless --live is passed.
-// Usage: set -a; . ./.env.local; set +a; npx tsx scripts/ads-stripe-setup.ts [--live] [--api-key sk_...] [--only unlock_pack]
+// Usage: set -a; . ./.env.local; set +a; npx tsx scripts/ads-stripe-setup.ts [--live] [--api-key sk_...] [--only unlock_pack|unlimited_week|autopilot]
+// --only autopilot: just the Growth Autopilot founding price ($297/month, product "Ozzy Growth Autopilot") (touches nothing else).
 // --only unlock_pack: just the $9 "Unlock this pack" price + its "$9 off the first Starter month" coupon (touches nothing else).
 import Stripe from "stripe";
-import { ADS_PLANS, ADS_TOPUPS, annualCredits, annualPriceCents, LAUNCH_FIRST_MONTH_OFF_CENTS, LAUNCH_QUARTER, UNLIMITED_WEEK, UNLOCK_PACK, UNLOCK_PACK_COUPON_ENV } from "../src/lib/ads/billing-config";
+import { ADS_PLANS, ADS_TOPUPS, getPlan, annualCredits, annualPriceCents, LAUNCH_FIRST_MONTH_OFF_CENTS, LAUNCH_QUARTER, UNLIMITED_WEEK, UNLOCK_PACK, UNLOCK_PACK_COUPON_ENV } from "../src/lib/ads/billing-config";
 
 const UNLOCK_COUPON_ID = `ads_unlock_pack_credit_${UNLOCK_PACK.priceCents}`;
 
@@ -35,22 +36,29 @@ async function ensureFirstMonthCoupon(stripe: Stripe): Promise<string> {
   return coupon.id;
 }
 
-async function ensurePrice(stripe: Stripe, item: { name: string; priceCents: number; lookupKey: string; recurring: boolean; credits: number; intervalCount?: number }) {
+async function ensurePrice(stripe: Stripe, item: { name: string; priceCents: number; lookupKey: string; recurring: boolean; credits: number; intervalCount?: number; productName?: string; plan?: string }) {
   const existing = await stripe.prices.list({ lookup_keys: [item.lookupKey], active: true, limit: 1 });
   if (existing.data[0]) return existing.data[0].id;
   const product = await stripe.products.create({
-    name: `Website2ads ${item.name}`,
-    metadata: { product: "ads", credits: String(item.credits) },
+    name: item.productName ?? `Website2ads ${item.name}`,
+    metadata: { product: "ads", credits: String(item.credits), ...(item.plan ? { plan: item.plan } : {}) },
   });
   const price = await stripe.prices.create({
     product: product.id,
     currency: "usd",
     unit_amount: item.priceCents,
     lookup_key: item.lookupKey,
-    metadata: { product: "ads", credits: String(item.credits) },
+    metadata: { product: "ads", credits: String(item.credits), ...(item.plan ? { plan: item.plan } : {}) },
     ...(item.recurring ? { recurring: { interval: "month" as const, interval_count: item.intervalCount ?? 1 } } : {}),
   });
   return price.id;
+}
+
+/** Growth Autopilot founding price ($297/month, locked while subscribed): its own product + a fixed lookup key. */
+const AUTOPILOT = getPlan("autopilot")!;
+export const AUTOPILOT_LOOKUP_KEY = "ads_autopilot_founding_monthly";
+function ensureAutopilot(stripe: Stripe): Promise<string> {
+  return ensurePrice(stripe, { name: `${AUTOPILOT.name} (monthly, founding)`, productName: "Ozzy Growth Autopilot", priceCents: AUTOPILOT.priceCents, lookupKey: AUTOPILOT_LOOKUP_KEY, recurring: true, credits: AUTOPILOT.monthlyCredits, plan: AUTOPILOT.key });
 }
 
 async function main() {
@@ -72,12 +80,18 @@ async function main() {
     console.log(lines.join("\n"));
     return;
   }
+  if (argValue("--only") === "autopilot") {
+    console.log(`# Growth Autopilot (${live ? "LIVE" : "test"} mode). Add to your env:\n${AUTOPILOT.priceEnv}=${await ensureAutopilot(stripe)}`);
+    return;
+  }
   for (const p of ADS_PLANS) {
-    const id = await ensurePrice(stripe, { name: `${p.name} (monthly)`, priceCents: p.priceCents, lookupKey: `ads_${p.key}_monthly_${p.priceCents}_${p.monthlyCredits}`, recurring: true, credits: p.monthlyCredits });
+    const id = p.key === AUTOPILOT.key
+      ? await ensureAutopilot(stripe)
+      : await ensurePrice(stripe, { name: `${p.name} (monthly)`, priceCents: p.priceCents, lookupKey: `ads_${p.key}_monthly_${p.priceCents}_${p.monthlyCredits}`, recurring: true, credits: p.monthlyCredits });
     lines.push(`${p.priceEnv}=${id}`);
   }
   // Annual price for the hero plan (the other plans' annual prices already exist; live product prod_VbxU5EorFQcPJJ).
-  for (const p of ADS_PLANS.filter((x) => x.key === "ad_department")) {
+  for (const p of ADS_PLANS.filter((x) => x.key === "ad_department" && x.annualPriceEnv)) {
     const id = await ensurePrice(stripe, { name: `${p.name} (yearly)`, priceCents: annualPriceCents(p), lookupKey: `ads_${p.key}_annual_${annualPriceCents(p)}_${annualCredits(p)}`, recurring: true, intervalCount: 12, credits: annualCredits(p) });
     lines.push(`${p.annualPriceEnv}=${id}`);
   }

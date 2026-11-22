@@ -84,7 +84,8 @@ describe("offer value stack", () => {
     expect(offerPerAdCents()).toEqual({ offer: 0, plan: 16 });
     const lines = launchQuarterValueStack({ stories: 3, videos: 2, locked: true });
     expect(lines[0]).toContain("Fresh ads every week");
-    expect(lines.some((l) => l.includes("Leads to your inbox"))).toBe(true);
+    expect(lines.some((l) => l.includes("Ozzy Ad Coach"))).toBe(true);
+    expect(lines.join(" ")).not.toMatch(/launched|run for you|Leads to your inbox/);
     expect(lines.some((l) => l.includes("paid by you directly to Meta"))).toBe(true);
     expect(lines.find((l) => l.startsWith("Total value"))).toContain("Your first month: $97 (save $100), then $197/month");
     expect(lines).toContain("Unlocks your 3 Stories versions + 2 more videos right away");

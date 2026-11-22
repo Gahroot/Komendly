@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { komendlyCheckoutText } from "@/lib/checkout-branding";
 import { z } from "zod";
-import { annualPriceIdFor, canBuyUnlimitedWeek, UNLIMITED_WEEK, getOffer, getPlan, isPlanForSale, LAUNCH_QUARTER, offerCouponId, getTopup, priceIdFor, UNLOCK_PACK, UNLOCK_PACK_NOTE, unlockPackCouponId } from "@/lib/ads/billing-config";
+import { annualPriceIdFor, AUTOPILOT_FULL_MESSAGE, canBuyUnlimitedWeek, UNLIMITED_WEEK, getOffer, getPlan, isPlanForSale, LAUNCH_QUARTER, offerCouponId, getTopup, priceIdFor, UNLOCK_PACK, UNLOCK_PACK_NOTE, unlockPackCouponId } from "@/lib/ads/billing-config";
 import { getLaunchOfferState } from "@/lib/ads/launch-offer";
 import { appUrl, getAdsStripe } from "@/lib/ads/billing-stripe";
 import { trackAdsEvent } from "@/lib/ads/events";
@@ -12,6 +12,8 @@ import { referralSummary } from "@/lib/ads/referrals";
 import { isStudioLaunchOfferOpen, STUDIO_LAUNCH_OFFER } from "@/lib/hub/money-model";
 import { isLegacyTestimonialSubscriber } from "@/lib/first-video-offer";
 import { hiresTeam } from "@/lib/ads/team/rules";
+import { foundingSpotsLeft } from "@/lib/ads/founding-spots";
+import { workspaceTrade } from "@/lib/ads/trade-server";
 
 // Studio launch offer: {plan: "growth", offer: "studio_launch"} (or {kind: "plan", key: "growth", offer: "studio_launch"}):
 // the existing Growth monthly price + bonus credits on the first invoice (webhook), only inside the 72h window.
@@ -65,6 +67,10 @@ export async function POST(request: NextRequest) {
     if (studioLaunch && !isStudioLaunchOfferOpen(ws.studioOfferReadyAt, new Date())) {
       return NextResponse.json({ error: "This launch offer has expired.", code: "offer_expired" }, { status: 410 });
     }
+    // Growth Autopilot: founding spots are a real limit (first AUTOPILOT_FOUNDING_SPOTS businesses).
+    if (kind === "plan" && key === "autopilot" && (await foundingSpotsLeft(prisma)) <= 0) {
+      return NextResponse.json({ error: AUTOPILOT_FULL_MESSAGE, code: "founding_full" }, { status: 409 });
+    }
     if (freeMonth && (await referralSummary(user, ws)).freeMonth !== "available") {
       return NextResponse.json({ error: "Your free month isn't available on this account.", code: "free_month_unavailable" }, { status: 409 });
     }
@@ -85,7 +91,8 @@ export async function POST(request: NextRequest) {
     // Launch offers (72h post-trial, Studio launch): $100 off the first hero-plan invoice. No coupon = not sold.
     const launchCoupon = offer ? offerCouponId(offer) : studioLaunch ? offerCouponId(LAUNCH_QUARTER) : null;
     if ((offer?.couponEnv || studioLaunch) && !launchCoupon) return NextResponse.json({ error: "That option isn't available.", code: "unknown_price" }, { status: 400 });
-    const founding = (kind === "plan" && getPlan(key)?.usageMultiple) || (offer && getPlan(offer.plan)?.usageMultiple);
+    const autopilot = kind === "plan" && key === "autopilot";
+    const founding = !autopilot && ((kind === "plan" && getPlan(key)?.usageMultiple) || (offer && getPlan(offer.plan)?.usageMultiple));
     const unlockCredit = couponId && !ws.stripeSubscriptionId
       ? Boolean(await prisma.creditLedger.findFirst({ where: { workspaceId: ws.id, reason: "topup", note: UNLOCK_PACK_NOTE, delta: { gt: 0 } }, select: { id: true } }))
       : false;
@@ -95,17 +102,18 @@ export async function POST(request: NextRequest) {
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
       metadata,
-      ...komendlyCheckoutText(founding ? "founding" : recurring ? "plan" : "pack"),
+      ...komendlyCheckoutText(autopilot ? "autopilot" : founding ? "founding" : recurring ? "plan" : "pack"),
       ...(recurring
         ? { subscription_data: { metadata, ...(freeMonth ? { trial_period_days: freeMonthCheckoutParams().trialDays } : {}) } }
         : { payment_intent_data: { metadata } }),
       ...(launchCoupon ? { discounts: [{ coupon: launchCoupon }] } : unlockCredit && couponId ? { discounts: [{ coupon: couponId }] } : {}),
       ...(freeMonth ? { payment_method_collection: freeMonthCheckoutParams().payment_method_collection } : {}),
-      // Hiring Ozzy's team (Ad Department / Agency) lands on the team page; everything else on billing.
+      // Hiring Ozzy's team (Growth Autopilot / Agency) lands on the team page; everything else (Ad Department too) on billing.
       success_url: `${appUrl()}${hiresTeam(kind, kind === "offer" ? offer?.plan : key) ? "/ads/team" : "/ads/billing"}?checkout=success${kind === "topup" && key === UNLOCK_PACK.key ? `&bought=${UNLOCK_PACK.key}` : ""}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl()}/ads/billing?checkout=canceled${kind === "topup" || freeMonth ? "" : `&declined=${encodeURIComponent(key)}`}`,
     });
-    await trackAdsEvent("checkout_started", { workspaceId: ws.id, userId: user.id, props: { kind, key, sessionId: session.id, ...(studioLaunch ? { offer: STUDIO_LAUNCH_OFFER.key, app: "studio", amountCents: item.priceCents, currency: "USD" } : {}), ...(annual ? { interval: "year" } : {}), ...(placement ? { placement } : {}), ...(unlockCredit ? { coupon: "unlock_pack_credit" } : {}) } });
+    const trade = await workspaceTrade(ws.id);
+    await trackAdsEvent("checkout_started", { workspaceId: ws.id, userId: user.id, props: { kind, key, sessionId: session.id, ...(trade ? { trade } : {}), ...(studioLaunch ? { offer: STUDIO_LAUNCH_OFFER.key, app: "studio", amountCents: item.priceCents, currency: "USD" } : {}), ...(annual ? { interval: "year" } : {}), ...(placement ? { placement } : {}), ...(unlockCredit ? { coupon: "unlock_pack_credit" } : {}) } });
     if (studioLaunch) await trackAdsEvent("studio_checkout_started", { workspaceId: ws.id, userId: user.id, props: { offer: STUDIO_LAUNCH_OFFER.key, plan: key, amountCents: item.priceCents } });
     const downsell = placement === "downsell" || placement === "unlock_pack";
     if (kind === "offer" || studioLaunch || (placement && !downsell)) await trackAdsEvent("upsell_accepted", { workspaceId: ws.id, userId: user.id, props: { kind, key, ...(placement ? { placement } : {}) } });

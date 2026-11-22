@@ -1,4 +1,4 @@
-// The ONE Ozzy pricing page: leads with "Hire Ozzy's AI Marketing Team", then Starter/Agency, Studio and Testimonials. Public and CDN-cached: no session reads on the
+// The ONE Ozzy pricing page: leads with "Hire Ozzy's AI Marketing Team" (Growth Autopilot), then Ad Department (DIY), Starter/Agency, Studio and Testimonials. Public and CDN-cached: no session reads on the
 // server; per-user parts (grandfathered plan notice, Launch Kit claim after registration) are client components.
 import { Suspense } from "react";
 import { ShieldCheck } from "lucide-react";
@@ -8,10 +8,14 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { PriceSurvey } from "@/components/testimonials/price-survey";
 import { planCheckoutPath } from "@/lib/ads/plan-checkout";
+import { foundingSpotsLeft } from "@/lib/ads/founding-spots";
+import { prisma } from "@/lib/prisma";
 import { LaunchKitActions, LegacyPlanNotice } from "./_components/pricing-client";
 
 export default async function PricingPage({ searchParams }: { searchParams: Promise<{ billing?: string }> }) {
   const yearly = (await searchParams).billing === "year";
+  // Founding spots (not per user): a DB count; checkout enforces the real limit if a cached page is stale.
+  const spotsLeft = await foundingSpotsLeft(prisma).catch(() => null);
   const billingPath = yearly ? "/ads/billing?billing=year" : "/ads/billing";
   return (
     <div className="min-h-screen text-foreground">
@@ -22,6 +26,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
         basePath="/pricing"
         planHref={(plan, y = yearly) => (plan ? planCheckoutPath(plan, y) : billingPath)}
         freeHref="/ads/signup?next=%2Fstudio"
+        spotsLeft={spotsLeft}
         notice={<Suspense fallback={null}><LegacyPlanNotice /></Suspense>}
         testimonialActions={<Suspense fallback={null}><LaunchKitActions /></Suspense>}
       />

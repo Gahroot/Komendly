@@ -12,7 +12,7 @@ import { stopTeamFor } from "../stop";
 import { adAccountNameFromText, hiresTeam, planOwnerChange, statusLine, teamNumbers } from "../rules";
 
 const NOW = new Date("2026-11-22T17:00:00Z");
-const ws = (over: Partial<AdsWorkspace> = {}) => ({ id: "ws1", name: "Joe's workspace", ownerId: "u1", adsPlan: "ad_department", subscriptionStatus: "active", suspendedAt: null, ...over }) as AdsWorkspace;
+const ws = (over: Partial<AdsWorkspace> = {}) => ({ id: "ws1", name: "Joe's workspace", ownerId: "u1", adsPlan: "autopilot", subscriptionStatus: "active", suspendedAt: null, ...over }) as AdsWorkspace;
 const access = (over: Partial<TeamAccess> = {}): TeamAccess => ({ user: { id: "u1", email: "joe@biz.com" } as User, workspace: ws(), role: "owner", ...over });
 const body = { monthlyLimit: 600, zips: "94110", leadEmail: "joe@biz.com", agreed: true };
 
@@ -62,6 +62,7 @@ describe("authorize gating", () => {
   it("refuses non-owners, missing plan, suspension, missing Meta and an already active team", async () => {
     await expect(authorizeTeam(access({ role: "member" }), body, deps(fakeDb().db))).rejects.toMatchObject({ code: "owner_only" });
     await expect(authorizeTeam(access({ workspace: ws({ adsPlan: "starter" }) }), body, deps(fakeDb().db))).rejects.toMatchObject({ code: "needs_plan" });
+    await expect(authorizeTeam(access({ workspace: ws({ adsPlan: "ad_department" }) }), body, deps(fakeDb().db))).rejects.toMatchObject({ code: "needs_plan" });
     await expect(authorizeTeam(access({ workspace: ws({ suspendedAt: new Date() }) }), body, deps(fakeDb().db))).rejects.toMatchObject({ code: "needs_plan" });
     await expect(authorizeTeam(access(), body, deps(fakeDb({ conn: null }).db))).rejects.toMatchObject({ code: "meta_not_connected" });
     await expect(authorizeTeam(access(), body, deps(fakeDb({ conn: { adAccountId: "act_1", pageId: null } }).db))).rejects.toMatchObject({ code: "meta_selection" });
@@ -77,9 +78,12 @@ describe("authorize gating", () => {
   });
   it("Agency counts as hired; Starter checkouts don't land on the team page", () => {
     expect(hiresTeam("plan", "agency")).toBe(true);
-    expect(hiresTeam("offer", "ad_department")).toBe(true);
+    expect(hiresTeam("plan", "autopilot")).toBe(true);
+    // Split 2026-11-22: Ad Department is DIY again; its checkouts (plan or $97 launch offer) go back to billing.
+    expect(hiresTeam("offer", "ad_department")).toBe(false);
+    expect(hiresTeam("plan", "ad_department")).toBe(false);
     expect(hiresTeam("plan", "starter")).toBe(false);
-    expect(hiresTeam("topup", "ad_department")).toBe(false);
+    expect(hiresTeam("topup", "autopilot")).toBe(false);
   });
 });
 

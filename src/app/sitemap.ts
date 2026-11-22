@@ -28,6 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/ozzy-studio`, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${SITE_URL}/remix`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${SITE_URL}/free-ads`, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${SITE_URL}/free-ads/roofers`, changeFrequency: 'monthly', priority: 0.8 },
     { url: `${SITE_URL}/ads/pricing`, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${SITE_URL}/partners`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${SITE_URL}/examples`, changeFrequency: 'weekly', priority: 0.8 },

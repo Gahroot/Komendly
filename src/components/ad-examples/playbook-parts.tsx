@@ -63,7 +63,7 @@ export function ChipLinks({ title, links }: { title: string; links: ReadonlyArra
 export function PaidNote() {
   return (
     <p className="mx-auto mt-6 max-w-2xl px-4 text-center text-sm text-muted-foreground">
-      Want it done for you? <Link href="/ads/pricing" className="text-[var(--studio-gold)] hover:underline">Ozzy Ad Department</Link> is $97 for the first month, then $197/mo: your ads go live in your own Meta account and the losers get replaced every week.
+      Want fresh ads every week? <Link href="/ads/pricing" className="text-[var(--studio-gold)] hover:underline">Ozzy Ad Department</Link> is $97 for the first month, then $197/mo: new ads from your website every Monday and a coach that tells you what&apos;s working. You post them yourself.
     </p>
   );
 }

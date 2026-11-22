@@ -14,7 +14,7 @@
 // Price IDs come from env (created by scripts/ads-stripe-setup.ts); a missing ID = not purchasable.
 // Pure module: safe to import from client components (reads only env strings).
 
-export type AdsPlanKey = "starter" | "ad_department" | "growth" | "scale" | "agency";
+export type AdsPlanKey = "starter" | "ad_department" | "autopilot" | "growth" | "scale" | "agency";
 export type BillingInterval = "month" | "year";
 export type AdsTopupKey = "topup_10" | "topup_30" | "unlock_pack" | "unlimited_week";
 
@@ -26,8 +26,8 @@ export interface AdsPlanTier {
   priceCents: number;
   monthlyCredits: number;
   priceEnv: string;
-  /** Annual prepay price (2 months free: 10x monthly), all 12 months of credits granted on payment. */
-  annualPriceEnv: string;
+  /** Annual prepay price (2 months free: 10x monthly), all 12 months of credits granted on payment. Unset = monthly only. */
+  annualPriceEnv?: string;
   /** Gift packs (3 free ads for another business) per calendar month while subscribed. */
   giftsPerMonth: number;
   highlights: string[];
@@ -47,7 +47,7 @@ export interface AdsPlanTier {
   usageMultiple?: number;
 }
 
-// Ozzy Ad Department: the hero plan sold after the free pack. Owner decision 2026-11-13: no unlimited plans (no
+// Ozzy Ad Department: the DIY weekly-ads plan sold after the free pack ($97 first-month launch offer); Growth Autopilot is the done-for-you hero. Owner decision 2026-11-13: no unlimited plans (no
 // obligation to unlimited use); instead "20x Starter" usage, AI-company style, with the credit count kept off pricing copy.
 // Single price constant: changing the price is this one line (+ a new Stripe price, see scripts/ads-stripe-setup.ts).
 export const AD_DEPARTMENT_PRICE_CENTS = 19700;
@@ -62,14 +62,42 @@ export const PLAN_USAGE_NOTE = `${AD_DEPARTMENT_USAGE_MULTIPLE}x the usage of St
 export const FOUNDING_TERMS = "Founding offer for the first 100 members or until we end it. Cancel anytime in one click.";
 export const FOUNDING_PRICE_LOCK = "Founding members keep their price for as long as they stay subscribed.";
 
-/** The public name of the hero plan (ad_department). Display only: plan key, Stripe prices and `name` are unchanged. */
-export const AD_DEPARTMENT_DISPLAY_NAME = "Ozzy's AI Marketing Team";
+/** Public name of the DIY weekly-ads plan (ad_department). Founder decision 2026-11-22: the team moved to Growth Autopilot. */
+export const AD_DEPARTMENT_DISPLAY_NAME = "Ozzy Ad Department";
+
+// Growth Autopilot (founder decision 2026-11-22): Ozzy's AI Marketing Team runs the owner's Facebook & Instagram lead
+// ads (prd.md §4). Founding price $297/month, locked while subscribed; regular $497. Only AUTOPILOT_FOUNDING_SPOTS
+// businesses (enforced at checkout: src/lib/ads/founding-spots.ts). Meta is connected WITH the owner on joining.
+export const AUTOPILOT_PRICE_CENTS = 29700;
+/** Standard price, shown as the regular price next to the founding price (no Stripe price at this amount yet). */
+export const AUTOPILOT_REGULAR_PRICE_CENTS = 49700;
+export const AUTOPILOT_FOUNDING_SPOTS = 10;
+/** Public name of the autopilot plan ("Ozzy's AI Marketing Team"); AUTOPILOT_PLAN_NAME is the plan's short name. */
+export const AUTOPILOT_DISPLAY_NAME = "Ozzy's AI Marketing Team";
+export const AUTOPILOT_PLAN_NAME = "Growth Autopilot";
+export const AUTOPILOT_FOUNDING_LINE = `Founding spots: ${AUTOPILOT_FOUNDING_SPOTS} businesses. We set up your Meta connection with you when you join.`;
+export const AUTOPILOT_PRICE_LOCK = "Founding price, locked for as long as you stay subscribed.";
+export const AUTOPILOT_FULL_MESSAGE = "The founding spots are full. Write to nolan@komendly.com to join the waitlist.";
+
+type StackLine = { label: string; detail: string; valueUsd: number; bonus?: boolean };
 
 /**
- * The value stack shown next to the hero plan (stated monthly worth, in dollars; kept modest). Every line is real work
- * the team does (prd.md §4): no line promises leads, sales or results. Bonus titles/values must match BONUS_META.
+ * Ozzy Ad Department (do it yourself): fresh ads every week + a coach; the owner posts them. Stated monthly worth in
+ * dollars, kept modest. No line claims we launch or run ads. Bonus titles/values must match BONUS_META.
  */
-export const AD_DEPARTMENT_STACK: readonly { label: string; detail: string; valueUsd: number; bonus?: boolean }[] = [
+export const AD_DEPARTMENT_STACK: readonly StackLine[] = [
+  { label: "Fresh ads every week", detail: "Ozzy makes new ads (and a short video) from your website every Monday, ready for you to post", valueUsd: 300 },
+  { label: "Ozzy Ad Coach", detail: "Ask him about any ad and he says what to keep, what to drop, and makes more like the winners", valueUsd: 100, bonus: true },
+  { label: "Website check-up", detail: "Ozzy checks the page your ads send people to", valueUsd: 300, bonus: true },
+  { label: "30-day ad plan", detail: "What to post, when, and what to test, day by day", valueUsd: 250, bonus: true },
+  { label: "Hook & caption library", detail: "Proven openers and captions written for your brand", valueUsd: 150, bonus: true },
+];
+
+/**
+ * Growth Autopilot's value stack: every line is real work the team does (prd.md §4); no line promises leads, sales
+ * or results. Bonus titles/values must match BONUS_META.
+ */
+export const AUTOPILOT_STACK: readonly StackLine[] = [
   { label: "Fresh ads every week", detail: "Creative Studio writes and designs new ads (and a short video) for you every Monday, steered by what's working", valueUsd: 300 },
   { label: "Your ads launched and run for you", detail: "Launch & Budget Desk sets up your Facebook and Instagram lead ads in your own Meta account and keeps spend inside your monthly limit", valueUsd: 300 },
   { label: "Daily checks", detail: "Performance Analyst looks at results every day, pauses ads that waste money and keeps the ones that work", valueUsd: 200 },
@@ -81,8 +109,8 @@ export const AD_DEPARTMENT_STACK: readonly { label: string; detail: string; valu
   { label: "Hook & caption library", detail: "Proven openers and captions written for your brand", valueUsd: 150, bonus: true },
 ];
 
-export function stackTotalUsd(): number {
-  return AD_DEPARTMENT_STACK.reduce((n, i) => n + i.valueUsd, 0);
+export function stackTotalUsd(stack: readonly StackLine[] = AD_DEPARTMENT_STACK): number {
+  return stack.reduce((n, i) => n + i.valueUsd, 0);
 }
 /** Weekly Drop cost basis: 5 static (1 credit each) + 1 animated (5 credits) = 10 credits/week = ~43 a month. */
 export const WEEKLY_DROP_CREDIT_EQUIVALENTS_PER_MONTH = 43;
@@ -118,6 +146,26 @@ export const ADS_PLANS: readonly AdsPlanTier[] = [
     priceEnv: "STRIPE_ADS_AD_DEPARTMENT_PRICE_ID",
     annualPriceEnv: "STRIPE_ADS_AD_DEPARTMENT_ANNUAL_PRICE_ID",
     giftsPerMonth: 1,
+    weeklyDrop: true,
+    highlights: [
+      "Fresh ads made from your website every week (and a short video), ready for you to post",
+      "Ozzy Ad Coach tells you what's working, what to drop and makes more like the winners",
+      "You post them yourself: every size, with the text to paste",
+      `Bonuses: website check-up, 30-day ad plan, hook & caption library, ${AD_DEPARTMENT_USAGE_MULTIPLE}x Starter usage for your own ads and videos`,
+      "Post Ozzy's ads for 30 days. Not happy? One click, full refund.",
+    ],
+  },
+  {
+    // name/priceCents/monthlyCredits are literals on purpose: blog-engine parses them (= AUTOPILOT_PLAN_NAME,
+    // AUTOPILOT_PRICE_CENTS, 20x Starter; asserted in __tests__/billing-config.test.ts).
+    key: "autopilot",
+    name: "Growth Autopilot",
+    displayName: AUTOPILOT_DISPLAY_NAME,
+    priceCents: 29700,
+    monthlyCredits: 1200,
+    usageMultiple: AD_DEPARTMENT_USAGE_MULTIPLE,
+    priceEnv: "STRIPE_ADS_AUTOPILOT_PRICE_ID",
+    giftsPerMonth: 1,
     recommended: true,
     weeklyDrop: true,
     highlights: [
@@ -125,8 +173,9 @@ export const ADS_PLANS: readonly AdsPlanTier[] = [
       "Checked every day: ads that waste money get paused, the ones that work keep running",
       "Every new lead emailed to you within minutes, plus a weekly plain-English report",
       "Ad spend is paid by you directly to Meta and never goes over your monthly limit",
-      `Bonuses: website check-up, 30-day ad plan, hook & caption library, Ad Coach, ${AD_DEPARTMENT_USAGE_MULTIPLE}x Starter usage for your own ads and videos`,
-      "Post Ozzy's ads for 30 days. Not happy? One click, full refund.",
+      AUTOPILOT_FOUNDING_LINE,
+      `Everything in Ozzy Ad Department: Ad Coach, website check-up, 30-day ad plan, hook & caption library, ${AD_DEPARTMENT_USAGE_MULTIPLE}x Starter usage`,
+      "Not happy in your first 30 days? One click, full refund.",
     ],
   },
   {
@@ -171,7 +220,7 @@ export const ADS_PLANS: readonly AdsPlanTier[] = [
   },
 ];
 
-/** Plans shown to new buyers, in menu order: Starter (fallback), Ozzy Ad Department (hero), Agency (multi-brand). */
+/** Plans shown to new buyers: Starter, Ozzy Ad Department (DIY weekly ads), Growth Autopilot (hero, done for you), Agency (multi-brand). */
 export const PLANS_FOR_SALE: readonly AdsPlanTier[] = ADS_PLANS.filter((p) => !p.hiddenForNewBuyers);
 
 /** Can a new subscription be started on this plan? (Growth: no; existing Growth subscribers are unaffected.) */
@@ -194,9 +243,19 @@ function activeOn(ws: PlanCheckWorkspace): boolean {
   return ACTIVE_SUB_STATUSES.has(ws.subscriptionStatus) && !ws.suspendedAt;
 }
 
-/** Workspace has Ozzy Ad Department features (Ad Department or Agency) with a live subscription (Weekly Drop, Ad Coach, bonuses). */
+/** Plans with the Ozzy Ad Department features (Weekly Drop, Ad Coach, bonuses). */
+export const AD_DEPARTMENT_PLAN_KEYS: readonly AdsPlanKey[] = ["ad_department", "autopilot", "agency"];
+/** Plans whose subscribers may hire Ozzy's AI Marketing Team (autonomous Meta campaigns). */
+export const TEAM_PLAN_KEYS: readonly AdsPlanKey[] = ["autopilot", "agency"];
+
+/** Workspace has Ozzy Ad Department features (Ad Department, Growth Autopilot or Agency) with a live subscription (Weekly Drop, Ad Coach, bonuses). */
 export function hasAdDepartment(ws: PlanCheckWorkspace): boolean {
-  return (ws.adsPlan === "ad_department" || ws.adsPlan === "agency") && activeOn(ws);
+  return (AD_DEPARTMENT_PLAN_KEYS as readonly string[]).includes(ws.adsPlan) && activeOn(ws);
+}
+
+/** Workspace may run Ozzy's AI Marketing Team (Growth Autopilot or Agency) with a live subscription, not suspended. */
+export function hasTeam(ws: PlanCheckWorkspace): boolean {
+  return (TEAM_PLAN_KEYS as readonly string[]).includes(ws.adsPlan) && activeOn(ws);
 }
 
 /** Parallel Studio chats / runs an admin may have in progress at once. */
@@ -274,7 +333,7 @@ export function annualCredits(plan: AdsPlanTier): number {
 }
 
 export function annualPriceIdFor(plan: AdsPlanTier, env: Record<string, string | undefined> = process.env): string | null {
-  return env[plan.annualPriceEnv] || null;
+  return plan.annualPriceEnv ? env[plan.annualPriceEnv] || null : null;
 }
 
 /** Billing interval of a plan price id ("year" for annual prepay prices), else null. */

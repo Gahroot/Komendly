@@ -16,7 +16,7 @@ export const HARD_RULES: readonly string[] = [
   "Emails to people who did not opt in must carry a working opt-out and Komendly's postal identity; opted-out people are never contacted.",
   "No shaming a named business publicly: scores/teardowns about a specific business are private (noindex, token link) only.",
   "Community/forum content answers the question first; any Komendly mention is disclosed.",
-  "Offer facts must match exactly: Ozzy Ad Department is $97 the first month then $197/month, cancel anytime; free pack = 10 ads (20 for referred friends); ads go live in the customer's own Meta account and losers are replaced weekly.",
+  "Offer facts must match exactly: Ozzy Ad Department is $97 the first month then $197/month, cancel anytime (do it yourself: fresh ads weekly + a coach, the customer posts them); Growth Autopilot is $297/month founding price, locked while subscribed (regular $497), 10 founding spots, and runs the customer's Meta lead ads; free pack = 10 ads (20 for referred friends).",
   "No claim of Meta partnership, endorsement or affiliation unless the supplied facts say so.",
   "No misleading urgency, fake scarcity or hidden costs.",
 ];
@@ -59,7 +59,7 @@ export const REVIEW_JSON_SCHEMA = {
 export const PRODUCT_FACTS: readonly string[] = [
   "Komendly makes Facebook/Instagram (Meta) ads from a business's website; free remakes of a single ad via /remix are free.",
   "Ozzy Ad Department: $97 the first month, then $197/month, cancel anytime. Free pack: 10 ads. Referred friends get 20.",
-  "Ads go live in the customer's own Meta account; losing ads are replaced weekly ('weekly drop').",
+  "Ozzy Ad Department: fresh ads every week ('weekly drop') and Ozzy Ad Coach; the customer posts them. Growth Autopilot (Ozzy's AI Marketing Team, $297/month founding price, 10 founding spots): the team runs the customer's Facebook and Instagram lead ads in their own Meta account; Meta connection set up with the customer on joining.",
   "Integrations Komendly ships: ChatGPT/Claude app, Zapier (actions: generate ads from a website, find ad run; triggers: ads ready, new ad run), Jobber (reviews/jobs feed ad ideas), Chrome extension for the Meta Ad Library.",
   "Free tools: Meta Ad Check (scores live Ad Library ads; rubric: an ad running over 45 days is flagged as possibly tired), Competitor ad watch weekly email (opt-in), data report from the public Meta Ad Library (collected Nov 2026).",
   "Komendly's postal address is inserted from configuration (OUTBOUND_POSTAL_ADDRESS) and is correct; never judge the address itself.",

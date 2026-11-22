@@ -5,7 +5,8 @@ import Link from "next/link";
 import { CalendarClock, Film, ShieldCheck, Smartphone, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BillingActionButton } from "@/app/ads/billing/_components/billing-action-button";
-import { getPlan, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE, offerFirstPaymentCents } from "@/lib/ads/billing-config";
+import { AUTOPILOT_FOUNDING_LINE, getPlan, LAUNCH_QUARTER, LAUNCH_QUARTER_GUARANTEE, offerFirstPaymentCents } from "@/lib/ads/billing-config";
+import { checkoutTerms } from "@/lib/ads/public-offer";
 import type { BonusSummary } from "@/lib/ads/bonus-access";
 import { postOfferEvent } from "@/lib/ads/offer-client";
 import { firstInSession } from "@/lib/ads/offer-session";
@@ -24,6 +25,7 @@ export function OfferNudge({ runId, ready, bonus, remainingMs, onDismiss, valueL
     postOfferEvent("offer_nudge_shown", { placement: "early_offer", runId, ready, offer: LAUNCH_QUARTER.key });
   }, [runId, ready]);
   const hero = getPlan(LAUNCH_QUARTER.plan);
+  const autopilot = getPlan("autopilot");
   if (!hero) return null;
   const today = usd(offerFirstPaymentCents(LAUNCH_QUARTER));
 
@@ -63,7 +65,9 @@ export function OfferNudge({ runId, ready, bonus, remainingMs, onDismiss, valueL
             <BillingActionButton endpoint="/api/ads-billing/checkout" body={{ kind: "offer", key: LAUNCH_QUARTER.key, placement: "early_offer" }} label={`Start for ${today}`} />
           </div>
         </div>
+        <p className="text-xs text-muted-foreground">{checkoutTerms(hero, { firstPaymentCents: offerFirstPaymentCents(LAUNCH_QUARTER) })} You post the ads yourself.</p>
         <p className="text-xs text-muted-foreground">
+          {autopilot ? <>Rather have Ozzy&apos;s team run your Facebook and Instagram lead ads? {autopilot.name}, {usd(autopilot.priceCents)}/month founding price. {AUTOPILOT_FOUNDING_LINE}{" "}</> : null}
           <Link href="/ads/pricing" target="_blank" className="underline underline-offset-4" onClick={() => postOfferEvent("offer_clicked", { placement: "early_offer", runId, target: "pricing" })}>See all plans</Link>
         </p>
       </div>

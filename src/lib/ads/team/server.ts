@@ -4,10 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { getCookieUser } from "@/lib/auth";
 import { currentAgent } from "@/lib/agent-keys/context";
 import { trackAdsEvent } from "@/lib/ads/events";
-import { isAdDepartment } from "@/lib/ads/weekly-drop";
+import { hasTeam } from "@/lib/ads/billing-config";
 import { metaAccess } from "@/lib/ads/meta/access";
 import { publisherForWorkspace } from "@/lib/ads/meta/connection";
 import { accountReadiness } from "@/lib/ads/meta/readiness";
+import { partnerBusinessId } from "@/lib/ads/meta/partner";
 import type { MetaAdAccount, MetaPage } from "@/lib/ads/meta/core/types";
 import { AdsHttpError, getOrCreateWorkspace, requireUser } from "@/lib/ads/workspace";
 import {
@@ -91,16 +92,19 @@ export async function loadTeamStatus(a: TeamAccess, d: Partial<TeamDeps> = {}): 
   const deps = { ...defaults(), ...d };
   const { db } = deps;
   const ws = a.workspace;
-  const hired = isAdDepartment(ws);
+  const hired = hasTeam(ws);
   const now = deps.now();
-  const [mandate, conn, access, businessName] = await Promise.all([
+  const [mandate, conn, access, businessName, partnerRequests] = await Promise.all([
     db.marketingMandate.findUnique({ where: { workspaceId: ws.id } }),
-    db.metaConnection.findUnique({ where: { workspaceId: ws.id }, select: { adAccountId: true, pageId: true } }),
+    db.metaConnection.findUnique({ where: { workspaceId: ws.id }, select: { adAccountId: true, pageId: true, viaPartner: true } }),
     metaAccess(ws),
     businessNameFor(db, ws),
+    db.adsEvent.count({ where: { workspaceId: ws.id, name: "partner_access_requested" } }),
   ]);
+  // Founding setup is offered until Meta App Review is approved (META_APP_REVIEW_APPROVED=1 hides it).
+  const partner = { offered: process.env.META_APP_REVIEW_APPROVED !== "1", businessId: partnerBusinessId(), viaPartner: !!conn?.viaPartner, requested: partnerRequests > 0 };
 
-  const meta: TeamMetaView = { access, connected: !!conn, selection: conn ? { adAccountId: conn.adAccountId, pageId: conn.pageId } : null, accounts: null, adAccountName: null, pageName: null, currency: mandate?.currency ?? "USD", readiness: null };
+  const meta: TeamMetaView = { access, connected: !!conn, selection: conn ? { adAccountId: conn.adAccountId, pageId: conn.pageId } : null, accounts: null, adAccountName: null, pageName: null, currency: mandate?.currency ?? "USD", readiness: null, partner };
   if (conn && access === "ok") {
     try {
       const { adAccounts, pages } = await deps.loadMetaAccounts(ws.id);
@@ -156,7 +160,7 @@ export async function authorizeTeam(a: TeamAccess, body: unknown, d: Partial<Tea
   const { db } = deps;
   const ws = a.workspace;
   if (a.role !== "owner") throw new AdsHttpError(403, "owner_only", "Only the account owner can hire the team.");
-  if (!isAdDepartment(ws)) throw new AdsHttpError(402, "needs_plan", "Hiring the team needs an active Ozzy Ad Department or Agency plan.");
+  if (!hasTeam(ws)) throw new AdsHttpError(402, "needs_plan", "Hiring the team needs an active Growth Autopilot or Agency plan.");
   const existing = await db.marketingMandate.findUnique({ where: { workspaceId: ws.id }, select: { status: true } });
   if (existing?.status === "active") throw new AdsHttpError(409, "already_hired", "Your team is already working. Change your budget or ZIP codes below.");
   const parsed = parseMandateInput(body);
@@ -209,7 +213,7 @@ export async function changeTeam(a: TeamAccess, body: unknown, d: Partial<TeamDe
   const plan = planOwnerChange(m, body, { monthToDateMinor: mtd._sum.spendMinor ?? 0 });
   if (!plan.ok) throw new AdsHttpError(plan.status, plan.code, plan.error);
   if (plan.noop) return mandateView(m);
-  if (plan.update.status === "active" && !isAdDepartment(ws)) throw new AdsHttpError(402, "needs_plan", "Turning ads back on needs an active Ozzy Ad Department or Agency plan.");
+  if (plan.update.status === "active" && !hasTeam(ws)) throw new AdsHttpError(402, "needs_plan", "Turning ads back on needs an active Growth Autopilot or Agency plan.");
   const now = deps.now();
   const data: Record<string, unknown> = { ...plan.update };
   if (plan.reauthorize) {
