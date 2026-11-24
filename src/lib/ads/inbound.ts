@@ -81,3 +81,29 @@ export function htmlToText(html: string): string {
     .replace(/&nbsp;/g, " ").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&")
     .replace(/\n{3,}/g, "\n\n");
 }
+
+/** Where replies to Komendly mail are forwarded so a person reads them (REPLY_FORWARD_TO, default Nolan's inbox). */
+export function replyForwardTo(): string {
+  return (process.env.REPLY_FORWARD_TO || "nolan@prestyj.com").trim();
+}
+
+/** Our own sending domains: mail from these (codes, tests) is stored but never forwarded (no loops). */
+const OWN_DOMAINS = ["komendly.com", "getkomendly.com"];
+
+/**
+ * The forward of one received reply to the founder's inbox, or null when it shouldn't be forwarded
+ * (no sender, sent by us, or sent by the forward address itself). Reply-To is the original sender,
+ * so hitting Reply answers the customer directly.
+ */
+export function buildReplyForward(r: { from: string; fromName: string | null; to: string[]; subject: string; text: string }, forwardTo: string = replyForwardTo()): { to: string; replyTo: string; subject: string; text: string; html: string } | null {
+  const from = r.from.trim().toLowerCase();
+  if (!from || !forwardTo || from === forwardTo.toLowerCase()) return null;
+  const domain = from.split("@")[1] ?? "";
+  if (OWN_DOMAINS.some((d) => domain === d || domain.endsWith(`.${d}`))) return null;
+  const who = r.fromName ? `${r.fromName} <${r.from}>` : r.from;
+  const subject = `Reply from ${r.fromName || r.from}: ${r.subject || "(no subject)"}`.slice(0, 200);
+  const text = `${who} replied to ${r.to.join(", ") || "Komendly"}.\nHit Reply to answer them directly.\n\n${r.text || "(no text)"}`;
+  const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const html = `<p><b>${esc(who)}</b> replied to ${esc(r.to.join(", ") || "Komendly")}. Hit Reply to answer them directly.</p><pre style="white-space:pre-wrap;font-family:inherit">${esc(r.text || "(no text)")}</pre>`;
+  return { to: forwardTo, replyTo: r.from, subject, text, html };
+}

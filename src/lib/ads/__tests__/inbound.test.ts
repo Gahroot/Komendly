@@ -85,3 +85,23 @@ describe("drip pause after a reply", () => {
     expect(dueStudioEmail(sc({ replied: true, firstFreeVideoAt: sat(59) }), sat(60), S)?.kind).toBe("studio_ready");
   });
 });
+
+describe("buildReplyForward", () => {
+  const base = { from: "owner@acme-roofing.com", fromName: "Sam", to: ["nolan@komendly.com"], subject: "Re: your ads", text: "Price was too high <b>" };
+  it("forwards a customer reply to the founder with Reply-To = sender", async () => {
+    const { buildReplyForward } = await import("../inbound");
+    const f = buildReplyForward(base, "nolan@prestyj.com")!;
+    expect(f.to).toBe("nolan@prestyj.com");
+    expect(f.replyTo).toBe("owner@acme-roofing.com");
+    expect(f.subject).toContain("Re: your ads");
+    expect(f.text).toContain("Price was too high");
+    expect(f.html).toContain("&lt;b&gt;");
+  });
+  it("never forwards our own mail or the founder's own address (no loops)", async () => {
+    const { buildReplyForward } = await import("../inbound");
+    expect(buildReplyForward({ ...base, from: "hello@komendly.com" }, "nolan@prestyj.com")).toBeNull();
+    expect(buildReplyForward({ ...base, from: "a@mail.getkomendly.com" }, "nolan@prestyj.com")).toBeNull();
+    expect(buildReplyForward({ ...base, from: "Nolan@prestyj.com" }, "nolan@prestyj.com")).toBeNull();
+    expect(buildReplyForward({ ...base, from: "" }, "nolan@prestyj.com")).toBeNull();
+  });
+});

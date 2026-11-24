@@ -6,6 +6,10 @@ export interface AdsMail {
   text: string;
   html: string;
   headers?: Record<string, string>;
+  /** Per-mail Reply-To (else SMTP_REPLY_TO). */
+  replyTo?: string;
+  /** Per-mail From (else SMTP_FROM). */
+  from?: string;
 }
 
 export type MailOutcome = "sent" | "logged";
@@ -22,7 +26,7 @@ export async function sendAdsMail(mail: AdsMail): Promise<MailOutcome> {
   }
   const port = Number(SMTP_PORT || 587);
   const transporter = nodemailer.createTransport({ host: SMTP_HOST, port, secure: port === 465, auth: { user: SMTP_USER, pass: SMTP_PASS } });
-  await transporter.sendMail({ from: SMTP_FROM || SMTP_USER, replyTo: process.env.SMTP_REPLY_TO || undefined, to: mail.to, subject: mail.subject, text: mail.text, html: mail.html, headers: mail.headers });
+  await transporter.sendMail({ from: mail.from || SMTP_FROM || SMTP_USER, replyTo: mail.replyTo || process.env.SMTP_REPLY_TO || undefined, to: mail.to, subject: mail.subject, text: mail.text, html: mail.html, headers: mail.headers });
   return "sent";
 }
 

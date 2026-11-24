@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { headerValue, htmlToText, parseAddress, stripQuotedReply, verifySvixSignature } from "@/lib/ads/inbound";
+import { buildReplyForward, headerValue, htmlToText, parseAddress, stripQuotedReply, verifySvixSignature } from "@/lib/ads/inbound";
+import { sendAdsMail } from "@/lib/ads/mailer";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,9 @@ export async function POST(request: NextRequest) {
       ? await prisma.adsWorkspaceMember.findFirst({ where: { userId: user.id }, orderBy: { createdAt: "asc" }, select: { workspaceId: true } })
       : null;
 
+    const subject = str(full?.subject) ?? str(data.subject) ?? "";
+    const text = stripQuotedReply(rawText);
+    const toList = Array.isArray(to) ? to.map(String) : to ? [String(to)] : [];
     await prisma.adsEvent.create({
       data: {
         name: "email_replied",
@@ -56,15 +60,18 @@ export async function POST(request: NextRequest) {
           emailId,
           from: fromEmail,
           fromName,
-          to: Array.isArray(to) ? to.map(String) : to ? [String(to)] : [],
-          subject: str(full?.subject) ?? str(data.subject) ?? "",
-          text: stripQuotedReply(rawText),
+          to: toList,
+          subject,
+          text,
           receivedAt: str(full?.created_at) ?? str(data.created_at) ?? new Date().toISOString(),
           inReplyTo: headerValue(full?.headers, "in-reply-to"),
           fetched: Boolean(full),
         },
       },
     });
+    // A person must read replies: forward to the founder's inbox (Reply-To = the sender). Best effort: the reply is stored.
+    const fwd = buildReplyForward({ from: fromEmail, fromName, to: toList, subject, text });
+    if (fwd) await sendAdsMail(fwd).catch((err) => console.error("[inbound/resend] forward", err));
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[inbound/resend]", err);

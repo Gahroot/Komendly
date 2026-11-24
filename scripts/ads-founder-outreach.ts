@@ -1,5 +1,5 @@
 // Personal plain-text notes from Nolan to users the lifecycle drip doesn't cover (or who we had to make whole).
-// Recipients + copy live in a JSON file: [{ "email", "kind", "subject", "body" }]. Body placeholders:
+// Recipients + copy live in a JSON file: [{ "email", "kind", "subject", "body", "replyTo"? }]. Body placeholders:
 //   {first} first name, {base} app URL, {verify} fresh confirm-email link (issues a new code), {unsub} unsubscribe URL.
 // Skips paid, unsubscribed and test users, and anyone who already got the same kind. Records AdsEvent email_sent
 // (so the drip keeps its 24h gap). Dry run by default; --send to send.
@@ -11,7 +11,7 @@ import { newVerificationSecrets, signEmailToken, verificationCodeHash, verificat
 import { isTestEmail } from "../src/lib/ads/lifecycle/select";
 import { founderFrom } from "../src/lib/ads/lifecycle/founder";
 
-interface Note { email: string; kind: string; subject: string; body: string }
+interface Note { email: string; kind: string; subject: string; body: string; replyTo?: string }
 
 async function main() {
   const file = process.argv[2];
@@ -47,7 +47,7 @@ async function main() {
     const first = user.name?.trim().split(/\s+/)[0] || "there";
     const text = `${n.body.replaceAll("{first}", first).replaceAll("{base}", base).replaceAll("{verify}", verify)}\n\n--\nDon't want these emails? Unsubscribe: ${unsubUrl}`;
     if (!send) { console.log(`\n=== DRY ${n.email} | ${n.subject}\n${text}`); continue; }
-    await mail!.sendMail({ from: founderFrom(env.LIFECYCLE_FOUNDER_FROM), replyTo: env.SMTP_REPLY_TO || undefined, to: n.email, subject: n.subject, text, headers: { "List-Unsubscribe": `<${unsubUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } });
+    await mail!.sendMail({ from: founderFrom(env.LIFECYCLE_FOUNDER_FROM), replyTo: n.replyTo || env.SMTP_REPLY_TO || undefined, to: n.email, subject: n.subject, text, headers: { "List-Unsubscribe": `<${unsubUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" } });
     await db.adsEvent.create({ data: { name: "email_sent", userId: user.id, workspaceId: ws?.id ?? null, props: { kind: n.kind, subject: n.subject, source: "founder_personal" } } });
     console.log(`sent ${n.email} (${n.kind})`);
   }
