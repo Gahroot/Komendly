@@ -23,6 +23,8 @@ export type QueuePlatform = (typeof QUEUE_PLATFORMS)[number];
 
 export const SITE = "https://www.komendly.com";
 export const AI_LABEL = "Made by Ozzy, AI";
+/** Brand line on every caption: the review gate requires Komendly to be named, not just Ozzy. */
+export const BRAND_LINE = "From Komendly.";
 export const CTA_LINE = "Free ads from your website, link in bio";
 export const GIVE_PER_ASK = 10;
 export type ReelFormat = "tip_list" | "makeover" | "how_i";
@@ -178,7 +180,7 @@ export function buildCaption(platform: ReelPlatform | QueuePlatform, s: ReelScri
     : `Three things a Facebook ad for ${t.yours} needs.`;
   const tags = "#SmallBusiness #FacebookAds";
   const cta = s.withCta ? (platform === "facebook" ? `${CTA_LINE.replace(", link in bio", "")}: ${reelLink("facebook", s.hookId)}` : CTA_LINE) : "";
-  return [body, cta, `${AI_LABEL}. This is an animated cartoon.`, tags].filter(Boolean).join("\n\n");
+  return [body, cta, `${BRAND_LINE} ${AI_LABEL}. This is an animated cartoon.`, tags].filter(Boolean).join("\n\n");
 }
 
 const hashtagCount = (t: string) => (t.match(/(^|\s)#[\p{L}\p{N}_]+/gu) ?? []).length;
