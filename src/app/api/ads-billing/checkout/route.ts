@@ -97,6 +97,10 @@ export async function POST(request: NextRequest) {
       ? Boolean(await prisma.creditLedger.findFirst({ where: { workspaceId: ws.id, reason: "topup", note: UNLOCK_PACK_NOTE, delta: { gt: 0 } }, select: { id: true } }))
       : false;
     const metadata = { product: "ads", workspaceId: ws.id, kind, ...(kind === "plan" || freeMonth ? { plan: freeMonth ? "starter" : key, interval: annual ? "year" : "month", ...(studioLaunch ? { offer: STUDIO_LAUNCH_OFFER.key } : {}), ...(legacySwitch ? { legacySwitch } : {}) } : offer ? { plan: offer.plan, offer: offer.key } : { topup: key }) };
+    // The $9 unlock returns to the pack that was just unlocked (it used to land on billing and buyers couldn't find their ads).
+    const unlockRunId = kind === "topup" && key === UNLOCK_PACK.key
+      ? (await prisma.adRun.findFirst({ where: { workspaceId: ws.id, isTrial: true }, orderBy: { createdAt: "desc" }, select: { id: true } }))?.id ?? null
+      : null;
     const session = await stripe.checkout.sessions.create({
       mode: recurring ? "subscription" : "payment",
       customer: customerId,
@@ -109,7 +113,7 @@ export async function POST(request: NextRequest) {
       ...(launchCoupon ? { discounts: [{ coupon: launchCoupon }] } : unlockCredit && couponId ? { discounts: [{ coupon: couponId }] } : {}),
       ...(freeMonth ? { payment_method_collection: freeMonthCheckoutParams().payment_method_collection } : {}),
       // Hiring Ozzy's team (Growth Autopilot / Agency) lands on the team page; everything else (Ad Department too) on billing.
-      success_url: `${appUrl()}${hiresTeam(kind, kind === "offer" ? offer?.plan : key) ? "/ads/team" : "/ads/billing"}?checkout=success${kind === "topup" && key === UNLOCK_PACK.key ? `&bought=${UNLOCK_PACK.key}` : ""}&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${appUrl()}${hiresTeam(kind, kind === "offer" ? offer?.plan : key) ? "/ads/team" : unlockRunId ? `/ads/runs/${unlockRunId}` : "/ads/billing"}?checkout=success${kind === "topup" && key === UNLOCK_PACK.key ? `&bought=${UNLOCK_PACK.key}` : ""}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl()}/ads/billing?checkout=canceled${kind === "topup" || freeMonth ? "" : `&declined=${encodeURIComponent(key)}`}`,
     });
     const trade = await workspaceTrade(ws.id);
