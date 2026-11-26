@@ -14,6 +14,8 @@ import { addCost, decide, SETTINGS_ID } from "./settings";
 import type { KlyAI } from "./ai";
 import { overtureSource } from "./places";
 import { adlibSource } from "./adlib";
+import { seasonalSignal } from "./seasonal";
+import { applySignalBoost, withSignals, type LeadSignal } from "./signals";
 
 const OSM_UA = "Komendly-lead-finder/1.0 (+https://www.komendly.com)";
 
@@ -479,6 +481,8 @@ async function processCandidate(
   if (!found.email) skip("phone_only");
   const q = deps.qualify ? await deps.qualify(p, found.homeHtml).catch((e: unknown) => (log("warn", "kly: qualify failed", { domain, error: errMsg(e) }), null)) : null;
   if (deps.qualify && !q) { skip("qualify_failed"); taken.delete(domain); return; }
+  // Signals never rescue an unqualified lead: the minimum is checked on the raw qualifier score.
+  const signals = [...(p.signals ?? []), ...(unusedSeasonal(p.signals, req.niche))];
   const unqualified = q !== null && q.score < (deps.minScore ?? 0);
   if (unqualified) skip("unqualified");
   const lead = await db.outboundLead.create({
@@ -496,7 +500,9 @@ async function processCandidate(
       source: p.source,
       ...(phone && phoneSource ? { phone, phoneSource } : {}),
       armIds: req.armIds ?? [],
-      ...(q ? { score: q.score, qualification: q.qualification as Prisma.InputJsonValue, costMicros: BigInt(Math.round(q.costMicros)) } : {}),
+      ...(q ? { score: applySignalBoost(q.score, signals), costMicros: BigInt(Math.round(q.costMicros)) } : {}),
+      // Intent signals ride in the qualification JSON (no schema change); a signal-only lead (no AI qualifier) still keeps them.
+      ...(q || signals.length ? { qualification: withSignals(q?.qualification ?? null, signals) as Prisma.InputJsonValue } : {}),
       ...(unqualified ? { status: "failed", error: "unqualified" } : {}),
       claimToken: newLeadToken(),
       unsubToken: newLeadToken(),
@@ -504,6 +510,12 @@ async function processCandidate(
     select: { id: true },
   }).catch(() => null); // unique domain race
   if (lead && !unqualified) st.created.push(lead.id);
+}
+
+function unusedSeasonal(have: readonly LeadSignal[] | undefined, niche: string): LeadSignal[] {
+  if (have?.some((s) => s.kind === "seasonal")) return [];
+  const s = seasonalSignal(niche, new Date());
+  return s ? [s] : [];
 }
 
 /** Cheap bounce guard: a domain with no MX (and no A fallback) can't receive the email at all. DNS errors other than

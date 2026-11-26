@@ -75,6 +75,11 @@ const publicPrefixes = [
   "/.well-known/openai-apps-challenge", // ChatGPT plugin domain verification (token from OPENAI_APPS_CHALLENGE)
   "/api/oauth/",           // OAuth register/token/revoke (client-authenticated) + consent POST (session + signed form)
   "/oauth/",               // Consent page (sends signed-out visitors to /login itself)
+  "/embed/",               // Embeddable free tools (iframe-able, public)
+  "/compare",              // Komendly vs <competitor> and /alternatives pages, ad copy library and ad inspiration (public SEO pages)
+  "/alternatives/",
+  "/ad-copy-library",
+  "/ad-inspiration",
   "/reports/",             // Public data reports (aggregate, anonymous; ISR daily) + their CSV downloads
   "/api/ad-check",         // Meta Ad Check (no sign-up): queue + poll by unguessable token (rate-limited, daily cap, kill switch sys_ad_check)
   "/api/free-tools",       // Free /tools (no sign-up): AI job queue + poll + usage beacon (rate-limited, daily cap, kill switch sys_free_tools)
@@ -82,6 +87,10 @@ const publicPrefixes = [
   "/api/shopify/",         // Shopify app API (session-token auth), HMAC-verified webhooks, health, signed open link
   "/api/integrations/jobber/", // Jobber app: OAuth authorize/callback (signed state + PKCE), HMAC-verified webhook, link (checks the session itself)
   "/api/ad-watch/",        // Competitor ad watch: public double opt-in sign-up (rate-limited, sys_ad_watch) + signed confirm/unsubscribe links
+  "/api/hub/",             // Creative hubs: public forms, votes, challenge, signed opt-out, capability images (flags creative_*; rate-limited)
+  "/api/approve/",         // No-login approve / request-changes on an ad pack (signed token)
+  "/makeover", "/nominate", "/rescue", "/launch-gifts", "/giveaways", "/nonprofits", "/react", "/reviews-to-ads", "/challenge", "/vote", // Creative hub pages
+  "/100-businesses", "/business-of-the-day", "/seasonal", "/approve/", "/showcase", // Public progress, BOTD, seasonal releases, approve links, opt-in showcases
   "/api/testimonials/price-survey", // Van Westendorp survey: anonymous /pricing visitors answer too (rate-limited)
 ];
 

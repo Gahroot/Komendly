@@ -4,6 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { AD_GOALS, AWARENESS_LEVELS } from "../../src/lib/ads/contracts";
 import { checkVariant, EMAIL_FORMATS, GIFT_TIMINGS, NOLAN_COPY, SEED_COPY, type CopyDimension, type GiftTiming } from "../../src/lib/ads/outbound/copy";
 import type { Db } from "./db";
+import { partnerSeedArms, syncPartnerArms } from "./partner-segments";
 import { decide } from "./settings";
 import { METROS, NICHES, type Audience } from "./targets";
 
@@ -220,7 +221,8 @@ export function rewriteRetirements(arms: ReadonlyArray<{ id: string; dimension: 
 export async function ensureSeeds(db: Db): Promise<number> {
   const existing = await db.klyArm.findMany({ select: { id: true, dimension: true, key: true, status: true, content: true, origin: true, createdAt: true } });
   const have = new Set(existing.map((a) => `${a.dimension}:${a.key}`));
-  const rows = seedArms().filter((a) => !have.has(`${a.dimension}:${a.key}`) && !checkArmContent(a.dimension, a.content));
+  const partnerOn = await syncPartnerArms(db, existing);
+  const rows = [...seedArms(), ...(partnerOn ? partnerSeedArms() : [])].filter((a) => !have.has(`${a.dimension}:${a.key}`) && !checkArmContent(a.dimension, a.content));
   const r = rows.length ? await db.klyArm.createMany({ data: rows.map((a) => ({ dimension: a.dimension, key: a.key, content: a.content as Prisma.InputJsonValue, origin: "seed" })), skipDuplicates: true }) : { count: 0 };
   if (r.count) await decide(db, "arm_new", existing.length ? `Added ${r.count} new starting variants: ${rows.map((a) => `${a.dimension}/${a.key}`).slice(0, 12).join(", ")}.` : `Seeded ${r.count} starting variants (copy, ad angles and ${SEED_NICHES.length} niches x ${SEED_CITIES.length} metros).`, { count: r.count });
   // Seed wording fixes ship with code: refresh seed arms whose stored content differs from the current seed.

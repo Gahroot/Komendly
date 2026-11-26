@@ -1,6 +1,7 @@
 // Page shell for /ad-examples/ideas pages (studio look, nav, footer, JSON-LD).
 import { JsonLd } from "@/components/json-ld";
 import { Breadcrumbs, CtaBlock } from "@/components/ad-examples/parts";
+import { ShareLink } from "@/components/hubs/share-link";
 import { PaidNote } from "@/components/ad-examples/playbook-parts";
 import { fraunces } from "@/components/studio/fonts";
 import { StudioFooter } from "@/components/studio/studio-footer";
@@ -37,6 +38,7 @@ export function IdeasShell(props: {
           <p className="mx-auto mt-5 max-w-2xl text-pretty text-base text-muted-foreground sm:text-lg">{props.intro}</p>
         </header>
         {props.children}
+        <div className="mx-auto mt-10 flex max-w-5xl justify-center px-4 sm:px-6"><ShareLink url={path} text={props.h1} label="Share or copy this page" /></div>
         <div className="px-4 pt-20 sm:px-6">
           <CtaBlock title={props.ctaTitle} campaign={props.campaign} content="end" label="Get my 10 free ads" />
         </div>

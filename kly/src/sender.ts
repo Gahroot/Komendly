@@ -6,6 +6,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import nodemailer from "nodemailer";
 import { z } from "zod";
+import { seasonalHookOf, signalOpener, signalsOf } from "./signals";
 import { buildOutboundEmail, buildOutboundHtml, checkOutboundEmail, claimLink, DEFAULT_POSTAL_ADDRESS, emailImageUrl, unsubscribeHeaders, unsubscribeLink, type CopyVariant, type EmailFormat, type OutboundCopyContext } from "../../src/lib/ads/outbound/copy";
 import { autoPauseReason, autoResumeDue, canSendNow, sendDayStart, DEFAULT_DOMAIN_DAILY_CAP, HEALTH_WINDOW, inBusinessHours, mailboxDayLimit, nextStep, parseMailboxes, sendGapMs, WARMUP_PAUSE_PREFIX, type MailboxEnv } from "../../src/lib/ads/outbound/policy";
 import { loadMailboxes, mapPool, planRotation, syncEnvMailboxes, type RotationCandidate, type StoredMailbox } from "./mailboxes";
@@ -92,6 +93,12 @@ export async function copyArms(db: Db, lead: Pick<LeadRow, "armIds" | "niche" | 
   return { armIds: [...ids].sort(), variant: { subject: tpl("subject"), body: tpl("body"), followup: tpl("followup") }, format: (byDim.get("format")?.content as { format?: unknown } | undefined)?.format === "plain" ? "plain" : "html", used };
 }
 
+/** Copy-context fields from a lead's stored signals: one truthful opener sentence, else the seasonal hook. */
+export function signalCopy(qualification: unknown, _now: Date): { signalLine: string | null; seasonalHook: string | null } {
+  const sigs = signalsOf(qualification);
+  return { signalLine: signalOpener(sigs), seasonalHook: seasonalHookOf(sigs) };
+}
+
 export interface Composed {
   ctx: OutboundCopyContext;
   subject: string;
@@ -119,11 +126,12 @@ export async function composeFor(db: Db, _provider: AIProvider | null, cfg: Outb
     postalAddress: cfg.postalAddress,
     variant: arms.variant,
     firstSubject: first?.subject ?? null,
+    ...signalCopy(lead.qualification, new Date()),
   };
   // Growth-system leads (review_gifts, new_business) use their own fixed copy, plain text, no fallback to the classic copy.
   const sys = systemVariant(lead);
   if (sys) {
-    const sctx = { ...ctx, variant: sys };
+    const sctx = { ...ctx, signalLine: null, seasonalHook: null, variant: sys };
     const smail = buildOutboundEmail(sctx);
     const serr = checkOutboundEmail(smail, sctx) ?? (step === 1 && !lead.giftToken ? "no gift page" : null);
     return { ctx: sctx, subject: smail.subject, text: smail.text, html: null, source: "fallback", error: serr, costMicros: 0 };

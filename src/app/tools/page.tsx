@@ -8,6 +8,7 @@ import { StudioFooter } from "@/components/studio/studio-footer";
 import { StudioNav } from "@/components/studio/studio-nav";
 import { StudioRoot } from "@/components/studio/studio-spell";
 import { FREE_TOOLS, TOOL_GROUPS } from "@/lib/growth/free-tools";
+import { RESOURCE_TOOLS } from "@/lib/growth/organic/registry";
 import { toolCtaHref } from "@/lib/growth/free-tools-links";
 import { freeToolsEnabled } from "@/lib/growth/free-tools-server";
 import { breadcrumbJsonLd, freeToolJsonLd, graph } from "@/lib/seo/jsonld";
@@ -59,11 +60,23 @@ export default async function ToolsHub() {
         ) : (
           <p className="mx-auto mt-12 max-w-xl text-center text-muted-foreground">Our free tools are taking a short break. Back soon! Meanwhile, Ozzy can still make you free ads from your website.</p>
         )}
+        <div className="mx-auto max-w-4xl"><section className="mt-14" aria-labelledby="more-title">
+            <h2 id="more-title" className="font-display text-2xl font-medium">Planning and resources</h2>
+            <ul className="mt-5 grid gap-5 sm:grid-cols-2">
+              {RESOURCE_TOOLS.map((t) => (
+                <li key={t.slug}><Link href={`/tools/${t.slug}`} className="studio-frame block h-full rounded-xl p-6 transition hover:brightness-110"><p className="font-display text-xl font-medium">{t.name}</p><p className="mt-2 text-sm text-muted-foreground">{t.blurb}</p></Link></li>
+              ))}
+              <li><Link href="/ad-copy-library" className="studio-frame block h-full rounded-xl p-6 transition hover:brightness-110"><p className="font-display text-xl font-medium">Ad copy library</p><p className="mt-2 text-sm text-muted-foreground">Curated headlines and ad text by trade.</p></Link></li>
+              <li><Link href="/ad-inspiration" className="studio-frame block h-full rounded-xl p-6 transition hover:brightness-110"><p className="font-display text-xl font-medium">Ad inspiration search</p><p className="mt-2 text-sm text-muted-foreground">Search hooks, offers and headlines by trade.</p></Link></li>
+              <li><Link href="/compare" className="studio-frame block h-full rounded-xl p-6 transition hover:brightness-110"><p className="font-display text-xl font-medium">Compare ad tools</p><p className="mt-2 text-sm text-muted-foreground">Sourced, fair comparisons with other ad creative tools.</p></Link></li>
+            </ul>
+          </section></div>
         <section className="mx-auto mt-16 max-w-3xl text-center" aria-labelledby="full-title">
           <h2 id="full-title" className="font-display text-2xl font-medium sm:text-3xl">Want finished ads, not just words?</h2>
           <p className="mt-3 text-muted-foreground">Paste your website and Ozzy makes 10 ready-to-run Facebook &amp; Instagram ads plus an animated one, free.</p>
           <div className="mt-6"><MakeYoursUrlBox href={toolCtaHref("hub", "url_box")} /></div>
-          <p className="mt-6 text-sm text-muted-foreground">Need ideas first? See <Link href="/ad-examples" className="text-[var(--studio-gold)] hover:underline">ad examples by industry</Link> or our <Link href="/reports/facebook-ad-statistics" className="text-[var(--studio-gold)] hover:underline">Facebook ad statistics</Link> from real small-business ads. Prefer to work in ChatGPT, Claude or Shopify? See <Link href="/integrations" className="text-[var(--studio-gold)] hover:underline">integrations</Link>.</p>
+          
+        <p className="mt-6 text-sm text-muted-foreground">Need ideas first? See <Link href="/ad-examples" className="text-[var(--studio-gold)] hover:underline">ad examples by industry</Link> or our <Link href="/reports/facebook-ad-statistics" className="text-[var(--studio-gold)] hover:underline">Facebook ad statistics</Link> from real small-business ads. Prefer to work in ChatGPT, Claude or Shopify? See <Link href="/integrations" className="text-[var(--studio-gold)] hover:underline">integrations</Link>.</p>
         </section>
         <div className="flex justify-center py-16"><CtaButton href={toolCtaHref("hub", "end")}>Make my free ads</CtaButton></div>
       </main>

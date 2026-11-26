@@ -3,6 +3,7 @@ import { AdsNav } from "@/components/ads/ads-nav";
 import { RunScreen } from "@/components/ads/run-screen";
 import { loadRunView } from "@/lib/ads/run-view";
 import { AdsHttpError, requireWorkspaceMember } from "@/lib/ads/workspace";
+import { RunShareCard } from "@/components/hubs/run-share-card";
 import { SwitchAccountCard } from "@/components/ads/switch-account-card";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -35,6 +36,7 @@ export default async function AdRunPage({ params }: { params: Promise<{ id: stri
       <AdsNav signedIn />
       <main className="mx-auto max-w-6xl px-4 py-10">
         <RunScreen initial={run} />
+        <RunShareCard runId={id} />
       </main>
     </div>
   );

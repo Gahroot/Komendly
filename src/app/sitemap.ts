@@ -6,11 +6,14 @@ import { loadAllGalleryPageStates } from '@/lib/growth/ad-pages-server'
 import { FREE_TOOLS } from '@/lib/growth/free-tools'
 import { CHROME_EXTENSION_PATH } from '@/lib/growth/chrome-extension'
 import { SITE_URL } from '@/lib/site'
+import { AUDIENCES, audiencePath } from '@/lib/growth/audiences'
 import { INTEGRATION_PATHS } from '@/lib/integrations'
 import { REPORT_PATH } from '@/lib/growth/ad-report'
 import { loadAdReport } from '@/lib/growth/ad-report-server'
 import { ADLIB_REPORT_PATH, LEADERBOARD_BASE, leaderboardPath } from '@/lib/growth/adlib-report'
 import { loadAdlibReport } from '@/lib/growth/adlib-report-server'
+import { benchmarkPath, benchmarkTrades, BENCHMARKS_BASE } from '@/lib/growth/organic/benchmarks'
+import { organicPaths } from '@/lib/growth/organic/registry'
 import { CATEGORIES as TRADE_CATEGORIES, IDEAS_BASE, allAnglePages, ideasPath } from '@/lib/growth/trade-playbooks'
 
 function latest(dates: string[]): string | undefined {
@@ -34,6 +37,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/examples`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${SITE_URL}/agents`, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${SITE_URL}/developers/api`, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${SITE_URL}/developers/embed`, changeFrequency: 'monthly', priority: 0.4 },
+    ...AUDIENCES.map((x) => ({ url: `${SITE_URL}${audiencePath(x.slug)}`, changeFrequency: 'monthly' as const, priority: 0.6 })),
     ...INTEGRATION_PATHS.map((p) => ({ url: `${SITE_URL}${p}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
     { url: `${SITE_URL}/ad-examples`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${SITE_URL}/tools`, changeFrequency: 'monthly', priority: 0.8 },
@@ -104,5 +109,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }))
 
-  return [...reportPages, ...adlibPages, ...staticPages, ...postPages, ...categoryPages, ...authorPages, ...tagPages, ...galleryPages, ...intentPages, ...ideaPages]
+  // Organic resources: tools, copy library, ad inspiration, comparisons; benchmarks only with the (indexable) Ad Library report
+  const organicPages: MetadataRoute.Sitemap = organicPaths().map((path) => ({ url: `${SITE_URL}${path}`, changeFrequency: 'monthly' as const, priority: 0.6 }))
+  const benchmarkPages: MetadataRoute.Sitemap = adlib.indexable ? [BENCHMARKS_BASE, ...benchmarkTrades(adlib).map((t) => benchmarkPath(t.slug))].map((path) => ({ url: `${SITE_URL}${path}`, lastModified: adlib.collectedOn, changeFrequency: 'monthly' as const, priority: 0.5 })) : []
+
+  return [...organicPages, ...benchmarkPages, ...reportPages, ...adlibPages, ...staticPages, ...postPages, ...categoryPages, ...authorPages, ...tagPages, ...galleryPages, ...intentPages, ...ideaPages]
 }

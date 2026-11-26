@@ -6,6 +6,7 @@
 import { domainOfUrl } from "../../src/lib/ads/outbound/policy";
 import { usState } from "./fsq";
 import { categoryToNiche, cityKey, OVERTURE_CATEGORIES, type KlyPlaceInput } from "./places";
+import { signalsOf, type LeadSignal } from "./signals";
 import { cityParts, isExcludedDomain, isListiclePath, type Candidate, type LeadSource } from "./sources";
 
 /** One advertiser line from the Ad Library pull. */
@@ -134,6 +135,24 @@ export function toAdlibPlace(r: AdlibRow, release: string): (KlyPlaceInput & { s
   };
 }
 
+/** AdsEvent name the import writes per advertiser (props: { domain, signals }): KlyPlace has no metadata column. */
+export const LEAD_SIGNAL_EVENT = "lead_signal" as const;
+
+/** Latest stored signals per domain (read-only; empty on any DB error so discovery never breaks on it). */
+export async function adlibSignalsFor(db: NonNullable<Parameters<LeadSource["find"]>[2]["db"]>, domains: readonly string[]): Promise<Map<string, LeadSignal[]>> {
+  const out = new Map<string, LeadSignal[]>();
+  const ds = [...new Set(domains.filter(Boolean))];
+  if (!ds.length) return out;
+  try {
+    const evs = await db.adsEvent.findMany({ where: { name: LEAD_SIGNAL_EVENT, OR: ds.map((d) => ({ props: { path: ["domain"], equals: d } })) }, orderBy: { createdAt: "asc" }, select: { props: true } });
+    for (const e of evs) {
+      const p = e.props as { domain?: string; signals?: unknown } | null;
+      if (p?.domain) out.set(p.domain, signalsOf({ signals: p.signals }));
+    }
+  } catch { /* signals are optional */ }
+  return out;
+}
+
 /** Adlib places handed out per call (fewer than Overture: these are scarce, and unprocessed ones are lost). */
 export const ADLIB_PER_CALL = 25;
 
@@ -152,6 +171,7 @@ export const adlibSource: LeadSource = {
       : [];
     const rows = [...here, ...rest];
     if (rows.length) await db.klyPlace.updateMany({ where: { id: { in: rows.map((r) => r.id) } }, data: { usedAt: new Date(ctx.rt.now()) } });
-    return rows.map((r): Candidate => ({ name: r.name, website: r.website, city: r.city, state: r.state, lon: r.lon, phone: r.phone, source: "adlib", ...(r.email ? { email: r.email } : {}) }));
+    const sigs = await adlibSignalsFor(db, rows.map((r) => domainOfUrl(r.website) ?? ""));
+    return rows.map((r): Candidate => ({ name: r.name, website: r.website, city: r.city, state: r.state, lon: r.lon, phone: r.phone, source: "adlib", ...(r.email ? { email: r.email } : {}), ...(sigs.get(domainOfUrl(r.website) ?? "")?.length ? { signals: sigs.get(domainOfUrl(r.website) ?? "") } : {}) }));
   },
 };

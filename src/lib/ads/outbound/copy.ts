@@ -18,6 +18,10 @@ export interface OutboundCopyContext {
   variant?: CopyVariant;
   /** Step 2: the subject the first email actually went out with (threaded "Re:"). */
   firstSubject?: string | null;
+  /** Step 1 only: one evidence-backed sentence about the lead's real signal (e.g. "Your longest-running Facebook ad has been live since Jun 2024."). Never invented. */
+  signalLine?: string | null;
+  /** Calendar hook (seasonal_hook) used as the opener only when there is no signalLine. */
+  seasonalHook?: string | null;
 }
 
 /** Default CAN-SPAM postal address (OUTBOUND_POSTAL_ADDRESS overrides). */
@@ -211,7 +215,9 @@ export function buildOutboundEmail(c: OutboundCopyContext): OutboundEmail {
   const vars = { business: cleanBusinessName(c.businessName), city: c.city, niche: trade(c.niche), headline, link: c.claimUrl };
   let tpl = c.step === 1 ? variantOr("body", c.variant?.body, DEFAULT_BODY) : variantOr("followup", c.variant?.followup, DEFAULT_FOLLOWUP);
   if (tpl.includes("{headline}") && (headline.length < 8 || headline.length > 90)) tpl = c.step === 1 ? DEFAULT_BODY : DEFAULT_FOLLOWUP;
-  const body = renderTemplate(tpl, vars);
+  const rendered = renderTemplate(tpl, vars);
+  const opener = c.step === 1 ? (c.signalLine ?? c.seasonalHook ?? "").trim() : "";
+  const body = opener && opener.length <= 160 && !/https?:|\{\w+\}/.test(opener) ? `${opener}\n\n${rendered}` : rendered;
   const text = [
     body,
     "",

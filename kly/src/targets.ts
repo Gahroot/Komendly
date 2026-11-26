@@ -83,6 +83,19 @@ export const NICHES: NicheDef[] = [
   { niche: "web design agencies", audience: "agency", tier: "agency", osm: [byName("web design|website design|creative agency|creative studio|branding agency")] },
 ];
 
+/**
+ * Partner-channel niches (agencies/freelancers who make ads for clients). NOT in NICHES: their segment arms are only seeded
+ * while AdsFeatureFlag "kly_partner_segments" is on (kly/src/partner-segments.ts). Lead source is the existing OSM
+ * name search (free, public); small agencies often have no OSM tag, so yield is low and expected to be.
+ */
+export const PARTNER_NICHES: NicheDef[] = [
+  { niche: "seo agencies", audience: "agency", tier: "agency", osm: [byName("seo agency|seo company|search engine optimization|seo services")] },
+  { niche: "shopify agencies", audience: "agency", tier: "agency", osm: [byName("shopify|ecommerce agency|e-commerce agency")] },
+  { niche: "branding agencies", audience: "agency", tier: "agency", osm: [byName("branding agency|brand studio|brand agency|brand design")] },
+  { niche: "social media agencies", audience: "agency", tier: "agency", osm: [byName("social media agency|social media management|social media marketing")] },
+  { niche: "media buyers", audience: "agency", tier: "agency", osm: [byName("media buy|ppc agency|paid social|performance marketing|paid media")] },
+];
+
 /** ~200 largest US cities (each its own Nominatim bbox), covering the top ~150 metros plus big suburbs. */
 export const METROS = [
   "New York, NY", "Los Angeles, CA", "Chicago, IL", "Houston, TX", "Phoenix, AZ", "Philadelphia, PA",
@@ -118,7 +131,7 @@ export const METROS = [
   "Victorville, CA", "Midland, TX", "Orange, CA",
 ];
 
-const BY_NICHE = new Map(NICHES.map((n) => [n.niche, n]));
+const BY_NICHE = new Map([...NICHES, ...PARTNER_NICHES].map((n) => [n.niche, n]));
 
 export function nicheDef(niche: string): NicheDef | undefined {
   return BY_NICHE.get(niche.trim().toLowerCase());

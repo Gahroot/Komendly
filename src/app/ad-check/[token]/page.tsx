@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdWatchOptin } from "@/components/growth/ad-watch-optin";
+import { ShareLink } from "@/components/hubs/share-link";
 import { AutoRefresh } from "@/components/tools/auto-refresh";
 import { fraunces } from "@/components/studio/fonts";
 import { StudioFooter } from "@/components/studio/studio-footer";
@@ -50,6 +51,7 @@ export default async function AdCheckReportPage({ params }: PageProps) {
         ) : (
           <>
             <Report r={r} token={token} />
+            <div className="mt-6"><ShareLink url="/tools/meta-ad-check" text="Check your Meta ads with Komendly's free Ad Check" label="Share the free ad check" /></div>
             {watchOn && (
               <section className="mt-10" aria-label="Competitor ad watch">
                 <AdWatchOptin

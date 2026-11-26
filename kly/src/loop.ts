@@ -1,5 +1,6 @@
 // Kly tick orchestration. Every step is isolated (try/catch + log); ticks never overlap; all state that matters lives
 // in Postgres (settings, arms, decisions, leads), so a restart just resumes. In-memory state is only for timing/health.
+import { seasonalPriority } from "./seasonal";
 import { audienceOf } from "./targets";
 import type { Db } from "./db";
 import { errMsg, log } from "./log";
@@ -200,7 +201,9 @@ export async function adlibSegment(db: Db, rng: Rng): Promise<{ arm: Awaited<Ret
     const n = (a.content as { niche?: string }).niche;
     if (n && !byNiche.has(n)) byNiche.set(n, a);
   }
-  const ranked = groups.filter((g) => byNiche.has(g.niche)).sort((a, b) => b._count._all - a._count._all || a.niche.localeCompare(b.niche));
+  // Niches inside a seasonal window (src/seasonal.ts) go first, then the biggest backlog.
+  const now = new Date();
+  const ranked = groups.filter((g) => byNiche.has(g.niche)).sort((a, b) => seasonalPriority(b.niche, now) - seasonalPriority(a.niche, now) || b._count._all - a._count._all || a.niche.localeCompare(b.niche));
   // Mostly the biggest backlog, sometimes the next ones, so one niche can't starve the rest.
   const pick = ranked[Math.min(ranked.length - 1, Math.floor(rng() * rng() * Math.min(ranked.length, 4)))];
   if (!pick) return null;

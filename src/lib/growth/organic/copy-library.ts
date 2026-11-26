@@ -1,0 +1,28 @@
+// Curated headline and primary-text library per trade (hand-written, /ad-copy-library/<trade>). Rules (enforced by tests):
+// headlines <= 40 characters, no statistics, no "guaranteed", no invented business names; [brackets] are for the owner to fill.
+export type CopyAngle = "problem" | "offer" | "proof" | "local" | "urgency" | "question";
+export interface CopyLine { angle: CopyAngle; text: string }
+export interface TradeCopy { slug: string; headlines: CopyLine[]; primaryTexts: string[] }
+
+const H = (angle: CopyAngle, text: string): CopyLine => ({ angle, text });
+export const COPY_LIBRARY: readonly TradeCopy[] = [
+  { slug: "roofers", headlines: [H("problem", "Roof leaking? Don't wait for rain"), H("offer", "Free roof inspection, no pressure"), H("proof", "Photos of every job we finish"), H("local", "Roofers serving [your town]"), H("urgency", "Storm damage? Book before claims pile up"), H("question", "When was your roof last checked?")],
+    primaryTexts: ["A small leak is cheap to fix and expensive to ignore. [Your business] checks your roof, shows you photos of what we find, and gives you a written quote. Tap to book a free inspection.", "After a storm, roofs can look fine from the ground. We climb up, take photos and tell you plainly what needs doing, and what doesn't."] },
+  { slug: "plumbers", headlines: [H("problem", "Slow drain? Fix it before it floods"), H("offer", "[$X] off your first repair"), H("proof", "Upfront price before we start"), H("local", "Plumber in [your town], on call"), H("urgency", "Burst pipe? Call now, we answer"), H("question", "Is your water heater over 10 years old?")],
+    primaryTexts: ["Leaks and clogs do not wait for a convenient time. [Your business] gives you a price before we start work and cleans up after. Tap to call.", "Is your water heater making noises, or running out of hot water early? We check it and tell you whether it needs a repair or a replacement."] },
+  { slug: "hvac", headlines: [H("problem", "AC struggling? Get it checked now"), H("offer", "Tune-up special, [$X]"), H("proof", "Licensed, insured technicians"), H("local", "Heating and cooling in [your town]"), H("urgency", "Book before the first heat wave"), H("question", "When did you last change your filter?")],
+    primaryTexts: ["The best time to service your AC is before it fails on the hottest day. [Your business] does a full tune-up and tells you honestly what it needs. Book a time that suits you.", "Cold house, no heat? Call us. We send a technician and explain your options before any work starts."] },
+  { slug: "dentists", headlines: [H("problem", "Tooth pain? We see you fast"), H("offer", "New patient exam and X-rays, [$X]"), H("proof", "Read what our patients say"), H("local", "Family dentist in [your town]"), H("urgency", "Use your benefits before they reset"), H("question", "Overdue for a cleaning?")],
+    primaryTexts: ["A check-up should not feel like a lecture. [Your business] explains every option, shows you the plan and the cost, and lets you decide. New patients welcome. Book online in a minute.", "Insurance benefits often reset at the end of the year. Book your visit now and make the most of yours."] },
+  { slug: "salons", headlines: [H("problem", "Tired of the same old color?"), H("offer", "First visit: [$X] off color"), H("proof", "See our latest work"), H("local", "Hair salon in [your town]"), H("urgency", "[Month] openings are filling up"), H("question", "Ready for a fresh cut?")],
+    primaryTexts: ["Bring a photo and we will tell you honestly what is possible. [Your business] books enough time to do it properly. Pick your slot online.", "New here? Your first visit includes [offer]. Appointments this month are limited, so grab yours."] },
+  { slug: "auto-repair", headlines: [H("problem", "Check-engine light on?"), H("offer", "Free brake check this month"), H("proof", "We show you the worn part"), H("local", "Trusted garage in [your town]"), H("urgency", "Book before the winter rush"), H("question", "Is your car due for service?")],
+    primaryTexts: ["We tell you what needs fixing now, what can wait, and what it costs, before we pick up a wrench. [Your business] shows you the old part. Book a drop-off.", "A strange noise is your car asking for help. Bring it in and we will find the cause."] },
+  { slug: "restaurants", headlines: [H("problem", "No plans for dinner tonight?"), H("offer", "[Dish] special this week"), H("proof", "Our regulars' favorite dish"), H("local", "Dinner in [your town]"), H("urgency", "Weekend tables go fast"), H("question", "Craving [cuisine] tonight?")],
+    primaryTexts: ["Come hungry. [Your restaurant] serves [signature dish] made fresh, with a table waiting or pickup ready in [N] minutes. Reserve or order online.", "This week only: [offer] on [dish]. Bring a friend."] },
+  { slug: "real-estate-agents", headlines: [H("problem", "Thinking of selling? Know your number"), H("offer", "Free home value report"), H("proof", "Homes I've helped sell in [area]"), H("local", "Real estate in [your town]"), H("urgency", "Spring buyers are already looking"), H("question", "What is your home worth today?")],
+    primaryTexts: ["Curious what your home would sell for? [Your name] prepares a free valuation based on recent sales on your street, with no obligation to list.", "Buying your first home? I will walk you through the steps, the paperwork and the costs, in plain English."] },
+];
+
+export function copyFor(slug: string): TradeCopy | undefined { return COPY_LIBRARY.find((c) => c.slug === slug); }
+export const ANGLE_LABEL: Record<CopyAngle, string> = { problem: "Problem first", offer: "Offer", proof: "Proof", local: "Local", urgency: "Urgency", question: "Question" };

@@ -34,6 +34,7 @@ const nextConfig: NextConfig = {
     "/s/[token]/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
     "/ozzy-studio/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
     "/reports/local-service-meta-ads/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
+    "/admin/ads/growth": ["./docs/growth-ecosystem/learnings.md"],
   },
   // The Ads studio is the homepage; /ads (exact) is kept as a permanent alias. /ads/* routes and assets are untouched.
   async redirects() {
@@ -57,13 +58,18 @@ const nextConfig: NextConfig = {
       },
       {
         // Public marketing pages only: never cache API, account or admin responses
-        source: "/((?!api|ads|admin|dashboard|checkout|oauth|\\.well-known|login|register|ozzy-lab|verify-email|test-video|r/|g/|u/|m/|gift/|ad-check/|partners/apply|studio|s/|_next).+)",
+        source: "/((?!api|ads|admin|dashboard|checkout|oauth|\\.well-known|login|register|ozzy-lab|verify-email|test-video|r/|g/|u/|m/|gift/|ad-check/|approve/|api/hub/|partners/apply|studio|s/|_next).+)",
         headers: [
           {
             key: "Cache-Control",
             value: "public, max-age=3600, stale-while-revalidate=86400",
           },
         ],
+      },
+      {
+        // Embeddable free tools: the ONLY routes meant to be framed by other sites (no other route sets a framing header)
+        source: "/embed/:tool*",
+        headers: [{ key: "Content-Security-Policy", value: "frame-ancestors *" }, { key: "X-Robots-Tag", value: "noindex, follow" }],
       },
       {
         // The Ads home is personalised (session + A/B variant): never shared-cache it

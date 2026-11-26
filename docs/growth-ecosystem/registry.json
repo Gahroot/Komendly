@@ -1,0 +1,2160 @@
+[
+  {
+    "id": 1,
+    "category": "Prospecting & intent signals",
+    "name": "Meta Ad Library prospecting",
+    "outcome": "Meta Ad Library prospecting: finds businesses with a live need and gives each a free ad made from their own site, so they sign up.",
+    "relevance": "High: small businesses already spending on ads or just launching are the buyers of $97-$297 ad plans.",
+    "status": "operational",
+    "readiness": "live",
+    "evidence": "kly/src/adlib.ts imports Ad Library advertisers as KlyPlace source 'adlib': 2,183 rows (MEMORY 21 Nov), 648 unused then; rounds 1-2 imported. Finder runs adlib before other sources. Cold email sends ~20-40/day, 198 sends 26 Nov; 0 real replies in 14d so far (MEMORY 24 Nov).",
+    "prerequisites": "Facebook throttles pulls: wait days between pulls. Round 3 workers running 26 Nov.",
+    "costs": "Free (public Ad Library); mailbox cost (Maildoso) for sending.",
+    "contribution": "Kly cold email channel: 1 click, 0 sign-ups attributed as of 24 Nov (check scoreboard).",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/adlib.ts",
+      "kly/scripts/import-adlib.ts",
+      "engine/src/growth/adlib-scan.ts",
+      "src/lib/growth/adlib-scan.ts"
+    ],
+    "flag": "outbound"
+  },
+  {
+    "id": 2,
+    "category": "Prospecting & intent signals",
+    "name": "Stale creative detection",
+    "outcome": "Stale creative detection: finds businesses with a live need and gives each a free ad made from their own site, so they sign up.",
+    "relevance": "High: small businesses already spending on ads or just launching are the buyers of $97-$297 ad plans.",
+    "status": "experimenting",
+    "readiness": "partial",
+    "evidence": "Ad Check grader and ad_watch read an advertiser's Ad Library pages (engine/src/growth/ad-check.ts, ad-watch.ts); /ad-examples/longest-running lists long-running ads. No outreach trigger on 'this advertiser's ads are stale'.",
+    "prerequisites": "A staleness signal in kly (ad start date older than N days) from the intent worker.",
+    "costs": "Engineering time; no paid data source assumed.",
+    "contribution": "Warm leads for gift-first cold email; measured by kly sign-ups on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "engine/src/growth/ad-check.ts",
+      "src/app/ad-examples/longest-running/page.tsx"
+    ],
+    "flag": "sys_ad_check"
+  },
+  {
+    "id": 3,
+    "category": "Prospecting & intent signals",
+    "name": "Single-ad advertiser acquisition",
+    "outcome": "Single-ad advertiser acquisition: finds businesses with a live need and gives each a free ad made from their own site, so they sign up.",
+    "relevance": "High: small businesses already spending on ads or just launching are the buyers of $97-$297 ad plans.",
+    "status": "experimenting",
+    "readiness": "partial",
+    "evidence": "kly/src/adlib.ts:127 uses active_ads only to order warmth (0.5-1 confidence); no single-ad targeting or dedicated copy.",
+    "prerequisites": "Segment + copy variant for 1-ad advertisers.",
+    "costs": "Engineering time; no paid data source assumed.",
+    "contribution": "Warm leads for gift-first cold email; measured by kly sign-ups on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/adlib.ts"
+    ],
+    "flag": "outbound"
+  },
+  {
+    "id": 4,
+    "category": "Prospecting & intent signals",
+    "name": "Google Ads advertiser acquisition",
+    "outcome": "Google Ads advertiser acquisition: finds businesses with a live need and gives each a free ad made from their own site, so they sign up.",
+    "relevance": "High: small businesses already spending on ads or just launching are the buyers of $97-$297 ad plans.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Intent-signals worker builds the source in kly; sending stays behind OUTBOUND_ENABLED + KlySettings.enabled + AdsFeatureFlag outbound.",
+    "costs": "Engineering time; no paid data source assumed.",
+    "contribution": "Warm leads for gift-first cold email; measured by kly sign-ups on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/finder.ts"
+    ],
+    "flag": "outbound"
+  },
+  {
+    "id": 5,
+    "category": "Prospecting & intent signals",
+    "name": "New business acquisition",
+    "outcome": "New business acquisition: finds businesses with a live need and gives each a free ad made from their own site, so they sign up.",
+    "relevance": "High: small businesses already spending on ads or just launching are the buyers of $97-$297 ad plans.",
+    "status": "experimenting",
+    "readiness": "built, flag state unverified",
+    "evidence": "kly/src/new-business.ts: Certificate Transparency first-cert <= N days, own-site email, MX, US postal address on site, on-click gift page. Flag sys_new_business is DB state; not verified from code. 'New business' = new website domain here; no business-registration feed (gov feeds carry no date).",
+    "prerequisites": "Flag ON + outbound ON; confirm /admin/ads/flags.",
+    "costs": "Free (crt.sh).",
+    "contribution": "Warm leads for gift-first cold email; measured by kly sign-ups on the scoreboard.",
+    "owner_action": "Confirm sys_new_business is ON in /admin/ads/flags if you want it running.",
+    "code_refs": [
+      "kly/src/new-business.ts",
+      "kly/src/growth.ts"
+    ],
+    "flag": "sys_new_business"
+  },
+  {
+    "id": 6,
+    "category": "Prospecting & intent signals",
+    "name": "New website acquisition",
+    "outcome": "New website acquisition: finds businesses with a live need and gives each a free ad made from their own site, so they sign up.",
+    "relevance": "High: small businesses already spending on ads or just launching are the buyers of $97-$297 ad plans.",
+    "status": "experimenting",
+    "readiness": "built, flag state unverified",
+    "evidence": "Same engine as #5 (CT logs find domains whose first certificate is days old). kly/src/new-business.ts.",
+    "prerequisites": "Flag ON.",
+    "costs": "Engineering time; no paid data source assumed.",
+    "contribution": "Warm leads for gift-first cold email; measured by kly sign-ups on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/new-business.ts"
+    ],
+    "flag": "sys_new_business"
+  },
+  {
+    "id": 7,
+    "category": "Prospecting & intent signals",
+    "name": "New Shopify store acquisition",
+    "outcome": "New Shopify store acquisition: finds businesses with a live need and gives each a free ad made from their own site, so they sign up.",
+    "relevance": "High: small businesses already spending on ads or just launching are the buyers of $97-$297 ad plans.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Intent-signals worker builds the source in kly; sending stays behind OUTBOUND_ENABLED + KlySettings.enabled + AdsFeatureFlag outbound.",
+    "costs": "Engineering time; no paid data source assumed.",
+    "contribution": "Warm leads for gift-first cold email; measured by kly sign-ups on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/finder.ts"
+    ],
+    "flag": "outbound"
+  },
+  {
+    "id": 8,
+    "category": "Prospecting & intent signals",
+    "name": "New product launch acquisition",
+    "outcome": "New product launch acquisition: finds businesses with a live need and gives each a free ad made from their own site, so they sign up.",
+    "relevance": "High: small businesses already spending on ads or just launching are the buyers of $97-$297 ad plans.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Intent-signals worker builds the source in kly; sending stays behind OUTBOUND_ENABLED + KlySettings.enabled + AdsFeatureFlag outbound.",
+    "costs": "Engineering time; no paid data source assumed.",
+    "contribution": "Warm leads for gift-first cold email; measured by kly sign-ups on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/finder.ts"
+    ],
+    "flag": "outbound"
+  },
+  {
+    "id": 9,
+    "category": "Prospecting & intent signals",
+    "name": "Marketing hiring signals",
+    "outcome": "Marketing hiring signals: finds businesses with a live need and gives each a free ad made from their own site, so they sign up.",
+    "relevance": "High: small businesses already spending on ads or just launching are the buyers of $97-$297 ad plans.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Intent-signals worker builds the source in kly; sending stays behind OUTBOUND_ENABLED + KlySettings.enabled + AdsFeatureFlag outbound.",
+    "costs": "Engineering time; no paid data source assumed.",
+    "contribution": "Warm leads for gift-first cold email; measured by kly sign-ups on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/finder.ts"
+    ],
+    "flag": "outbound"
+  },
+  {
+    "id": 10,
+    "category": "Prospecting & intent signals",
+    "name": "Seasonal opportunity acquisition",
+    "outcome": "Seasonal opportunity acquisition: finds businesses with a live need and gives each a free ad made from their own site, so they sign up.",
+    "relevance": "High: small businesses already spending on ads or just launching are the buyers of $97-$297 ad plans.",
+    "status": "experimenting",
+    "readiness": "content only",
+    "evidence": "Seasons in src/lib/growth/trade-playbooks-data.ts (SeasonKey: 11 seasons); /ad-examples/occasion/[slug] pages. No seasonal outreach trigger.",
+    "prerequisites": "Seasonal trigger in kly copy.",
+    "costs": "Engineering time; no paid data source assumed.",
+    "contribution": "Warm leads for gift-first cold email; measured by kly sign-ups on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/trade-playbooks-data.ts",
+      "src/app/ad-examples/occasion/[slug]/page.tsx"
+    ],
+    "flag": "outbound"
+  },
+  {
+    "id": 11,
+    "category": "Prospecting & intent signals",
+    "name": "Crowdfunding campaign acquisition",
+    "outcome": "Crowdfunding campaign acquisition: finds businesses with a live need and gives each a free ad made from their own site, so they sign up.",
+    "relevance": "High: small businesses already spending on ads or just launching are the buyers of $97-$297 ad plans.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Intent-signals worker builds the source in kly; sending stays behind OUTBOUND_ENABLED + KlySettings.enabled + AdsFeatureFlag outbound.",
+    "costs": "Engineering time; no paid data source assumed.",
+    "contribution": "Warm leads for gift-first cold email; measured by kly sign-ups on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/finder.ts"
+    ],
+    "flag": "outbound"
+  },
+  {
+    "id": 12,
+    "category": "Prospecting & intent signals",
+    "name": "Business expansion acquisition",
+    "outcome": "Business expansion acquisition: finds businesses with a live need and gives each a free ad made from their own site, so they sign up.",
+    "relevance": "High: small businesses already spending on ads or just launching are the buyers of $97-$297 ad plans.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Intent-signals worker builds the source in kly; sending stays behind OUTBOUND_ENABLED + KlySettings.enabled + AdsFeatureFlag outbound.",
+    "costs": "Engineering time; no paid data source assumed.",
+    "contribution": "Warm leads for gift-first cold email; measured by kly sign-ups on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/finder.ts"
+    ],
+    "flag": "outbound"
+  },
+  {
+    "id": 13,
+    "category": "Prospecting & intent signals",
+    "name": "Public purchase-intent monitoring",
+    "outcome": "Public purchase-intent monitoring: finds businesses with a live need and gives each a free ad made from their own site, so they sign up.",
+    "relevance": "High: small businesses already spending on ads or just launching are the buyers of $97-$297 ad plans.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "Quora/Reddit posting exists via media-master (outbound only); nothing monitors public buying-intent posts. kly/src/social.ts only posts to Komendly's own Page.",
+    "prerequisites": "Intent-signals worker builds the source in kly; sending stays behind OUTBOUND_ENABLED + KlySettings.enabled + AdsFeatureFlag outbound.",
+    "costs": "Engineering time; no paid data source assumed.",
+    "contribution": "Warm leads for gift-first cold email; measured by kly sign-ups on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "/Users/groot/media-master/packages/offsite"
+    ],
+    "flag": "outbound"
+  },
+  {
+    "id": 14,
+    "category": "Prospecting & intent signals",
+    "name": "Creative gap identification",
+    "outcome": "Creative gap identification: finds businesses with a live need and gives each a free ad made from their own site, so they sign up.",
+    "relevance": "High: small businesses already spending on ads or just launching are the buyers of $97-$297 ad plans.",
+    "status": "experimenting",
+    "readiness": "partial",
+    "evidence": "Ad Check scores a live Meta page and reports gaps (src/lib/growth/ad-check.ts, /ad-check); ad_watch weekly email. Gap-based outreach not wired into kly.",
+    "prerequisites": "Feed Ad Check result into gift email copy.",
+    "costs": "Engineering time; no paid data source assumed.",
+    "contribution": "Warm leads for gift-first cold email; measured by kly sign-ups on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/ad-check.ts",
+      "src/app/ad-check"
+    ],
+    "flag": "sys_ad_check"
+  },
+  {
+    "id": 15,
+    "category": "Prospecting & intent signals",
+    "name": "Website redesign acquisition",
+    "outcome": "Website redesign acquisition: finds businesses with a live need and gives each a free ad made from their own site, so they sign up.",
+    "relevance": "High: small businesses already spending on ads or just launching are the buyers of $97-$297 ad plans.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Intent-signals worker builds the source in kly; sending stays behind OUTBOUND_ENABLED + KlySettings.enabled + AdsFeatureFlag outbound.",
+    "costs": "Engineering time; no paid data source assumed.",
+    "contribution": "Warm leads for gift-first cold email; measured by kly sign-ups on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/finder.ts"
+    ],
+    "flag": "outbound"
+  },
+  {
+    "id": 16,
+    "category": "Agency & partner channels",
+    "name": "Marketing agency acquisition",
+    "outcome": "Marketing agency acquisition: partners bring in several small-business clients through the 30% partner program.",
+    "relevance": "Medium-high: one agency can bring many SMB clients; partner program already pays 30% for 12 months.",
+    "status": "awaiting_prerequisite",
+    "readiness": "partner program exists; no outreach to this segment yet",
+    "evidence": "Partner program live: src/app/partners/page.tsx + /partners/apply, 30% for 12 months (src/lib/ads/partner.ts), admin src/app/admin/ads/partners. No segment-specific outreach or landing page found.",
+    "prerequisites": "Partner/agency worker builds segment pages + openly-from-Komendly outreach; outbound flag ON.",
+    "costs": "Commission 30% of partner-referred revenue for 12 months (only when a customer pays).",
+    "contribution": "Referral channel; sign-ups attributed via AdsReferral/partner tag (scoreboard channel 'Referrals & partners').",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/partner.ts",
+      "src/app/partners/page.tsx",
+      "src/app/partners/apply/page.tsx"
+    ]
+  },
+  {
+    "id": 17,
+    "category": "Agency & partner channels",
+    "name": "Web design agency partnerships",
+    "outcome": "Web design agency partnerships: partners bring in several small-business clients through the 30% partner program.",
+    "relevance": "Medium-high: one agency can bring many SMB clients; partner program already pays 30% for 12 months.",
+    "status": "awaiting_prerequisite",
+    "readiness": "partner program exists; no outreach to this segment yet",
+    "evidence": "Partner program live: src/app/partners/page.tsx + /partners/apply, 30% for 12 months (src/lib/ads/partner.ts), admin src/app/admin/ads/partners. No segment-specific outreach or landing page found.",
+    "prerequisites": "Partner/agency worker builds segment pages + openly-from-Komendly outreach; outbound flag ON.",
+    "costs": "Commission 30% of partner-referred revenue for 12 months (only when a customer pays).",
+    "contribution": "Referral channel; sign-ups attributed via AdsReferral/partner tag (scoreboard channel 'Referrals & partners').",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/partner.ts",
+      "src/app/partners/page.tsx"
+    ]
+  },
+  {
+    "id": 18,
+    "category": "Agency & partner channels",
+    "name": "Freelance media buyer acquisition",
+    "outcome": "Freelance media buyer acquisition: partners bring in several small-business clients through the 30% partner program.",
+    "relevance": "Medium-high: one agency can bring many SMB clients; partner program already pays 30% for 12 months.",
+    "status": "awaiting_prerequisite",
+    "readiness": "partner program exists; no outreach to this segment yet",
+    "evidence": "Partner program live: src/app/partners/page.tsx + /partners/apply, 30% for 12 months (src/lib/ads/partner.ts), admin src/app/admin/ads/partners. No segment-specific outreach or landing page found.",
+    "prerequisites": "Partner/agency worker builds segment pages + openly-from-Komendly outreach; outbound flag ON.",
+    "costs": "Commission 30% of partner-referred revenue for 12 months (only when a customer pays).",
+    "contribution": "Referral channel; sign-ups attributed via AdsReferral/partner tag (scoreboard channel 'Referrals & partners').",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/partner.ts",
+      "src/app/partners/page.tsx"
+    ]
+  },
+  {
+    "id": 19,
+    "category": "Agency & partner channels",
+    "name": "Social media manager acquisition",
+    "outcome": "Social media manager acquisition: partners bring in several small-business clients through the 30% partner program.",
+    "relevance": "Medium-high: one agency can bring many SMB clients; partner program already pays 30% for 12 months.",
+    "status": "awaiting_prerequisite",
+    "readiness": "partner program exists; no outreach to this segment yet",
+    "evidence": "Partner program live: src/app/partners/page.tsx + /partners/apply, 30% for 12 months (src/lib/ads/partner.ts), admin src/app/admin/ads/partners. No segment-specific outreach or landing page found.",
+    "prerequisites": "Partner/agency worker builds segment pages + openly-from-Komendly outreach; outbound flag ON.",
+    "costs": "Commission 30% of partner-referred revenue for 12 months (only when a customer pays).",
+    "contribution": "Referral channel; sign-ups attributed via AdsReferral/partner tag (scoreboard channel 'Referrals & partners').",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/partner.ts",
+      "src/app/partners/page.tsx"
+    ]
+  },
+  {
+    "id": 20,
+    "category": "Agency & partner channels",
+    "name": "SEO agency partnerships",
+    "outcome": "SEO agency partnerships: partners bring in several small-business clients through the 30% partner program.",
+    "relevance": "Medium-high: one agency can bring many SMB clients; partner program already pays 30% for 12 months.",
+    "status": "awaiting_prerequisite",
+    "readiness": "partner program exists; no outreach to this segment yet",
+    "evidence": "Partner program live: src/app/partners/page.tsx + /partners/apply, 30% for 12 months (src/lib/ads/partner.ts), admin src/app/admin/ads/partners. No segment-specific outreach or landing page found.",
+    "prerequisites": "Partner/agency worker builds segment pages + openly-from-Komendly outreach; outbound flag ON.",
+    "costs": "Commission 30% of partner-referred revenue for 12 months (only when a customer pays).",
+    "contribution": "Referral channel; sign-ups attributed via AdsReferral/partner tag (scoreboard channel 'Referrals & partners').",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/partner.ts",
+      "src/app/partners/page.tsx"
+    ]
+  },
+  {
+    "id": 21,
+    "category": "Agency & partner channels",
+    "name": "GoHighLevel agency acquisition",
+    "outcome": "GoHighLevel agency acquisition: partners bring in several small-business clients through the 30% partner program.",
+    "relevance": "Medium-high: one agency can bring many SMB clients; partner program already pays 30% for 12 months.",
+    "status": "awaiting_prerequisite",
+    "readiness": "partner program exists; no outreach to this segment yet",
+    "evidence": "User dropped GHL as a platform integration (MEMORY); outreach to GHL agencies still in scope but nothing built. Partner program page exists.",
+    "prerequisites": "Partner worker: GHL-agency segment page + outreach.",
+    "costs": "Commission 30% of partner-referred revenue for 12 months (only when a customer pays).",
+    "contribution": "Referral channel; sign-ups attributed via AdsReferral/partner tag (scoreboard channel 'Referrals & partners').",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/partner.ts",
+      "src/app/partners/page.tsx"
+    ]
+  },
+  {
+    "id": 22,
+    "category": "Agency & partner channels",
+    "name": "Shopify development agency partnerships",
+    "outcome": "Shopify development agency partnerships: partners bring in several small-business clients through the 30% partner program.",
+    "relevance": "Medium-high: one agency can bring many SMB clients; partner program already pays 30% for 12 months.",
+    "status": "awaiting_prerequisite",
+    "readiness": "partner program exists; no outreach to this segment yet",
+    "evidence": "Partner program live: src/app/partners/page.tsx + /partners/apply, 30% for 12 months (src/lib/ads/partner.ts), admin src/app/admin/ads/partners. No segment-specific outreach or landing page found.",
+    "prerequisites": "Partner/agency worker builds segment pages + openly-from-Komendly outreach; outbound flag ON.",
+    "costs": "Commission 30% of partner-referred revenue for 12 months (only when a customer pays).",
+    "contribution": "Referral channel; sign-ups attributed via AdsReferral/partner tag (scoreboard channel 'Referrals & partners').",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/partner.ts",
+      "src/app/partners/page.tsx"
+    ]
+  },
+  {
+    "id": 23,
+    "category": "Agency & partner channels",
+    "name": "Branding agency partnerships",
+    "outcome": "Branding agency partnerships: partners bring in several small-business clients through the 30% partner program.",
+    "relevance": "Medium-high: one agency can bring many SMB clients; partner program already pays 30% for 12 months.",
+    "status": "awaiting_prerequisite",
+    "readiness": "partner program exists; no outreach to this segment yet",
+    "evidence": "Partner program live: src/app/partners/page.tsx + /partners/apply, 30% for 12 months (src/lib/ads/partner.ts), admin src/app/admin/ads/partners. No segment-specific outreach or landing page found.",
+    "prerequisites": "Partner/agency worker builds segment pages + openly-from-Komendly outreach; outbound flag ON.",
+    "costs": "Commission 30% of partner-referred revenue for 12 months (only when a customer pays).",
+    "contribution": "Referral channel; sign-ups attributed via AdsReferral/partner tag (scoreboard channel 'Referrals & partners').",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/partner.ts",
+      "src/app/partners/page.tsx"
+    ]
+  },
+  {
+    "id": 24,
+    "category": "Agency & partner channels",
+    "name": "Business coach partnerships",
+    "outcome": "Business coach partnerships: partners bring in several small-business clients through the 30% partner program.",
+    "relevance": "Medium-high: one agency can bring many SMB clients; partner program already pays 30% for 12 months.",
+    "status": "awaiting_prerequisite",
+    "readiness": "partner program exists; no outreach to this segment yet",
+    "evidence": "Partner program live: src/app/partners/page.tsx + /partners/apply, 30% for 12 months (src/lib/ads/partner.ts), admin src/app/admin/ads/partners. No segment-specific outreach or landing page found.",
+    "prerequisites": "Partner/agency worker builds segment pages + openly-from-Komendly outreach; outbound flag ON.",
+    "costs": "Commission 30% of partner-referred revenue for 12 months (only when a customer pays).",
+    "contribution": "Referral channel; sign-ups attributed via AdsReferral/partner tag (scoreboard channel 'Referrals & partners').",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/partner.ts",
+      "src/app/partners/page.tsx"
+    ]
+  },
+  {
+    "id": 25,
+    "category": "Agency & partner channels",
+    "name": "Marketing educator partnerships",
+    "outcome": "Marketing educator partnerships: partners bring in several small-business clients through the 30% partner program.",
+    "relevance": "Medium-high: one agency can bring many SMB clients; partner program already pays 30% for 12 months.",
+    "status": "awaiting_prerequisite",
+    "readiness": "partner program exists; no outreach to this segment yet",
+    "evidence": "Partner program live: src/app/partners/page.tsx + /partners/apply, 30% for 12 months (src/lib/ads/partner.ts), admin src/app/admin/ads/partners. No segment-specific outreach or landing page found.",
+    "prerequisites": "Partner/agency worker builds segment pages + openly-from-Komendly outreach; outbound flag ON.",
+    "costs": "Commission 30% of partner-referred revenue for 12 months (only when a customer pays).",
+    "contribution": "Referral channel; sign-ups attributed via AdsReferral/partner tag (scoreboard channel 'Referrals & partners').",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/partner.ts",
+      "src/app/partners/page.tsx"
+    ]
+  },
+  {
+    "id": 26,
+    "category": "Agency & partner channels",
+    "name": "Freelancer marketplace acquisition",
+    "outcome": "Freelancer marketplace acquisition: partners bring in several small-business clients through the 30% partner program.",
+    "relevance": "Medium-high: one agency can bring many SMB clients; partner program already pays 30% for 12 months.",
+    "status": "awaiting_prerequisite",
+    "readiness": "partner program exists; no outreach to this segment yet",
+    "evidence": "Partner program live: src/app/partners/page.tsx + /partners/apply, 30% for 12 months (src/lib/ads/partner.ts), admin src/app/admin/ads/partners. No segment-specific outreach or landing page found.",
+    "prerequisites": "Partner/agency worker builds segment pages + openly-from-Komendly outreach; outbound flag ON.",
+    "costs": "Commission 30% of partner-referred revenue for 12 months (only when a customer pays).",
+    "contribution": "Referral channel; sign-ups attributed via AdsReferral/partner tag (scoreboard channel 'Referrals & partners').",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/partner.ts",
+      "src/app/partners/page.tsx"
+    ]
+  },
+  {
+    "id": 27,
+    "category": "Agency & partner channels",
+    "name": "White-label and reseller",
+    "outcome": "White-label and reseller: partners bring in several small-business clients through the 30% partner program.",
+    "relevance": "Medium-high: one agency can bring many SMB clients; partner program already pays 30% for 12 months.",
+    "status": "awaiting_prerequisite",
+    "readiness": "partner program exists; no outreach to this segment yet",
+    "evidence": "Partner program pays commission but there is no white-label or reseller billing/branding (src/lib/ads/partner.ts has PARTNER_TERMS only).",
+    "prerequisites": "Product decision on white-label; would need billing + branding work.",
+    "costs": "Commission 30% of partner-referred revenue for 12 months (only when a customer pays).",
+    "contribution": "Referral channel; sign-ups attributed via AdsReferral/partner tag (scoreboard channel 'Referrals & partners').",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/partner.ts",
+      "src/app/partners/page.tsx"
+    ]
+  },
+  {
+    "id": 28,
+    "category": "Agency & partner channels",
+    "name": "Franchise partnerships",
+    "outcome": "Franchise partnerships: partners bring in several small-business clients through the 30% partner program.",
+    "relevance": "Medium-high: one agency can bring many SMB clients; partner program already pays 30% for 12 months.",
+    "status": "awaiting_prerequisite",
+    "readiness": "partner program exists; no outreach to this segment yet",
+    "evidence": "Partner program live: src/app/partners/page.tsx + /partners/apply, 30% for 12 months (src/lib/ads/partner.ts), admin src/app/admin/ads/partners. No segment-specific outreach or landing page found.",
+    "prerequisites": "Partner/agency worker builds segment pages + openly-from-Komendly outreach; outbound flag ON.",
+    "costs": "Commission 30% of partner-referred revenue for 12 months (only when a customer pays).",
+    "contribution": "Referral channel; sign-ups attributed via AdsReferral/partner tag (scoreboard channel 'Referrals & partners').",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/partner.ts",
+      "src/app/partners/page.tsx"
+    ]
+  },
+  {
+    "id": 29,
+    "category": "Agency & partner channels",
+    "name": "Virtual assistant agency partnerships",
+    "outcome": "Virtual assistant agency partnerships: partners bring in several small-business clients through the 30% partner program.",
+    "relevance": "Medium-high: one agency can bring many SMB clients; partner program already pays 30% for 12 months.",
+    "status": "awaiting_prerequisite",
+    "readiness": "partner program exists; no outreach to this segment yet",
+    "evidence": "Partner program live: src/app/partners/page.tsx + /partners/apply, 30% for 12 months (src/lib/ads/partner.ts), admin src/app/admin/ads/partners. No segment-specific outreach or landing page found.",
+    "prerequisites": "Partner/agency worker builds segment pages + openly-from-Komendly outreach; outbound flag ON.",
+    "costs": "Commission 30% of partner-referred revenue for 12 months (only when a customer pays).",
+    "contribution": "Referral channel; sign-ups attributed via AdsReferral/partner tag (scoreboard channel 'Referrals & partners').",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/partner.ts",
+      "src/app/partners/page.tsx"
+    ]
+  },
+  {
+    "id": 30,
+    "category": "Agency & partner channels",
+    "name": "Embedded partner experiences",
+    "outcome": "Embedded partner experiences: partners bring in several small-business clients through the 30% partner program.",
+    "relevance": "Medium-high: one agency can bring many SMB clients; partner program already pays 30% for 12 months.",
+    "status": "awaiting_prerequisite",
+    "readiness": "partner program exists; no outreach to this segment yet",
+    "evidence": "Partner links + gift pages (/g/[token], /free-ads/from/[code]) exist; no embedded partner flow.",
+    "prerequisites": "Partner/agency worker builds segment pages + openly-from-Komendly outreach; outbound flag ON.",
+    "costs": "Commission 30% of partner-referred revenue for 12 months (only when a customer pays).",
+    "contribution": "Referral channel; sign-ups attributed via AdsReferral/partner tag (scoreboard channel 'Referrals & partners').",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/free-ads/from/[code]/page.tsx",
+      "src/lib/ads/partner.ts"
+    ]
+  },
+  {
+    "id": 31,
+    "category": "Gifts, publicity & viral pages",
+    "name": "Personalized advertising gifts",
+    "outcome": "Personalized advertising gifts: a shareable, consented creative moment that sends new visitors to Komendly.",
+    "relevance": "Medium-high: gift-first marketing is Komendly's differentiator; public features need consent.",
+    "status": "operational",
+    "readiness": "live",
+    "evidence": "Kly makes a gift ad per lead (AdsGift source 'outbound', /g/[token], /gift/[token]); core of every cold email; kly/src/hook.ts. Real sends 26 Nov (198).",
+    "prerequisites": "Sending governed by kly/src/governor.ts (stops on complaint, >2% bounce, 2,000 sends w/o positive reply).",
+    "costs": "Gift generation cost tracked in /admin/ads/growth (AdsGift cost micros).",
+    "contribution": "Kly channel; 0 attributed payments as of 24 Nov.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/hook.ts",
+      "src/app/g/[token]/page.tsx",
+      "src/lib/ads/gifts.ts",
+      "kly/src/governor.ts"
+    ],
+    "flag": "outbound"
+  },
+  {
+    "id": 32,
+    "category": "Gifts, publicity & viral pages",
+    "name": "Public advertising makeovers",
+    "outcome": "Public advertising makeovers: a shareable, consented creative moment that sends new visitors to Komendly.",
+    "relevance": "Medium-high: gift-first marketing is Komendly's differentiator; public features need consent.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/publicity worker builds it; consent needed before any public feature of a business's ad (see Ad of the week flow). No fake reviews or invented results.",
+    "costs": "Image/video generation cost per gift (see AdsGift cost in /admin/ads/growth).",
+    "contribution": "Shareable pages that bring sign-ups with first-touch utm; measured on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/g/[token]/page.tsx"
+    ]
+  },
+  {
+    "id": 33,
+    "category": "Gifts, publicity & viral pages",
+    "name": "Ozzy's business of the day",
+    "outcome": "Ozzy's business of the day: a shareable, consented creative moment that sends new visitors to Komendly.",
+    "relevance": "Medium-high: gift-first marketing is Komendly's differentiator; public features need consent.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/publicity worker builds it; consent needed before any public feature of a business's ad (see Ad of the week flow). No fake reviews or invented results.",
+    "costs": "Image/video generation cost per gift (see AdsGift cost in /admin/ads/growth).",
+    "contribution": "Shareable pages that bring sign-ups with first-touch utm; measured on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/g/[token]/page.tsx"
+    ]
+  },
+  {
+    "id": 34,
+    "category": "Gifts, publicity & viral pages",
+    "name": "Small-business makeover competitions",
+    "outcome": "Small-business makeover competitions: a shareable, consented creative moment that sends new visitors to Komendly.",
+    "relevance": "Medium-high: gift-first marketing is Komendly's differentiator; public features need consent.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/publicity worker builds it; consent needed before any public feature of a business's ad (see Ad of the week flow). No fake reviews or invented results.",
+    "costs": "Image/video generation cost per gift (see AdsGift cost in /admin/ads/growth).",
+    "contribution": "Shareable pages that bring sign-ups with first-touch utm; measured on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/g/[token]/page.tsx"
+    ]
+  },
+  {
+    "id": 35,
+    "category": "Gifts, publicity & viral pages",
+    "name": "100 businesses in 100 days campaign",
+    "outcome": "100 businesses in 100 days campaign: a shareable, consented creative moment that sends new visitors to Komendly.",
+    "relevance": "Medium-high: gift-first marketing is Komendly's differentiator; public features need consent.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/publicity worker builds it; consent needed before any public feature of a business's ad (see Ad of the week flow). No fake reviews or invented results.",
+    "costs": "Image/video generation cost per gift (see AdsGift cost in /admin/ads/growth).",
+    "contribution": "Shareable pages that bring sign-ups with first-touch utm; measured on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/g/[token]/page.tsx"
+    ]
+  },
+  {
+    "id": 36,
+    "category": "Gifts, publicity & viral pages",
+    "name": "Recurring creative giveaways",
+    "outcome": "Recurring creative giveaways: a shareable, consented creative moment that sends new visitors to Komendly.",
+    "relevance": "Medium-high: gift-first marketing is Komendly's differentiator; public features need consent.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/publicity worker builds it; consent needed before any public feature of a business's ad (see Ad of the week flow). No fake reviews or invented results.",
+    "costs": "Image/video generation cost per gift (see AdsGift cost in /admin/ads/growth).",
+    "contribution": "Shareable pages that bring sign-ups with first-touch utm; measured on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/g/[token]/page.tsx"
+    ]
+  },
+  {
+    "id": 37,
+    "category": "Gifts, publicity & viral pages",
+    "name": "Community business nominations",
+    "outcome": "Community business nominations: a shareable, consented creative moment that sends new visitors to Komendly.",
+    "relevance": "Medium-high: gift-first marketing is Komendly's differentiator; public features need consent.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/publicity worker builds it; consent needed before any public feature of a business's ad (see Ad of the week flow). No fake reviews or invented results.",
+    "costs": "Image/video generation cost per gift (see AdsGift cost in /admin/ads/growth).",
+    "contribution": "Shareable pages that bring sign-ups with first-touch utm; measured on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/g/[token]/page.tsx"
+    ]
+  },
+  {
+    "id": 38,
+    "category": "Gifts, publicity & viral pages",
+    "name": "Seasonal creative releases",
+    "outcome": "Seasonal creative releases: a shareable, consented creative moment that sends new visitors to Komendly.",
+    "relevance": "Medium-high: gift-first marketing is Komendly's differentiator; public features need consent.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/publicity worker builds it; consent needed before any public feature of a business's ad (see Ad of the week flow). No fake reviews or invented results.",
+    "costs": "Image/video generation cost per gift (see AdsGift cost in /admin/ads/growth).",
+    "contribution": "Shareable pages that bring sign-ups with first-touch utm; measured on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/g/[token]/page.tsx"
+    ]
+  },
+  {
+    "id": 39,
+    "category": "Gifts, publicity & viral pages",
+    "name": "Startup launch gifts",
+    "outcome": "Startup launch gifts: a shareable, consented creative moment that sends new visitors to Komendly.",
+    "relevance": "Medium-high: gift-first marketing is Komendly's differentiator; public features need consent.",
+    "status": "experimenting",
+    "readiness": "built",
+    "evidence": "new_business system creates an on-click gift page for each new-site lead (kly/src/new-business.ts).",
+    "prerequisites": "Gifts/publicity worker builds it; consent needed before any public feature of a business's ad (see Ad of the week flow). No fake reviews or invented results.",
+    "costs": "Image/video generation cost per gift (see AdsGift cost in /admin/ads/growth).",
+    "contribution": "Shareable pages that bring sign-ups with first-touch utm; measured on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/new-business.ts"
+    ],
+    "flag": "sys_new_business"
+  },
+  {
+    "id": 40,
+    "category": "Gifts, publicity & viral pages",
+    "name": "Customer review transformations",
+    "outcome": "Customer review transformations: a shareable, consented creative moment that sends new visitors to Komendly.",
+    "relevance": "Medium-high: gift-first marketing is Komendly's differentiator; public features need consent.",
+    "status": "experimenting",
+    "readiness": "built, flag state unverified",
+    "evidence": "kly/src/review-gifts.ts: video from ONE real review the business published on its own site, verbatim, named, labelled AI; engine renders animated quote video ($0) (engine/src/growth/review-video.ts). Presenter variant capped at 0 by default.",
+    "prerequisites": "Flag sys_review_gifts ON.",
+    "costs": "$0 default; ~$2.10 FAL per presenter video only if cap>0.",
+    "contribution": "Shareable pages that bring sign-ups with first-touch utm; measured on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/review-gifts.ts",
+      "engine/src/growth/review-video.ts",
+      "src/lib/kly/review-video.ts"
+    ],
+    "flag": "sys_review_gifts"
+  },
+  {
+    "id": 41,
+    "category": "Gifts, publicity & viral pages",
+    "name": "Creative competitions and voting",
+    "outcome": "Creative competitions and voting: a shareable, consented creative moment that sends new visitors to Komendly.",
+    "relevance": "Medium-high: gift-first marketing is Komendly's differentiator; public features need consent.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/publicity worker builds it; consent needed before any public feature of a business's ad (see Ad of the week flow). No fake reviews or invented results.",
+    "costs": "Image/video generation cost per gift (see AdsGift cost in /admin/ads/growth).",
+    "contribution": "Shareable pages that bring sign-ups with first-touch utm; measured on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/g/[token]/page.tsx"
+    ]
+  },
+  {
+    "id": 42,
+    "category": "Gifts, publicity & viral pages",
+    "name": "Website-to-ad challenges",
+    "outcome": "Website-to-ad challenges: a shareable, consented creative moment that sends new visitors to Komendly.",
+    "relevance": "Medium-high: gift-first marketing is Komendly's differentiator; public features need consent.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/publicity worker builds it; consent needed before any public feature of a business's ad (see Ad of the week flow). No fake reviews or invented results.",
+    "costs": "Image/video generation cost per gift (see AdsGift cost in /admin/ads/growth).",
+    "contribution": "Shareable pages that bring sign-ups with first-touch utm; measured on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/g/[token]/page.tsx"
+    ]
+  },
+  {
+    "id": 43,
+    "category": "Gifts, publicity & viral pages",
+    "name": "Advertising rescue submissions",
+    "outcome": "Advertising rescue submissions: a shareable, consented creative moment that sends new visitors to Komendly.",
+    "relevance": "Medium-high: gift-first marketing is Komendly's differentiator; public features need consent.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/publicity worker builds it; consent needed before any public feature of a business's ad (see Ad of the week flow). No fake reviews or invented results.",
+    "costs": "Image/video generation cost per gift (see AdsGift cost in /admin/ads/growth).",
+    "contribution": "Shareable pages that bring sign-ups with first-touch utm; measured on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/g/[token]/page.tsx"
+    ]
+  },
+  {
+    "id": 44,
+    "category": "Gifts, publicity & viral pages",
+    "name": "Nonprofit creative initiatives",
+    "outcome": "Nonprofit creative initiatives: a shareable, consented creative moment that sends new visitors to Komendly.",
+    "relevance": "Medium-high: gift-first marketing is Komendly's differentiator; public features need consent.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/publicity worker builds it; consent needed before any public feature of a business's ad (see Ad of the week flow). No fake reviews or invented results.",
+    "costs": "Image/video generation cost per gift (see AdsGift cost in /admin/ads/growth).",
+    "contribution": "Shareable pages that bring sign-ups with first-touch utm; measured on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/g/[token]/page.tsx"
+    ]
+  },
+  {
+    "id": 45,
+    "category": "Gifts, publicity & viral pages",
+    "name": "Customer reaction content",
+    "outcome": "Customer reaction content: a shareable, consented creative moment that sends new visitors to Komendly.",
+    "relevance": "Medium-high: gift-first marketing is Komendly's differentiator; public features need consent.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/publicity worker builds it; consent needed before any public feature of a business's ad (see Ad of the week flow). No fake reviews or invented results.",
+    "costs": "Image/video generation cost per gift (see AdsGift cost in /admin/ads/growth).",
+    "contribution": "Shareable pages that bring sign-ups with first-touch utm; measured on the scoreboard.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/g/[token]/page.tsx"
+    ]
+  },
+  {
+    "id": 46,
+    "category": "SEO & free tools",
+    "name": "Industry-specific ad generators",
+    "outcome": "Industry-specific ad generators: search and AI-search visitors use a useful free page or tool and then sign up.",
+    "relevance": "High: compounding, no-cost traffic that matches ad-maker search intent.",
+    "status": "experimenting",
+    "readiness": "live pages",
+    "evidence": "21 free tools in src/lib/growth/free-tools.ts (ad copy generator, hook, caption, slogan, UGC script...), served at /tools/[slug]; /free-ads/roofers. Attributed signups unmeasured here.",
+    "prerequisites": "SEO/free-tools worker builds it; quality bar: no thin mass-generated pages.",
+    "costs": "Engineering + occasional AI cost per use (free tools are rate limited).",
+    "contribution": "Organic search/AI-search visitors who sign up (first-touch utm_source free_tool / examples).",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/free-tools.ts",
+      "src/app/tools/[slug]/page.tsx",
+      "src/app/free-ads/roofers/page.tsx"
+    ],
+    "flag": "sys_free_tools"
+  },
+  {
+    "id": 47,
+    "category": "SEO & free tools",
+    "name": "Industry-specific ad galleries",
+    "outcome": "Industry-specific ad galleries: search and AI-search visitors use a useful free page or tool and then sign up.",
+    "relevance": "High: compounding, no-cost traffic that matches ad-maker search intent.",
+    "status": "experimenting",
+    "readiness": "live pages",
+    "evidence": "/ad-examples/[industry] (+facebook/google), format, occasion, platform, ideas/[category]/[angle]; 45 trade playbooks and 48 idea pages (MEMORY 20 Nov: af8d9df); engine/src/growth/industry-examples.ts.",
+    "prerequisites": "SEO/free-tools worker builds it; quality bar: no thin mass-generated pages.",
+    "costs": "Engineering + occasional AI cost per use (free tools are rate limited).",
+    "contribution": "Organic search/AI-search visitors who sign up (first-touch utm_source free_tool / examples).",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/ad-examples",
+      "src/lib/growth/industry-examples.ts",
+      "src/lib/growth/trade-playbooks-data.ts"
+    ],
+    "flag": "sys_industry_examples"
+  },
+  {
+    "id": 48,
+    "category": "SEO & free tools",
+    "name": "Competitor comparison content",
+    "outcome": "Competitor comparison content: search and AI-search visitors use a useful free page or tool and then sign up.",
+    "relevance": "High: compounding, no-cost traffic that matches ad-maker search intent.",
+    "status": "experimenting",
+    "readiness": "live posts",
+    "evidence": "content/blog has 27 files incl. komendly-vs-creatify, komendly-vs-adcreative-ai, best-ai-ugc-ad-tools. Written by blog-engine (own service).",
+    "prerequisites": "SEO/free-tools worker builds it; quality bar: no thin mass-generated pages.",
+    "costs": "Engineering + occasional AI cost per use (free tools are rate limited).",
+    "contribution": "Organic search/AI-search visitors who sign up (first-touch utm_source free_tool / examples).",
+    "owner_action": "",
+    "code_refs": [
+      "content/blog/komendly-vs-creatify.md",
+      "content/blog/komendly-vs-adcreative-ai.md",
+      "blog-engine/README.md"
+    ],
+    "flag": "sys_free_tools"
+  },
+  {
+    "id": 49,
+    "category": "SEO & free tools",
+    "name": "Alternative software discovery",
+    "outcome": "Alternative software discovery: search and AI-search visitors use a useful free page or tool and then sign up.",
+    "relevance": "High: compounding, no-cost traffic that matches ad-maker search intent.",
+    "status": "experimenting",
+    "readiness": "live posts",
+    "evidence": "Alternatives posts: creatify-alternatives, icon-alternatives, predis-ai-alternatives, smartly-alternatives-small-business.",
+    "prerequisites": "SEO/free-tools worker builds it; quality bar: no thin mass-generated pages.",
+    "costs": "Engineering + occasional AI cost per use (free tools are rate limited).",
+    "contribution": "Organic search/AI-search visitors who sign up (first-touch utm_source free_tool / examples).",
+    "owner_action": "",
+    "code_refs": [
+      "content/blog/creatify-alternatives.md",
+      "content/blog/predis-ai-alternatives.md"
+    ],
+    "flag": "sys_free_tools"
+  },
+  {
+    "id": 50,
+    "category": "SEO & free tools",
+    "name": "Ad creative assessment",
+    "outcome": "Ad creative assessment: search and AI-search visitors use a useful free page or tool and then sign up.",
+    "relevance": "High: compounding, no-cost traffic that matches ad-maker search intent.",
+    "status": "operational",
+    "readiness": "live",
+    "evidence": "Meta Ad Check grader at /ad-check; sys_ad_check flag ON per MEMORY 21 Nov; engine queues adlib_scan jobs. Attribution via utm_source=ad_check.",
+    "prerequisites": "SEO/free-tools worker builds it; quality bar: no thin mass-generated pages.",
+    "costs": "Engine time; no paid API.",
+    "contribution": "Organic search/AI-search visitors who sign up (first-touch utm_source free_tool / examples).",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/ad-check",
+      "src/lib/growth/ad-check.ts",
+      "engine/src/growth/ad-check.ts"
+    ],
+    "flag": "sys_ad_check"
+  },
+  {
+    "id": 51,
+    "category": "SEO & free tools",
+    "name": "Website ad readiness assessment",
+    "outcome": "Website ad readiness assessment: search and AI-search visitors use a useful free page or tool and then sign up.",
+    "relevance": "High: compounding, no-cost traffic that matches ad-maker search intent.",
+    "status": "experimenting",
+    "readiness": "partial",
+    "evidence": "/free-ads/from/[code] and /remix turn a website into ads (free pack); no dedicated 'is my website ad-ready' score page.",
+    "prerequisites": "SEO/free-tools worker builds it; quality bar: no thin mass-generated pages.",
+    "costs": "Engineering + occasional AI cost per use (free tools are rate limited).",
+    "contribution": "Organic search/AI-search visitors who sign up (first-touch utm_source free_tool / examples).",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/remix/page.tsx",
+      "src/app/free-ads/page.tsx"
+    ],
+    "flag": "sys_free_tools"
+  },
+  {
+    "id": 52,
+    "category": "SEO & free tools",
+    "name": "Competitor ad intelligence",
+    "outcome": "Competitor ad intelligence: search and AI-search visitors use a useful free page or tool and then sign up.",
+    "relevance": "High: compounding, no-cost traffic that matches ad-maker search intent.",
+    "status": "operational",
+    "readiness": "live",
+    "evidence": "Competitor ad watch: /tools/competitor-ad-watch, weekly email, engine/src/growth/ad-watch.ts; sys_ad_watch ON per MEMORY 21 Nov.",
+    "prerequisites": "SEO/free-tools worker builds it; quality bar: no thin mass-generated pages.",
+    "costs": "Engineering + occasional AI cost per use (free tools are rate limited).",
+    "contribution": "Organic search/AI-search visitors who sign up (first-touch utm_source free_tool / examples).",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/ad-watch.ts",
+      "engine/src/growth/ad-watch.ts",
+      "src/app/tools/competitor-ad-watch"
+    ],
+    "flag": "sys_ad_watch"
+  },
+  {
+    "id": 53,
+    "category": "SEO & free tools",
+    "name": "Marketing offer generation",
+    "outcome": "Marketing offer generation: search and AI-search visitors use a useful free page or tool and then sign up.",
+    "relevance": "High: compounding, no-cost traffic that matches ad-maker search intent.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "SEO/free-tools worker builds it; quality bar: no thin mass-generated pages.",
+    "costs": "Engineering + occasional AI cost per use (free tools are rate limited).",
+    "contribution": "Organic search/AI-search visitors who sign up (first-touch utm_source free_tool / examples).",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/free-tools.ts"
+    ],
+    "flag": "sys_free_tools"
+  },
+  {
+    "id": 54,
+    "category": "SEO & free tools",
+    "name": "Marketing calendar generation",
+    "outcome": "Marketing calendar generation: search and AI-search visitors use a useful free page or tool and then sign up.",
+    "relevance": "High: compounding, no-cost traffic that matches ad-maker search intent.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "SEO/free-tools worker builds it; quality bar: no thin mass-generated pages.",
+    "costs": "Engineering + occasional AI cost per use (free tools are rate limited).",
+    "contribution": "Organic search/AI-search visitors who sign up (first-touch utm_source free_tool / examples).",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/free-tools.ts"
+    ],
+    "flag": "sys_free_tools"
+  },
+  {
+    "id": 55,
+    "category": "SEO & free tools",
+    "name": "Ad budget resources",
+    "outcome": "Ad budget resources: search and AI-search visitors use a useful free page or tool and then sign up.",
+    "relevance": "High: compounding, no-cost traffic that matches ad-maker search intent.",
+    "status": "experimenting",
+    "readiness": "live tool",
+    "evidence": "ad-budget-calculator free tool (src/lib/growth/free-tools.ts).",
+    "prerequisites": "SEO/free-tools worker builds it; quality bar: no thin mass-generated pages.",
+    "costs": "Engineering + occasional AI cost per use (free tools are rate limited).",
+    "contribution": "Organic search/AI-search visitors who sign up (first-touch utm_source free_tool / examples).",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/free-tools.ts"
+    ],
+    "flag": "sys_free_tools"
+  },
+  {
+    "id": 56,
+    "category": "SEO & free tools",
+    "name": "Ad image resizing",
+    "outcome": "Ad image resizing: search and AI-search visitors use a useful free page or tool and then sign up.",
+    "relevance": "High: compounding, no-cost traffic that matches ad-maker search intent.",
+    "status": "experimenting",
+    "readiness": "partial",
+    "evidence": "ad-size-guide (size guide & checker) free tool; not an image resizer. Blog: facebook-instagram-ad-sizes.",
+    "prerequisites": "SEO/free-tools worker builds it; quality bar: no thin mass-generated pages.",
+    "costs": "Engineering + occasional AI cost per use (free tools are rate limited).",
+    "contribution": "Organic search/AI-search visitors who sign up (first-touch utm_source free_tool / examples).",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/free-tools.ts",
+      "content/blog/facebook-instagram-ad-sizes.md"
+    ],
+    "flag": "sys_free_tools"
+  },
+  {
+    "id": 57,
+    "category": "SEO & free tools",
+    "name": "Downloadable ad templates",
+    "outcome": "Downloadable ad templates: search and AI-search visitors use a useful free page or tool and then sign up.",
+    "relevance": "High: compounding, no-cost traffic that matches ad-maker search intent.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "SEO/free-tools worker builds it; quality bar: no thin mass-generated pages.",
+    "costs": "Engineering + occasional AI cost per use (free tools are rate limited).",
+    "contribution": "Organic search/AI-search visitors who sign up (first-touch utm_source free_tool / examples).",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/free-tools.ts"
+    ],
+    "flag": "sys_free_tools"
+  },
+  {
+    "id": 58,
+    "category": "SEO & free tools",
+    "name": "Headline/copy libraries",
+    "outcome": "Headline/copy libraries: search and AI-search visitors use a useful free page or tool and then sign up.",
+    "relevance": "High: compounding, no-cost traffic that matches ad-maker search intent.",
+    "status": "experimenting",
+    "readiness": "partial",
+    "evidence": "Hook, CTA, headline, caption, slogan generators (free tools) + /ad-examples/ideas pages. No saved searchable library.",
+    "prerequisites": "SEO/free-tools worker builds it; quality bar: no thin mass-generated pages.",
+    "costs": "Engineering + occasional AI cost per use (free tools are rate limited).",
+    "contribution": "Organic search/AI-search visitors who sign up (first-touch utm_source free_tool / examples).",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/free-tools.ts",
+      "src/app/ad-examples/ideas/page.tsx"
+    ],
+    "flag": "sys_free_tools"
+  },
+  {
+    "id": 59,
+    "category": "SEO & free tools",
+    "name": "Searchable ad inspiration",
+    "outcome": "Searchable ad inspiration: search and AI-search visitors use a useful free page or tool and then sign up.",
+    "relevance": "High: compounding, no-cost traffic that matches ad-maker search intent.",
+    "status": "experimenting",
+    "readiness": "partial",
+    "evidence": "Browsable /ad-examples hierarchy (industry/format/occasion/platform/longest-running), no search box.",
+    "prerequisites": "SEO/free-tools worker builds it; quality bar: no thin mass-generated pages.",
+    "costs": "Engineering + occasional AI cost per use (free tools are rate limited).",
+    "contribution": "Organic search/AI-search visitors who sign up (first-touch utm_source free_tool / examples).",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/ad-examples/page.tsx"
+    ],
+    "flag": "sys_free_tools"
+  },
+  {
+    "id": 60,
+    "category": "SEO & free tools",
+    "name": "Interactive marketing playbooks",
+    "outcome": "Interactive marketing playbooks: search and AI-search visitors use a useful free page or tool and then sign up.",
+    "relevance": "High: compounding, no-cost traffic that matches ad-maker search intent.",
+    "status": "experimenting",
+    "readiness": "content",
+    "evidence": "45 trade playbooks (src/lib/growth/trade-playbooks-data.ts); not interactive.",
+    "prerequisites": "SEO/free-tools worker builds it; quality bar: no thin mass-generated pages.",
+    "costs": "Engineering + occasional AI cost per use (free tools are rate limited).",
+    "contribution": "Organic search/AI-search visitors who sign up (first-touch utm_source free_tool / examples).",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/trade-playbooks-data.ts",
+      "src/lib/growth/trade-playbooks.ts"
+    ],
+    "flag": "sys_free_tools"
+  },
+  {
+    "id": 61,
+    "category": "Social & community",
+    "name": "Reddit",
+    "outcome": "Reddit: Ozzy shows up openly as Komendly on this channel and earns sign-ups.",
+    "relevance": "Medium: low cost, slow; platform limits and disclosure apply.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "Reddit parked by user 20 Nov; Reddit keys not yet in media-master (waiting for the other agent's Reddit app).",
+    "prerequisites": "Reddit API keys into media-master; disclosure on.",
+    "costs": "Time; no paid promotion assumed.",
+    "contribution": "Community-channel sign-ups (scoreboard 'Community') or social utm_source.",
+    "owner_action": "Provide Reddit API keys when the app exists (or tell us to drop Reddit).",
+    "code_refs": [
+      "/Users/groot/media-master/packages/offsite"
+    ]
+  },
+  {
+    "id": 62,
+    "category": "Social & community",
+    "name": "Facebook business communities",
+    "outcome": "Facebook business communities: Ozzy shows up openly as Komendly on this channel and earns sign-ups.",
+    "relevance": "Medium: low cost, slow; platform limits and disclosure apply.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Social/content worker; every post openly from Komendly/Ozzy, disclosure on, platform limits and captchas never bypassed.",
+    "costs": "Time; no paid promotion assumed.",
+    "contribution": "Community-channel sign-ups (scoreboard 'Community') or social utm_source.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/social.ts"
+    ]
+  },
+  {
+    "id": 63,
+    "category": "Social & community",
+    "name": "LinkedIn",
+    "outcome": "LinkedIn: Ozzy shows up openly as Komendly on this channel and earns sign-ups.",
+    "relevance": "Medium: low cost, slow; platform limits and disclosure apply.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Social/content worker; every post openly from Komendly/Ozzy, disclosure on, platform limits and captchas never bypassed.",
+    "costs": "Time; no paid promotion assumed.",
+    "contribution": "Community-channel sign-ups (scoreboard 'Community') or social utm_source.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/social.ts"
+    ]
+  },
+  {
+    "id": 64,
+    "category": "Social & community",
+    "name": "X",
+    "outcome": "X: Ozzy shows up openly as Komendly on this channel and earns sign-ups.",
+    "relevance": "Medium: low cost, slow; platform limits and disclosure apply.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Social/content worker; every post openly from Komendly/Ozzy, disclosure on, platform limits and captchas never bypassed.",
+    "costs": "Time; no paid promotion assumed.",
+    "contribution": "Community-channel sign-ups (scoreboard 'Community') or social utm_source.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/social.ts"
+    ]
+  },
+  {
+    "id": 65,
+    "category": "Social & community",
+    "name": "Pinterest",
+    "outcome": "Pinterest: Ozzy shows up openly as Komendly on this channel and earns sign-ups.",
+    "relevance": "Medium: low cost, slow; platform limits and disclosure apply.",
+    "status": "experimenting",
+    "readiness": "live, trial API",
+    "evidence": "5 boards on the PRESTYJ account; 52 pins uploaded via UI and scheduled 4/day 21 Nov-3 Dec (utm_source=pinterest); 4 pins live day 1. API app 1642180 is trial access (cannot create pins).",
+    "prerequisites": "Pinterest Standard API access for automation.",
+    "costs": "Time; no paid promotion assumed.",
+    "contribution": "Community-channel sign-ups (scoreboard 'Community') or social utm_source.",
+    "owner_action": "Check pins landed on boards; apply for Standard access when you want automation.",
+    "code_refs": []
+  },
+  {
+    "id": 66,
+    "category": "Social & community",
+    "name": "YouTube Shorts",
+    "outcome": "YouTube Shorts: Ozzy shows up openly as Komendly on this channel and earns sign-ups.",
+    "relevance": "Medium: low cost, slow; platform limits and disclosure apply.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Social/content worker; every post openly from Komendly/Ozzy, disclosure on, platform limits and captchas never bypassed.",
+    "costs": "Time; no paid promotion assumed.",
+    "contribution": "Community-channel sign-ups (scoreboard 'Community') or social utm_source.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/social.ts"
+    ]
+  },
+  {
+    "id": 67,
+    "category": "Social & community",
+    "name": "TikTok",
+    "outcome": "TikTok: Ozzy shows up openly as Komendly on this channel and earns sign-ups.",
+    "relevance": "Medium: low cost, slow; platform limits and disclosure apply.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Social/content worker; every post openly from Komendly/Ozzy, disclosure on, platform limits and captchas never bypassed.",
+    "costs": "Time; no paid promotion assumed.",
+    "contribution": "Community-channel sign-ups (scoreboard 'Community') or social utm_source.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/social.ts"
+    ]
+  },
+  {
+    "id": 68,
+    "category": "Social & community",
+    "name": "Instagram",
+    "outcome": "Instagram: Ozzy shows up openly as Komendly on this channel and earns sign-ups.",
+    "relevance": "Medium: low cost, slow; platform limits and disclosure apply.",
+    "status": "awaiting_prerequisite",
+    "readiness": "built, off until connected",
+    "evidence": "kly/src/social.ts: one daily post to Komendly's own Facebook Page + linked Instagram, gated by KlySettings.socialEnabled and an admin-connected KlySocialConnection; one per day via unique day+platform row. Connection state not verified.",
+    "prerequisites": "Connect the Page in admin and enable socialEnabled.",
+    "costs": "Time; no paid promotion assumed.",
+    "contribution": "Community-channel sign-ups (scoreboard 'Community') or social utm_source.",
+    "owner_action": "Connect the Facebook Page/Instagram account in admin and enable social when ready.",
+    "code_refs": [
+      "kly/src/social.ts",
+      "src/lib/kly/social-core.ts"
+    ]
+  },
+  {
+    "id": 69,
+    "category": "Social & community",
+    "name": "Quora",
+    "outcome": "Quora: Ozzy shows up openly as Komendly on this channel and earns sign-ups.",
+    "relevance": "Medium: low cost, slow; platform limits and disclosure apply.",
+    "status": "experimenting",
+    "readiness": "live but runner offline",
+    "evidence": "First answer published 20 Nov (Ozzy, disclosed). Publishing runs through media-master dev electron app on port 9333, which was NOT running 24 Nov (restarted 26 Nov, unverified).",
+    "prerequisites": "media-master electron must stay running.",
+    "costs": "Time; no paid promotion assumed.",
+    "contribution": "Community-channel sign-ups (scoreboard 'Community') or social utm_source.",
+    "owner_action": "Keep the media-master dev app running (check pgrep -f remote-debugging-port=9333).",
+    "code_refs": [
+      "/Users/groot/media-master/packages/browser-automation",
+      "/Users/groot/media-master/packages/offsite"
+    ]
+  },
+  {
+    "id": 70,
+    "category": "Social & community",
+    "name": "Ozzy as a marketing personality",
+    "outcome": "Ozzy as a marketing personality: Ozzy shows up openly as Komendly on this channel and earns sign-ups.",
+    "relevance": "Medium: low cost, slow; platform limits and disclosure apply.",
+    "status": "experimenting",
+    "readiness": "partial",
+    "evidence": "Ozzy voice in kly/src/social.ts and kly/src/voice.ts; Ozzy mascot across site. No standalone personality channel.",
+    "prerequisites": "Social/content worker; every post openly from Komendly/Ozzy, disclosure on, platform limits and captchas never bypassed.",
+    "costs": "Time; no paid promotion assumed.",
+    "contribution": "Community-channel sign-ups (scoreboard 'Community') or social utm_source.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/voice.ts",
+      "kly/src/social.ts"
+    ]
+  },
+  {
+    "id": 71,
+    "category": "Platform & ecosystem distribution",
+    "name": "Shopify App Store",
+    "outcome": "Shopify App Store: merchants discover and install Komendly where they already shop for tools.",
+    "relevance": "Medium-high: installs happen where merchants already look.",
+    "status": "awaiting_prerequisite",
+    "readiness": "built, not listed",
+    "evidence": "Shopify app in docs/shopify (listing.md, review-test-instructions.md, shopify.app.toml), engine/src/growth/shopify.ts, /integrations/shopify. App Store listing not confirmed live.",
+    "prerequisites": "Shopify review/approval.",
+    "costs": "Platform fees where applicable (user rule: no paid directories).",
+    "contribution": "Listing installs/sign-ups by utm_source.",
+    "owner_action": "Confirm Shopify submission status.",
+    "code_refs": [
+      "docs/shopify/listing.md",
+      "engine/src/growth/shopify.ts",
+      "src/app/integrations/shopify"
+    ],
+    "flag": "sys_shopify"
+  },
+  {
+    "id": 72,
+    "category": "Platform & ecosystem distribution",
+    "name": "ChatGPT ecosystem",
+    "outcome": "ChatGPT ecosystem: merchants discover and install Komendly where they already shop for tools.",
+    "relevance": "Medium-high: installs happen where merchants already look.",
+    "status": "awaiting_prerequisite",
+    "readiness": "built, NOT submitted",
+    "evidence": "docs/ai-assistants/chatgpt-app-directory.md, chatgpt-plugin/, komendly-chatgpt-1.1.0.zip; draft uploaded on platform.openai.com. Submission blocked: form needs 'suitable under 18' but privacy policy says not under 16.",
+    "prerequisites": "Owner decision on age wording.",
+    "costs": "Platform fees where applicable (user rule: no paid directories).",
+    "contribution": "Listing installs/sign-ups by utm_source.",
+    "owner_action": "Decide: change privacy policy to allow under-18, or hold the ChatGPT submission.",
+    "code_refs": [
+      "docs/ai-assistants/chatgpt-app-directory.md",
+      "src/app/api/mcp",
+      "src/app/integrations/chatgpt"
+    ],
+    "flag": "sys_ai_assistant"
+  },
+  {
+    "id": 73,
+    "category": "Platform & ecosystem distribution",
+    "name": "Claude ecosystem",
+    "outcome": "Claude ecosystem: merchants discover and install Komendly where they already shop for tools.",
+    "relevance": "Medium-high: installs happen where merchants already look.",
+    "status": "awaiting_prerequisite",
+    "readiness": "submitted, in review",
+    "evidence": "Connector 'Komendly' in review since ~19 Nov; plugin bundle Gahroot/komendly-claude-plugin submitted 21 Nov; docs/ai-assistants/claude-directory.md.",
+    "prerequisites": "Anthropic review.",
+    "costs": "Platform fees where applicable (user rule: no paid directories).",
+    "contribution": "Listing installs/sign-ups by utm_source.",
+    "owner_action": "",
+    "code_refs": [
+      "docs/ai-assistants/claude-directory.md",
+      "docs/ai-assistants/claude-plugin",
+      "src/app/api/mcp",
+      "src/app/integrations/claude"
+    ],
+    "flag": "sys_ai_assistant"
+  },
+  {
+    "id": 74,
+    "category": "Platform & ecosystem distribution",
+    "name": "Product launch platforms",
+    "outcome": "Product launch platforms: merchants discover and install Komendly where they already shop for tools.",
+    "relevance": "Medium-high: installs happen where merchants already look.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Listing/review by the platform; owner accounts.",
+    "costs": "Platform fees where applicable (user rule: no paid directories).",
+    "contribution": "Listing installs/sign-ups by utm_source.",
+    "owner_action": "",
+    "code_refs": []
+  },
+  {
+    "id": 75,
+    "category": "Platform & ecosystem distribution",
+    "name": "AI software directories",
+    "outcome": "AI software directories: merchants discover and install Komendly where they already shop for tools.",
+    "relevance": "Medium-high: installs happen where merchants already look.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "Free-only rule: no paid directories. No AI-directory submissions recorded.",
+    "prerequisites": "Free-listing submissions by the social/content worker.",
+    "costs": "Platform fees where applicable (user rule: no paid directories).",
+    "contribution": "Listing installs/sign-ups by utm_source.",
+    "owner_action": "",
+    "code_refs": []
+  },
+  {
+    "id": 76,
+    "category": "Platform & ecosystem distribution",
+    "name": "Software comparison directories",
+    "outcome": "Software comparison directories: merchants discover and install Komendly where they already shop for tools.",
+    "relevance": "Medium-high: installs happen where merchants already look.",
+    "status": "experimenting",
+    "readiness": "outreach done",
+    "evidence": "9 listicle pitches sent 20 Nov from hello@getkomendly.com (goal-folder outreach/send.mjs, dedup sent.jsonl; not in this repo). Outcomes unknown. User rule: no paid directories.",
+    "prerequisites": "Track replies.",
+    "costs": "Platform fees where applicable (user rule: no paid directories).",
+    "contribution": "Listing installs/sign-ups by utm_source.",
+    "owner_action": "",
+    "code_refs": []
+  },
+  {
+    "id": 77,
+    "category": "Platform & ecosystem distribution",
+    "name": "Automation ecosystems (n8n, Make, Zapier)",
+    "outcome": "Automation ecosystems (n8n, Make, Zapier): merchants discover and install Komendly where they already shop for tools.",
+    "relevance": "Medium-high: installs happen where merchants already look.",
+    "status": "awaiting_prerequisite",
+    "readiness": "Zapier built, unpublished",
+    "evidence": "packages/komendly-zapier (app id 250388, v1.0.0 pushed); publish needs 3 real users with live Zaps + komendly.com-domain team member + dev ToS. No n8n/Make nodes.",
+    "prerequisites": "3 real Zap users; n8n/Make not started.",
+    "costs": "Platform fees where applicable (user rule: no paid directories).",
+    "contribution": "Listing installs/sign-ups by utm_source.",
+    "owner_action": "Invite 3 real users with live Zaps via the Zapier invite link (MEMORY) so the app can be submitted.",
+    "code_refs": [
+      "packages/komendly-zapier",
+      "docs/integrations"
+    ],
+    "flag": "sys_zapier"
+  },
+  {
+    "id": 78,
+    "category": "Platform & ecosystem distribution",
+    "name": "WordPress ecosystem",
+    "outcome": "WordPress ecosystem: merchants discover and install Komendly where they already shop for tools.",
+    "relevance": "Medium-high: installs happen where merchants already look.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Listing/review by the platform; owner accounts.",
+    "costs": "Platform fees where applicable (user rule: no paid directories).",
+    "contribution": "Listing installs/sign-ups by utm_source.",
+    "owner_action": "",
+    "code_refs": []
+  },
+  {
+    "id": 79,
+    "category": "Platform & ecosystem distribution",
+    "name": "Browser-based distribution",
+    "outcome": "Browser-based distribution: merchants discover and install Komendly where they already shop for tools.",
+    "relevance": "Medium-high: installs happen where merchants already look.",
+    "status": "awaiting_prerequisite",
+    "readiness": "built, not on the store",
+    "evidence": "packages/komendly-extension (Remake this ad); packages/komendly-extension/store; src/lib/growth/chrome-extension.ts CHROME_EXTENSION_URL unset.",
+    "prerequisites": "$5 Chrome developer fee; retake screenshot 1 (third-party brands).",
+    "costs": "Platform fees where applicable (user rule: no paid directories).",
+    "contribution": "Listing installs/sign-ups by utm_source.",
+    "owner_action": "Pay the $5 Chrome Web Store fee and approve a retaken screenshot.",
+    "code_refs": [
+      "packages/komendly-extension",
+      "src/lib/growth/chrome-extension.ts"
+    ],
+    "flag": "sys_chrome_ext"
+  },
+  {
+    "id": 80,
+    "category": "Platform & ecosystem distribution",
+    "name": "Open-source distribution",
+    "outcome": "Open-source distribution: merchants discover and install Komendly where they already shop for tools.",
+    "relevance": "Medium-high: installs happen where merchants already look.",
+    "status": "experimenting",
+    "readiness": "published",
+    "evidence": "packages/komendly-cli (npm komendly/ozzy), MCP server in src/app/api/mcp, public repo Gahroot/komendly-claude-plugin, /developers/api docs.",
+    "prerequisites": "Listing/review by the platform; owner accounts.",
+    "costs": "Platform fees where applicable (user rule: no paid directories).",
+    "contribution": "Listing installs/sign-ups by utm_source.",
+    "owner_action": "",
+    "code_refs": [
+      "packages/komendly-cli",
+      "src/app/api/mcp",
+      "src/app/developers"
+    ]
+  },
+  {
+    "id": 81,
+    "category": "Product-led virality",
+    "name": "Shareable ad experiences",
+    "outcome": "Shareable ad experiences: existing users and their audiences bring in new sign-ups.",
+    "relevance": "Medium: needs a user base first (0 real payers as of 24 Nov).",
+    "status": "experimenting",
+    "readiness": "live",
+    "evidence": "Share routes /g/[token], /s/[token], /r/[code], /m/[code], /u/[token]; viral_branding system.",
+    "prerequisites": "Gifts/viral worker; opt-in only, honest attribution.",
+    "costs": "Negligible per share.",
+    "contribution": "Referral/shared-link sign-ups.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/s",
+      "src/app/r",
+      "src/app/m",
+      "src/lib/growth/viral-branding.ts"
+    ],
+    "flag": "sys_viral_branding"
+  },
+  {
+    "id": 82,
+    "category": "Product-led virality",
+    "name": "Customer referral",
+    "outcome": "Customer referral: existing users and their audiences bring in new sign-ups.",
+    "relevance": "Medium: needs a user base first (0 real payers as of 24 Nov).",
+    "status": "experimenting",
+    "readiness": "live, no known payers",
+    "evidence": "Referral system src/lib/ads/referrals.ts + referral-billing.ts, /admin/ads/referrals, credit rewards; 0 real payers overall (MEMORY 24 Nov).",
+    "prerequisites": "Gifts/viral worker; opt-in only, honest attribution.",
+    "costs": "Negligible per share.",
+    "contribution": "Referral/shared-link sign-ups.",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/referrals.ts",
+      "src/app/admin/ads/referrals",
+      "src/app/r"
+    ],
+    "flag": "sys_viral_branding"
+  },
+  {
+    "id": 83,
+    "category": "Product-led virality",
+    "name": "Collaborative creative approval",
+    "outcome": "Collaborative creative approval: existing users and their audiences bring in new sign-ups.",
+    "relevance": "Medium: needs a user base first (0 real payers as of 24 Nov).",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/viral worker; opt-in only, honest attribution.",
+    "costs": "Negligible per share.",
+    "contribution": "Referral/shared-link sign-ups.",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/viral-branding.ts"
+    ],
+    "flag": "sys_viral_branding"
+  },
+  {
+    "id": 84,
+    "category": "Product-led virality",
+    "name": "Customer creative portfolios",
+    "outcome": "Customer creative portfolios: existing users and their audiences bring in new sign-ups.",
+    "relevance": "Medium: needs a user base first (0 real payers as of 24 Nov).",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/viral worker; opt-in only, honest attribution.",
+    "costs": "Negligible per share.",
+    "contribution": "Referral/shared-link sign-ups.",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/viral-branding.ts"
+    ],
+    "flag": "sys_viral_branding"
+  },
+  {
+    "id": 85,
+    "category": "Product-led virality",
+    "name": "Optional Komendly attribution",
+    "outcome": "Optional Komendly attribution: existing users and their audiences bring in new sign-ups.",
+    "relevance": "Medium: needs a user base first (0 real payers as of 24 Nov).",
+    "status": "experimenting",
+    "readiness": "built",
+    "evidence": "viral_branding: 'Made with Komendly' on free output (engine/src/growth/viral-branding.ts, utm_source=made_with).",
+    "prerequisites": "Gifts/viral worker; opt-in only, honest attribution.",
+    "costs": "Negligible per share.",
+    "contribution": "Referral/shared-link sign-ups.",
+    "owner_action": "",
+    "code_refs": [
+      "engine/src/growth/viral-branding.ts",
+      "src/lib/growth/viral-branding.ts"
+    ],
+    "flag": "sys_viral_branding"
+  },
+  {
+    "id": 86,
+    "category": "Product-led virality",
+    "name": "Embeddable free resources",
+    "outcome": "Embeddable free resources: existing users and their audiences bring in new sign-ups.",
+    "relevance": "Medium: needs a user base first (0 real payers as of 24 Nov).",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/viral worker; opt-in only, honest attribution.",
+    "costs": "Negligible per share.",
+    "contribution": "Referral/shared-link sign-ups.",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/viral-branding.ts"
+    ],
+    "flag": "sys_viral_branding"
+  },
+  {
+    "id": 87,
+    "category": "Product-led virality",
+    "name": "Shareable ad intelligence",
+    "outcome": "Shareable ad intelligence: existing users and their audiences bring in new sign-ups.",
+    "relevance": "Medium: needs a user base first (0 real payers as of 24 Nov).",
+    "status": "experimenting",
+    "readiness": "live",
+    "evidence": "ad_watch shareable page (src/lib/growth/ad-watch-page.ts).",
+    "prerequisites": "Gifts/viral worker; opt-in only, honest attribution.",
+    "costs": "Negligible per share.",
+    "contribution": "Referral/shared-link sign-ups.",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/ad-watch-page.ts"
+    ],
+    "flag": "sys_ad_watch"
+  },
+  {
+    "id": 88,
+    "category": "Product-led virality",
+    "name": "Agency-client expansion",
+    "outcome": "Agency-client expansion: existing users and their audiences bring in new sign-ups.",
+    "relevance": "Medium: needs a user base first (0 real payers as of 24 Nov).",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/viral worker; opt-in only, honest attribution.",
+    "costs": "Negligible per share.",
+    "contribution": "Referral/shared-link sign-ups.",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/viral-branding.ts"
+    ],
+    "flag": "sys_viral_branding"
+  },
+  {
+    "id": 89,
+    "category": "Product-led virality",
+    "name": "Shareable campaign concepts",
+    "outcome": "Shareable campaign concepts: existing users and their audiences bring in new sign-ups.",
+    "relevance": "Medium: needs a user base first (0 real payers as of 24 Nov).",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Gifts/viral worker; opt-in only, honest attribution.",
+    "costs": "Negligible per share.",
+    "contribution": "Referral/shared-link sign-ups.",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/growth/viral-branding.ts"
+    ],
+    "flag": "sys_viral_branding"
+  },
+  {
+    "id": 90,
+    "category": "Product-led virality",
+    "name": "Customer creative showcases",
+    "outcome": "Customer creative showcases: existing users and their audiences bring in new sign-ups.",
+    "relevance": "Medium: needs a user base first (0 real payers as of 24 Nov).",
+    "status": "experimenting",
+    "readiness": "live, consent-based",
+    "evidence": "Ad of the week (/ad-of-the-week, /admin/ads/features): only ads whose owner consented; never Kly gifts.",
+    "prerequisites": "Gifts/viral worker; opt-in only, honest attribution.",
+    "costs": "Negligible per share.",
+    "contribution": "Referral/shared-link sign-ups.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/ad-of-the-week/page.tsx",
+      "src/lib/ads/features.ts",
+      "src/app/admin/ads/features"
+    ],
+    "flag": "sys_viral_branding"
+  },
+  {
+    "id": 91,
+    "category": "Authority & PR",
+    "name": "Original ad research",
+    "outcome": "Original ad research: earned mentions and links that build trust and organic traffic.",
+    "relevance": "Medium: backlinks and AI-search citations compound; needs real data.",
+    "status": "operational",
+    "readiness": "live",
+    "evidence": "Ad Library data report: src/lib/growth/adlib-report-data.json, /reports/local-service-meta-ads (with data.csv, OG image), /reports/facebook-ad-statistics; sys_data_report ON per MEMORY 21 Nov; pitch in docs/data-report-pitch.md.",
+    "prerequisites": "Social/content worker; only real data from Komendly's own systems; no invented results.",
+    "costs": "Time.",
+    "contribution": "Backlinks, mentions, referral traffic.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/reports/local-service-meta-ads/page.tsx",
+      "src/lib/growth/adlib-report.ts",
+      "docs/data-report-pitch.md"
+    ],
+    "flag": "sys_data_report"
+  },
+  {
+    "id": 92,
+    "category": "Authority & PR",
+    "name": "Industry benchmarks",
+    "outcome": "Industry benchmarks: earned mentions and links that build trust and organic traffic.",
+    "relevance": "Medium: backlinks and AI-search citations compound; needs real data.",
+    "status": "experimenting",
+    "readiness": "live",
+    "evidence": "/reports/facebook-ad-statistics and local-service report include benchmark-style tables from our Ad Library data; not a recurring benchmark series.",
+    "prerequisites": "Social/content worker; only real data from Komendly's own systems; no invented results.",
+    "costs": "Time.",
+    "contribution": "Backlinks, mentions, referral traffic.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/reports/facebook-ad-statistics/page.tsx"
+    ]
+  },
+  {
+    "id": 93,
+    "category": "Authority & PR",
+    "name": "Marketing newsletter",
+    "outcome": "Marketing newsletter: earned mentions and links that build trust and organic traffic.",
+    "relevance": "Medium: backlinks and AI-search citations compound; needs real data.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Social/content worker; only real data from Komendly's own systems; no invented results.",
+    "costs": "Time.",
+    "contribution": "Backlinks, mentions, referral traffic.",
+    "owner_action": "",
+    "code_refs": []
+  },
+  {
+    "id": 94,
+    "category": "Authority & PR",
+    "name": "Journalist/publication relationships",
+    "outcome": "Journalist/publication relationships: earned mentions and links that build trust and organic traffic.",
+    "relevance": "Medium: backlinks and AI-search citations compound; needs real data.",
+    "status": "awaiting_prerequisite",
+    "readiness": "pitch doc only",
+    "evidence": "docs/data-report-pitch.md exists; no journalist outreach recorded.",
+    "prerequisites": "Report live (yes); outreach by social/content worker, openly from Komendly.",
+    "costs": "Time.",
+    "contribution": "Backlinks, mentions, referral traffic.",
+    "owner_action": "",
+    "code_refs": [
+      "docs/data-report-pitch.md"
+    ]
+  },
+  {
+    "id": 95,
+    "category": "Authority & PR",
+    "name": "Podcast opportunities",
+    "outcome": "Podcast opportunities: earned mentions and links that build trust and organic traffic.",
+    "relevance": "Medium: backlinks and AI-search citations compound; needs real data.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Social/content worker; only real data from Komendly's own systems; no invented results.",
+    "costs": "Time.",
+    "contribution": "Backlinks, mentions, referral traffic.",
+    "owner_action": "",
+    "code_refs": []
+  },
+  {
+    "id": 96,
+    "category": "Authority & PR",
+    "name": "Newsletter partnerships",
+    "outcome": "Newsletter partnerships: earned mentions and links that build trust and organic traffic.",
+    "relevance": "Medium: backlinks and AI-search citations compound; needs real data.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Social/content worker; only real data from Komendly's own systems; no invented results.",
+    "costs": "Time.",
+    "contribution": "Backlinks, mentions, referral traffic.",
+    "owner_action": "",
+    "code_refs": []
+  },
+  {
+    "id": 97,
+    "category": "Authority & PR",
+    "name": "Guest contributions",
+    "outcome": "Guest contributions: earned mentions and links that build trust and organic traffic.",
+    "relevance": "Medium: backlinks and AI-search citations compound; needs real data.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Social/content worker; only real data from Komendly's own systems; no invented results.",
+    "costs": "Time.",
+    "contribution": "Backlinks, mentions, referral traffic.",
+    "owner_action": "",
+    "code_refs": []
+  },
+  {
+    "id": 98,
+    "category": "Authority & PR",
+    "name": "Ad education and workshops",
+    "outcome": "Ad education and workshops: earned mentions and links that build trust and organic traffic.",
+    "relevance": "Medium: backlinks and AI-search citations compound; needs real data.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Social/content worker; only real data from Komendly's own systems; no invented results.",
+    "costs": "Time.",
+    "contribution": "Backlinks, mentions, referral traffic.",
+    "owner_action": "",
+    "code_refs": []
+  },
+  {
+    "id": 99,
+    "category": "Authority & PR",
+    "name": "Build-in-public experiments",
+    "outcome": "Build-in-public experiments: earned mentions and links that build trust and organic traffic.",
+    "relevance": "Medium: backlinks and AI-search citations compound; needs real data.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Social/content worker; only real data from Komendly's own systems; no invented results.",
+    "costs": "Time.",
+    "contribution": "Backlinks, mentions, referral traffic.",
+    "owner_action": "",
+    "code_refs": []
+  },
+  {
+    "id": 100,
+    "category": "Authority & PR",
+    "name": "Ad recognition initiatives",
+    "outcome": "Ad recognition initiatives: earned mentions and links that build trust and organic traffic.",
+    "relevance": "Medium: backlinks and AI-search citations compound; needs real data.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "No code yet for this opportunity (checked src/lib/growth, engine/src/growth, kly/src, src/app).",
+    "prerequisites": "Social/content worker; only real data from Komendly's own systems; no invented results.",
+    "costs": "Time.",
+    "contribution": "Backlinks, mentions, referral traffic.",
+    "owner_action": "",
+    "code_refs": []
+  },
+  {
+    "id": 101,
+    "category": "Platform & ecosystem distribution",
+    "name": "Jobber App Marketplace",
+    "outcome": "Home-service businesses find Komendly inside Jobber.",
+    "relevance": "High: Jobber users are exactly the local-trade buyers.",
+    "status": "awaiting_prerequisite",
+    "readiness": "built as draft app",
+    "evidence": "Draft app 'Komendly: Facebook Ads' with read-only scopes, webhooks to /api/integrations/jobber/webhook (docs/integrations/jobber-listing.md). Marketplace listing needs 2FA on Nolan's phone + Jobber review call.",
+    "prerequisites": "Jobber review.",
+    "costs": "None.",
+    "contribution": "Jobber installs by utm_source=jobber.",
+    "owner_action": "Do the Jobber 2FA step and review call to list the app.",
+    "code_refs": [
+      "docs/integrations/jobber-listing.md",
+      "src/app/integrations/jobber"
+    ],
+    "flag": "sys_jobber"
+  },
+  {
+    "id": 102,
+    "category": "SEO & free tools",
+    "name": "Abandoned-checkout recovery",
+    "outcome": "Win back people who started checkout but did not pay.",
+    "relevance": "High: cheapest conversion lift once traffic exists.",
+    "status": "experimenting",
+    "readiness": "built, flag state unverified",
+    "evidence": "engine/src/growth/checkout-recovery.ts + src/lib/growth/checkout-recovery*.ts, 15-minute cycle.",
+    "prerequisites": "Flag sys_checkout_recovery ON.",
+    "costs": "Email cost only.",
+    "contribution": "Payments by utm_source=recovery.",
+    "owner_action": "",
+    "code_refs": [
+      "engine/src/growth/checkout-recovery.ts",
+      "src/lib/growth/checkout-recovery.ts"
+    ],
+    "flag": "sys_checkout_recovery"
+  },
+  {
+    "id": 103,
+    "category": "Product-led virality",
+    "name": "Churn and failed-payment win-back",
+    "outcome": "Keep and recover paying customers.",
+    "relevance": "Medium: matters once customers exist (0 real payers 24 Nov).",
+    "status": "experimenting",
+    "readiness": "built, flag state unverified",
+    "evidence": "engine/src/growth/winback.ts, src/lib/growth/winback.ts, /admin/ads/churn.",
+    "prerequisites": "Flag sys_winback ON.",
+    "costs": "Email cost only.",
+    "contribution": "Retention.",
+    "owner_action": "",
+    "code_refs": [
+      "engine/src/growth/winback.ts",
+      "src/lib/growth/winback.ts"
+    ],
+    "flag": "sys_winback"
+  },
+  {
+    "id": 104,
+    "category": "Platform & ecosystem distribution",
+    "name": "Agent distribution (MCP, OAuth, CLI)",
+    "outcome": "Agents and developers use Komendly through kmd_ API keys.",
+    "relevance": "Medium: reach through AI agents; overlaps #72, #73, #80.",
+    "status": "experimenting",
+    "readiness": "live",
+    "evidence": "src/app/api/mcp, src/app/api/oauth, src/lib/agent-keys, packages/komendly-cli, docs/ai-assistants/server.json.",
+    "prerequisites": "MCP registry listings.",
+    "costs": "None.",
+    "contribution": "utm_source=ai_assistant sign-ups.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/api/mcp",
+      "src/lib/agent-keys",
+      "packages/komendly-cli"
+    ],
+    "flag": "sys_ai_assistant"
+  },
+  {
+    "id": 105,
+    "category": "SEO & free tools",
+    "name": "Public API docs",
+    "outcome": "Developers and agencies find and trust the API.",
+    "relevance": "Low-medium.",
+    "status": "experimenting",
+    "readiness": "live",
+    "evidence": "/developers/api docs (commit 6088fbd per MEMORY).",
+    "prerequisites": "None.",
+    "costs": "None.",
+    "contribution": "Developer sign-ups.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/developers"
+    ]
+  },
+  {
+    "id": 106,
+    "category": "Product-led virality",
+    "name": "Instant Meta lead alerts for customers",
+    "outcome": "Customers see leads from their Komendly ads fast, reducing churn.",
+    "relevance": "Medium (retention).",
+    "status": "awaiting_prerequisite",
+    "readiness": "built, off",
+    "evidence": "sys_lead_alerts OFF: needs Meta leads_retrieval review; page leadgen subscribe not wired (Meta agent's files).",
+    "prerequisites": "Meta App Review.",
+    "costs": "None.",
+    "contribution": "Retention.",
+    "owner_action": "Submit Meta App Review once the Meta publish work ships.",
+    "code_refs": [
+      "docs/meta-permissions-results-leads.md"
+    ],
+    "flag": "sys_lead_alerts"
+  },
+  {
+    "id": 107,
+    "category": "Product-led virality",
+    "name": "Weekly Meta results report",
+    "outcome": "Customers get proof their ads are running; drives retention and referrals.",
+    "relevance": "Medium.",
+    "status": "awaiting_prerequisite",
+    "readiness": "built, off",
+    "evidence": "sys_meta_results OFF: needs Meta ads_read review (engine/src/growth/meta-results.ts).",
+    "prerequisites": "Meta App Review.",
+    "costs": "None.",
+    "contribution": "Retention.",
+    "owner_action": "",
+    "code_refs": [
+      "engine/src/growth/meta-results.ts"
+    ],
+    "flag": "sys_meta_results"
+  },
+  {
+    "id": 108,
+    "category": "Social & community",
+    "name": "Meta paid ads for Komendly",
+    "outcome": "Paid acquisition of sign-ups.",
+    "relevance": "High (currently the largest source: 50 of 58 real sign-ups).",
+    "status": "experimenting",
+    "readiness": "live",
+    "evidence": "MEMORY 24 Nov: $898 all-time, 7d $193/55 clicks/11 regs/0 purchases; live campaign '200-creative test' CBO $30/day; keep optimising for PURCHASE. Another agent owns Meta WIP.",
+    "prerequisites": "Budget.",
+    "costs": "$898 spent all-time (24 Nov).",
+    "contribution": "Sign-ups (scoreboard 'Meta ads'); 0 purchases so far.",
+    "owner_action": "Decide how long to keep spending before 0 purchases changes the plan.",
+    "code_refs": [
+      "src/lib/ads/meta-capi.ts"
+    ]
+  },
+  {
+    "id": 109,
+    "category": "Prospecting & intent signals",
+    "name": "Cold-email arm strategist",
+    "outcome": "Copy and cadence improve automatically from results.",
+    "relevance": "High: lifts #1/#31 response.",
+    "status": "operational",
+    "readiness": "live",
+    "evidence": "kly/src/strategist.ts, kly/src/arms.ts, kly/src/governor.ts; 3 Nolan variants live since 20 Nov.",
+    "prerequisites": "None.",
+    "costs": "AI tokens (small).",
+    "contribution": "Better reply rate.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/strategist.ts",
+      "kly/src/arms.ts",
+      "kly/src/governor.ts"
+    ],
+    "flag": "outbound"
+  },
+  {
+    "id": 110,
+    "category": "Prospecting & intent signals",
+    "name": "Mailbox capacity scaling",
+    "outcome": "More verified sends per day without hurting deliverability.",
+    "relevance": "High: cap on every outbound idea.",
+    "status": "experimenting",
+    "readiness": "partial",
+    "evidence": "kly/src/autoscale.ts, maildoso.ts, warmup.ts; 200 boxes ready 26-27 Nov; 100 boxes on joinkomendly/hellokomendly are on Spamhaus DBL (paused); 2,401 verified unsent (24 Nov).",
+    "prerequisites": "Warm-up complete.",
+    "costs": "Maildoso mailbox fees.",
+    "contribution": "Send volume.",
+    "owner_action": "Decide what to do about the 100 DBL-listed mailboxes (replace or drop).",
+    "code_refs": [
+      "kly/src/autoscale.ts",
+      "kly/src/maildoso.ts",
+      "kly/src/warmup.ts"
+    ]
+  },
+  {
+    "id": 111,
+    "category": "Prospecting & intent signals",
+    "name": "Places and open-data lead sources",
+    "outcome": "Wider pool of local businesses to gift.",
+    "relevance": "Medium-high.",
+    "status": "operational",
+    "readiness": "live",
+    "evidence": "kly/src/fsq.ts (needs HF_TOKEN), places.ts, gov.ts, sources.ts.",
+    "prerequisites": "HF_TOKEN for Foursquare import.",
+    "costs": "Free sources.",
+    "contribution": "Lead volume.",
+    "owner_action": "Set HF_TOKEN in kly if you want the Foursquare import.",
+    "code_refs": [
+      "kly/src/places.ts",
+      "kly/src/fsq.ts",
+      "kly/src/gov.ts"
+    ]
+  },
+  {
+    "id": 112,
+    "category": "SEO & free tools",
+    "name": "Roofer-specific offer page",
+    "outcome": "Convert roofing traffic with a trade-specific offer.",
+    "relevance": "Medium.",
+    "status": "experimenting",
+    "readiness": "live",
+    "evidence": "/free-ads/roofers, src/lib/ads/roofer-offer.ts.",
+    "prerequisites": "None.",
+    "costs": "None.",
+    "contribution": "Trade conversions.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/free-ads/roofers/page.tsx",
+      "src/lib/ads/roofer-offer.ts"
+    ]
+  },
+  {
+    "id": 113,
+    "category": "Prospecting & intent signals",
+    "name": "Reply auto-responder",
+    "outcome": "Inbound replies get a prompt, honest answer without the owner.",
+    "relevance": "High: owner wants no manual involvement.",
+    "status": "awaiting_prerequisite",
+    "readiness": "being built",
+    "evidence": "src/lib/ads/auto-reply.ts + auto-reply-server.ts exist; per MEMORY 26 Nov worker 09f16c7d building, not committed/deployed. Replies already forward to nolan@prestyj.com.",
+    "prerequisites": "Review + deploy.",
+    "costs": "AI tokens.",
+    "contribution": "Reply conversion.",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/auto-reply.ts",
+      "src/lib/ads/inbound.ts"
+    ]
+  },
+  {
+    "id": 114,
+    "category": "Product-led virality",
+    "name": "Paid unlock pack ($9)",
+    "outcome": "Turn free-pack users into first payers.",
+    "relevance": "High: only real payment so far (25 Nov).",
+    "status": "experimenting",
+    "readiness": "live",
+    "evidence": "First $9 unlock_pack 25 Nov (mtplanton@comcast.net); checkout success_url fixed cbd1682. src/lib/ads/bonus-unlock.ts.",
+    "prerequisites": "None.",
+    "costs": "None.",
+    "contribution": "First payments.",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/bonus-unlock.ts",
+      "src/lib/ads/download-gate.ts"
+    ]
+  },
+  {
+    "id": 115,
+    "category": "Product-led virality",
+    "name": "Done-for-you Growth Autopilot offer",
+    "outcome": "Higher-ticket $297/mo plan for owners who want it set up for them.",
+    "relevance": "High: counted as a goal payment (24 Nov decision).",
+    "status": "experimenting",
+    "readiness": "live",
+    "evidence": "Root prd.md and src/lib/ads/public-offer.ts (10 founding spots).",
+    "prerequisites": "Partner access to Meta set up with customer.",
+    "costs": "Fulfilment time.",
+    "contribution": "Revenue per customer.",
+    "owner_action": "",
+    "code_refs": [
+      "src/lib/ads/public-offer.ts",
+      "src/lib/ads/founding-spots.ts"
+    ]
+  },
+  {
+    "id": 116,
+    "category": "Gifts, publicity & viral pages",
+    "name": "Ozzy Lab / Studio demos",
+    "outcome": "Public demos that show what Ozzy can make.",
+    "relevance": "Medium.",
+    "status": "experimenting",
+    "readiness": "live",
+    "evidence": "src/app/ozzy-lab, src/app/ozzy-studio, src/app/examples.",
+    "prerequisites": "None.",
+    "costs": "Generation cost.",
+    "contribution": "Referral traffic.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/ozzy-lab/page.tsx",
+      "src/app/examples/page.tsx"
+    ]
+  },
+  {
+    "id": 117,
+    "category": "SEO & free tools",
+    "name": "Testimonial-video SEO cluster",
+    "outcome": "Search traffic from testimonial-video queries (original product).",
+    "relevance": "Medium.",
+    "status": "experimenting",
+    "readiness": "live",
+    "evidence": "8+ posts in content/blog on video testimonials (2025-12-28 to 2026-01-05, turn-google-reviews-into-video-testimonials).",
+    "prerequisites": "None.",
+    "costs": "blog-engine cost.",
+    "contribution": "Organic sign-ups.",
+    "owner_action": "",
+    "code_refs": [
+      "content/blog/turn-google-reviews-into-video-testimonials.mdx"
+    ]
+  },
+  {
+    "id": 118,
+    "category": "Authority & PR",
+    "name": "Weekly scoreboard review email",
+    "outcome": "Weekly honest review of what works.",
+    "relevance": "High: drives course changes.",
+    "status": "operational",
+    "readiness": "live",
+    "evidence": "/api/cron/scoreboard-digest Mondays 14:00 UTC (vercel.json); src/lib/ads/scoreboard-digest.ts.",
+    "prerequisites": "ADS_ALERT_EMAIL set.",
+    "costs": "None.",
+    "contribution": "Decisions.",
+    "owner_action": "",
+    "code_refs": [
+      "src/app/api/cron/scoreboard-digest/route.ts",
+      "src/lib/ads/scoreboard-digest.ts"
+    ]
+  },
+  {
+    "id": 119,
+    "category": "SEO & free tools",
+    "name": "Blog engine (autonomous posts)",
+    "outcome": "Steady, source-cited blog posts that pull search traffic.",
+    "relevance": "High.",
+    "status": "operational",
+    "readiness": "live",
+    "evidence": "blog-engine/ Railway service opens PRs into content/blog; 27 files present; contract docs/blog-contract.md.",
+    "prerequisites": "None.",
+    "costs": "Railway + AI cost.",
+    "contribution": "Organic sign-ups (scoreboard 'Blog').",
+    "owner_action": "",
+    "code_refs": [
+      "blog-engine/README.md",
+      "docs/blog-contract.md",
+      "src/lib/blog.ts"
+    ]
+  },
+  {
+    "id": 120,
+    "category": "Prospecting & intent signals",
+    "name": "Ad Library niche expansion",
+    "outcome": "Use the 171 skipped health rows (IV therapy, daycare, hearing aids, lash, tutoring, weight loss, driving school).",
+    "relevance": "Medium.",
+    "status": "awaiting_prerequisite",
+    "readiness": "not built",
+    "evidence": "MEMORY 21 Nov: 171 rows skipped (no Kly niche). Add to kly/src/adlib.ts NICHE_PATTERNS + niche list.",
+    "prerequisites": "Pick niches.",
+    "costs": "None.",
+    "contribution": "More adlib leads.",
+    "owner_action": "",
+    "code_refs": [
+      "kly/src/adlib.ts"
+    ]
+  }
+]

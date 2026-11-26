@@ -5,6 +5,7 @@
 //  3. codex_search  the owner's Codex subscription with its hosted web_search tool (same login as all Kly AI)
 // Per-run state that must not be module-level (geocode cache, throttles, search-engine blocks) lives in a
 // SourceRuntime owned by the loop; blocks and yields are also persisted in KlySettings.sourceStats.
+import type { LeadSignal } from "./signals";
 import { z } from "zod";
 import { domainOfUrl } from "../../src/lib/ads/outbound/policy";
 import { loadPrices, textCostMicros } from "../../engine/src/providers/cost";
@@ -24,6 +25,8 @@ export interface Candidate extends Place {
   phoneSource?: string;
   /** Business email listed by the data source (fsq), already validated as on the business's own domain. */
   email?: string | null;
+  /** Intent signals known at discovery time (adlib: from AdsEvent "lead_signal"); stored in the lead's qualification JSON. */
+  signals?: LeadSignal[];
 }
 
 export interface Geo {

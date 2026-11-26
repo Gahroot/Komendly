@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatCents, formatPct } from "@/lib/ads/billing-format";
 import { parseFunnelQuery } from "@/lib/ads/funnel-queries";
 import { loadGrowthOverview } from "@/lib/ads/growth-queries";
+import { CommandCenter } from "./command-center";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
 import { StatCard } from "../_components/stat-card";
 
@@ -14,7 +15,8 @@ const day = (d: Date) => d.toISOString().slice(0, 10);
 export default async function AdminGrowthPage({ searchParams }: { searchParams: Promise<{ from?: string; to?: string }> }) {
   const { from, to } = parseFunnelQuery(await searchParams);
   return (
-    <AdminAdsShell title="Growth loops" description="Referrals, gift packs and partners: what they bring in, and what they cost.">
+    <AdminAdsShell title="Growth command center" description="All 100 growth opportunities (+ discovered), what is live, what needs you, and referrals, gifts and partners below.">
+      <CommandCenter />
       <form className="flex flex-wrap items-end gap-3 text-sm">
         <label className="grid gap-1">From<input className="rounded border bg-background px-2 py-1" type="date" name="from" defaultValue={day(from)} /></label>
         <label className="grid gap-1">To<input className="rounded border bg-background px-2 py-1" type="date" name="to" defaultValue={day(new Date(to.getTime() - 1))} /></label>

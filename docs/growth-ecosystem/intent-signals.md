@@ -1,0 +1,28 @@
+# Intent signals (Kly)
+
+Pure detectors + wiring. No schema change. Signals live in `OutboundLead.qualification.signals` (JSON) and, for adlib advertisers, as `AdsEvent` rows named `lead_signal` (`props: {domain, release, signals}`), written by `scripts/import-adlib.ts` and read back by `adlibSource` (`kly/src/adlib.ts`). Opportunities from public posts are queued, never posted.
+
+| Signal | Detector | Evidence / rule |
+|---|---|---|
+| `stale_creative` | `signals.ts detectStaleCreative` | oldest active ad > 45 days AND (newest ad start > 30 days, if the pull records `newest_ad_start`, or exactly 1 active ad). Several ads with no newest date = unknown = no signal |
+| `single_ad` | `detectSingleAd` | active_ads 1-2 |
+| `creative_gap` | `detectCreativeGap` | sampled ad text lacks offer / proof / CTA; "no video" only if a `formats` array exists. Describes only the sample ("the ad I saw") |
+| `new_website` | `site-signals.ts` | RDAP registration within 120 days (rdap.org) |
+| `new_shopify_store` | `site-signals.ts` | public `/products.json`, partial page, products created within 90 days |
+| `grand_opening` / `new_location` / `site_refresh` | `site-signals.ts` | quoted homepage phrase; sitemap `lastmod` burst. Own-site fetches obey robots.txt |
+| `seasonal` | `seasonal.ts` | calendar window (N weeks before a peak until its end) per niche; carries `hook`, no claim about the lead |
+| crt.sh new certs | existing `new-business.ts` (growth system `new_business`) | unchanged |
+
+**Prioritisation:** `applySignalBoost` adds up to +20 to the stored lead score (never to 0-scored or below-minimum leads; the minimum is checked on the raw qualifier score). `loop.ts adlibSegment` ranks niches in a seasonal window first.
+
+**Copy:** `sender.ts signalCopy` -> `OutboundCopyContext.signalLine` (one evidence-backed sentence, e.g. "Your longest-running Facebook ad has been live since Jun 2024.") else `seasonalHook`; `copy.ts` prepends it to step-1 bodies only, and the usual compliance gate (one link, 20-90 words) still applies. Fixed growth-system copy is untouched. Sending caps, governor, bounce/complaint and the 2,000-no-reply stop are unchanged.
+
+**Attribution:** quoted signal is in the lead's `qualification.signals`; the `lead_signal` AdsEvent has the domain and release; join to `signed_up` via lead/first-touch as for other adlib leads.
+
+## Intent opportunities (item 5)
+`npx tsx scripts/intent-discover.ts [--dry] [--file data/intent-queue.json] [--events]` (run from `kly/`). Sources: Reddit listing JSON (forhire, smallbusiness, Entrepreneur, marketing, facebookads, ecommerce), HN Algolia, a marketing-jobs RSS. Sellers (`[FOR HIRE]`) score 0. Each queue entry: url, text, `intentScore`, `matched`, `replyDraft` (answers first, no link, discloses affiliation). `--events` also writes `AdsEvent intent_opportunity`. A human or Media Master posts; the script posts nothing. Check Reddit's current API terms/rate limits before scheduling it; it makes ~10 requests with a 2 s gap.
+
+## Not implemented (`gated-sources.ts`, status `awaiting_prerequisite`)
+- **Google Ads Transparency Center:** JS app, no API, Google ToS bars automated access. Needs a licensed provider.
+- **Kickstarter / Indiegogo:** no public listing API; ToS bar scraping; creators are mostly individuals. Option: Webrobots Kickstarter datasets joined to own sites.
+- **New Google Business listings:** no free dated source in the repo (Overture/FSQ/OSM lack creation dates).

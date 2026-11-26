@@ -35,6 +35,9 @@ export const GROWTH_SYSTEMS = [
   { key: "lead_alerts", label: "Instant Meta lead alerts", stage: "keep", utmSource: "lead_alert", cycleMinutes: 60, silentAlertHours: 24 * 30 },
   { key: "zapier", label: "Zapier integration", stage: "acquire", utmSource: "zapier", cycleMinutes: 60, silentAlertHours: 24 * 14 },
   { key: "data_report", label: "Ad Library data report", stage: "acquire", utmSource: "data_report", cycleMinutes: 30 * 24 * 60, silentAlertHours: 24 * 95 },
+  { key: "creative_hubs", label: "Creative hubs: makeover / rescue / giveaway / nonprofit intake, votes, approve links", stage: "acquire", utmSource: "hub", cycleMinutes: 24 * 60, silentAlertHours: 24 * 30 },
+  { key: "creative_outreach", label: "Nominee notice email (one-time, opt-out)", stage: "acquire", utmSource: "nominate", cycleMinutes: 24 * 60, silentAlertHours: 24 * 60 },
+  { key: "creative_publish", label: "Public showcase, makeovers and business of the day (opt-in only)", stage: "acquire", utmSource: "showcase", cycleMinutes: 24 * 60, silentAlertHours: 24 * 60 },
   { key: "team_ops", label: "Ozzy's team: campaign operations", stage: "keep", utmSource: "team", cycleMinutes: 15, silentAlertHours: 24 * 7 },
 ] as const satisfies readonly GrowthSystem[];
 

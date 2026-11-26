@@ -10,6 +10,7 @@ const FLAGS = [
   { key: "ezmotion", label: "EZ Motion", description: "Animated (motion) ad generation." },
   { key: "meta_publish", label: "Meta publishing", description: "Let paid workspaces publish ads to Meta." },
   { key: "lifecycle_email", label: "Lifecycle emails", description: "Engine sends the post-sign-up / post-trial email sequence (preview at Admin > Emails)." },
+  { key: "growth_weekly_review", label: "Weekly ecosystem review email", description: "Monday cron emails the owner a plain-English growth ecosystem report and suspends growth systems with 500+ actions and no sign-ups. OFF = nothing is sent or changed." },
 ] as const;
 
 export default async function AdminAdsFlagsPage() {

@@ -11,6 +11,8 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { toAdlibPlace, type AdlibRow } from "../src/adlib";
 import { dedupeByDomain } from "../src/places";
+import { LEAD_SIGNAL_EVENT } from "../src/adlib";
+import { detectAdlibSignals, type AdlibSignalRow, type LeadSignal } from "../src/signals";
 
 const arg = (k: string): string | undefined => {
   const i = process.argv.indexOf(k);
@@ -23,6 +25,7 @@ const release = `adlib-${new Date().toISOString().slice(0, 10)}`;
 const files = readdirSync(dir).filter((f) => f.endsWith(".jsonl")).sort();
 type Place = Exclude<ReturnType<typeof toAdlibPlace>, { skip: unknown }>;
 const mapped: Place[] = [];
+const signalsByDomain = new Map<string, LeadSignal[]>();
 const skipped: Record<string, number> = {};
 let lines = 0;
 for (const f of files) {
@@ -38,7 +41,11 @@ for (const f of files) {
     }
     const p = toAdlibPlace(r, release);
     if ("skip" in p) skipped[p.skip] = (skipped[p.skip] ?? 0) + 1;
-    else mapped.push(p);
+    else {
+      mapped.push(p);
+      const s = detectAdlibSignals(r as AdlibSignalRow, new Date());
+      if (s.length) signalsByDomain.set(p.domain, s);
+    }
   }
 }
 let places = dedupeByDomain(mapped) as Place[];
@@ -64,12 +71,17 @@ if (!process.env.DATABASE_URL) {
   for (const p of places) perNiche[p.niche] = (perNiche[p.niche] ?? 0) + 1;
   const counts = { alreadyInKlyPlace: inPlaces.size, alreadyOutboundLead: [...inLeads].filter((d) => !inPlaces.has(d)).length, perNiche: Object.fromEntries(Object.entries(perNiche).sort((a, b) => b[1] - a[1])) };
   const retagWhere = { domain: { in: retag }, usedAt: null, source: { not: "adlib" } };
-  if (dry) console.log(JSON.stringify({ ...counts, wouldInsert: places.length, wouldRetag: await db.klyPlace.count({ where: retagWhere }) }, null, 1));
+  if (dry) console.log(JSON.stringify({ signalDomains: signalsByDomain.size, ...counts, wouldInsert: places.length, wouldRetag: await db.klyPlace.count({ where: retagWhere }) }, null, 1));
   else {
     let inserted = 0;
     for (let i = 0; i < places.length; i += 1000) inserted += (await db.klyPlace.createMany({ data: places.slice(i, i + 1000), skipDuplicates: true })).count;
     const retagged = retag.length ? (await db.klyPlace.updateMany({ where: retagWhere, data: { source: "adlib" } })).count : 0;
-    console.log(JSON.stringify({ ...counts, inserted, retagged }, null, 1));
+    // Intent signals (stale_creative / single_ad / creative_gap) as AdsEvent rows the finder reads back by domain.
+    const sigDomains = [...signalsByDomain.keys()];
+    const known = new Set((await db.adsEvent.findMany({ where: { name: LEAD_SIGNAL_EVENT }, select: { props: true } })).map((e) => (e.props as { domain?: string }).domain));
+    const fresh = sigDomains.filter((d) => !known.has(d));
+    if (fresh.length) await db.adsEvent.createMany({ data: fresh.map((d) => ({ name: LEAD_SIGNAL_EVENT, props: { domain: d, release, signals: signalsByDomain.get(d) } as never })) });
+    console.log(JSON.stringify({ ...counts, inserted, retagged, signalEvents: fresh.length }, null, 1));
   }
   await db.$disconnect();
 }
