@@ -43,6 +43,7 @@ export const GROWTH_SYSTEMS = [
   { key: "cancel_save", label: "Cancel-intent 'what went wrong?' note", stage: "keep", utmSource: "cancel_save", cycleMinutes: 15, silentAlertHours: 24 * 120 },
   { key: "guarantee_watch", label: "Live-in-7-days breach alert to Nolan", stage: "keep", utmSource: "guarantee", cycleMinutes: 15, silentAlertHours: 24 * 120 },
   { key: "content_queue", label: "Weekly ad-of-the-week + trade playbook content queue", stage: "acquire", utmSource: "content_queue", cycleMinutes: 7 * 24 * 60, silentAlertHours: 24 * 21 },
+  { key: "reels", label: "Ozzy short videos (Reels / Shorts / TikTok queue)", stage: "acquire", utmSource: "reels", cycleMinutes: 60, silentAlertHours: 24 * 4 },
   { key: "indexnow", label: "IndexNow pinger (new URLs to search engines)", stage: "acquire", utmSource: "indexnow", cycleMinutes: 24 * 60, silentAlertHours: 24 * 30 },
   { key: "kly_refill", label: "Kly weekly lead refill check (alerts when ad-library leads run low)", stage: "acquire", utmSource: "kly_refill", cycleMinutes: 7 * 24 * 60, silentAlertHours: 24 * 60 },
   { key: "team_ops", label: "Ozzy's team: campaign operations", stage: "keep", utmSource: "team", cycleMinutes: 15, silentAlertHours: 24 * 7 },

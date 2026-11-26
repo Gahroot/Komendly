@@ -3,13 +3,15 @@
 // ET day: the KlySocialPost row (unique day+platform) is claimed before publishing, so restarts never double-post.
 // Content: Komendly-owned samples, Ozzy art tips, or ads whose owner consented via "Ad of the week" (never Kly gifts).
 import { z } from "zod";
+import { reelsState } from "./reels";
+import { staticShouldYield } from "../../src/lib/growth/reels-core";
 import { openSecret } from "./mailboxes";
 import type { Db } from "./db";
 import { errMsg, log } from "./log";
 import { ask, type AIProvider } from "./ai";
 import { addCost, type KlySettingsRow } from "./settings";
 import {
-  SOCIAL_CONSENTED_STATUSES, checkCaption, etDay, fallbackCaptions, ownedContent, pickContent, publishFacebook, publishInstagram,
+  SOCIAL_CONSENTED_STATUSES, checkCaption, etDay, etHour, fallbackCaptions, ownedContent, pickContent, publishFacebook, publishInstagram,
   showcaseContent, socialGate, socialLink, type FetchFn, type SocialContent, type SocialPlatform,
 } from "../../src/lib/kly/social-core";
 // Same as src/lib/ads/meta/core/graph-publisher DEFAULT_GRAPH_VERSION (not imported: Kly's image ships only a few web files).
@@ -74,7 +76,9 @@ export async function socialTick(d: SocialDeps): Promise<SocialResult> {
   if (gate || !conn) return { skipped: gate ?? "not connected" };
   const day = etDay(now);
   const done = await db.klySocialPost.findMany({ where: { day }, select: { platform: true } });
-  const platforms = (["facebook", ...(conn.igUserId ? ["instagram"] : [])] as SocialPlatform[]).filter((p) => !done.some((x) => x.platform === p));
+  // Reels (sys_reels) take the day's slot: the static post only stands in when no reel went out / is ready (src/lib/growth/reels-core staticShouldYield).
+  const rs = await reelsState(db, now).catch(() => null);
+  const platforms = (["facebook", ...(conn.igUserId ? ["instagram"] : [])] as SocialPlatform[]).filter((p) => !done.some((x) => x.platform === p) && !(rs && staticShouldYield({ reelsOn: rs.on, reelPostedToday: rs.postedToday.has(p), reelReady: rs.ready, etHour: etHour(now), hourEt: d.settings.socialHourEt, paused: rs.paused.has(p) })));
   if (!platforms.length) return { skipped: "already posted today" };
 
   const recent = await db.klySocialPost.findMany({ where: { status: "posted" }, orderBy: { createdAt: "desc" }, take: 200, select: { sourceRef: true, createdAt: true } });

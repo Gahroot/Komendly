@@ -50,6 +50,12 @@ export function etDay(now: Date): string {
   return etParts(now).day;
 }
 
+/** Minutes since midnight, America/New_York. */
+export function etMinutes(now: Date): number {
+  const m = new Intl.DateTimeFormat("en-US", { timeZone: SOCIAL_TZ, minute: "2-digit" }).formatToParts(now).find((p) => p.type === "minute")?.value ?? "0";
+  return etHour(now) * 60 + Number(m);
+}
+
 export function etHour(now: Date): number {
   return etParts(now).hour;
 }
@@ -185,9 +191,73 @@ async function graph(f: FetchFn, version: string, path: string, params: Record<s
   const body = new URLSearchParams(params);
   if (method === "GET") for (const [k, v] of body) u.searchParams.set(k, v);
   const res = await f(u, method === "POST" ? { method, body, signal } : { signal });
-  const json = (await res.json().catch(() => ({}))) as Record<string, unknown> & { error?: { message?: string } };
-  if (!res.ok || json.error) throw new Error(`Meta ${path}: ${json.error?.message ?? res.status}`);
+  const json = (await res.json().catch(() => ({}))) as Record<string, unknown> & { error?: { message?: string; code?: number } };
+  if (!res.ok || json.error) throw new Error(`Meta ${path}: ${json.error?.message ?? res.status}${json.error?.code ? ` (code ${json.error.code})` : ""}`);
   return json;
+}
+
+/** Facebook Reels (Pages API, 3 phases): start -> rupload with file_url (Meta pulls the public MP4) -> finish PUBLISHED. Returns the video id. */
+export async function publishFacebookReel(o: { f: FetchFn; version: string; pageId: string; token: string; videoUrl: string; caption: string; title?: string; signal?: AbortSignal; sleep?: (ms: number) => Promise<void>; tries?: number }): Promise<string> {
+  const sleep = o.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  const tries = o.tries ?? 40;
+  const start = await graph(o.f, o.version, `${o.pageId}/video_reels`, { upload_phase: "start", access_token: o.token }, "POST", o.signal);
+  const videoId = typeof start.video_id === "string" ? start.video_id : "";
+  const uploadUrl = typeof start.upload_url === "string" ? start.upload_url : "";
+  if (!videoId || !uploadUrl) throw new Error("Meta video_reels start: no video_id/upload_url");
+  const up = await o.f(uploadUrl, { method: "POST", headers: { Authorization: `OAuth ${o.token}`, file_url: o.videoUrl }, signal: o.signal });
+  const upJson = (await up.json().catch(() => ({}))) as { success?: boolean; error?: { message?: string; code?: number } | string };
+  if (!up.ok || upJson.success === false || upJson.error) throw new Error(`Meta reel upload: ${typeof upJson.error === "string" ? upJson.error : upJson.error?.message ?? up.status}`);
+  // Wait for the upload phase to complete before finishing.
+  for (let i = 0; i < tries; i++) {
+    const st = await graph(o.f, o.version, videoId, { fields: "status", access_token: o.token }, "GET", o.signal);
+    const status = (st.status ?? {}) as { video_status?: string; uploading_phase?: { status?: string } };
+    if (status.video_status === "error" || status.uploading_phase?.status === "error") throw new Error("Meta reel upload failed");
+    if (status.uploading_phase?.status === "complete" || status.video_status === "upload_complete" || status.video_status === "ready") break;
+    if (i === tries - 1) throw new Error("Meta reel upload still processing");
+    await sleep(3000);
+  }
+  const fin = await graph(o.f, o.version, `${o.pageId}/video_reels`, { upload_phase: "finish", video_id: videoId, video_state: "PUBLISHED", description: o.caption, ...(o.title ? { title: o.title } : {}), access_token: o.token }, "POST", o.signal);
+  if (fin.success === false) throw new Error("Meta video_reels finish: not successful");
+  return videoId;
+}
+
+/** Instagram Reel: container (media_type=REELS, video_url) -> poll status_code until FINISHED -> media_publish. Returns the IG media id. */
+export function publishInstagramReel(o: { f: FetchFn; version: string; igUserId: string; token: string; videoUrl: string; caption: string; signal?: AbortSignal; sleep?: (ms: number) => Promise<void>; tries?: number }): Promise<string> {
+  return publishInstagram({ ...o, imageUrl: "" });
+}
+
+/** Instagram Insights for one Reel: each metric is requested on its own so one bad/unsupported name can't blank the rest. */
+export async function igReelInsights(f: FetchFn, version: string, mediaId: string, token: string, signal?: AbortSignal): Promise<{ metrics: Record<string, number>; errors: string[] }> {
+  const metrics: Record<string, number> = {};
+  const errors: string[] = [];
+  for (const m of ["views", "reach", "shares", "saved", "likes", "comments", "follows"]) {
+    try {
+      const r = await graph(f, version, `${mediaId}/insights`, { metric: m, access_token: token }, "GET", signal);
+      const v = (Array.isArray(r.data) ? (r.data as Array<{ values?: Array<{ value?: unknown }>; total_value?: { value?: unknown } }>)[0] : undefined);
+      const n = Number(v?.total_value?.value ?? v?.values?.[0]?.value);
+      if (Number.isFinite(n)) metrics[m] = n;
+    } catch (e) {
+      errors.push(`${m}: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200));
+    }
+  }
+  return { metrics, errors };
+}
+
+/** Facebook Reel insights (Page video_insights), one metric per request, same tolerance as above. */
+export async function fbReelInsights(f: FetchFn, version: string, videoId: string, token: string, signal?: AbortSignal): Promise<{ metrics: Record<string, number>; errors: string[] }> {
+  const metrics: Record<string, number> = {};
+  const errors: string[] = [];
+  for (const m of ["blue_reels_play_count", "post_impressions_unique", "post_video_social_actions", "post_video_likes_by_reaction_type"]) {
+    try {
+      const r = await graph(f, version, `${videoId}/video_insights`, { metric: m, access_token: token }, "GET", signal);
+      const v = (Array.isArray(r.data) ? (r.data as Array<{ values?: Array<{ value?: unknown }> }>)[0] : undefined)?.values?.[0]?.value;
+      const n = typeof v === "object" && v ? Object.values(v as Record<string, unknown>).reduce<number>((a, x) => a + (Number(x) || 0), 0) : Number(v);
+      if (Number.isFinite(n)) metrics[m] = n;
+    } catch (e) {
+      errors.push(`${m}: ${e instanceof Error ? e.message : String(e)}`.slice(0, 200));
+    }
+  }
+  return { metrics, errors };
 }
 
 /** Photo (or video, when videoUrl is set) post on the Page; returns the post / video id. */

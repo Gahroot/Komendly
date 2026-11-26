@@ -18,6 +18,7 @@ import { startProofLoop } from "./growth/proof";
 import { startFreeToolsLoop } from "./growth/free-tools";
 import { startIndustryExamplesLoop } from "./growth/industry-examples";
 import { startViralBrandingLoop } from "./growth/viral-branding";
+import { startReelsLoop } from "./growth/reels";
 import { startAiAssistantLoop } from "./growth/ai-assistant";
 import { startShopifyLoop } from "./growth/shopify";
 import { startAdWatchLoop } from "./growth/ad-watch";
@@ -55,6 +56,8 @@ async function main(): Promise<void> {
   // Autopilot growth: free /tools AI jobs (sys_free_tools) + industry ad examples (sys_industry_examples). Off until flagged on.
   const stopFreeTools = startFreeToolsLoop({ db, worker: config.workerId });
   const stopIndustryExamples = startIndustryExamplesLoop({ db });
+  // reels (sys_reels): Ozzy short videos rendered + reviewed for kly to publish (off until flagged on).
+  const stopReels = startReelsLoop({ db, storage });
   // viral_branding (sys_viral_branding): hourly made_with visits/sign-ups + "free renders carry the mark" check.
   const stopViral = startViralBrandingLoop(db);
   // ai_assistant (sys_ai_assistant): hourly real MCP check against production + assistant sign-ups/tool calls.
@@ -98,6 +101,7 @@ async function main(): Promise<void> {
       stopAdWatch();
       stopFreeTools();
       stopIndustryExamples();
+      stopReels();
       stopViral();
       stopAiAssistant();
       stopShopify();

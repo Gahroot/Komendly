@@ -42,6 +42,9 @@ COPY src/lib/ads/coach/table.ts src/lib/ads/coach/table.ts
 COPY src/lib/ads/coach/assess.ts src/lib/ads/coach/assess.ts
 COPY src/lib/ads/coach/match.ts src/lib/ads/coach/match.ts
 COPY src/lib/growth/systems.ts src/lib/growth/systems.ts
+COPY src/lib/growth/reels-core.ts src/lib/growth/reels-core.ts
+COPY src/lib/growth/reels-learning.ts src/lib/growth/reels-learning.ts
+COPY src/lib/kly/social-core.ts src/lib/kly/social-core.ts
 COPY src/lib/growth/ad-check.ts src/lib/growth/ad-check.ts
 COPY src/lib/shopify/store-data.ts src/lib/shopify/store-data.ts
 COPY src/lib/kly/review-video.ts src/lib/kly/review-video.ts

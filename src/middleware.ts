@@ -56,6 +56,7 @@ const publicPrefixes = [
   "/g/",                   // Kly short claim link (same as /api/outbound/c/)
   "/u/",                   // Kly short unsubscribe link (same as /api/outbound/unsubscribe)
   "/api/ads/gift-public/", // Gift pack page beacon + token-checked ad images (public /gift/<token>)
+  "/api/reels/",          // Ozzy reels: public video redirect for Meta to pull; queue route checks its own bearer token
   "/api/ad-of-the-week/",  // Public images of consented ads only (Ad of the week, /ad-examples)
   "/api/ads-billing/webhook", // Stripe webhook for ads billing (signature-verified)
   "/api/meta-webhooks/",   // Meta leadgen webhook (X-Hub-Signature-256 verified; GET verify-token handshake)

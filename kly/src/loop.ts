@@ -22,6 +22,7 @@ import { purgeStaleLeads } from "./retention";
 import { outboundEnv, senderTick } from "./sender";
 import { strategistTick } from "./strategist";
 import { socialTick } from "./social";
+import { reelInsightsTick, reelsTick } from "./reels";
 import { voiceTick } from "./voice";
 import { warmupSecretOf, warmupTick } from "./warmup";
 import { createVerifyRuntime, verifyEnabled, verifyTick, type VerifyRuntime } from "./verify";
@@ -396,6 +397,13 @@ export async function runTick(d: LoopDeps, state: LoopState): Promise<void> {
   if (!kill) await step(state, "strategist", () => strategistTick(db, provider, now));
   // Ozzy's daily organic post to Komendly's own FB Page / IG (own switch KlySettings.socialEnabled + connected Page).
   if (s.socialEnabled) {
+    // Reels first (own flag sys_reels, default off): they take the day's slot; the static post is the fallback.
+    await step(state, "reels", async () => {
+      const r = await reelsTick({ db, settings: s, env, now });
+      if ("posted" in r && r.posted.length) log("info", "kly reels", r);
+      const i = await reelInsightsTick({ db, settings: s, env, now });
+      if ("measured" in i) log("info", "kly reels insights", i);
+    });
     await step(state, "social", async () => {
       const r = await socialTick({ db, settings: s, provider, env, now });
       if ("posted" in r) log("info", "kly social", r);
