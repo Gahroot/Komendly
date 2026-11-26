@@ -87,12 +87,11 @@ export function sendGapMs(rand: number): number {
   return Math.round(MIN_GAP_MS + r * (MAX_GAP_MS - MIN_GAP_MS));
 }
 
-/** Weekday 9:00-16:59 in the lead's time zone. */
+/** 9:00-16:59 in the lead's time zone, every day of the week (Nolan 26 Nov: small-business owners check email 7 days). */
 export function inBusinessHours(now: Date, timeZone: string): boolean {
-  const parts = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "short", hour: "numeric", hourCycle: "h23" }).formatToParts(now);
-  const wd = parts.find((p) => p.type === "weekday")?.value ?? "";
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", hourCycle: "h23" }).formatToParts(now);
   const hour = Number(parts.find((p) => p.type === "hour")?.value ?? "0");
-  return !["Sat", "Sun"].includes(wd) && hour >= 9 && hour < 17;
+  return hour >= 9 && hour < 17;
 }
 
 export const MAILBOX_PROVIDERS = ["gmail", "maildoso", "smtp"] as const;
