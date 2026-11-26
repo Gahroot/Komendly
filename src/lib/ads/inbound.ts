@@ -95,15 +95,18 @@ const OWN_DOMAINS = ["komendly.com", "getkomendly.com"];
  * (no sender, sent by us, or sent by the forward address itself). Reply-To is the original sender,
  * so hitting Reply answers the customer directly.
  */
-export function buildReplyForward(r: { from: string; fromName: string | null; to: string[]; subject: string; text: string }, forwardTo: string = replyForwardTo()): { to: string; replyTo: string; subject: string; text: string; html: string } | null {
+export function buildReplyForward(r: { from: string; fromName: string | null; to: string[]; subject: string; text: string }, forwardTo: string = replyForwardTo(), auto?: { category: string | null; replied: string | null; flagged: boolean }): { to: string; replyTo: string; subject: string; text: string; html: string } | null {
   const from = r.from.trim().toLowerCase();
   if (!from || !forwardTo || from === forwardTo.toLowerCase()) return null;
   const domain = from.split("@")[1] ?? "";
   if (OWN_DOMAINS.some((d) => domain === d || domain.endsWith(`.${d}`))) return null;
   const who = r.fromName ? `${r.fromName} <${r.from}>` : r.from;
-  const subject = `Reply from ${r.fromName || r.from}: ${r.subject || "(no subject)"}`.slice(0, 200);
-  const text = `${who} replied to ${r.to.join(", ") || "Komendly"}.\nHit Reply to answer them directly.\n\n${r.text || "(no text)"}`;
+  const prefix = auto?.replied ? "Auto-replied: " : auto?.flagged ? "Needs review: " : "";
+  const subject = `${prefix}Reply from ${r.fromName || r.from}: ${r.subject || "(no subject)"}`.slice(0, 200);
+  const autoNote = auto?.replied ? `\n\n--- I auto-replied (${auto.category}) with:\n${auto.replied}` : auto?.flagged ? `\n\n--- Flagged for you (${auto.category}).` : "";
+  const bodyText = `${r.text || "(no text)"}${autoNote}`;
+  const text = `${who} replied to ${r.to.join(", ") || "Komendly"}.\nHit Reply to answer them directly.\n\n${bodyText}`;
   const esc = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const html = `<p><b>${esc(who)}</b> replied to ${esc(r.to.join(", ") || "Komendly")}. Hit Reply to answer them directly.</p><pre style="white-space:pre-wrap;font-family:inherit">${esc(r.text || "(no text)")}</pre>`;
+  const html = `<p><b>${esc(who)}</b> replied to ${esc(r.to.join(", ") || "Komendly")}. Hit Reply to answer them directly.</p><pre style="white-space:pre-wrap;font-family:inherit">${esc(bodyText)}</pre>`;
   return { to: forwardTo, replyTo: r.from, subject, text, html };
 }

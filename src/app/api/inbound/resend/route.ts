@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { buildReplyForward, headerValue, htmlToText, parseAddress, stripQuotedReply, verifySvixSignature } from "@/lib/ads/inbound";
+import { buildReplyForward, headerValue, htmlToText, parseAddress, replyForwardTo, stripQuotedReply, verifySvixSignature } from "@/lib/ads/inbound";
 import { sendAdsMail } from "@/lib/ads/mailer";
+import { handleAutoReply } from "@/lib/ads/auto-reply-server";
 
 export const dynamic = "force-dynamic";
 
@@ -70,7 +71,13 @@ export async function POST(request: NextRequest) {
       },
     });
     // A person must read replies: forward to the founder's inbox (Reply-To = the sender). Best effort: the reply is stored.
-    const fwd = buildReplyForward({ from: fromEmail, fromName, to: toList, subject, text });
+    // Auto-responder (fails closed, never throws): answers safe categories as Nolan, flags the rest.
+    const hdrs = full?.headers;
+    const auto = await handleAutoReply({
+      emailId, from: fromEmail, fromName, subject, text, userId: user?.id ?? null, workspaceId: member?.workspaceId ?? null, forwardTo: replyForwardTo(),
+      headers: Object.fromEntries(["auto-submitted", "precedence", "x-autoreply", "x-autorespond", "x-auto-response-suppress", "list-unsubscribe", "list-id", "x-komendly-auto"].map((k) => [k, headerValue(hdrs, k)])),
+    });
+    const fwd = buildReplyForward({ from: fromEmail, fromName, to: toList, subject, text }, undefined, { category: auto.category, replied: auto.replied, flagged: auto.flagged });
     if (fwd) await sendAdsMail(fwd).catch((err) => console.error("[inbound/resend] forward", err));
     return NextResponse.json({ ok: true });
   } catch (err) {

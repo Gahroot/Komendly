@@ -24,11 +24,13 @@ const s = (v: unknown): string => (typeof v === "string" ? v : "");
 
 async function Inbox({ showAll }: { showAll: boolean }) {
   if (!(await getAdminUser())) return null;
-  const [replies, handledEv] = await Promise.all([
+  const [flagged, replies, handledEv] = await Promise.all([
+    prisma.adsEvent.findMany({ where: { name: "email_needs_human" }, orderBy: { createdAt: "desc" }, take: 50 }),
     prisma.adsEvent.findMany({ where: { name: "email_replied" }, orderBy: { createdAt: "desc" }, take: 200 }),
     prisma.adsEvent.findMany({ where: { name: "email_reply_handled" }, select: { props: true } }),
   ]);
   const handled = new Set(handledEv.map((e) => s(p(e.props).emailId)));
+  const flaggedOpen = flagged.filter((f) => !handled.has(s(p(f.props).emailId)));
   const unread = replies.filter((r) => !handled.has(s(p(r.props).emailId))).length;
   const shown = showAll ? replies : replies.filter((r) => !handled.has(s(p(r.props).emailId)));
 
@@ -52,6 +54,25 @@ async function Inbox({ showAll }: { showAll: boolean }) {
         <span className="text-muted-foreground">{replies.length} replies total</span>
         <Link className="hover:underline" href={showAll ? "/admin/ads/inbox" : "/admin/ads/inbox?all=1"}>{showAll ? "Show unread only" : "Show handled too"}</Link>
       </div>
+      {flaggedOpen.length > 0 && (
+        <Card className="border-destructive">
+          <CardContent className="space-y-2 pt-4 text-sm">
+            <div className="font-medium">Needs you ({flaggedOpen.length})</div>
+            {flaggedOpen.map((f) => {
+              const fp = p(f.props);
+              return (
+                <div key={f.id} className="flex flex-wrap items-center gap-2">
+                  <Badge variant="destructive">{s(fp.category)}</Badge>
+                  <span>{s(fp.from)} · {s(fp.subject) || "(no subject)"}</span>
+                  {fp.paying === true && <Badge variant="outline">paying</Badge>}
+                  {fp.refundEligible === true && <Badge variant="outline">refund eligible</Badge>}
+                  <span className="text-muted-foreground">{ts(f.createdAt)} UTC</span>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
       {!shown.length && <AdminEmpty>No {showAll ? "" : "unread "}replies.</AdminEmpty>}
       {shown.map((r) => {
         const pr = p(r.props);
