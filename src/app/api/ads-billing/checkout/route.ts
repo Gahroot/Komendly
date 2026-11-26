@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { komendlyCheckoutText } from "@/lib/checkout-branding";
 import { z } from "zod";
-import { annualPriceIdFor, AUTOPILOT_FULL_MESSAGE, canBuyUnlimitedWeek, UNLIMITED_WEEK, getOffer, getPlan, isPlanForSale, LAUNCH_QUARTER, offerCouponId, getTopup, priceIdFor, UNLOCK_PACK, UNLOCK_PACK_NOTE, unlockPackCouponId } from "@/lib/ads/billing-config";
+import { annualPriceIdFor, AUTOPILOT_FULL_MESSAGE, AUTOPILOT_LAUNCH, canBuyUnlimitedWeek, UNLIMITED_WEEK, getOffer, getPlan, isPlanForSale, LAUNCH_QUARTER, offerCouponId, getTopup, priceIdFor, UNLOCK_PACK, UNLOCK_PACK_NOTE, unlockPackCouponId } from "@/lib/ads/billing-config";
 import { getLaunchOfferState } from "@/lib/ads/launch-offer";
+import { getAutopilotLaunchState } from "@/lib/ads/autopilot-launch";
 import { appUrl, getAdsStripe } from "@/lib/ads/billing-stripe";
 import { trackAdsEvent } from "@/lib/ads/events";
 import { prisma } from "@/lib/prisma";
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
     // New subscriptions only on plans for sale (Growth/Scale are hidden during the founding offer; their
     // existing subscribers change plans in the Customer Portal, never here). Only the current launch offer is sold.
     if (kind === "plan" && !isPlanForSale(key)) return NextResponse.json({ error: "That plan isn't available anymore.", code: "unknown_price" }, { status: 400 });
-    if (kind === "offer" && key !== LAUNCH_QUARTER.key) return NextResponse.json({ error: "This launch offer has expired.", code: "offer_expired" }, { status: 410 });
+    if (kind === "offer" && key !== LAUNCH_QUARTER.key && key !== AUTOPILOT_LAUNCH.key) return NextResponse.json({ error: "This launch offer has expired.", code: "offer_expired" }, { status: 410 });
     const annual = kind === "plan" && parsed.data.interval === "year";
     const freeMonth = kind === FREE_MONTH_KIND;
     const item = kind === "plan" || freeMonth ? getPlan(freeMonth ? "starter" : key) : kind === "offer" ? getOffer(key) : getTopup(key);
@@ -61,14 +62,19 @@ export async function POST(request: NextRequest) {
     if (kind === "topup" && key === UNLIMITED_WEEK.key && !canBuyUnlimitedWeek(ws)) {
       return NextResponse.json({ error: "Unlimited week is an add-on for paid plans. Pick a plan first.", code: "needs_plan" }, { status: 409 });
     }
-    if (kind === "offer" && !(await getLaunchOfferState(ws.id)).open) {
+    const autopilotLaunch = kind === "offer" && key === AUTOPILOT_LAUNCH.key;
+    // Growth Autopilot first month: server-enforced (finished free pack, 7 days, once per workspace).
+    if (autopilotLaunch && !(await getAutopilotLaunchState(ws.id)).open) {
+      return NextResponse.json({ error: "This first-month offer isn't available on this account.", code: "offer_expired" }, { status: 410 });
+    }
+    if (kind === "offer" && !autopilotLaunch && !(await getLaunchOfferState(ws.id)).open) {
       return NextResponse.json({ error: "This launch offer has expired.", code: "offer_expired" }, { status: 410 });
     }
     if (studioLaunch && !isStudioLaunchOfferOpen(ws.studioOfferReadyAt, new Date())) {
       return NextResponse.json({ error: "This launch offer has expired.", code: "offer_expired" }, { status: 410 });
     }
     // Growth Autopilot: founding spots are a real limit (first AUTOPILOT_FOUNDING_SPOTS businesses).
-    if (kind === "plan" && key === "autopilot" && (await foundingSpotsLeft(prisma)) <= 0) {
+    if ((autopilotLaunch || (kind === "plan" && key === "autopilot")) && (await foundingSpotsLeft(prisma)) <= 0) {
       return NextResponse.json({ error: AUTOPILOT_FULL_MESSAGE, code: "founding_full" }, { status: 409 });
     }
     if (freeMonth && (await referralSummary(user, ws)).freeMonth !== "available") {
@@ -91,7 +97,7 @@ export async function POST(request: NextRequest) {
     // Launch offers (72h post-trial, Studio launch): $100 off the first hero-plan invoice. No coupon = not sold.
     const launchCoupon = offer ? offerCouponId(offer) : studioLaunch ? offerCouponId(LAUNCH_QUARTER) : null;
     if ((offer?.couponEnv || studioLaunch) && !launchCoupon) return NextResponse.json({ error: "That option isn't available.", code: "unknown_price" }, { status: 400 });
-    const autopilot = kind === "plan" && key === "autopilot";
+    const autopilot = autopilotLaunch || (kind === "plan" && key === "autopilot");
     const founding = !autopilot && ((kind === "plan" && getPlan(key)?.usageMultiple) || (offer && getPlan(offer.plan)?.usageMultiple));
     const unlockCredit = couponId && !ws.stripeSubscriptionId
       ? Boolean(await prisma.creditLedger.findFirst({ where: { workspaceId: ws.id, reason: "topup", note: UNLOCK_PACK_NOTE, delta: { gt: 0 } }, select: { id: true } }))

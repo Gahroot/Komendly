@@ -38,6 +38,13 @@ export const GROWTH_SYSTEMS = [
   { key: "creative_hubs", label: "Creative hubs: makeover / rescue / giveaway / nonprofit intake, votes, approve links", stage: "acquire", utmSource: "hub", cycleMinutes: 24 * 60, silentAlertHours: 24 * 30 },
   { key: "creative_outreach", label: "Nominee notice email (one-time, opt-out)", stage: "acquire", utmSource: "nominate", cycleMinutes: 24 * 60, silentAlertHours: 24 * 60 },
   { key: "creative_publish", label: "Public showcase, makeovers and business of the day (opt-in only)", stage: "acquire", utmSource: "showcase", cycleMinutes: 24 * 60, silentAlertHours: 24 * 60 },
+  { key: "activation", label: "Live-in-7-days nudges + first-win emails (opt-out)", stage: "keep", utmSource: "activation", cycleMinutes: 15, silentAlertHours: 24 * 60 },
+  { key: "proof", label: "Day-14/30 measured results + case-study consent", stage: "keep", utmSource: "proof", cycleMinutes: 15, silentAlertHours: 24 * 90 },
+  { key: "cancel_save", label: "Cancel-intent 'what went wrong?' note", stage: "keep", utmSource: "cancel_save", cycleMinutes: 15, silentAlertHours: 24 * 120 },
+  { key: "guarantee_watch", label: "Live-in-7-days breach alert to Nolan", stage: "keep", utmSource: "guarantee", cycleMinutes: 15, silentAlertHours: 24 * 120 },
+  { key: "content_queue", label: "Weekly ad-of-the-week + trade playbook content queue", stage: "acquire", utmSource: "content_queue", cycleMinutes: 7 * 24 * 60, silentAlertHours: 24 * 21 },
+  { key: "indexnow", label: "IndexNow pinger (new URLs to search engines)", stage: "acquire", utmSource: "indexnow", cycleMinutes: 24 * 60, silentAlertHours: 24 * 30 },
+  { key: "kly_refill", label: "Kly weekly lead refill check (alerts when ad-library leads run low)", stage: "acquire", utmSource: "kly_refill", cycleMinutes: 7 * 24 * 60, silentAlertHours: 24 * 60 },
   { key: "team_ops", label: "Ozzy's team: campaign operations", stage: "keep", utmSource: "team", cycleMinutes: 15, silentAlertHours: 24 * 7 },
 ] as const satisfies readonly GrowthSystem[];
 

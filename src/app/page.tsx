@@ -14,15 +14,16 @@ import { StudioNav } from "@/components/studio/studio-nav";
 import { StudioRoot } from "@/components/studio/studio-spell";
 import "@/components/studio/studio.css";
 import { graph, jsonLdString, softwareApplicationJsonLd } from "@/lib/seo/jsonld";
-import { HERO_HEADLINE, HERO_OUTCOME, PUBLIC_OFFER } from "@/lib/ads/public-offer";
+import { PUBLIC_OFFER } from "@/lib/ads/public-offer";
+import { DREAM_HEADLINE } from "@/lib/ads/dream-copy";
 import { planCheckoutPath } from "@/lib/ads/plan-checkout";
 import { TeamOffer } from "@/components/billing/team-offer";
 import { foundingSpotsLeft } from "@/lib/ads/founding-spots";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: { absolute: `Komendly — ${HERO_HEADLINE}` },
-  description: `${HERO_HEADLINE}. ${HERO_OUTCOME} Start with ${PUBLIC_OFFER.freeAds} free ads from your website, no card.`,
+  title: { absolute: `Komendly — ${DREAM_HEADLINE}` },
+  description: `${DREAM_HEADLINE}. We run your Facebook and Instagram ads and email you the leads within minutes. Start with ${PUBLIC_OFFER.freeAds} free ads from your website, no card.`,
   alternates: { canonical: "/" },
 };
 

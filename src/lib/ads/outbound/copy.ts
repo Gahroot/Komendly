@@ -126,6 +126,18 @@ export const NOLAN_COPY: SeedCopy[] = [
   { dimension: "followup", key: "nolan-followup", timing: "any", template: ["The ad for {business} is one tap away: {link}", "", "Want fresh ads every week? Ozzy Ad Department makes new ones from your website every Monday. $97 the first month, 10 ads free first.", "", NOLAN_SIGNOFF].join("\n") },
 ];
 
+/**
+ * Hormozi rewrite (Nov 26, $100M Leads): lead with THEIR finished ad (the gift), name the outcome in one line, one tiny ask
+ * ("reply yes"), one reason-to-reply question. No price, no plan pitch in the first touch: the gift page carries the offer.
+ * Timing "any": true whether the ad is pre-made or drawn when they open {link}. Replaces the Nolan variants (retired below).
+ */
+export const HORMOZI_COPY: SeedCopy[] = [
+  { dimension: "body", key: "hz-gift-outcome", timing: "any", template: ["Here's a Facebook ad for {business}, made from your website:", "", "{link}", "", "The idea: a Facebook ad that keeps asking for quote requests, without you running it.", "", "Want me to help you put it live? Reply yes.", "", "Which job would you most like more of?", "", NOLAN_SIGNOFF].join("\n") },
+  { dimension: "body", key: "hz-which-job", timing: "any", template: ["Which job would you like more of at {business}? I made a Facebook ad from your website to start with:", "", "{link}", "", "So your ads keep working while you're out on a job, without you running them.", "", "Want me to help you put it live? Reply yes.", "", NOLAN_SIGNOFF].join("\n") },
+  { dimension: "body", key: "hz-headline", timing: "any", template: ["\"{headline}\"", "", "That's the Facebook ad I made for {business} from your website:", "", "{link}", "", "It's built so your ads keep going out for quote requests without you running them. Want me to help you put it live? Reply yes.", "", "What's your slowest month for new jobs?", "", NOLAN_SIGNOFF].join("\n") },
+  { dimension: "followup", key: "hz-followup", timing: "any", template: ["Your Facebook ad for {business} is still here: {link}", "", "Want me to help you put it live? Reply yes. Or tell me which service you want more calls for.", "", NOLAN_SIGNOFF].join("\n") },
+];
+
 /** Old local-business body/follow-up seeds, retired by the Nov 21 rewrite (agency copy keeps running). */
 const RETIRED_KEYS = new Set(["made-this", "would-you-run", "headline-hook", "too-busy", "still-here", "last-note", "did-it-land", "oc-tap-to-draw", "oc-want-one", "oc-too-busy", "oc-still-ready", "oc-last-note"]);
 
@@ -164,7 +176,7 @@ export const SEED_COPY: SeedCopy[] = ([
   { dimension: "body", key: "oc-agency", timing: "on-click", audience: "agency", template: ["Want to see what Ozzy makes from your website?", "", "{link}", "", "Tap it and he draws three ready-to-run Meta ads live. Then point him at any client's site. Your first 10 ads are free, no card."].join("\n") },
   { dimension: "followup", key: "oc-still-ready", timing: "on-click", template: ["Ozzy's still ready to draw your ads: {link}", "", "Takes two minutes, free either way."].join("\n") },
   { dimension: "followup", key: "oc-last-note", timing: "on-click", template: ["Last note from me. If ads aren't a priority right now, totally get it.", "", "Ozzy's offer stands: {link}"].join("\n") },
-] as SeedCopy[]).map((c): SeedCopy => (RETIRED_KEYS.has(c.key) ? { ...c, retired: true } : c)).concat(NOLAN_COPY);
+] as SeedCopy[]).map((c): SeedCopy => (RETIRED_KEYS.has(c.key) ? { ...c, retired: true } : c)).concat(NOLAN_COPY.map((c): SeedCopy => ({ ...c, retired: true })), HORMOZI_COPY);
 
 export function renderTemplate(t: string, vars: Partial<Record<(typeof PLACEHOLDERS)[number], string>>): string {
   return t.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? (vars[k as keyof typeof vars] ?? "") : m));

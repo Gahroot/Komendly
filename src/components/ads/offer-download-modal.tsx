@@ -19,7 +19,7 @@ import { AutopilotOfferCard } from "./autopilot-offer-card";
  * Roofer workspaces (src/lib/ads/roofer-offer.ts) pass `autopilot` while Growth Autopilot is their offer: it leads instead,
  * and the caller passes unlockAvailable only once it's the $9 stage.
  */
-export function OfferDownloadModal({ runId, bonus, offerOpen, remainingMs, lockedAds = 0, unlockAvailable = false, freeAds = null, autopilot = null }: { runId: string; bonus: BonusSummary | null; offerOpen: boolean; remainingMs: number | null; lockedAds?: number; unlockAvailable?: boolean; freeAds?: number | null; autopilot?: { spotsLeft: number | null; onDecline: () => void } | null }) {
+export function OfferDownloadModal({ runId, bonus, offerOpen, remainingMs, lockedAds = 0, unlockAvailable = false, freeAds = null, autopilot = null }: { runId: string; bonus: BonusSummary | null; offerOpen: boolean; remainingMs: number | null; lockedAds?: number; unlockAvailable?: boolean; freeAds?: number | null; autopilot?: { spotsLeft: number | null; launch?: boolean; onDecline: () => void } | null }) {
   const [open, setOpen] = useState(false);
   const autopilotFirst = autopilot !== null;
   const unlockFirst = !autopilotFirst && lockedAds > 0 && unlockAvailable;
@@ -52,15 +52,15 @@ export function OfferDownloadModal({ runId, bonus, offerOpen, remainingMs, locke
       <DialogContent className="max-h-[95dvh] overflow-y-auto rounded-3xl sm:max-w-md">
         {autopilot ? (
           <>
-            <DialogTitle className="sr-only">Growth Autopilot founding offer</DialogTitle>
+            <DialogTitle className="sr-only">We run your ads for you: founding offer</DialogTitle>
             <DialogDescription className="sr-only">Ozzy&apos;s team runs your Facebook and Instagram lead ads for you.</DialogDescription>
-            <AutopilotOfferCard bare runId={runId} placement="post_download" spotsLeft={autopilot.spotsLeft} onDecline={() => { autopilot.onDecline(); setOpen(false); }} />
+            <AutopilotOfferCard bare runId={runId} placement="post_download" spotsLeft={autopilot.spotsLeft} launch={autopilot.launch} onDecline={() => { autopilot.onDecline(); setOpen(false); }} />
           </>
         ) : unlockFirst ? (
           <>
             <DialogTitle>Downloaded your {freeAds ?? FREE_TRIAL_ADS} free ads. {lockedAds} more {lockedAds === 1 ? "is" : "are"} ready.</DialogTitle>
             <DialogDescription>
-              Unlock the other {lockedAds} for ${UNLOCK_PACK.priceCents / 100}, once. No subscription. You also get {UNLOCK_PACK.credits} credits for brand-new ads.
+              Unlock the other {lockedAds} for ${UNLOCK_PACK.priceCents / 100}, once. No subscription. You also get {UNLOCK_PACK.credits} credits to make brand-new ads.
             </DialogDescription>
             <div onClickCapture={() => postOfferEvent("offer_clicked", { placement: "post_download", runId, offer: UNLOCK_PACK.key })}>
               <BillingActionButton endpoint="/api/ads-billing/checkout" body={{ kind: "topup", key: UNLOCK_PACK.key, placement: "post_download" }} label={`Unlock all ${lockedAds} for $${UNLOCK_PACK.priceCents / 100}`} />
@@ -81,7 +81,7 @@ export function OfferDownloadModal({ runId, bonus, offerOpen, remainingMs, locke
           <>
             <DialogTitle>Downloaded. Want fresh ads every week?</DialogTitle>
             <DialogDescription>
-              Ozzy Ad Department makes fresh ads from your website every week and coaches you on what&apos;s working; you post them yourself{bonus?.locked ? ". It also unlocks your bonus ads now" : ""}.
+              Ozzy Ad Department is the do-it-yourself option: fresh ads from your own website every week and a coach for what&apos;s working; you post them yourself{bonus?.locked ? ". It also unlocks your bonus ads now" : ""}.
             </DialogDescription>
             <LaunchQuarterCard placement="post_download" bonus={bonus} remainingMs={remainingMs} runId={runId} />
           </>

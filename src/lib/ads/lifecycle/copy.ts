@@ -4,6 +4,7 @@ import { ADS_GUARANTEE, ADS_PLANS, ADS_TOPUPS, PLAN_USAGE_NOTE, planDisplayName,
 import { FREE_TRIAL_ADS } from "../bonus-access";
 import { REFERRAL_FACTS } from "./facts";
 import { isFreshKind, isStartKind, type LifecycleKind } from "./select";
+import { dreamLine } from "./trade-term";
 
 export interface CopyContext {
   kind: LifecycleKind;
@@ -29,6 +30,8 @@ export interface CopyContext {
   hasLockedBonus?: boolean;
   /** fresh_m*: a new locked ad was made for them (false = it couldn't be made; copy must not claim one). */
   freshAd?: boolean;
+  /** Trade phrase from the sign-up ("roofing company"); null = unknown (say "business"). */
+  tradeTerm?: string | null;
 }
 
 export interface EmailCopy {
@@ -99,7 +102,7 @@ function hoursLeft(ctx: CopyContext, now: Date): number | null {
 const STAGE: Record<LifecycleKind, string> = {
   verify_nudge: "Signed up 1 hour ago but has not confirmed the email. Their free ads work without it; confirming keeps their account and emails safe. Goal: get them to type the code. Mention the code is in this email. No prices.",
   verify_nudge_2: "Signed up a day ago and still has not confirmed the email (second and last reminder). Fixed copy.",
-  start_nudge_1h: "Confirmed their email about an hour ago but has not pasted their website yet, so their free ads have not started. Goal: get them to paste their website now. It takes a few minutes and Ozzy does the work. No prices.",
+  start_nudge_1h: "Lead with the outcome (Facebook ads for their business, made from their website); one step only: paste the website. Confirmed their email about an hour ago but has not pasted their website yet, so their free ads have not started. Goal: get them to paste their website now. It takes a few minutes and Ozzy does the work. No prices.",
   start_nudge_1d: "Confirmed their email a day ago and still has not started their free ads. Goal: remove friction: they only need their website address (homepage is fine, no logo or photos needed); Ozzy reads the site and makes the ads in their brand. No prices.",
   start_nudge_3d: "Confirmed their email 3 days ago, never started their free ads. Last friendly reminder: the free pack is still waiting. Short. Say this is the last reminder. No prices.",
   ads_ready: "Their free trial ads just finished; their best ad is shown as a big image above your text, with 3 more under it. Goal: get them to open their ads. Subject like \"Your N ads for <brand> are ready\". One short line on the launch offer being open for 72 hours.",
@@ -119,6 +122,9 @@ const STAGE: Record<LifecycleKind, string> = {
   fresh_m6: "Monthly fresh ad, the last one we send. Goal as fresh_m1.",
   free_ads_ways: "One-time announcement to existing users: there are now ways to get more free ads: Give 10, get 10 with their invite link, Gift a pack, and the partner program. If they are paid (see FACTS), thank them as a customer. No prices.",
   founder_note: "Plain-text personal note from Nolan (fixed copy in founder.ts, never AI-written).",
+  unlock_thanks: "Never used: fixed plain-text copy in unlock-emails.ts.",
+  unlock_day3: "Never used: fixed plain-text copy in unlock-emails.ts.",
+  unlock_day7: "Never used: fixed plain-text copy in unlock-emails.ts.",
   refreshed_pack: "We re-ran their free ad pack because the first one delivered fewer ads than promised; their full pack is now ready. Goal: apologise briefly and get them to look. No prices needed.",
 };
 
@@ -150,6 +156,7 @@ export function buildCopyPrompt(ctx: CopyContext, now: Date = new Date()): strin
     ...(ctx.kind === "day21_examples" ? [PRICE_FACTS.gallery] : []),
     ...(ctx.kind === "day30_checkin" ? [PRICE_FACTS.yearly, PRICE_FACTS.starter, ctx.agencyLike ? `Their site looks like an agency or freelancer. ${PRICE_FACTS.agency}` : `${PRICE_FACTS.partner} ${PRICE_FACTS.linksBelow}`] : []),
     ...(isStartKind(ctx.kind) ? [PRICE_FACTS.freeTrial] : []),
+    ...(ctx.tradeTerm ? [`Their business is a ${ctx.tradeTerm}; speak to that trade, lead with the finished outcome (their ads, made from their website) and give ONE next step.`] : []),
     ...(isFreshKind(ctx.kind) ? [ctx.freshAd ? PRICE_FACTS.freshLocked : PRICE_FACTS.freshNone, PRICE_FACTS.starter, PRICE_FACTS.topup] : []),
     ...(left !== null && LQ_KINDS.has(ctx.kind) ? [`The launch offer closes in about ${left} hours.`] : []),
     ctx.readyAdCount ? `They have ${ctx.readyAdCount} ready free ads.` : "",
@@ -225,7 +232,7 @@ export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCop
       return {
         subject: `Your Komendly code: ${ctx.code ?? ""}`.trim(),
         preheader: "One quick step to keep your account safe.",
-        paragraphs: [hi, `Please confirm your email. Type the code below on the "Confirm your email" screen, or tap the button.`, "Your free ads work either way. If you haven't pasted your website yet, do that too: Ozzy makes a pack of ads in your brand from it. No card needed."],
+        paragraphs: [hi, `Please confirm your email. Type the code below on the "Confirm your email" screen, or tap the button.`, `Your free ads work either way. Haven't pasted your website yet? ${dreamLine(ctx.tradeTerm)}: just paste your site. No card needed.`],
         ctaLabel: "Confirm my email",
       };
     case "verify_nudge_2":
@@ -237,23 +244,23 @@ export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCop
       };
     case "start_nudge_1h":
       return {
-        subject: "Your free ads are one paste away",
-        preheader: "Paste your website and Ozzy does the rest.",
-        paragraphs: [hi, "Your email is confirmed, but your free ads haven't started yet. Paste your website address and Ozzy reads it and makes a pack of ads in your brand.", "It usually takes a few minutes. No card needed."],
+        subject: ctx.tradeTerm ? `Your ${ctx.tradeTerm} ads are ready to make`.slice(0, MAX_SUBJECT) : "Your ads are ready to make",
+        preheader: "One paste: your website address.",
+        paragraphs: [hi, `${dreamLine(ctx.tradeTerm)}: that's what's waiting for you. Paste your website address and Ozzy does the rest.`, "It usually takes a few minutes. Free, no card."],
         ctaLabel: "Make my free ads",
       };
     case "start_nudge_1d":
       return {
         subject: "All Ozzy needs is your website",
         preheader: "No logo, photos or copy needed.",
-        paragraphs: [hi, "Your free ad pack is still waiting. You don't need a logo, photos or copy: just your website address. Ozzy reads the site and makes the ads in your brand.", "Free, no card."],
+        paragraphs: [hi, `Your free ads are still waiting: ${dreamLine(ctx.tradeTerm).toLowerCase()}. You don't need a logo, photos or copy. Just your website address.`, "Free, no card."],
         ctaLabel: "Paste my website",
       };
     case "start_nudge_3d":
       return {
         subject: "Your free ads are still waiting",
         preheader: "Last reminder from Ozzy.",
-        paragraphs: [hi, "Your free ads are still waiting. Paste your website and Ozzy makes them in a few minutes. No card needed.", "This is my last reminder."],
+        paragraphs: [hi, `${dreamLine(ctx.tradeTerm)}. Paste your website and they're ready in a few minutes. No card needed.`, "This is my last reminder."],
         ctaLabel: "Make my free ads",
       };
     case "ads_ready": {
@@ -261,7 +268,7 @@ export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCop
       return {
         subject: sub((x) => `Your ${n} ads for ${x} are ready`, `Your ${n} free ads are ready`),
         preheader: `Made from your website${ctx.lockedLabel ? `, plus ${ctx.lockedLabel} you can unlock` : ""}.`,
-        paragraphs: [hi, `Here's my favourite of the ${n} free ads I made for ${brand}${ctx.lockedLabel ? `, plus ${ctx.lockedLabel} you can unlock` : ""}.`, `Want fresh ones every week? ${TEAM} makes new ads from your website every Monday and coaches you on what's working. The ${lq} is open for ${LAUNCH_QUARTER.windowHours} hours.`],
+        paragraphs: [hi, `Your Facebook ads${ctx.tradeTerm ? ` for your ${ctx.tradeTerm}` : ""} are ready. Here's my favourite of the ${n} free ads I made for ${brand}${ctx.lockedLabel ? `, plus ${ctx.lockedLabel} you can unlock` : ""}.`, `Want fresh ones every week? ${TEAM} makes new ads from your website every Monday and coaches you on what's working. The ${lq} is open for ${LAUNCH_QUARTER.windowHours} hours.`],
         ctaLabel: "See all my ads",
       };
     }
@@ -352,6 +359,11 @@ export function fallbackCopy(ctx: CopyContext, now: Date = new Date()): EmailCop
     case "founder_note":
       // Never used: the engine sends founder.ts copy as plain text. Kept so the switch is exhaustive.
       return { subject: `your ${ctx.brandName ?? "komendly"} ads`, preheader: "", paragraphs: [hi, "I'm Nolan, I built Komendly."], ctaLabel: "See my ads" };
+    case "unlock_thanks":
+    case "unlock_day3":
+    case "unlock_day7":
+      // Never used: the engine sends unlock-emails.ts copy as plain text. Kept so the switch is exhaustive.
+      return { subject: `your ${ctx.brandName ?? "komendly"} ads`, preheader: "", paragraphs: [hi], ctaLabel: "See my ads" };
     case "refreshed_pack":
       return {
         subject: "Your full free ad pack is ready",

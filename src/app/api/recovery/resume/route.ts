@@ -48,6 +48,8 @@ async function resumeAds(p: ResumePayload, discount: boolean) {
   const offer = kind === "offer" ? getOffer(key) : undefined;
   const topup = kind === "topup" ? getTopup(key) : undefined;
   if (kind === "plan" && !isPlanForSale(key)) return go("/ads/pricing", p.st);
+  // The $97 Growth Autopilot first month is gated on a finished free pack + a 7-day window + one use: only the live checkout route sells it.
+  if (offer?.key === "autopilot_launch") return go("/ads/billing", p.st);
   const annual = Boolean(plan) && p.i.interval === "year";
   const priceId = plan ? (annual ? annualPriceIdFor(plan) : priceIdFor(plan)) : offer ? priceIdFor(offer) : topup ? priceIdFor(topup) : null;
   if (!priceId) return go("/ads/pricing", p.st);

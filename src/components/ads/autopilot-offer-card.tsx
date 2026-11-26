@@ -7,6 +7,7 @@ import { BillingActionButton } from "@/app/ads/billing/_components/billing-actio
 import { postOfferEvent, type OfferPlacement } from "@/lib/ads/offer-client";
 import { firstInSession } from "@/lib/ads/offer-session";
 import { AUTOPILOT_PLACEMENT, AUTOPILOT_PLAN_KEY, autopilotOfferCopy } from "@/lib/ads/roofer-offer";
+import { AUTOPILOT_FIRST_MONTH_LINE, AUTOPILOT_GUARANTEE_LINE, AUTOPILOT_LAUNCH_NOTE } from "@/lib/ads/public-offer";
 import { track } from "@/lib/analytics/track";
 import { trackOfferView } from "./launch-quarter-card";
 
@@ -16,7 +17,7 @@ import { trackOfferView } from "./launch-quarter-card";
  * Events (server adds props.trade): upsell_shown / upsell_declined / offer_clicked with offer "autopilot";
  * checkout_started comes from the checkout route with placement "autopilot_offer".
  */
-export function AutopilotOfferCard({ runId, placement = AUTOPILOT_PLACEMENT, spotsLeft = null, onDecline, bare = false }: { runId: string; placement?: OfferPlacement; spotsLeft?: number | null; onDecline: () => void; bare?: boolean }) {
+export function AutopilotOfferCard({ runId, placement = AUTOPILOT_PLACEMENT, spotsLeft = null, launch = false, onDecline, bare = false }: { runId: string; placement?: OfferPlacement; spotsLeft?: number | null; launch?: boolean; onDecline: () => void; bare?: boolean }) {
   const c = autopilotOfferCopy(spotsLeft);
   useEffect(() => {
     if (!firstInSession(`autopilot_shown:${placement}:${runId}`)) return;
@@ -33,7 +34,7 @@ export function AutopilotOfferCard({ runId, placement = AUTOPILOT_PLACEMENT, spo
   const body = (
     <div className="space-y-4">
       <div className="space-y-1">
-        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-primary"><Sparkles className="size-4" aria-hidden /> Growth Autopilot · founding offer</p>
+        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-primary"><Sparkles className="size-4" aria-hidden /> We run it for you · founding offer</p>
         <h2 className="text-2xl font-semibold tracking-tight">{c.title}</h2>
         <p className="text-sm text-muted-foreground">{c.intro}</p>
       </div>
@@ -41,16 +42,16 @@ export function AutopilotOfferCard({ runId, placement = AUTOPILOT_PLACEMENT, spo
         {c.features.map((f) => <li key={f} className="flex items-start gap-2"><Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />{f}</li>)}
       </ul>
       <div className="rounded-xl bg-primary/10 px-4 py-3">
-        <p className="text-3xl font-semibold">{c.price}</p>
-        <p className="text-sm text-muted-foreground">{c.priceNote}</p>
+        <p className="text-3xl font-semibold">{launch ? AUTOPILOT_FIRST_MONTH_LINE : c.price}</p>
+        <p className="text-sm text-muted-foreground">{launch ? `${AUTOPILOT_LAUNCH_NOTE} ` : ""}{c.priceNote}</p>
         <p className="mt-1 text-sm font-medium">{c.scarcity}</p>
       </div>
       <div className="space-y-2">
         <div onClickCapture={() => postOfferEvent("offer_clicked", { placement, offer: AUTOPILOT_PLAN_KEY, runId })}>
           <BillingActionButton endpoint="/api/ads-billing/checkout" body={{ kind: "plan", key: AUTOPILOT_PLAN_KEY, placement: AUTOPILOT_PLACEMENT }} label={c.cta} />
         </div>
-        <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="size-3.5 shrink-0 text-primary" aria-hidden />{c.guarantee}</p>
-        <Button type="button" variant="ghost" className="w-full text-muted-foreground" onClick={decline}>No thanks, I&apos;ll run them myself</Button>
+        <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="size-3.5 shrink-0 text-primary" aria-hidden />{AUTOPILOT_GUARANTEE_LINE}</p>
+        <Button type="button" variant="ghost" className="w-full text-muted-foreground" onClick={decline}>No thanks, I&apos;ll post them myself</Button>
       </div>
     </div>
   );

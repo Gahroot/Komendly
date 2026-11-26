@@ -60,6 +60,8 @@ const publicPrefixes = [
   "/api/ads-billing/webhook", // Stripe webhook for ads billing (signature-verified)
   "/api/meta-webhooks/",   // Meta leadgen webhook (X-Hub-Signature-256 verified; GET verify-token handshake)
   "/api/cron/",            // Vercel Cron jobs (Bearer CRON_SECRET checked in each route)
+  "/results",              // Public customer results (consented, measured only; noindex while empty)
+  "/api/proof/",           // Case-study consent links (signed token, confirm page + POST)
   "/api/winback/go",       // Win-back: signed, expiring links (update card portal, churn reason, come-back checkout)
   "/api/recovery/resume",  // Abandoned-checkout recovery: signed, expiring resume-checkout link (token-bound to user + item)
   "/s/",                   // Ozzy Studio public share pages (/s/<token>)

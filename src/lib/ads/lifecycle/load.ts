@@ -16,6 +16,13 @@ const rows = (v: unknown): Row[] => (Array.isArray(v) ? (v as Row[]) : []);
 const str = (v: unknown): string | null => (typeof v === "string" ? v : null);
 const date = (v: unknown): Date | null => (v instanceof Date ? v : typeof v === "string" ? new Date(v) : null);
 
+const propKey = (e: Row): string | null => str((e.props && typeof e.props === "object" ? (e.props as Record<string, unknown>) : {}).key);
+/** Earliest paid $9 unlock (purchased event, key unlock_pack) among the events. */
+function unlockAt(mine: Row[]): Date | null {
+  const times = mine.filter((e) => e.name === "purchased" && propKey(e) === "unlock_pack").map((e) => date(e.createdAt)).filter((d): d is Date => d !== null);
+  return times.length ? new Date(Math.min(...times.map((d) => d.getTime()))) : null;
+}
+
 /** Candidates: ads workspace owners who signed up or finished a trial in the last LOOKBACK_DAYS. `userIds` narrows (ops/script). */
 export async function loadLifecycleCandidates(db: RawQueryDb, now: Date, userIds?: string[], start: Date = freeAdsWaysStart()): Promise<LifecycleCandidate[]> {
   const since = new Date(now.getTime() - LOOKBACK_DAYS * 86_400_000);
@@ -29,6 +36,7 @@ export async function loadLifecycleCandidates(db: RawQueryDb, now: Date, userIds
         WHERE ($2::text[] IS NOT NULL AND u.id = ANY($2::text[]))
            OR ($2::text[] IS NULL AND (u."createdAt" >= $1
                OR COALESCE(u."createdAt" < $3, false)
+               OR EXISTS (SELECT 1 FROM "AdsEvent" p WHERE p."workspaceId" = w.id AND p.name = 'purchased' AND p."createdAt" >= $1 AND p.props->>'key' = 'unlock_pack')
                OR EXISTS (SELECT 1 FROM "AdRun" r WHERE r."workspaceId" = w.id AND r."isTrial" AND r."completedAt" >= $1)))
         ORDER BY u.id, w."createdAt" ASC`,
       since,
@@ -100,6 +108,8 @@ export async function loadLifecycleCandidates(db: RawQueryDb, now: Date, userIds
       adsSignup: mine.some((e) => e.name === "signed_up"),
       signedUpAt: date(u.createdAt) ?? now,
       emailVerifiedAt: date(u.emailVerifiedAt),
+      unlockBoughtAt: unlockAt(mine),
+      subscribed: paidWs || mine.some((e) => e.name === "paid_converted" || (e.name === "purchased" && propKey(e) !== "unlock_pack")),
       paid: paidWs || mine.some((e) => e.name === "purchased" || e.name === "paid_converted"),
       unsubscribed: mine.some((e) => e.name === "email_unsubscribed" && e.userId === id),
       replied: mine.some((e) => e.name === "email_replied" && e.userId === id),

@@ -397,7 +397,7 @@ export function planMonthlyCents(planKey: string): number {
 
 // Post-trial money model (goal folder komendly-ad-rdy/MONEY_MODEL.md): menu upsell on the trial run page
 // (Scale anchor -> Launch Quarter recommended -> Growth), downsell on checkout cancel (Starter, then topup_10).
-export type AdsOfferKey = "launch_department" | "launch_quarter";
+export type AdsOfferKey = "launch_department" | "launch_quarter" | "autopilot_launch";
 
 export interface AdsLaunchOffer {
   key: AdsOfferKey;
@@ -438,6 +438,33 @@ export const LAUNCH_QUARTER: AdsLaunchOffer = {
   firstPaymentCents: AD_DEPARTMENT_PRICE_CENTS - LAUNCH_FIRST_MONTH_OFF_CENTS,
 };
 
+/** Growth Autopilot first month: $97, then the founding $297/month. */
+export const AUTOPILOT_FIRST_MONTH_CENTS = 9700;
+/** The coupon takes this much off the first autopilot invoice (renewals are plain $297 invoices). */
+export const AUTOPILOT_LAUNCH_OFF_CENTS = AUTOPILOT_PRICE_CENTS - AUTOPILOT_FIRST_MONTH_CENTS;
+/** Days after the free pack finishes that the autopilot first-month price can be bought (server-enforced). */
+export const AUTOPILOT_LAUNCH_WINDOW_DAYS = 7;
+export const AUTOPILOT_LAUNCH_COUPON_ENV = "STRIPE_ADS_AUTOPILOT_LAUNCH_COUPON_ID";
+
+/**
+ * The small first yes for the done-for-you plan (2026-11-26): Growth Autopilot's first month for $97 via a once
+ * coupon on the plan's own $297 price. Only for workspaces with a finished free pack, for 7 days after it finishes,
+ * once per workspace (src/lib/ads/autopilot-launch.ts); the founding-spot cap still applies at checkout.
+ */
+export const AUTOPILOT_LAUNCH: AdsLaunchOffer = {
+  key: "autopilot_launch",
+  name: "Growth Autopilot first month",
+  priceCents: AUTOPILOT_PRICE_CENTS,
+  intervalMonths: 1,
+  creditsPerPeriod: 0,
+  firstPeriodBonus: 0,
+  plan: "autopilot",
+  windowHours: AUTOPILOT_LAUNCH_WINDOW_DAYS * 24,
+  priceEnv: "STRIPE_ADS_AUTOPILOT_PRICE_ID",
+  couponEnv: AUTOPILOT_LAUNCH_COUPON_ENV,
+  firstPaymentCents: AUTOPILOT_FIRST_MONTH_CENTS,
+};
+
 export function offerCouponId(offer: AdsLaunchOffer, env: Record<string, string | undefined> = process.env): string | null {
   return offer.couponEnv ? env[offer.couponEnv] || null : null;
 }
@@ -460,7 +487,7 @@ export const LAUNCH_QUARTER_LEGACY: AdsLaunchOffer = {
   priceEnv: "STRIPE_ADS_LAUNCH_QUARTER_PRICE_ID",
 };
 
-const ALL_OFFERS: readonly AdsLaunchOffer[] = [LAUNCH_QUARTER, LAUNCH_QUARTER_LEGACY];
+const ALL_OFFERS: readonly AdsLaunchOffer[] = [LAUNCH_QUARTER, AUTOPILOT_LAUNCH, LAUNCH_QUARTER_LEGACY];
 
 export const LAUNCH_QUARTER_GUARANTEE = "Post Ozzy's ads for 30 days. Not happy? One click, full refund.";
 

@@ -1,6 +1,7 @@
 import { Check, ShieldCheck } from "lucide-react";
 import { BillingActionButton } from "@/app/ads/billing/_components/billing-action-button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { AUTOPILOT_FIRST_MONTH_LINE, AUTOPILOT_GUARANTEE_LINE, AUTOPILOT_LAUNCH_NOTE } from "@/lib/ads/public-offer";
 import { AUTOPILOT_DISPLAY_NAME, AUTOPILOT_FOUNDING_LINE, AUTOPILOT_FULL_MESSAGE, AUTOPILOT_PLAN_NAME, AUTOPILOT_PRICE_LOCK } from "@/lib/ads/billing-config";
 import { TEAM_ROLES } from "@/lib/ads/team/contracts";
 import { roleNextStep } from "@/lib/ads/team/rules";
@@ -18,19 +19,21 @@ export interface TeamOfferProps {
   /** Already on another paid plan: switch in the billing portal instead of a new checkout. */
   switchInPortal: boolean;
   blockedReason: string | null;
+  /** Server says the $97 first-month launch offer is open for this workspace. */
+  launch?: boolean;
 }
 
-const WHAT_YOU_DO = ["Connect Meta with us when you join (Facebook and Instagram): we set it up together.", "Set a monthly ad budget limit.", "Call the leads Ozzy sends you."];
+const WHAT_YOU_DO = ["Connect Meta with us when you join (Facebook and Instagram): we set it up together.", "Set a monthly ad budget limit.", "Read one email a week and call the leads we send you."];
 
-export function TeamOffer({ priceLabel, regularPriceLabel, spotsFull, checkout, switchInPortal, blockedReason }: TeamOfferProps) {
+export function TeamOffer({ priceLabel, regularPriceLabel, spotsFull, checkout, switchInPortal, blockedReason, launch = false }: TeamOfferProps) {
   return (
     <div className="space-y-8">
       <section className="studio-rise flex flex-col items-start gap-5 sm:flex-row sm:items-center">
         <OzzyImg src="/brand/ozzy-joyful-happy.png" size={112} />
         <div className="space-y-2">
           <p className="font-mono text-xs uppercase tracking-widest text-[var(--studio-gold)]">{AUTOPILOT_DISPLAY_NAME} · {AUTOPILOT_PLAN_NAME}</p>
-          <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">You run your business. Ozzy runs your marketing.</h1>
-          <p className="max-w-2xl text-muted-foreground">The team makes your ads, puts them on Facebook and Instagram, checks them every day and sends every new lead to your inbox. You set the monthly limit; they never go over it.</p>
+          <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">A steady flow of customers asking for quotes, without you running Facebook ads.</h1>
+          <p className="max-w-2xl text-muted-foreground">We make your ads from your own website, put them on Facebook and Instagram with you, pause the ones that waste money every day and email every new lead to you within minutes. You set one budget; spend never goes over it.</p>
         </div>
       </section>
 
@@ -51,8 +54,9 @@ export function TeamOffer({ priceLabel, regularPriceLabel, spotsFull, checkout, 
       <Card className="glow-primary border-2 border-primary">
         <CardHeader>
           <CardTitle className="font-display text-2xl">
-            Hire the team: {priceLabel}/month <span className="text-base font-normal text-muted-foreground">founding price (regular <s>{regularPriceLabel}</s>)</span>
+            Have us run your ads: {priceLabel}/month <span className="text-base font-normal text-muted-foreground">founding price (regular <s>{regularPriceLabel}</s>)</span>
           </CardTitle>
+          {launch ? <p className="text-sm font-medium">{AUTOPILOT_FIRST_MONTH_LINE}. {AUTOPILOT_LAUNCH_NOTE}</p> : null}
           <p className="text-sm text-[var(--studio-gold)]">{AUTOPILOT_PRICE_LOCK} {AUTOPILOT_FOUNDING_LINE}</p>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
@@ -64,12 +68,12 @@ export function TeamOffer({ priceLabel, regularPriceLabel, spotsFull, checkout, 
           {blockedReason ? <p role="status" className="text-sm text-muted-foreground">{blockedReason}</p>
             : spotsFull ? <p role="status" className="text-sm font-medium">{AUTOPILOT_FULL_MESSAGE}</p>
             : switchInPortal ? <BillingActionButton endpoint="/api/ads-billing/portal" label={`Switch to ${AUTOPILOT_PLAN_NAME}`} />
-            : checkout ? <BillingActionButton endpoint="/api/ads-billing/checkout" body={checkout} label={`Hire the team for ${priceLabel}/month`} />
+            : checkout ? <BillingActionButton endpoint="/api/ads-billing/checkout" body={checkout} label={`Have us run your ads for ${priceLabel}/month`} />
             : <p className="text-sm text-muted-foreground">Checkout isn&apos;t available right now. Please try again later.</p>}
           <p className="text-xs text-muted-foreground">
-            {priceLabel} every month until you cancel. Cancel any time in one click under Billing, Manage subscription. Ad spend is paid to Meta separately.
+            {priceLabel} every month until you cancel. Cancel any time under Billing, Manage subscription. Ad spend is paid to Meta separately.
           </p>
-          <p className="flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0 text-primary" aria-hidden />Not happy in the first 30 days? Refund yourself in one click on the billing page.</p>
+          <p className="flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck className="size-4 shrink-0 text-primary" aria-hidden />{AUTOPILOT_GUARANTEE_LINE}</p>
         </CardFooter>
       </Card>
     </div>

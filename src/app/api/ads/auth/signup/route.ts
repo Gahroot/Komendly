@@ -17,6 +17,7 @@ import { claimOutboundGift } from "@/lib/kly/gift-claim";
 import { ANON_ID_COOKIE, EXP_COOKIE, parseAssignments } from "@/lib/analytics/experiments";
 import { normalizeTrade, TRADE_COOKIE } from "@/lib/ads/trade";
 import { tagWorkspaceTrade } from "@/lib/ads/trade-server";
+import { businessSignals, OTHER_TRADE, SITE_COOKIE } from "@/lib/ads/lead-qualify";
 
 const BodySchema = z.object({
   /** Optional: the landing sign-up asks only for email + password. Emails greet "Hi there" without it. */
@@ -54,7 +55,11 @@ export async function POST(request: NextRequest) {
     // Trade landing page (/free-ads/roofers sets kmd_trade): count roofer sign-ups and payers separately.
     const trade = normalizeTrade(request.cookies.get(TRADE_COOKIE)?.value);
     if (trade) await tagWorkspaceTrade(workspace.id, trade, { userId: user.id, via: "signup" });
-    await trackAdsEvent("signed_up", { workspaceId: workspace.id, userId: user.id, props: { firstTouch, ...(trade ? { trade } : {}), ...(klyLead ? { klyLead } : {}), anonId: request.cookies.get(ANON_ID_COOKIE)?.value, exp: parseAssignments(request.cookies.get(EXP_COOKIE)?.value) } });
+    // Soft qualification (never blocks): is this a real business? Stored on the event so the scoreboard can split them.
+    const rawTrade = request.cookies.get(TRADE_COOKIE)?.value;
+    const tradePicked = Boolean(trade) || rawTrade === OTHER_TRADE;
+    const signals = businessSignals({ email: user.email, website: safeDecode(request.cookies.get(SITE_COOKIE)?.value), tradePicked });
+    await trackAdsEvent("signed_up", { workspaceId: workspace.id, userId: user.id, props: { firstTouch, ...(trade ? { trade } : {}), ...(rawTrade === OTHER_TRADE ? { trade_other: true } : {}), ...signals, ...(klyLead ? { klyLead } : {}), anonId: request.cookies.get(ANON_ID_COOKIE)?.value, exp: parseAssignments(request.cookies.get(EXP_COOKIE)?.value) } });
     await recordReferralAtSignup({
       code: request.cookies.get(REFERRAL_COOKIE)?.value ?? parsed.data.ref,
       giftId: request.cookies.get(GIFT_COOKIE)?.value ?? null,
@@ -70,5 +75,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     return adsErrorResponse(error);
+  }
+}
+
+function safeDecode(v: string | undefined): string | null {
+  try {
+    return v ? decodeURIComponent(v).slice(0, 200) : null;
+  } catch {
+    return null;
   }
 }

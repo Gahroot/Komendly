@@ -5,6 +5,7 @@ import { formatCents, formatPct } from "@/lib/ads/billing-format";
 import { parseFunnelQuery } from "@/lib/ads/funnel-queries";
 import { loadGrowthOverview } from "@/lib/ads/growth-queries";
 import { CommandCenter } from "./command-center";
+import { ProofCard } from "./proof-card";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
 import { StatCard } from "../_components/stat-card";
 
@@ -17,6 +18,7 @@ export default async function AdminGrowthPage({ searchParams }: { searchParams: 
   return (
     <AdminAdsShell title="Growth command center" description="All 100 growth opportunities (+ discovered), what is live, what needs you, and referrals, gifts and partners below.">
       <CommandCenter />
+      <ProofCard />
       <form className="flex flex-wrap items-end gap-3 text-sm">
         <label className="grid gap-1">From<input className="rounded border bg-background px-2 py-1" type="date" name="from" defaultValue={day(from)} /></label>
         <label className="grid gap-1">To<input className="rounded border bg-background px-2 py-1" type="date" name="to" defaultValue={day(new Date(to.getTime() - 1))} /></label>

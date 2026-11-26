@@ -22,6 +22,7 @@ import { OfferDownloadModal } from "./offer-download-modal";
 import { OfferNudge } from "./offer-nudge";
 import { TrialUpsell } from "./trial-upsell";
 import { UnlockPackCard } from "./unlock-pack-offer";
+import { UnlockUpsellModal } from "./unlock-upsell-modal";
 import { AutopilotOfferCard } from "./autopilot-offer-card";
 import { rooferOfferStage, usesAutopilotOffer } from "@/lib/ads/roofer-offer";
 import { LAUNCH_OFFER_MIN_READY } from "@/lib/ads/billing-config";
@@ -122,11 +123,12 @@ export function RunScreen({ initial }: { initial: RunView }) {
         </div>
         {body}
         {done && readyMain > 0 && <LaunchGuideCard runId={run.id} ready={readyMain} defaultOpen={!trialUnpaid} />}
-        {offerReady && stage === "autopilot" && <AutopilotOfferCard runId={run.id} spotsLeft={offer.spotsLeft} onDecline={declineAutopilot} />}
+        {offerReady && stage === "autopilot" && <AutopilotOfferCard runId={run.id} spotsLeft={offer.spotsLeft} launch={Boolean(offer.autopilotLaunch)} onDecline={declineAutopilot} />}
         {showEarlyOffer && <OfferNudge runId={run.id} ready={readyMain} bonus={run.bonus ?? null} remainingMs={offer.remainingMs} onDismiss={dismissLaunch} valueLine={valueLine} />}
         {offerReady && stage === "unlock_pack" && run.bonus && <UnlockPackCard runId={run.id} bonus={run.bonus} />}
         {offerReady && done && trialUnpaid && stage !== "unlock_pack" && stage !== "autopilot" && <TrialUpsell runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} onDecline={offerOpen ? dismissLaunch : undefined} valueLine={valueLine} />}
-        {offerReady && done && trialUnpaid && <OfferDownloadModal runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} lockedAds={run.lockedAds ?? 0} unlockAvailable={unlockNow} freeAds={run.freeAds} autopilot={stage === "autopilot" ? { spotsLeft: offer.spotsLeft, onDecline: declineAutopilot } : null} />}
+        {offerReady && done && trialUnpaid && <OfferDownloadModal runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} lockedAds={run.lockedAds ?? 0} unlockAvailable={unlockNow} freeAds={run.freeAds} autopilot={stage === "autopilot" ? { spotsLeft: offer.spotsLeft, launch: Boolean(offer.autopilotLaunch), onDecline: declineAutopilot } : null} />}
+        {offerReady && done && trialUnpaid && offer.autopilotLaunch && <UnlockUpsellModal runId={run.id} spotsLeft={offer.autopilotLaunchSpotsLeft} stepDownOpen={offer.open} />}
         {done && ws?.isPaid && <GenerateMoreForm url={run.url} brandProfileId={run.brandProfileId} />}
         {bridgeOn && <StudioBridgeCard placement="run_card" data={{ runId: run.id, domain, bestAdId: bridgeAd?.id ?? null, hasLogo: Boolean(run.logoUrl), freeVideosLeft: run.studio?.freeVideosLeft ?? 0 }} />}
         {done && run.ads.length > 0 && <GiftPackCard />}

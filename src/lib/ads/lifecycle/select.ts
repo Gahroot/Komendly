@@ -15,6 +15,8 @@ export const LIFECYCLE_KINDS = [
   // One-off announcement to users who signed up before FREE_ADS_WAYS_START (paid users included).
   "free_ads_ways",
   "refreshed_pack",
+  // $9 "Unlock this pack" buyers (unlock-emails.ts): thanks ~10 min after paying, then day 3 and day 7 if no subscription.
+  "unlock_thanks", "unlock_day3", "unlock_day7",
 ] as const;
 export type LifecycleKind = (typeof LIFECYCLE_KINDS)[number];
 /** Kinds the scheduler sends by itself (refreshed_pack is triggered by ops only). */
@@ -34,6 +36,10 @@ export interface LifecycleCandidate {
   /** Replied to one of our emails (email_replied event): talking to a human now, marketing drips stop. */
   replied?: boolean;
   trialRunId: string | null;
+  /** When the $9 "Unlock this pack" was paid (purchased event, key unlock_pack); null/missing = never. */
+  unlockBoughtAt?: Date | null;
+  /** Has a plan or non-unlock purchase. `paid` is also true for $9-only buyers; the unlock emails use this instead (missing = paid). */
+  subscribed?: boolean;
   /** Any non-gift run was ever started in the workspace (even one that failed or is still running). */
   startedRun?: boolean;
   /** Run start refused the free trial (trial_blocked event: used domain / network / device...). */
@@ -104,7 +110,10 @@ export function spreadSlot(id: string, n: number): number {
  */
 export const MIN_GAP_MS = 24 * H;
 /** Sends that never count toward (nor wait for) the 24h cap: verify codes, "your video is ready", invite reward. */
-export const TRANSACTIONAL_KINDS: ReadonlySet<string> = new Set(["verify_nudge", "verify_nudge_2", "studio_ready", "studio_invite_reward"]);
+export const TRANSACTIONAL_KINDS: ReadonlySet<string> = new Set(["verify_nudge", "verify_nudge_2", "studio_ready", "studio_invite_reward", "unlock_thanks"]);
+/** Unlock-buyer emails: a $9-only buyer (paid by `paid`) still gets them until they subscribe. */
+const UNLOCK_EMAILS: ReadonlySet<string> = new Set(["unlock_thanks", "unlock_day3", "unlock_day7"]);
+export const UNLOCK_THANKS_OPEN_MS = 12 * H;
 /** founder_note: sent this long after ads_ready went out; not later than openMs after it (missed = never). */
 export const FOUNDER_NOTE = { delayMs: 10 * 60_000, openMs: 20 * H, quietMs: 2 * H };
 /** Kinds founder_note doesn't wait for (it follows ads_ready by design). */
@@ -172,6 +181,13 @@ export function scheduleFor(c: LifecycleCandidate, start: Date = freeAdsWaysStar
     out.push({ kind: "day7_downsell", from: at(t, 7 * 24), until: at(t, 8 * 24) });
     for (const l of LONG_TAIL) out.push({ kind: l.kind, from: at(t, l.day * 24), until: at(t, (l.day + l.days) * 24) });
   }
+  // $9 buyers who have not subscribed: thanks within ~10 min (next engine tick), then a day-3 and a day-7 follow-up.
+  if (c.unlockBoughtAt) {
+    const b = c.unlockBoughtAt;
+    out.push({ kind: "unlock_thanks", from: b, until: new Date(b.getTime() + UNLOCK_THANKS_OPEN_MS) });
+    out.push({ kind: "unlock_day3", from: at(b, 72), until: at(b, 96) });
+    out.push({ kind: "unlock_day7", from: at(b, 168), until: at(b, 192) });
+  }
   if (c.signedUpAt < start && isAdsUser(c) && (c.emailVerifiedAt || c.paid)) {
     out.push({ kind: "free_ads_ways", from: new Date(start.getTime() + spreadSlot(c.userId, FREE_ADS_WAYS.spreadHours) * H), until: new Date(start.getTime() + FREE_ADS_WAYS.openDays * D) });
   }
@@ -200,6 +216,11 @@ export function offerWindowStart(c: Pick<LifecycleCandidate, "offerReadyAt" | "t
 /** Why this user gets no email of `kind` (null = eligible). */
 export function suppressedFor(c: LifecycleCandidate, kind: string): "test_user" | "paid" | "unsubscribed" | "replied" | null {
   const why = suppressedReason(c);
+  if (UNLOCK_EMAILS.has(kind)) {
+    // Subscribers (the upsell taken) get no more; a $9-only buyer is "paid" for the other kinds but not for these.
+    const w = isTestEmail(c.email) ? "test_user" : c.unsubscribed ? "unsubscribed" : (c.subscribed ?? c.paid) ? "paid" : null;
+    return w ?? (c.replied && !TRANSACTIONAL_KINDS.has(kind) ? "replied" : null);
+  }
   const base = why === "paid" && PAID_OK.has(kind) ? (c.unsubscribed ? "unsubscribed" : null) : why;
   // Replied: only transactional emails (verify codes...) keep going.
   return base ?? (c.replied && !TRANSACTIONAL_KINDS.has(kind) ? "replied" : null);

@@ -6,13 +6,14 @@
 import Link from "next/link";
 import { Check, Clapperboard, Clock, Gem, Megaphone, ShieldCheck, Sparkles, Wallet, Wand2 } from "lucide-react";
 import type { ReactNode } from "react";
-import { ADS_GUARANTEE, ADS_TOPUPS, AUTOPILOT_FULL_MESSAGE, AUTOPILOT_PRICE_LOCK, AUTOPILOT_STACK, PLAN_USAGE_NOTE, FOUNDING_PRICE_LOCK, FOUNDING_TERMS, PLANS_FOR_SALE, stackTotalUsd, ANNUAL_MONTHS, ANNUAL_MONTHS_PAID, annualCredits, annualPriceCents, type AdsPlanKey, type AdsPlanTier, planDisplayName, planUsageLine } from "@/lib/ads/billing-config";
+import { ADS_GUARANTEE, ADS_TOPUPS, AUTOPILOT_FULL_MESSAGE, AUTOPILOT_PRICE_LOCK, PLAN_USAGE_NOTE, FOUNDING_PRICE_LOCK, FOUNDING_TERMS, PLANS_FOR_SALE, stackTotalUsd, ANNUAL_MONTHS, ANNUAL_MONTHS_PAID, annualCredits, annualPriceCents, type AdsPlanKey, type AdsPlanTier, planDisplayName, planUsageLine } from "@/lib/ads/billing-config";
 import { formatCents } from "@/lib/ads/billing-format";
 import { FIRST_VIDEO_OFFER, perVideoUsd, VIDEO_PACK_OFFER } from "@/lib/first-video-offer";
 import { ATTRACTION, planAppsSummary, TESTIMONIALS_PER_MONTH } from "@/lib/hub/money-model";
 import { STUDIO_INVITE, STUDIO_PRICE } from "@/lib/studio/contracts";
-import { AD_SPEND_LINE, checkoutTerms, DIY_INCLUDES, FOUNDING_SPOTS_LINE, HERO_PLAN, LAUNCH_PRICE_NOTE, NO_GUARANTEE_LINE, PUBLIC_OFFER } from "@/lib/ads/public-offer";
+import { AD_SPEND_LINE, checkoutTerms, DIY_INCLUDES, FOUNDING_SPOTS_LINE, HERO_PLAN, AUTOPILOT_FIRST_MONTH_LINE, AUTOPILOT_GUARANTEE_LINE, AUTOPILOT_LAUNCH_NOTE, LAUNCH_PRICE_NOTE, NO_GUARANTEE_LINE, PUBLIC_OFFER } from "@/lib/ads/public-offer";
 import { TeamOffer } from "./team-offer";
+import { OBJECTION_STACK } from "@/lib/ads/dream-copy";
 import { cn } from "@/lib/utils";
 
 /** Display order for new buyers: Growth Autopilot (hero, done for you), Ozzy Ad Department (DIY), Starter, Scale, Agency; hidden plans are skipped. */
@@ -60,7 +61,7 @@ const FAQ = [
   { q: "Why are testimonial videos only on Agency?", a: "Each AI testimonial video takes real presenter rendering time and costs us far more than an ad, so we keep them scarce: 3 a month on Agency, plus one-off packs. Unused plan testimonials don't roll over." },
   { q: "Is there really a free video?", a: `Yes. Everyone gets ${ATTRACTION.studio}. Invite a friend and they get ${STUDIO_INVITE.friendFreeVideos} free videos; you get ${STUDIO_INVITE.senderRewardVideos} more when they join.` },
   { q: "Do credits expire?", a: "Plan credits reset each billing period (yearly plans get all 12 months up front, valid for the year). Top-up credits never expire." },
-  { q: "I'm on an old testimonials plan. What happens?", a: "Nothing changes unless you want it to: your plan and price stay as they are. You can switch to an Ozzy plan in one click from Billing." },
+  { q: "I'm on an old testimonials plan. What happens?", a: "Nothing changes unless you want it to: your plan and price stay as they are. You can switch to an Ozzy plan from Billing." },
   { q: "Can I cancel?", a: `Any time, online, from Manage subscription on your billing page. Your plan runs to the end of the period you paid for, then the team pauses your ads. ${ADS_GUARANTEE}` },
 ] as const;
 
@@ -129,23 +130,21 @@ export function OzzyPricing({ yearly, basePath, planHref, freeHref, spotsLeft, t
 
       {hero && (
         <section aria-labelledby="hero-stack-h" className="glass mx-auto mt-12 max-w-3xl rounded-2xl p-6">
-          <h2 id="hero-stack-h" className="font-display text-2xl font-medium">Everything {planDisplayName(hero)} does for you</h2>
+          <h2 id="hero-stack-h" className="font-display text-2xl font-medium">What you get, and what we take off your plate</h2>
           <ul className="mt-4 space-y-2.5 text-sm">
-            {AUTOPILOT_STACK.map((i) => (
-              <li key={i.label} className="flex items-start justify-between gap-4">
-                <span className="flex gap-2"><Check aria-hidden className="mt-0.5 size-4 shrink-0 text-[var(--studio-gold)]" /><span><span className="font-medium">{i.bonus ? "Bonus: " : ""}{i.label}</span> · <span className="text-muted-foreground">{i.detail}</span></span></span>
-                <span className="shrink-0 tabular-nums text-muted-foreground">${i.valueUsd}/mo</span>
-              </li>
+            {OBJECTION_STACK.map((o) => (
+              <li key={o.worry} className="flex gap-2"><Check aria-hidden className="mt-0.5 size-4 shrink-0 text-[var(--studio-gold)]" /><span><span className="font-medium">{o.worry}</span> <span className="text-muted-foreground">{o.answer}</span></span></li>
             ))}
           </ul>
-          <p className="mt-4 border-t border-border pt-4 text-sm"><span className="font-semibold">Total value ${stackTotalUsd(AUTOPILOT_STACK).toLocaleString("en-US")}/month.</span> Yours for {formatCents(hero.priceCents)}/month, the founding price (regular {PUBLIC_OFFER.heroRegularPrice}/month). {AUTOPILOT_PRICE_LOCK}</p>
+          <p className="mt-4 border-t border-border pt-4 text-sm">Founding price: <span className="font-semibold">{formatCents(hero.priceCents)}/month</span> (regular {PUBLIC_OFFER.heroRegularPrice}/month). {AUTOPILOT_PRICE_LOCK} {AUTOPILOT_GUARANTEE_LINE}</p>
+          <p className="mt-2 text-sm text-[var(--studio-gold)]">For businesses that have made their free ads: {AUTOPILOT_FIRST_MONTH_LINE}. {AUTOPILOT_LAUNCH_NOTE}</p>
           <p className="mt-2 flex gap-2 text-xs text-muted-foreground"><Wallet aria-hidden className="mt-0.5 size-3.5 shrink-0 text-[var(--studio-gold)]" />{AD_SPEND_LINE} {NO_GUARANTEE_LINE}</p>
           <p className="mt-2 text-xs text-muted-foreground">{FOUNDING_SPOTS_LINE}</p>
         </section>
       )}
 
       <section aria-labelledby="stack-h" className="mt-20">
-        <h2 id="stack-h" className="font-display text-center text-3xl font-medium tracking-[-0.01em]">What hiring the team really buys you</h2>
+        <h2 id="stack-h" className="font-display text-center text-3xl font-medium tracking-[-0.01em]">Who does the work</h2>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STACK.map((s) => (
             <div key={s.title} className="glass rounded-2xl p-5">

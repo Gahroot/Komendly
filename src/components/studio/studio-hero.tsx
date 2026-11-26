@@ -6,9 +6,9 @@ import { StudioUrlForm } from "./studio-url-form";
 const COPY = {
   control: {
     title: (
-      <>Your website in, <em className="not-italic text-[var(--studio-gold)]">ready&#8209;to&#8209;run ads</em> out</>
+      <>A steady flow of <em className="not-italic text-[var(--studio-gold)]">customers asking for quotes</em>, without you running Facebook ads</>
     ),
-    sub: "Ozzy reads your site like a strategist, finds your audience, offer and the pains your customers talk about, then builds on-brand ads for every stage of awareness.",
+    sub: "For local businesses: roofers, plumbers, HVAC, landscapers, cleaners, dentists. Paste your website and see 10 ads made from your own logo and colors, free. Then we run them on Facebook and Instagram and email you the leads. You set one budget and read one email a week.",
   },
   companion: {
     title: (

@@ -233,3 +233,27 @@ describe("founder rewrite (Nov 21)", () => {
     expect(DEFAULT_BODY).toMatch(/10 more free ads/);
   });
 });
+
+import { HORMOZI_COPY } from "../copy";
+describe("Hormozi rewrite (Nov 26)", () => {
+  const base = { businessName: "Denver Gutter Company", city: "Denver, CO", niche: "gutter installers", senderName: "Ozzy at Komendly", claimUrl: "https://www.komendly.com/g/abc", unsubscribeUrl: "https://www.komendly.com/u/def", postalAddress: "2211 Cole St, Birmingham, MI 48009", headline: "Gutters that keep your basement dry" };
+  it("3 bodies + 1 follow-up: gift first, tiny ask, signed Nolan, compliant, no promised results", () => {
+    expect(HORMOZI_COPY.filter((c) => c.dimension === "body")).toHaveLength(3);
+    expect(HORMOZI_COPY.filter((c) => c.dimension === "followup")).toHaveLength(1);
+    for (const v of HORMOZI_COPY) {
+      expect(checkVariant(v.dimension, v.template), v.key).toBeNull();
+      const c = { ...base, step: (v.dimension === "body" ? 1 : 2) as 1 | 2, variant: { [v.dimension]: v.template } };
+      const e = buildOutboundEmail(c);
+      expect(checkOutboundEmail(e, c), v.key).toBeNull();
+      expect(e.text).toContain(NOLAN_SIGNOFF);
+      expect(e.text).toMatch(/Reply yes/);
+      expect(e.text).toContain(base.postalAddress);
+      expect(e.text).toContain(base.unsubscribeUrl);
+      expect(e.text).not.toMatch(/\$|guarantee|results/i);
+    }
+  });
+  it("seeds: new arms live, old Nolan arms retired", () => {
+    expect(SEED_COPY.filter((s) => !s.retired && s.key.startsWith("hz-"))).toHaveLength(4);
+    expect(SEED_COPY.filter((s) => s.key.startsWith("nolan-")).every((s) => s.retired)).toBe(true);
+  });
+});

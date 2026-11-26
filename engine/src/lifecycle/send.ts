@@ -1,11 +1,13 @@
 // Lifecycle email loop (engine side): select due users (shared pure logic), write personalised copy
 // with Codex (validated, fallback template), render the branded email, send via SMTP, record
 // AdsEvent email_sent {kind, subject} for idempotency. Kill switch: AdsFeatureFlag lifecycle_email.
-import { LAUNCH_QUARTER, launchOfferExpiresAt } from "../../../src/lib/ads/billing-config";
+import { AUTOPILOT_FOUNDING_SPOTS, AUTOPILOT_LAUNCH, LAUNCH_QUARTER, launchOfferExpiresAt } from "../../../src/lib/ads/billing-config";
 import type { CopyContext } from "../../../src/lib/ads/lifecycle/copy";
+import { tradeTermFor } from "../../../src/lib/ads/lifecycle/trade-term";
 import { looksLikeAgency } from "../../../src/lib/ads/lifecycle/facts";
 import { freeAdsBlock, type LinkBlock } from "../../../src/lib/ads/lifecycle/free-ads";
 import { founderFrom, founderNote } from "../../../src/lib/ads/lifecycle/founder";
+import { isUnlockKind, UNLOCK_REPLY_TO, unlockEmail, type UnlockKind } from "../../../src/lib/ads/lifecycle/unlock-emails";
 import { loadLifecycleCandidates } from "../../../src/lib/ads/lifecycle/load";
 import { BEST_AD_KINDS, dueEmail, isFreshKind, offerWindowStart, rankAdsForEmail, isStartKind, isVerifyKind, refreshedPackAllowed, type LifecycleCandidate, type LifecycleKind } from "../../../src/lib/ads/lifecycle/select";
 import { renderLifecycleHtml, renderLifecycleText, unsubscribeHeaders, type LifecycleEmailInput } from "../../../src/lib/ads/lifecycle/template";
@@ -128,6 +130,20 @@ export async function brandContext(db: Db, runId: string | null, unlocked = fals
   };
 }
 
+/** The trade the visitor picked at sign-up (signed_up / trade_tagged props.trade) as email wording; null when unknown. Never throws. */
+async function tradeTermOf(db: Db, workspaceId: string): Promise<string | null> {
+  try {
+    for (const name of ["trade_tagged", "signed_up"]) {
+      const e = await db.adsEvent.findFirst({ where: { workspaceId, name }, orderBy: { createdAt: "asc" }, select: { props: true } });
+      const term = tradeTermFor((e?.props as Record<string, unknown> | null)?.trade);
+      if (term) return term;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 /** Fresh code + link for the verify nudge (same hashes as the web app's src/lib/ads/verify.ts). */
 async function issueVerification(db: Db, userId: string, now: Date): Promise<{ token: string; code: string }> {
   const { token, code } = newVerificationSecrets();
@@ -147,6 +163,7 @@ export async function sendLifecycleEmail(deps: LifecycleDeps, c: LifecycleCandid
   const runId = opts.runId ?? c.trialRunId;
   const verify = isVerifyKind(kind);
   const brand = await brandContext(deps.db, verify ? null : runId, c.paid);
+  if (isUnlockKind(kind)) return sendUnlockEmail(deps, c, kind, { runId, brandName: brand.brandName, dryRun: opts.dryRun });
   if (kind === "founder_note") return sendFounderNote(deps, c, { runId, brandName: brand.brandName, dryRun: opts.dryRun });
   const verification = verify && !opts.dryRun ? await issueVerification(deps.db, c.userId, now) : null;
   const fresh = isFreshKind(kind) && opts.nurture?.state === "ready" ? opts.nurture : null;
@@ -172,6 +189,7 @@ export async function sendLifecycleEmail(deps: LifecycleDeps, c: LifecycleCandid
     paid: c.paid,
     agencyLike: brand.agencyLike,
     freshAd: Boolean(fresh),
+    tradeTerm: await tradeTermOf(deps.db, c.workspaceId),
   };
   const { copy, source, reason } = await writeCopy(verify ? null : deps.provider, ctx, now);
   const path =
@@ -265,6 +283,50 @@ async function sendFounderNote(deps: LifecycleDeps, c: LifecycleCandidate, o: { 
   const claim = await deps.db.adsEvent.create({ data: { name: "email_sent", userId: c.userId, workspaceId: c.workspaceId, runId: o.runId, props: { kind, subject: note.subject, source: "fixed" } } });
   try {
     await deps.send({ to: c.email, from: founderFrom(env.LIFECYCLE_FOUNDER_FROM), subject: note.subject, text: note.text, html: "", headers: unsubscribeHeaders(unsubscribeUrl) });
+    log("info", "lifecycle email sent", { userId: c.userId, kind });
+    return { ...result, status: "sent" };
+  } catch (e) {
+    await deps.db.adsEvent.delete({ where: { id: claim.id } }).catch(() => undefined);
+    log("warn", "lifecycle email failed", { userId: c.userId, kind, error: errMsg(e) });
+    return { ...result, status: "failed", detail: errMsg(e) };
+  }
+}
+
+/**
+ * unlock_thanks / unlock_day3 / unlock_day7: plain text from Nolan to $9 "Unlock this pack" buyers (fixed copy,
+ * reply-to nolan@prestyj.com, same claim + unsubscribe header as the rest). The $97 Growth Autopilot first month is
+ * only mentioned while its 7-day window is open and a founding spot is free, and only if LIFECYCLE_AUTOPILOT_FIRST_MONTH=1
+ * (set it once STRIPE_ADS_AUTOPILOT_LAUNCH_COUPON_ID is live on the web app, so the email never promises a price checkout can't sell).
+ */
+async function sendUnlockEmail(deps: LifecycleDeps, c: LifecycleCandidate, kind: UnlockKind, o: { runId: string | null; brandName: string | null; dryRun: boolean }): Promise<SendResult> {
+  const env = deps.env ?? process.env;
+  const now = deps.now?.() ?? new Date();
+  const base = appUrl(env);
+  const unsubscribeUrl = `${base}/api/ads/email-unsubscribe?t=${signEmailToken({ p: "unsub", u: c.userId }, env.LIFECYCLE_EMAIL_SECRET ?? "")}`;
+  const finishedAt = c.trialCompletedAt;
+  const taken = await deps.db.adsWorkspace.count({ where: { adsPlan: "autopilot", subscriptionStatus: { in: ["active", "trialing", "past_due"] } } });
+  const autopilotOpen = env.LIFECYCLE_AUTOPILOT_FIRST_MONTH === "1" && taken < AUTOPILOT_FOUNDING_SPOTS && Boolean(finishedAt) && now.getTime() < (finishedAt?.getTime() ?? 0) + AUTOPILOT_LAUNCH.windowHours * 3_600_000;
+  const diyExpires = launchOfferExpiresAt(offerWindowStart(c), LAUNCH_QUARTER);
+  const packUrl = o.runId ? `${base}/ads/runs/${o.runId}` : `${base}/ads/app`;
+  const mail = unlockEmail({
+    kind,
+    firstName: c.name?.trim().split(/\s+/)[0] ?? null,
+    brandName: o.brandName,
+    packUrl,
+    offerUrl: `${packUrl}?offer=autopilot`,
+    pricingUrl: `${base}/ads/pricing`,
+    unsubscribeUrl,
+    autopilotOpen,
+    diyFirstMonthOpen: Boolean(diyExpires && now < diyExpires),
+  });
+  const result: SendResult = { userId: c.userId, email: c.email, kind, subject: mail.subject, source: "fallback", status: "dry_run", detail: "fixed founder copy" };
+  if (o.dryRun) {
+    log("info", "lifecycle email (dry run)", { ...result, text: mail.text });
+    return result;
+  }
+  const claim = await deps.db.adsEvent.create({ data: { name: "email_sent", userId: c.userId, workspaceId: c.workspaceId, runId: o.runId, props: { kind, subject: mail.subject, source: "fixed", autopilotOffered: autopilotOpen } } });
+  try {
+    await deps.send({ to: c.email, from: founderFrom(env.LIFECYCLE_FOUNDER_FROM), replyTo: UNLOCK_REPLY_TO, subject: mail.subject, text: mail.text, html: "", headers: unsubscribeHeaders(unsubscribeUrl) });
     log("info", "lifecycle email sent", { userId: c.userId, kind });
     return { ...result, status: "sent" };
   } catch (e) {

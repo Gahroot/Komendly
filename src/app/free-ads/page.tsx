@@ -49,7 +49,7 @@ const SAMPLES = [
 
 const STEPS = [
   { n: "1", t: "Paste your website", d: "Just the address. Nothing to fill in, no design files." },
-  { n: "2", t: "Check what we found", d: "Your customers, your offer and what they care about, taken from your site. Fix anything in one click." },
+  { n: "2", t: "Check what we found", d: "Your customers, your offer and what they care about, taken from your site. Fix anything in seconds." },
   { n: "3", t: "Download your ads", d: "Your first ad shows up in about 2 minutes. We also email you when they're all ready." },
 ];
 
@@ -66,7 +66,7 @@ const TRUST = ["No card needed", "Ready in minutes", "One free pack per business
 function Cta({ id }: { id: string }) {
   return (
     <div className="w-full max-w-2xl">
-      <FreeAdsUrlForm id={id} />
+      <FreeAdsUrlForm id={id} pickTrade />
       <ul className="mt-1 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-base text-foreground/90">
         {TRUST.map((t) => (
           <li key={t} className="inline-flex items-center gap-1.5"><Check aria-hidden className="size-4 text-[var(--studio-gold)]" />{t}</li>
@@ -111,10 +111,10 @@ export default function FreeAdsPage() {
             Free Ad Pack · no card needed
           </p>
           <h1 id="offer-title" className="font-display mt-3 text-balance text-[2.4rem] font-medium leading-[1.08] tracking-[-0.02em] sm:text-6xl">
-            Paste your website. Get {FREE_TRIAL_ADS} ready-to-run ads, free.
+            Customers asking for quotes, without you running Facebook ads. Start by seeing {FREE_TRIAL_ADS} ads, free.
           </h1>
           <p className="mt-3 max-w-xl text-pretty text-lg text-foreground/90 sm:text-xl">
-            Made from your own website in minutes. No designer needed.
+            For local businesses. Paste your website: your ads are ready in minutes, made from your own logo and colors. Like them? We run them on Facebook and Instagram and email you the leads.
           </p>
           <div id="start" className="mt-5 flex w-full justify-center"><Cta id="hero" /></div>
           <div className="mt-4 flex w-full justify-center sm:mt-8"><MaxQuote /></div>

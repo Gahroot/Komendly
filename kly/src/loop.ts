@@ -29,6 +29,7 @@ import { createSourceRuntime, type SourceRuntime } from "./sources";
 import { cycleDue, KLY_SYSTEMS, SYSTEM_EVENTS, type KlySystem } from "./growth";
 import { systemEnabled } from "../../src/lib/growth/systems";
 import { reviewGiftsCycle } from "./review-gifts";
+import { refillCycle } from "./refill";
 import { createNewBizRuntime, newBusinessCycle, type NewBizRuntime } from "./new-business";
 import { dayStart, decide, getSettings, killSwitchReason, overBudget, upsertDaily, type KlySettingsRow } from "./settings";
 
@@ -330,6 +331,7 @@ export async function runTick(d: LoopDeps, state: LoopState): Promise<void> {
       if (r) log("info", `kly ${key}`, { ...r, sent });
     });
   }
+  await step(state, "refill", () => refillCycle(db, now));
   // Hard-rule governors (complaint, 2% bounces, 2,000 sends with no positive reply): any stop pauses all cold sending.
   // Fails closed: if the check itself errors, nothing is sent this tick.
   let governed: string | null = sendingLive ? "governor check failed" : null;

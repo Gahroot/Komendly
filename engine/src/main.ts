@@ -14,6 +14,7 @@ import { startBonusLoop } from "./bonuses/loop";
 import { startWeeklyLoop } from "./jobs/weekly";
 import { startCheckoutRecoveryLoop } from "./growth/checkout-recovery";
 import { startWinbackLoop } from "./growth/winback";
+import { startProofLoop } from "./growth/proof";
 import { startFreeToolsLoop } from "./growth/free-tools";
 import { startIndustryExamplesLoop } from "./growth/industry-examples";
 import { startViralBrandingLoop } from "./growth/viral-branding";
@@ -68,6 +69,8 @@ async function main(): Promise<void> {
   const stopRecovery = startCheckoutRecoveryLoop({ db, provider, send });
   // Churn & failed-payment win-back (growth system winback; off until AdsFeatureFlag sys_winback).
   const stopWinback = startWinbackLoop({ db, provider, send });
+  // Live-in-7-days nudges, first wins, day-14/30 measured results + consent, cancel save, guarantee alerts (each off until its sys_ flag).
+  const stopProof = startProofLoop({ db, send });
   // Meta Ad Check grader (sys_ad_check): fills AdJob adlib_scan rows from the public Ad Library. Stopped on process exit.
   const stopAdCheck = startAdCheckLoop({ db, provider, worker: config.workerId });
   const stopAdWatch = startAdWatchLoop({ db, provider, send }); // Competitor ad watch (sys_ad_watch): Monday opt-in emails
@@ -90,6 +93,7 @@ async function main(): Promise<void> {
       stopWeekly();
       stopRecovery();
       stopWinback();
+      stopProof();
       stopAdCheck();
       stopAdWatch();
       stopFreeTools();

@@ -30,6 +30,7 @@ COPY src/lib/testimonial/contracts.ts src/lib/testimonial/contracts.ts
 COPY src/lib/studio/contracts.ts src/lib/studio/contracts.ts
 COPY src/lib/hub/money-model.ts src/lib/hub/money-model.ts
 COPY src/lib/ads/billing-config.ts src/lib/ads/billing-config.ts
+COPY src/lib/ads/public-offer.ts src/lib/ads/public-offer.ts
 COPY src/lib/ads/weekly-drop.ts src/lib/ads/weekly-drop.ts
 COPY src/lib/ads/autopilot.ts src/lib/ads/autopilot.ts
 COPY src/lib/ads/lifecycle/ src/lib/ads/lifecycle/
@@ -46,6 +47,7 @@ COPY src/lib/shopify/store-data.ts src/lib/shopify/store-data.ts
 COPY src/lib/kly/review-video.ts src/lib/kly/review-video.ts
 COPY src/lib/growth/checkout-recovery.ts src/lib/growth/checkout-recovery.ts
 COPY src/lib/growth/winback.ts src/lib/growth/winback.ts
+COPY src/lib/growth/proof.ts src/lib/growth/proof.ts
 COPY src/lib/first-video-offer.ts src/lib/first-video-offer.ts
 COPY src/lib/growth/free-tools.ts src/lib/growth/free-tools.ts
 COPY src/lib/growth/industry-examples.ts src/lib/growth/industry-examples.ts

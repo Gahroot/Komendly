@@ -227,3 +227,18 @@ describe("Growth Autopilot split (2026-11-22)", () => {
     expect(where).toEqual({ adsPlan: "autopilot", subscriptionStatus: { in: ["active", "trialing", "past_due"] } });
   });
 });
+
+describe("AUTOPILOT_LAUNCH (Growth Autopilot first month)", () => {
+  it("rides the autopilot plan price with a once coupon: $97 first month, then $297", async () => {
+    const c = await import("@/lib/ads/billing-config");
+    expect(c.AUTOPILOT_LAUNCH.plan).toBe("autopilot");
+    expect(c.offerFirstPaymentCents(c.AUTOPILOT_LAUNCH)).toBe(9700);
+    expect(c.AUTOPILOT_LAUNCH.priceCents - c.AUTOPILOT_LAUNCH_OFF_CENTS).toBe(9700);
+    expect(c.AUTOPILOT_LAUNCH.windowHours).toBe(7 * 24);
+    expect(c.getOffer("autopilot_launch")).toBe(c.AUTOPILOT_LAUNCH);
+    // coupon offers never match a price id: renewals stay plain autopilot invoices
+    expect(c.offerFromPriceId("price_x", { STRIPE_ADS_AUTOPILOT_PRICE_ID: "price_x" })).toBeUndefined();
+    expect(c.offerCouponId(c.AUTOPILOT_LAUNCH, {})).toBeNull();
+    expect(c.offerCouponId(c.AUTOPILOT_LAUNCH, { STRIPE_ADS_AUTOPILOT_LAUNCH_COUPON_ID: "cp" })).toBe("cp");
+  });
+});

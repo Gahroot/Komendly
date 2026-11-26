@@ -2,8 +2,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { trackAdsEvent } from "@/lib/ads/events";
+import { getAutopilotLaunchState } from "@/lib/ads/autopilot-launch";
 import { getLaunchOfferState } from "@/lib/ads/launch-offer";
-import { getPlan, priceIdFor, UNLOCK_PACK } from "@/lib/ads/billing-config";
+import { AUTOPILOT_LAUNCH, getPlan, offerCouponId, priceIdFor, UNLOCK_PACK } from "@/lib/ads/billing-config";
 import { AUTOPILOT_PLAN_KEY, autopilotForSale, usesAutopilotOffer } from "@/lib/ads/roofer-offer";
 import { workspaceTrade } from "@/lib/ads/trade-server";
 import { foundingSpotsLeft } from "@/lib/ads/founding-spots";
@@ -22,10 +23,15 @@ export async function GET() {
     const sellable = eligible && usesAutopilotOffer(trade) && autopilotForSale() && Boolean(autopilotPlan && priceIdFor(autopilotPlan));
     const spotsLeft = sellable ? await foundingSpotsLeft(prisma).catch(() => null) : null;
     const autopilot = sellable && spotsLeft !== 0;
+    // Growth Autopilot first month ($97): finished free pack, 7 days, once, founding spot free, price + coupon configured.
+    const launchState = eligible ? await getAutopilotLaunchState(ws.id) : null;
+    const launchConfigured = Boolean(priceIdFor(AUTOPILOT_LAUNCH) && offerCouponId(AUTOPILOT_LAUNCH));
+    const launchSpots = launchState?.open && launchConfigured ? await foundingSpotsLeft(prisma).catch(() => null) : null;
+    const autopilotLaunch = Boolean(launchState?.open && launchConfigured && launchSpots !== 0);
     // serverNow lets the client run a real countdown against server time (expiresAt = 3rd ready trial ad + 72h).
     // unlockPack = the $9 downsell can be bought (the run screen shows it only after the Launch Quarter).
     return NextResponse.json(
-      { open: eligible && state.open, expiresAt: state.expiresAt?.toISOString() ?? null, serverNow: new Date().toISOString(), unlockPack: eligible && Boolean(priceIdFor(UNLOCK_PACK)), trade, autopilot, spotsLeft },
+      { open: eligible && state.open, expiresAt: state.expiresAt?.toISOString() ?? null, serverNow: new Date().toISOString(), unlockPack: eligible && Boolean(priceIdFor(UNLOCK_PACK)), trade, autopilot, spotsLeft, autopilotLaunch, autopilotLaunchExpiresAt: autopilotLaunch ? launchState?.expiresAt?.toISOString() ?? null : null, autopilotLaunchSpotsLeft: launchSpots },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {

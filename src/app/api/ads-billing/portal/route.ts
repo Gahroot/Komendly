@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { appUrl, getAdsStripe } from "@/lib/ads/billing-stripe";
+import { prisma } from "@/lib/prisma";
 import { adsErrorResponse, getOrCreateWorkspace, requireUser } from "@/lib/ads/workspace";
 
 export async function POST() {
@@ -12,6 +13,8 @@ export async function POST() {
     // Ads-only portal config (plan switching between ads plans incl. Agency + yearly); the account default is shared with testimonials.
     const configuration = process.env.STRIPE_ADS_PORTAL_CONFIG_ID || undefined;
     const session = await stripe.billingPortal.sessions.create({ customer: ws.stripeCustomerId, return_url: `${appUrl()}/ads/billing`, ...(configuration ? { configuration } : {}) });
+    // Retention: record that the owner opened billing settings (cancel_save email, sys_cancel_save). Never blocks the portal.
+    await prisma.adsEvent.create({ data: { name: "billing_portal_opened", workspaceId: ws.id, userId: user.id, props: { plan: ws.adsPlan } } }).catch(() => undefined);
     return NextResponse.json({ url: session.url });
   } catch (error) {
     return adsErrorResponse(error);

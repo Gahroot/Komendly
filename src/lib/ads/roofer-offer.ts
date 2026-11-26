@@ -42,20 +42,20 @@ const usd = (cents: number) => `$${Math.round(cents / 100)}`;
 export function autopilotOfferCopy(spotsLeft: number | null = null) {
   const { foundingCents, regularCents } = autopilotPrices();
   return {
-    title: "You've got the ads. Now who runs them?",
-    intro: "Ozzy Growth Autopilot: Ozzy's team runs your Facebook and Instagram lead ads for you. Founding offer, roofing companies only.",
+    title: "Want us to put these live and send you the leads?",
+    intro: "We run your Facebook and Instagram ads so you don't have to. Founding offer, roofing companies only.",
     features: [
-      "New ads made from your website every week, with your logo, services and photos.",
-      "A form on the ad that asks homeowners what you need to know: homeowner, timeline, ZIP, service.",
-      "Ozzy's team launches the ads in your own Meta ad account, swaps out the ones that don't get results, and emails you each new lead within minutes.",
-      "A plain-English weekly report: what you spent, how many leads, what changed.",
-      "You own the ad account and every lead. Your ad budget is paid straight to Meta and never goes over your limit.",
-      "We set up your Meta connection with you when you join.",
+      "Worried you can't run ads? We run them, in your own Meta ad account. You own the account and every lead.",
+      "Worried Facebook is complicated? We set up the connection with you when you join.",
+      "Worried about wasting money? Ads that waste money get paused daily, and spend never goes over the monthly limit you set. You pay Meta directly.",
+      "Worried the ads look generic? Every ad is made from your own website, logo and colors, and you've already seen them.",
+      "Worried about missed calls? Each new lead is emailed to you within minutes, and fresh ads are added every week.",
+      "Worried about the time? One budget to set and one weekly email to read.",
     ],
     price: `${usd(foundingCents)}/month`,
     priceNote: `Founding price, locked while you stay. Regular price ${usd(regularCents)}/month.`,
     scarcity: `First ${AUTOPILOT_FOUNDING_SPOTS} roofing companies only${spotsLeft !== null && spotsLeft < AUTOPILOT_FOUNDING_SPOTS ? ` (${spotsLeft} ${spotsLeft === 1 ? "spot" : "spots"} left)` : ""}.`,
-    guarantee: "30-day refund, no questions.",
+    guarantee: "Not happy with our work in your first 30 days? Full refund.",
     cta: `Join for ${usd(foundingCents)}/month`,
   };
 }
