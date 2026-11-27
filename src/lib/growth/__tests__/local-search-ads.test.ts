@@ -86,6 +86,10 @@ describe("search ad examples fit Google's responsive search ad limits", () => {
     const hvac = searchGuide("hvac")!;
     expect(hvac.who).toBe("heating and cooling repair companies");
     expect(hvac.tradeTitle).toMatch(/Heating and Cooling/);
+    const page = comboForIndustry("hvac", "google")!;
+    expect(page.entry.title).toBe("Google Ads for Heating & Cooling (HVAC) Repair Companies");
+    expect(page.entry.h1).toMatch(/heating and cooling \(HVAC\) repair companies/);
+    expect(page.entry.title).not.toMatch(/\| Komendly/);
     expect(hvac.services.map((s) => s.name).join(" ")).toMatch(/AC repair/);
     expect(hvac.services.map((s) => s.name).join(" ")).toMatch(/Furnace/);
   });

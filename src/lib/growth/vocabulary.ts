@@ -357,7 +357,12 @@ function googleComboEntry(slug: string): VocabEntry {
     faq: [{ q: `How much should a ${i.singular} spend on Google ads?`, a: "Many local businesses start with a daily budget that buys 10-20 clicks a day in their area, run it for a month, and keep only the keywords that bring calls or leads at a price they can afford." }, { q: "What's the difference between Local Services Ads and Google search ads?", a: "Local Services Ads (where available for your trade) show a Google-verified badge at the very top and charge per lead. Search ads are text ads you write yourself and pay per click; many businesses run both." }, { q: "Can Komendly run my Google ads?", a: "No. Komendly writes ad copy and makes ad images; you paste the text into Google Ads yourself. Komendly does not post or run these ads for you." }],
   };
 }
-export const COMBO_VOCAB: VocabEntry[] = [...Object.keys(FACEBOOK_COMBOS).map(comboEntry), ...Object.keys(GOOGLE_COMBOS).map(googleComboEntry)];
+/** Title/H1 patches applied where the combo pages are built (GALLERY_PAGES reads COMBO_VOCAB, not VOCABULARY).
+ * 27 Nov 2026 (Search Console): "google ads for heating and cooling repair companies" had impressions and no matching title. */
+const COMBO_TITLES: Record<string, Pick<VocabEntry, "title" | "h1">> = {
+  "combo:google-hvac": { title: "Google Ads for Heating & Cooling (HVAC) Repair Companies", h1: "Google ads for heating and cooling (HVAC) repair companies" },
+};
+export const COMBO_VOCAB: VocabEntry[] = [...Object.keys(FACEBOOK_COMBOS).map(comboEntry), ...Object.keys(GOOGLE_COMBOS).map(googleComboEntry)].map((e) => ({ ...e, ...(COMBO_TITLES[e.key] ?? {}) }));
 
 // ------------------------------------------------------------------------------------------------ industries (derived)
 
@@ -389,10 +394,7 @@ export const INDUSTRY_VOCAB: VocabEntry[] = INDUSTRIES.map(industryEntry);
 // ------------------------------------------------------------------------------------------------ overrides + lookups
 
 /** Researcher/founder patches by key (merged over the entries above). Data only. */
-export const VOCAB_OVERRIDES: Record<string, Partial<Omit<VocabEntry, "key" | "kind" | "slug">>> = {
-  // 27 Nov 2026 (Search Console): "google ads for heating and cooling repair companies" had impressions and no matching title.
-  "combo:google-hvac": { title: "Google Ads for Heating & Cooling (HVAC) Repair Companies", h1: "Google ads for heating and cooling (HVAC) repair companies" },
-};
+export const VOCAB_OVERRIDES: Record<string, Partial<Omit<VocabEntry, "key" | "kind" | "slug">>> = {};
 
 export const VOCABULARY: readonly VocabEntry[] = [...TOOL_VOCAB, ...FORMAT_VOCAB, ...PLATFORM_VOCAB, ...OCCASION_VOCAB, ...COMBO_VOCAB, ...INDUSTRY_VOCAB].map((e) => ({ ...e, ...(VOCAB_OVERRIDES[e.key] ?? {}) }));
 const BY_KEY = new Map(VOCABULARY.map((e) => [e.key, e]));
