@@ -145,6 +145,18 @@ describe("publish + rollback", () => {
     expect(calls).toHaveLength(0);
     expect(results.search!.error).toMatch(/quality checks/);
   });
+  it("search-only publish needs no pack ads (text ad from the draft)", async () => {
+    const { f, calls } = mockFetch((url, body) => {
+      if (url.endsWith("googleAds:search")) return { results: [] };
+      const ops = (body.mutateOperations ?? []) as any[];
+      return { mutateOperationResponses: ops.map((o, i) => ({ [Object.keys(o)[0]!.replace("Operation", "Result")]: { resourceName: `customers/1234567890/x/${i + 1}` } })) };
+    });
+    const { store, results } = memStore({ loadAds: async () => [] });
+    const s = await publishToGoogle({ client: client(f), store, payload: payload({ campaigns: ["search"], adIds: [] }), businessName: "Acme", currency: "USD", now: () => new Date() });
+    expect(s.failed).toEqual([]);
+    expect(calls.length).toBeGreaterThan(0);
+    expect(results.search!.status).toBe("published");
+  });
   it("demand gen uses multi-asset ad, PAUSED, business name <= 25, respects the minimum budget", async () => {
     const { f, calls } = mockFetch((url, body) => {
       if (url.endsWith("googleAds:search")) return { results: [{ currencyConstant: { demandGenInfo: { minimumBudgetPerDayMicros: "5000000" } } }] };

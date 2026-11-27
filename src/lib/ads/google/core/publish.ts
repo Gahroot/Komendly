@@ -338,7 +338,10 @@ export async function publishToGoogle(c: PublishContext): Promise<PublishSummary
   const ads = all.filter((a) => a.eligible);
   const created: Created[] = [];
   let failure: { kind: CampaignKind; error: string } | null = null;
-  if (!ads.length || ads.length !== p.adIds.length) failure = { kind: p.campaigns[0]!, error: "Only finished ads that passed quality checks can be published." };
+  // Search ads are text only (no pack images needed); image campaigns need every picked ad finished and QC-passed.
+  const needsImages = p.campaigns.includes("demand_gen");
+  if (needsImages && (!ads.length || ads.length !== p.adIds.length)) failure = { kind: "demand_gen", error: "Only finished ads that passed quality checks can be published." };
+  else if (!needsImages && ads.length !== p.adIds.length) failure = { kind: p.campaigns[0]!, error: "Only finished ads that passed quality checks can be published." };
   for (const kind of failure ? [] : p.campaigns) {
     const name = campaignName(kind, c.businessName, c.now());
     try {
