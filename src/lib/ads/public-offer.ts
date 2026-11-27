@@ -52,7 +52,7 @@ export const HERO_INCLUDES = "fresh ads every week, launched and run for you as 
 /** "Ozzy Ad Department: $97 the first month, then $197/month" (the first month only within the launch window). */
 export const DIY_PRICE_LINE = `${PUBLIC_OFFER.diyName}: ${PUBLIC_OFFER.diyFirstMonth} the first month, then ${PUBLIC_OFFER.diyPrice}/month`;
 /** What the DIY plan includes (lower-case phrase). No claim that we launch or run ads. */
-export const DIY_INCLUDES = "fresh ads made from your website every week, and a coach that tells you what's working; you post them yourself";
+export const DIY_INCLUDES = "fresh ads made from your website every week, and a coach that tells you what's working; you post them yourself, and Ozzy can set up Google search ads in your own Google Ads account, paused until you press start";
 
 /** Ad spend, always stated next to the offer. */
 export const AD_SPEND_LINE = "Ad spend is paid by you directly to Meta, never through Komendly, and never goes over the monthly limit you set.";
@@ -77,6 +77,7 @@ export const HERO_TEAM: readonly { role: string; does: string }[] = [
   { role: "Learns your business", does: "Reads your website to learn what you sell, who you serve and the questions to ask new customers." },
   { role: "Makes your ads", does: "Writes and designs fresh ads every week from your own website, logo and colors." },
   { role: "Puts them live, inside your limit", does: "Sets up and turns on your Facebook and Instagram lead ads with you, and keeps spend inside your monthly limit." },
+  { role: "Google search ads too", does: "Writes your Google search ads from your website and sets them up in your own Google Ads account, paused until you press start. Google bills your card directly." },
   { role: "Pauses what wastes money", does: "Checks results every day, pauses ads that waste money and keeps the ones that work." },
   { role: "Sends you the leads", does: "Emails you each new inquiry within minutes, so you can call them back fast." },
 ];

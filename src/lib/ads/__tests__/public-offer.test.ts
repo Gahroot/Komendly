@@ -33,7 +33,7 @@ describe("public offer facts", () => {
     expect(copy).not.toMatch(/guarantee|\bROI\b|\d+\s*(leads|customers|sales)/i);
     expect([...OWNER_STEPS, ...HERO_PLAN.highlights].join(" ")).not.toMatch(/one[- ]click connect|couple of clicks|connect meta once/i);
     expect(AD_SPEND_LINE).toMatch(/directly to Meta/);
-    expect(HERO_TEAM.map((t) => t.role)).toEqual(["Ozzy, your point of contact", "Learns your business", "Makes your ads", "Puts them live, inside your limit", "Pauses what wastes money", "Sends you the leads"]);
+    expect(HERO_TEAM.map((t) => t.role)).toEqual(["Ozzy, your point of contact", "Learns your business", "Makes your ads", "Puts them live, inside your limit", "Google search ads too", "Pauses what wastes money", "Sends you the leads"]);
   });
 });
 
