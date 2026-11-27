@@ -1,6 +1,7 @@
 // The executive strategy cycle (pure orchestration; all I/O via injected deps and the AdsEvent store):
 // governance -> overrides -> idempotency -> context -> stage -> constraint -> objectives -> decisions -> reviews -> handoff -> summary.
 // Each step is isolated (one failing step is recorded, the rest run). Budget: at most `maxCalls` AI calls. Dry run writes nothing.
+import { stageIndexOf, stageOf } from "./validation-mode";
 import { isoWeekKey } from "../optimizer/actions";
 import { buildBusinessContext, constraintInputsOf, type ContextInput } from "./context";
 import { applyRootCauseNotes, diagnoseExecConstraints, ROOT_CAUSE_SCHEMA, type ConstraintReport } from "./constraints17";
@@ -62,7 +63,10 @@ export async function runExecCycle(d: CycleDeps): Promise<CycleResult> {
   if (!g) return fail();
 
   // 4. stage + constraint
-  const stage = g.snapshot?.stage ?? { index: 0, label: "Pre-revenue (no snapshot: strictest stage assumed)", code: "improvise" };
+  // ONE stage definition shared with the coordinator (validation-mode.stageOf): the stricter of the revenue snapshot's roadmap stage and the paying-customer stage.
+  const snapStage = g.snapshot?.stage ?? { index: 0, label: "Pre-revenue (no snapshot: strictest stage assumed)", code: "improvise" };
+  const execIdx = stageIndexOf(stageOf({ payingCustomers: g.snapshot?.economics?.payingCustomers ?? 0, mrrCents: null }));
+  const stage = { ...snapStage, index: Math.min(snapStage.index, execIdx) };
   let report: ConstraintReport | null = null;
   await step("constraint", async () => {
     let rep = diagnoseExecConstraints(constraintInputsOf(g));

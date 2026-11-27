@@ -23,7 +23,7 @@ key_takeaways:
   - "Komendly turns a website URL into static and animated ad creatives through Ozzy. Its trial includes 10 static ads + 1 animated ad, no card required."
   - "AdCreative.ai's predictive scoring, product-photo generation, and product-video workflows make it worth evaluating when those capabilities are requirements.[^5][^7][^8]"
   - "Compare subscription and production labor costs per approved ad. Credit allowances alone do not establish a cost winner."
-  - "Komendly offers one-click publish to Meta on Growth and Scale plans. AdCreative.ai documents pushing creatives to a connected Meta ad account.[^3]"
+  - "Komendly offers Meta publishing set up with you on Growth Autopilot. AdCreative.ai documents pushing creatives to a connected Meta ad account.[^3]"
 competitors:
   - "AdCreative.ai"
 cta: "ads"
@@ -37,7 +37,7 @@ faq:
   - q: "Can AdCreative.ai make ads from my website?"
     a: "Yes. AdCreative.ai's Instant Ads accepts a website or product URL and generates ad copy and visuals from the page.[^3] Review the output against your actual offer and brand guidelines."
   - q: "Can Komendly and AdCreative.ai publish to Meta?"
-    a: "Komendly offers one-click publish to Meta on Growth and Scale plans. AdCreative.ai documents pushing creatives to connected Meta ad accounts.[^3] Confirm the precise publishing handoff during your evaluation."
+    a: "Komendly offers Meta publishing set up with you on Growth Autopilot. AdCreative.ai documents pushing creatives to connected Meta ad accounts.[^3] Confirm the precise publishing handoff during your evaluation."
 sources:
   - id: 1
     title: "AdCreative.ai: Monthly pricing cards and credit FAQ"
@@ -145,7 +145,7 @@ Start with this comparison, then evaluate the work you actually need to finish.
 | Free trial | 10 static ads + 1 animated ad, no card required | 7-day trial; credit card required.[^2] |
 | Formats | Static + animated; 4:5, 1:1, 9:16 | Ad banners, product photos, and product videos.[^1][^7][^8] |
 | Website input | Website URL through Ozzy | URL-based Instant Ads.[^3] |
-| Meta workflow | One-click publish on Growth and Scale | Push creatives to a connected Meta ad account.[^3] |
+| Meta workflow | Meta publishing set up with you on Growth Autopilot | Push creatives to a connected Meta ad account.[^3] |
 | Best for, in my judgment | Founders wanting a URL-to-ad workflow and a no-card starting point | Buyers who specifically want predictive scoring or product-image production tools.[^5][^7][^8] |
 
 ## How much does AdCreative.ai cost?
@@ -222,7 +222,7 @@ If your actual need is presenting reviews, Komendly's separate AI video testimon
 
 ## Can you publish creatives to Meta with either tool?
 
-Komendly offers one-click publish to Meta on Growth and Scale plans. If that is essential, evaluate one of those plans when budgeting.
+Komendly offers Meta publishing set up with you on Growth Autopilot. If that is essential, evaluate one of those plans when budgeting.
 
 AdCreative.ai's Instant Ads page documents pushing creatives to Meta.[^3] Its help guide says to connect the ad account to the brand, select a creative, click Download, and choose the destination platform.[^9]
 
@@ -253,7 +253,7 @@ That is a substantive reason to choose it. I would use those predictions to prio
 
 **Pros:** website-URL input, Ozzy, static and animated creatives, all 5 awareness stages, and 10 static ads + 1 animated ad, no card required. My best-for verdict is a founder starting with a website and a defined ad brief.
 
-**Cons:** one-click Meta publishing requires Growth or Scale, and the free trial is limited to one per website/device/network with email verification. Factor those conditions into your evaluation.
+**Cons:** Meta publishing set up with you requires Growth Autopilot, and the free trial is limited to one per website/device/network with email verification. Factor those conditions into your evaluation.
 
 Choose against a required job, rather than assuming the longer feature list or my own product must win.
 

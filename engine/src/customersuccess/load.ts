@@ -21,6 +21,8 @@ export interface Person {
 }
 
 const NAMES = [...SEND_EVENT_NAMES, "signed_up", "trade_tagged", "email_unsubscribed", "email_replied", "purchased", "paid_converted", "export_downloaded", "ad_downloaded", "locked_asset_refused", "pricing_viewed", "begin_checkout", "launch_guide_opened", "activation_stuck", "rl_alert_sent", "churned"];
+// Opt-outs never expire: an unsubscribe/reply older than the load window must still suppress.
+const PERMANENT = ["email_unsubscribed", "email_replied", "purchased", "paid_converted"];
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 
 export async function loadPeople(db: Db, now: Date, days = 120): Promise<Person[]> {
@@ -31,7 +33,7 @@ export async function loadPeople(db: Db, now: Date, days = 120): Promise<Person[
   const uids = wss.map((w) => w.ownerId);
   const [users, events, runs, brands, codes, metas] = await Promise.all([
     db.user.findMany({ where: { id: { in: uids } }, select: { id: true, email: true, name: true, createdAt: true } }),
-    db.adsEvent.findMany({ where: { OR: [{ workspaceId: { in: wids } }, { userId: { in: uids } }], name: { in: NAMES }, createdAt: { gte: new Date(since.getTime() - 10 * DAY) } }, orderBy: { createdAt: "asc" }, select: { id: true, name: true, props: true, createdAt: true, userId: true, workspaceId: true } }),
+    db.adsEvent.findMany({ where: { OR: [{ workspaceId: { in: wids } }, { userId: { in: uids } }], name: { in: NAMES }, AND: [{ OR: [{ createdAt: { gte: new Date(since.getTime() - 10 * DAY) } }, { name: { in: PERMANENT } }] }] }, orderBy: { createdAt: "asc" }, select: { id: true, name: true, props: true, createdAt: true, userId: true, workspaceId: true } }),
     db.adRun.findMany({ where: { workspaceId: { in: wids }, kind: { not: "gift" } }, orderBy: { createdAt: "desc" }, take: 6000, select: { id: true, workspaceId: true, status: true, isTrial: true, completedAt: true, createdAt: true, error: true } }),
     db.brandProfile.findMany({ where: { workspaceId: { in: wids } }, select: { workspaceId: true, domain: true, name: true, createdAt: true }, orderBy: { createdAt: "asc" } }),
     db.adsReferralCode.findMany({ where: { workspaceId: { in: wids } }, select: { workspaceId: true, code: true } }),

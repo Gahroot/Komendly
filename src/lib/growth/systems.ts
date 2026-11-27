@@ -54,7 +54,6 @@ export const GROWTH_SYSTEMS = [
   { key: "funnel_monitor", label: "Daily funnel monitor (public pages, Stripe objects, stuck packs; emails on failure)", stage: "keep", utmSource: "funnel_monitor", cycleMinutes: 24 * 60, silentAlertHours: 24 * 3 },
   { key: "optimizer", label: "Autonomous optimiser (weekly business loop: diagnose, decide, act within guardrails)", stage: "keep", utmSource: "optimizer", cycleMinutes: 7 * 24 * 60, silentAlertHours: 24 * 21 },
   { key: "exec_strategy", label: "Executive strategy engine (weekly: business context, stage, constraint, objectives, decisions; defaults to hold_and_measure)", stage: "keep", utmSource: "exec_strategy", cycleMinutes: 7 * 24 * 60, silentAlertHours: 24 * 21 },
-  { key: "exec_digest", label: "Executive strategy weekly plain-English digest to the owner", stage: "keep", utmSource: "exec_digest", cycleMinutes: 7 * 24 * 60, silentAlertHours: 24 * 60 },
   { key: "optimizer_digest", label: "Optimiser weekly plain-English digest to the owner", stage: "keep", utmSource: "optimizer_digest", cycleMinutes: 7 * 24 * 60, silentAlertHours: 24 * 60 },
   { key: "revenue_intel", label: "Revenue intelligence: daily economics, constraint and stage snapshot", stage: "keep", utmSource: "revenue_intel", cycleMinutes: 24 * 60, silentAlertHours: 24 * 3 },
   { key: "revenue_digest", label: "Monday revenue digest email to the owner", stage: "keep", utmSource: "revenue_digest", cycleMinutes: 7 * 24 * 60, silentAlertHours: 24 * 21 },
@@ -63,6 +62,7 @@ export const GROWTH_SYSTEMS = [
   { key: "delivery_econ", label: "Delivery economics: cost-to-deliver, margin per plan/offer, cost hotspots, savings proposals", stage: "keep", utmSource: "delivery_econ", cycleMinutes: 24 * 60, silentAlertHours: 24 * 3 },
   { key: "competitive", label: "Competitive intelligence: product proposals from the public-sourced scorecard", stage: "convert", utmSource: "competitive", cycleMinutes: 7 * 24 * 60, silentAlertHours: 24 * 30 },
   { key: "product_loop", label: "Autonomous product loop: weekly ranked product backlog + what-to-build-next digest", stage: "keep", utmSource: "product_loop", cycleMinutes: 7 * 24 * 60, silentAlertHours: 24 * 21 },
+  { key: "ai_gateway", label: "AI gateway: web AI requests (auto-reply, review gate) run on the owner's Codex subscription via the engine (docs/ops/ai-policy.md)", stage: "keep", utmSource: "ai_gateway", cycleMinutes: 24 * 60, silentAlertHours: 24 * 30 },
   { key: "customer_memory", label: "Customer memory: per-business brief + self-learning guidance in ad generation", stage: "keep", utmSource: "customer_memory", cycleMinutes: 24 * 60, silentAlertHours: 24 * 14 },
   { key: "agency_ops", label: "Agency operations: multi-client dashboard and bulk weekly drop", stage: "keep", utmSource: "agency_ops", cycleMinutes: 24 * 60, silentAlertHours: 24 * 30 },
   { key: "simplicity", label: "Radical simplicity: one next step per customer, prefilled defaults", stage: "convert", utmSource: "simplicity", cycleMinutes: 24 * 60, silentAlertHours: 24 * 30 },
@@ -78,6 +78,8 @@ export const GROWTH_SYSTEMS = [
   { key: "incidents", label: "Incident management: signals to incidents, safe containment, owner escalation, daily learning review", stage: "keep", utmSource: "incidents", cycleMinutes: 10, silentAlertHours: 24 * 30 },
   { key: "exec_coordinator", label: "Executive coordinator: routes approved objectives to allow-listed reversible actions, build_request queue, performance, allocation, risks (docs/exec)", stage: "keep", utmSource: "exec_coordinator", cycleMinutes: 24 * 60, silentAlertHours: 24 * 9 },
   { key: "exec_brief", label: "Weekly executive brief: the ONE Monday owner email (absorbs the revenue/optimiser/ops digests)", stage: "keep", utmSource: "exec_brief", cycleMinutes: 7 * 24 * 60, silentAlertHours: 24 * 21 },
+  { key: "newsletter", label: "Ozzy's Ad Report: weekly double-opt-in newsletter (one real Ad Library number, one ad idea, one tip)", stage: "acquire", utmSource: "ozzy_report", cycleMinutes: 7 * 24 * 60, silentAlertHours: 24 * 21 },
+  { key: "build_in_public", label: "Build in public: weekly real-numbers post drafts from DB snapshots (draft files only, never auto-posted)", stage: "acquire", utmSource: "build_in_public", cycleMinutes: 7 * 24 * 60, silentAlertHours: 24 * 21 },
   { key: "infra_watch", label: "Infrastructure watch: health, DB, SSL/domain/token expiry (read-only), weekly expiring-soon list", stage: "keep", utmSource: "infra_watch", cycleMinutes: 60, silentAlertHours: 24 * 3 },
 ] as const satisfies readonly GrowthSystem[];
 

@@ -146,6 +146,11 @@ describe("registry, llms and sitemap", () => {
     expect(new Set(RESOURCE_TOOLS.map((t) => t.slug)).size).toBe(RESOURCE_TOOLS.length);
     for (const t of RESOURCE_TOOLS) expect(t.description.length).toBeGreaterThan(80);
   });
+  it("llms.txt lists competitor ad watch and seasonal ideas", () => {
+    const txt = organicLlmsLines(null).join("\n");
+    expect(txt).toContain("/tools/competitor-ad-watch");
+    expect(txt).toContain("/seasonal");
+  });
   it("llms.txt lists every organic path", () => {
     const txt = organicLlmsLines("/reports/local-service-meta-ads").join("\n");
     for (const t of RESOURCE_TOOLS) expect(txt).toContain(`/tools/${t.slug}`);

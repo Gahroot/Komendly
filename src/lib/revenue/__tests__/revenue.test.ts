@@ -67,12 +67,20 @@ describe("economics", () => {
 });
 describe("constraints", () => {
   it("ranks and shrinks small samples", () => {
-    const e = computeEconomics(base({ visits: Array.from({ length: 900 }, () => ({ touch: null, at: d("2026-11-10") })), signups: Array.from({ length: 40 }, (_, i) => ({ workspaceId: `w${i}`, touch: null, at: d("2026-11-10"), activated: i < 30, upsellShown: false, upsellAccepted: false })) }));
+    const e = computeEconomics(base({ visits: Array.from({ length: 15000 }, () => ({ touch: null, at: d("2026-11-10") })), signups: Array.from({ length: 40 }, (_, i) => ({ workspaceId: `w${i}`, touch: null, at: d("2026-11-10"), activated: i < 30, upsellShown: false, upsellAccepted: false })) }));
     const c = diagnoseConstraint(e);
     expect(c).toHaveLength(7);
     expect(c.map((x) => x.rank)).toEqual([1, 2, 3, 4, 5, 6, 7]);
     expect(c[0].key).toBe("first_purchase");
     expect(diagnoseConstraint(computeEconomics(base()))[0].severity).toBeLessThanOrEqual(5);
+  });
+  it("low traffic is the constraint when visits are far below target, and one $9 sale never makes economics the constraint", () => {
+    const e = computeEconomics(base({ visits: Array.from({ length: 900 }, () => ({ touch: null, at: d("2026-11-10") })), signups: [{ workspaceId: "w1", touch: null, at: d("2026-11-20"), activated: true, upsellShown: true, upsellAccepted: false }], payments: [{ workspaceId: "w1", at: d("2026-11-25"), amountCents: 900, recurring: false }], klyCents: 12000, generationCentsByWorkspace: { w1: 300 } }));
+    const c = diagnoseConstraint(e);
+    expect(c[0].key).toBe("traffic");
+    const eco = c.find((x) => x.key === "economics")!;
+    expect(eco.severity).toBe(1);
+    expect(eco.confidence).toBe("insufficient");
   });
   it("stage is honest", () => {
     expect(businessStage({ payingCustomers: 0, totalRevenueCents: 0, mrrCents: 0, recurringCustomers: 0, newPayingLast30d: 0, weeksWithNewCustomersLast8: 0 }).index).toBe(0);

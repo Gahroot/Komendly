@@ -2,9 +2,10 @@
 import { randomBytes } from "node:crypto";
 import type { AdsWorkspace, User } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { hashIdentity, ipPrefix, normalizeEmail, type RequestFingerprint } from "@/lib/ads/abuse";
+import { hashIdentity, ipPrefix, normalizeEmail, rateLimit, type RequestFingerprint } from "@/lib/ads/abuse";
 import { appBaseUrl, sendAdsMail } from "@/lib/ads/mailer";
 import { renderEmailLayout } from "@/lib/email/layout";
+import { guardContact } from "@/lib/ops/control/contact-web";
 import { trackAdsEvent } from "@/lib/ads/events";
 import { STUDIO_INVITE } from "./contracts";
 import { decideInviteClaim, decideSenderReward, inviteLink, isPlausibleInviteToken, utcMonthStart } from "./invite";
@@ -33,9 +34,14 @@ export async function createStudioInvite(input: { user: User; workspace: AdsWork
   const base = appBaseUrl(input.origin);
   const link = inviteLink(base, token);
   let emailed = false;
-  if (input.email) {
+  // S-09: never email someone on the suppression list, cap invites per sender, respect the contact ledger.
+  const target = input.email ? input.email.trim().toLowerCase() : null;
+  const dom = target?.split("@")[1] ?? "";
+  const suppressed = target ? await prisma.outboundSuppression.findFirst({ where: { value: { in: [target, dom] } }, select: { id: true } }).catch(() => null) : null;
+  const allowed = target && !suppressed && (await rateLimit(`studio_invite_mail:${input.user.id}`, 5, 86_400).catch(() => true)) && (await guardContact(target, "other", "studio_invite")).allowed;
+  if (input.email && allowed) {
     const from = input.user.name?.split(" ")[0] || "A friend";
-    const text = `G'day!\n\n${from} reckons you'd like Ozzy Studio, so they've sent you ${STUDIO_INVITE.friendFreeVideos} free videos.\n\nTell me what you want (a promo, a launch video, your own footage cut into an ad) and I'll make it while we chat. No card needed.\n\nClaim them here: ${link}\n\nOzzy\n(the dingo wizard at Komendly)`;
+    const text = `G'day!\n\n${from} reckons you'd like Ozzy Studio, so they've sent you ${STUDIO_INVITE.friendFreeVideos} free videos.\n\nTell me what you want (a promo, a launch video, your own footage cut into an ad) and I'll make it while we chat. No card needed.\n\nClaim them here: ${link}\n\nOzzy\n(the dingo wizard at Komendly)\n\nThis is a one-off invite sent at ${from}'s request. Not for you? Ignore it, or reply "unsubscribe" and we'll never email you again.`;
     await sendAdsMail({
       to: input.email,
       subject: `${from} sent you ${STUDIO_INVITE.friendFreeVideos} free videos from Ozzy`,
@@ -49,6 +55,7 @@ export async function createStudioInvite(input: { user: User; workspace: AdsWork
           "No card needed. The videos are yours to keep.",
         ],
         button: { label: "Claim my free videos", href: link },
+        note: `One-off invite sent at ${from}'s request. Not for you? Ignore it, or reply "unsubscribe" and we'll never email you again.`,
       }),
     }).then(() => (emailed = true), (error) => console.error("[studio] invite email failed", error));
   }

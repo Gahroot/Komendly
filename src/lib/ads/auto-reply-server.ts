@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { founderFrom } from "./lifecycle/founder";
 import { sendAdsMail } from "./mailer";
 import { reviewGate, type TextFn } from "@/lib/growth/review-gate";
+import { gatewayText } from "@/lib/ai-gateway/client";
 import { kbAnswer } from "@/lib/ops/kb";
 import { getSelfRefundEligibility } from "./self-refund";
 import { ANSWER_FACTS, AUTO_HEADER, buildAutoReply, CLASSIFY_SCHEMA, CLASSIFY_SYSTEM, classifyByRules, guardrailBlock, loopSkipReason, needsHuman, parseCategory, repliesTo, SENDER_WINDOW_MS, threadKey, type ReplyCategory } from "./auto-reply";
@@ -22,20 +23,8 @@ export interface AutoReplyOutcome { category: ReplyCategory | null; replied: str
 
 const PAYING = ["active", "trialing", "past_due"];
 
-/** The existing AI vendor (OpenAI Responses API, same key/model env as engine/src/providers/openai.ts), read inside the function. */
-export const webText: TextFn = async (req) => {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) throw new Error("OPENAI_API_KEY not configured");
-  const body: Record<string, unknown> = { model: process.env.OPENAI_TEXT_MODEL || "gpt-6.2-sol", instructions: req.system, input: [{ role: "user", content: [{ type: "input_text", text: req.prompt }] }], reasoning: { effort: "low" }, store: false };
-  if (req.jsonSchema) body.text = { format: { type: "json_schema", name: "result", schema: req.jsonSchema, strict: false } };
-  const res = await fetch("https://api.openai.com/v1/responses", { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(45_000) });
-  if (!res.ok) throw new Error(`OpenAI ${res.status}`);
-  const r = (await res.json()) as { output?: Array<{ type: string; content?: Array<{ text?: string }> }> };
-  const text = (r.output ?? []).filter((o) => o.type === "message").flatMap((o) => o.content ?? []).map((c) => c.text ?? "").join("");
-  let json: unknown;
-  if (req.jsonSchema) { try { json = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)); } catch { json = undefined; } }
-  return { text, json };
-};
+/** AI text for the web app: through the AI gateway (Postgres -> engine -> owner's Codex subscription). Never an API key; throws (fail closed) when the gateway is off, slow or failing. docs/ops/ai-policy.md */
+export const webText: TextFn = (req) => gatewayText(req, { purpose: "web_text", requester: "web", timeoutMs: 40_000 });
 
 export async function handleAutoReply(r: InboundReply, text: TextFn = webText): Promise<AutoReplyOutcome> {
   const out: AutoReplyOutcome = { category: null, replied: null, flagged: false, skipped: null };

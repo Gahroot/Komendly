@@ -17,3 +17,15 @@ Source: MEMORY.md baseline 20 Nov and 24-26 Nov notes; /admin/ads/scoreboard
 ## 2026-11-26 [ASSUMPTION] Gift-first outreach and free tools will compound, but are unmeasured
 
 Free tools, industry examples and viral branding are live but their first-touch sign-ups have not been read per source yet. Treat their value as unproven until the command center shows sign-ups by utm_source.
+
+## 2026-11-27 [EVIDENCE] No organic channel has produced a sign-up yet; only Meta (and Shopify test installs) are attributed (#61-100)
+
+Prod AdsEvent signed_up by first-touch source: facebook 60, shopify 4, none from pinterest, embed, free tools, social, reels or newsletter. Pinterest has 52 pins scheduled since 21 Nov and 0 landed visits tagged utm_source=pinterest in the last 14 days. Facebook/Instagram own posts: 9 each plus 1 reel each, links carry utm_source=facebook|instagram. Volume is still tiny, so this is not a verdict, but nothing organic is proven.
+
+Source: psql read-only on production 27 Nov 2026 (AdsEvent signed_up/visit_landed, KlySocialPost); docs/audit/organic-61-100.md
+
+## 2026-11-27 [EVIDENCE] Media Master's Komendly wiring is not running (#61, #66, #67, #69)
+
+The dev Electron process (pid 67626, started 26 Nov 16:38) loads apps/media-master/out built 20 Nov, which contains no komendlyGrowthHost code, and offsite-settings.json lists only Quora for the Komendly brand. All MM social accounts are Nolan's personal/other-company accounts (none bound to the Komendly brand). Lint, typecheck and package tests for the uncommitted MM code pass, so the fix is a rebuild + restart + dedicated accounts.
+
+Source: ~/Library/Application Support/@media-master/app/data/*.json; pnpm lint, pnpm typecheck, package tests run 27 Nov 2026

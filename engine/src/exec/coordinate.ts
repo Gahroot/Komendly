@@ -47,6 +47,11 @@ export async function execTick(d: ExecDeps): Promise<ExecTickResult> {
       }
       // objectives whose checkpoint is due move to verification (never "done": a human/strategy engine concludes)
       if (!dry) await dueCheckpoints(db, now);
+      // verify -> close -> learn: objectives already in "verifying" are concluded with their measured outcome (the next strategy cycle reassesses from there)
+      for (const c of out.closures) {
+        await write(E.dispatch, { objectiveId: c.objectiveId, status: "closed", type: "closure", outcome: c.outcome, detail: c.evidence, metric: c.metric, current: c.current, target: c.target });
+        if (!dry) await markObjective(db, c.objectiveId, "done", { outcome: c.outcome, evidence: c.evidence, metric: c.metric, current: c.current, target: c.target, by: "exec-coordinator" }).catch(() => undefined);
+      }
       if (weekly) {
         for (const r of out.rejected) { res.rejected.push(r.reason); await write(E.dispatch, { objectiveId: r.objectiveId, status: "rejected", reason: r.reason, action: j(r.action ?? null) }); }
         for (const t of out.tracked.filter((x) => x.stalled || x.duplicateOf || x.abandoned)) await write(E.dispatch, { objectiveId: t.id, status: "flagged", reason: t.stalled ? `stalled: no activity for ${t.daysSinceActivity} days` : t.duplicateOf ? `duplicate of ${t.duplicateOf}` : `proposed ${t.ageDays} days with no decision`, owner: t.owner });
@@ -130,16 +135,13 @@ async function baseline(db: Db, metric: string): Promise<number | null> {
 
 async function opportunityPass(d: ExecDeps, stage: Parameters<typeof allowedStrategiesFor>[0], constraint: string | null, write: (n: string, p: unknown) => Promise<void>, week: string) {
   const db = d.db, env = d.env ?? process.env;
-  const [offers, replies, kly] = await Promise.all([
+  const [offers, kly] = await Promise.all([
     db.adsEvent.findMany({ where: { name: "offer_proposal" }, orderBy: { createdAt: "desc" }, take: 8, select: { props: true } }).catch(() => []),
-    db.adsEvent.findMany({ where: { name: "reply_classified", createdAt: { gte: new Date(Date.now() - 60 * 86_400_000) } }, take: 500, select: { props: true } }).catch(() => []),
     db.klyDaily.findMany({ where: { day: { gte: new Date(Date.now() - 30 * 86_400_000) } }, select: { sent: true, replies: true, positive: true, signups: true, paid: true } }).catch(() => []),
   ]);
-  const cats = new Map<string, number>();
-  for (const r of replies) { const c = String((r.props as { category?: string })?.category ?? "other"); cats.set(c, (cats.get(c) ?? 0) + 1); }
   const sum = (k: "sent" | "replies" | "positive" | "signups" | "paid") => kly.reduce((a, r) => a + r[k], 0);
   const objections = offers.map((o) => String((o.props as { title?: string; hypothesis?: string })?.title ?? (o.props as { hypothesis?: string })?.hypothesis ?? "")).filter(Boolean);
-  const replyLines = [...cats].map(([c, n]) => `${n} replies classified "${c}"`);
+  const replyLines: string[] = []; // no producer classifies replies into AdsEvents; kly reply COUNTS are in channelResults below
   const channel = kly.length ? [`Cold email 30d: ${sum("sent")} sent, ${sum("replies")} replies, ${sum("positive")} positive, ${sum("signups")} sign-ups, ${sum("paid")} paid`] : [];
   if (!objections.length && !replyLines.length && !channel.length) return; // no evidence, no opportunities
   let calls = 0;

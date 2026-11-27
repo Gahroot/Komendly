@@ -198,7 +198,7 @@ Use the storyboard to judge the sequence and the photograph to judge product app
 
 Komendly’s ad sizes are 4:5, 1:1, and 9:16. When planning your versions, use the [Facebook and Instagram ad sizes guide](/blog/facebook-instagram-ad-sizes) as a companion reference.
 
-See [Komendly pricing](/pricing) for Growth and Scale plan details. My recommendation is to evaluate the free animated ad against your own product reference before choosing a paid plan.
+See [Komendly pricing](/pricing) for current plan details. My recommendation is to evaluate the free animated ad against your own product reference before choosing a paid plan.
 
 ## Should I choose Komendly, Canva, or Pippit?
 
@@ -206,7 +206,7 @@ Choose according to the work you want to do yourself. The verdicts below are my 
 
 | Tool | Price | Free access or trial | Formats and relevant workflow | My best-for verdict |
 | --- | --- | --- | --- | --- |
-| Komendly | Check current Komendly Growth and Scale pricing using the plan link above | 10 static ads + 1 animated ad, no card required | Website URL to static and animated ad creatives; 4:5, 1:1, 9:16 | Starting with a product page and creating ad creatives |
+| Komendly | Check current Komendly pricing using the plan link above | 10 static ads + 1 animated ad, no card required | Website URL to static and animated ad creatives; 4:5, 1:1, 9:16 | Starting with a product page and creating ad creatives |
 | Canva | As of November 2026, Canva Free: US$0/month; standard Canva Pro: US$18/month for one person, excluding applicable tax.[^2] | Free plan; Pro and Business trials offered.[^2] | Photo and text animation; individual element effects.[^3] | Arranging photo and message movement yourself |
 | Pippit | As of November 2026, Pippit Free: USD0.[^1] | Free daily credits; no credit card required.[^1] | Product photograph to generated video using motion prompts.[^4] | Exploring generated image-to-video treatments |
 

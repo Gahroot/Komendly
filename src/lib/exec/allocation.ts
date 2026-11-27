@@ -51,7 +51,8 @@ export function scoreCandidate(c: Candidate, stage: ExecStage): Scored {
   return { ...c, score: { lo, mid: f(c.impact.mid), hi: f(c.impact.hi) }, adjustments: adj };
 }
 
-export interface AllocationInput { stage: ExecStage; candidates: Candidate[]; capacity: Partial<Record<Resource, number>> }
+/** `buildAuthorised`: an approved/active build objective exists (it cited a measured primary constraint). Without one, build work is never funded: no manufactured development goals. */
+export interface AllocationInput { stage: ExecStage; candidates: Candidate[]; capacity: Partial<Record<Resource, number>>; buildAuthorised?: boolean }
 
 /** Per-resource weekly budgets within authority. Money budget is always 0 (owner-set limits: new services 0, Meta 0). */
 export function defaultBudgets(capacity: Partial<Record<Resource, number>>): Record<Resource, number> {
@@ -82,6 +83,7 @@ export function allocate(i: AllocationInput): AllocationPlan {
     const base = { id: s.id, label: s.label, resource: s.resource, tag: s.tag, score: s.score, opportunityCost: opp, spendCents: 0 };
     if (moneyOverAuthority(s)) { lines.push({ ...base, allotted: 0, status: "needs_owner", note: `would cost ${s.cashCents}c; spend authority is 0 for new services and Meta. Owner decision; nothing was spent.` }); continue; }
     if (pol.blockedKinds.includes(s.tag === "scale" ? "scale" : "__none__") || s.score.mid <= 0) { lines.push({ ...base, allotted: 0, status: "unfunded", note: s.tag === "scale" ? `held: scaling is blocked in ${pol.mode}` : "no expected impact" }); continue; }
+    if (s.tag === "build" && !i.buildAuthorised) { lines.push({ ...base, allotted: 0, status: "unfunded", note: "held: no approved build objective backed by a measured constraint; building is not a default use of capacity" }); continue; }
     const give = Math.min(s.cost, Math.max(0, left));
     used[s.resource] += give;
     lines.push({ ...base, allotted: give, status: give >= s.cost ? "funded" : give > 0 ? "partial" : "unfunded", note: give >= s.cost ? s.adjustments.join("; ") : `only ${give}/${s.cost} ${s.resource} left in this week's budget` });

@@ -23,7 +23,7 @@ Totals are weighted averages over the **scored** dimensions only (coverage shows
 | Predis.ai | n/v | n/v | 3 | 3 | n/v | n/v | n/v | 100 | 27% |
 | AdCreative.ai | n/v | n/v | n/v | n/v | 2 | 1 | 2 | 53 | 33% |
 | Canva Magic Studio | n/v | n/v | n/v | n/v | n/v | n/v | n/v | n/v | 0% |
-| Pencil | n/v | n/v | n/v | n/v | n/v | n/v | n/v | n/v | 0% |
+| Pencil | n/v | n/v | n/v | n/v | n/v | 0 | 2 | 22 | 20% |
 | Smartly | n/v | n/v | n/v | n/v | n/v | n/v | n/v | n/v | 0% |
 | Meta Advantage+ creative | n/v | n/v | n/v | n/v | n/v | n/v | n/v | n/v | 0% |
 | Hiring a freelancer or agency | n/v | n/v | n/v | n/v | n/v | n/v | n/v | n/v | 0% |
@@ -40,7 +40,7 @@ n/v = not verified.
 
 - Entry price: Creatopy, Madgicx, Predis.ai score higher than us (2/3) on the verified facts.
 - Learns / optimises from results: Madgicx score higher than us (2/3) on the verified facts.
-- Public proof of results: AdCreative.ai score higher than us (1/3) on the verified facts.
+- Public proof of results: AdCreative.ai, Pencil score higher than us (1/3) on the verified facts.
 
 ## Underserved
 
@@ -76,6 +76,8 @@ n/v = not verified.
 - AdCreative.ai / Learns / optimises from results: Lists creative insights and competitor insights (https://www.adcreative.ai/, checked 2026-11-26)
 - AdCreative.ai / Local-business focus: Home page leans to ecommerce brands and agencies (https://www.adcreative.ai/, checked 2026-11-26)
 - AdCreative.ai / Public proof of results: States 4.2M+ businesses and $35B+ ad-spend training data (vendor's own claims) (https://www.adcreative.ai/, checked 2026-11-26)
+- Pencil / Local-business focus: Home page: "AI Operating System for Marketing" with enterprise governance; named customers L'Oreal, Unilever, Diageo, Salomon; CTA is Book a Demo (https://www.trypencil.com/, checked 2026-11-26)
+- Pencil / Public proof of results: Vendor-stated results with named brands (e.g. 33% cost cut producing 46K AI assets); not independently verified (https://www.trypencil.com/, checked 2026-11-26)
 
 ## Not yet verified
 
@@ -83,9 +85,9 @@ n/v = not verified.
 - Madgicx: 4/7 dimensions scored.
 - Predis.ai: 2/7 dimensions scored.
 - AdCreative.ai: 3/7 dimensions scored.
-- Canva Magic Studio: 0/7 dimensions scored. Not verified yet: run scripts/competitive-scan.ts and review.
-- Pencil: 0/7 dimensions scored. Not verified yet.
-- Smartly: 0/7 dimensions scored. Not verified yet (enterprise platform; likely a different segment).
-- Meta Advantage+ creative: 0/7 dimensions scored. Not verified yet. It is the platform's own tooling, so any claim needs the current Meta page.
+- Canva Magic Studio: 0/7 dimensions scored. Not verified: canva.com/pricing returned HTTP 403 to automated fetch on 26 Nov 2026. Check in a browser; do not fill from memory.
+- Pencil: 2/7 dimensions scored. Partly verified 26 Nov 2026 from the home page only. No public price (demo-led), so price is left unscored. Other dimensions not verified.
+- Smartly: 0/7 dimensions scored. Not verified: 26 Nov 2026 fetch of smartly.io returned only a short marketing page ("AI Advertising Platform") with no price, segment or result claims to cite. Likely a different segment, but that is not a sourced claim.
+- Meta Advantage+ creative: 0/7 dimensions scored. Not verified: facebook.com/business/ads/meta-advantage-plus returned HTTP 400 to automated fetch on 26 Nov 2026. It is the platform's own tooling, so any claim needs the current Meta page opened in a browser.
 - Hiring a freelancer or agency: 0/7 dimensions scored. No single public page; typical price and turnaround would be assumptions, so unscored.
 - Doing it yourself: 0/7 dimensions scored. Unscored: depends entirely on the owner's skill and time.

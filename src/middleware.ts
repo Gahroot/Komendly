@@ -65,6 +65,8 @@ const publicPrefixes = [
   "/api/intent/",         // Media Master agent: intent opportunity queue; the route checks its own bearer token (INTENT_AGENT_TOKEN)
   "/api/ad-of-the-week/",  // Public images of consented ads only (Ad of the week, /ad-examples)
   "/api/ads-billing/webhook", // Stripe webhook for ads billing (signature-verified)
+  "/api/webhooks/",        // FAL + video-status callbacks: HMAC-verified in-route, fail closed (503) when the secret is unset
+  "/api/ops/status",       // Public maintenance-flag read for the banner (boolean only)
   "/api/meta-webhooks/",   // Meta leadgen webhook (X-Hub-Signature-256 verified; GET verify-token handshake)
   "/api/cron/",            // Vercel Cron jobs (Bearer CRON_SECRET checked in each route)
   "/results",              // Public customer results (consented, measured only; noindex while empty)
@@ -95,6 +97,7 @@ const publicPrefixes = [
   "/shopify",              // Embedded Shopify admin app (App Bridge session token, no cookies; sys_shopify)
   "/api/shopify/",         // Shopify app API (session-token auth), HMAC-verified webhooks, health, signed open link
   "/api/integrations/jobber/", // Jobber app: OAuth authorize/callback (signed state + PKCE), HMAC-verified webhook, link (checks the session itself)
+  "/api/newsletter/",     // Ozzy's Ad Report: public double opt-in sign-up (rate-limited, sys_newsletter) + signed confirm/unsubscribe links
   "/api/ad-watch/",        // Competitor ad watch: public double opt-in sign-up (rate-limited, sys_ad_watch) + signed confirm/unsubscribe links
   "/api/hub/",             // Creative hubs: public forms, votes, challenge, signed opt-out, capability images (flags creative_*; rate-limited)
   "/api/approve/",         // No-login approve / request-changes on an ad pack (signed token)

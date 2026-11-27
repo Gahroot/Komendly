@@ -36,7 +36,7 @@ faq:
   - q: "Can I make Facebook ad creatives from my website for free?"
     a: "Komendly offers 10 static ads + 1 animated ad, no card required. Email verification is required, with one trial per website/device/network."
   - q: "Does generating an ad mean it has been published?"
-    a: "Treat creative generation and campaign publication as separate steps. Review your creative and campaign settings before launch. Komendly offers one-click publish to Meta on Growth and Scale plans."
+    a: "Treat creative generation and campaign publication as separate steps. Review your creative and campaign settings before launch. Komendly offers Meta publishing set up with you on Growth Autopilot."
 sources:
   - id: 1
     title: "Getting started with Meta Ads Manager"
@@ -151,6 +151,6 @@ For AI-generated imagery, keep a record of the original assets and review how th
 
 Use Meta Ads Manager for campaign setup and reporting.[^1] Before launch, decide what result you want, who the offer is for and what budget you are prepared to spend. Keep those decisions alongside your creative brief.
 
-Komendly offers one-click publish to Meta on Growth and Scale plans; see [pricing](/pricing) when choosing a plan.
+Komendly offers Meta publishing set up with you on Growth Autopilot; see [pricing](/pricing) when choosing a plan.
 
 For your first batch, keep the offer and destination consistent while exploring different openings. Record what each concept was intended to communicate. When you review results, use that record to decide which message deserves another iteration. Return to the website whenever the offer changes, so your next creative starts from accurate information.

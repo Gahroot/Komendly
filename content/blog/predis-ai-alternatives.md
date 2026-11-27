@@ -201,7 +201,7 @@ The useful distinction is the starting brief. If your task is to turn an existin
 
 **Pros:** Komendly supports all 5 awareness stages: unaware, problem aware, solution aware, product aware and most aware. That gives you a concrete way to organize the messages you want to evaluate. For example, ask whether an ad explains the problem clearly or assumes the reader already knows your product.
 
-**Cons:** One-click publish to Meta is available on Growth and Scale plans. The trial also has eligibility conditions: one trial per website/device/network; email verification.
+**Cons:** Meta publishing set up with you is available on Growth Autopilot. The trial also has eligibility conditions: one trial per website/device/network; email verification.
 
 Komendly is not my recommendation for every brief. For an avatar-led video campaign, I would shortlist Creatify. For a designer who wants to direct the layout closely, I would shortlist Canva.
 

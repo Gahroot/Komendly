@@ -1,21 +1,23 @@
 // Web loader for /admin/ads/revenue and the Monday digest (read-only). Maths lives in economics/constraints/experiments.
 import { prisma } from "@/lib/prisma";
+import { loadOfferProposals } from "@/lib/offer-intel/server"; // also registers the offer experiments into EXPERIMENT_DEFAULTS (side effect of ./variants)
 import { EXPERIMENT_DEFAULTS, loadExperimentResults, type ExperimentResults } from "./experiments";
 import { buildRevenueSnapshot, SNAPSHOT_EVENT, type RevenueSnapshot } from "./snapshot";
 import type { ExperimentLine } from "./digest";
 
 export async function loadRevenueDashboard(now = new Date()) {
   const db = prisma as never;
-  const [live, history, flags, defined] = await Promise.all([
+  const [live, history, flags, defined, proposals] = await Promise.all([
     buildRevenueSnapshot(db, now),
     prisma.adsEvent.findMany({ where: { name: SNAPSHOT_EVENT }, orderBy: { createdAt: "desc" }, take: 8, select: { props: true, createdAt: true } }),
-    prisma.adsFeatureFlag.findMany({ where: { key: { in: ["sys_revenue_intel", "sys_revenue_digest"] } } }),
+    prisma.adsFeatureFlag.findMany({ where: { key: { in: ["sys_revenue_intel", "sys_revenue_digest", "sys_offer_intel"] } } }),
     prisma.adsEvent.findMany({ where: { name: "exp_defined" }, select: { props: true } }),
+    loadOfferProposals(db).catch(() => []),
   ]);
   const keys = [...new Set([...EXPERIMENT_DEFAULTS.map((d) => d.key), ...defined.map((d) => (d.props as { def?: { key?: string } })?.def?.key).filter((k): k is string => !!k)])];
   const experiments: ExperimentResults[] = await Promise.all(keys.map((k) => loadExperimentResults(db, k)));
   const on = (k: string) => flags.find((f) => f.key === k)?.enabled ?? false;
-  return { live, history: history.map((h) => ({ at: h.createdAt, snapshot: h.props as unknown as RevenueSnapshot })), experiments, flags: { intel: on("sys_revenue_intel"), digest: on("sys_revenue_digest") } };
+  return { live, history: history.map((h) => ({ at: h.createdAt, snapshot: h.props as unknown as RevenueSnapshot })), experiments, flags: { intel: on("sys_revenue_intel"), digest: on("sys_revenue_digest"), offerIntel: on("sys_offer_intel") }, proposals };
 }
 
 export const experimentLine = (r: ExperimentResults): ExperimentLine => {

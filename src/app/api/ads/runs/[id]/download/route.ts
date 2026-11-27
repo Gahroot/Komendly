@@ -9,6 +9,8 @@ import { assertCanDownload } from "@/lib/ads/download-gate-server";
 import { extensionForMime, getObjectStream } from "@/lib/ads/storage";
 import { adsErrorResponse, AdsHttpError, requireWorkspaceMember } from "@/lib/ads/workspace";
 import { systemEnabled } from "@/lib/growth/systems";
+import { agencyEnabled, isAgencyWorkspace } from "@/lib/customer-intel/agency-server";
+import { exportFileName, weekKey } from "@/lib/customer-intel/agency";
 import { MADE_WITH_CTA, madeWithCtaUrl, shouldBrand, VIRAL_KEY } from "@/lib/growth/viral-branding";
 
 /** "Download all": streams every ready asset of the run as one ZIP. */
@@ -24,11 +26,17 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const unlocked = await isBonusUnlocked(workspace);
     // Locked trial bonus ads, ads past the free pack limit and preview posters never leave the server in an export.
     const packLocked = await trialLockedIdsForRun(run.id, unlocked);
+    // Agencies get client-ready names (<client>_<week>_<nn>-<ratio>.<ext>, never "Komendly"): only when sys_agency_ops is on and the workspace is an agency plan. Everyone else keeps the existing names.
+    const agencyNames = (await agencyEnabled().catch(() => false)) && isAgencyWorkspace(workspace);
+    const clientName = (run.extraction as { brandName?: string } | null)?.brandName ?? domainOf(run.url);
+    const week = weekKey(run.createdAt);
     const perAd = run.ads.filter((ad) => !packLocked.has(ad.id)).map((ad) => ({
       ad,
       files: exportableAssets(ad, unlocked).map((asset) => ({
         key: asset.storageKey,
-        name: `ad-${String(ad.index + 1).padStart(2, "0")}-${ad.awareness}-${asset.ratio.replace(":", "x")}.${extensionForMime(asset.mime)}`,
+        name: agencyNames
+          ? exportFileName(clientName, week, ad.index + 1, asset.ratio, extensionForMime(asset.mime))
+          : `ad-${String(ad.index + 1).padStart(2, "0")}-${ad.awareness}-${asset.ratio.replace(":", "x")}.${extensionForMime(asset.mime)}`,
       })),
     }));
     const files = perAd.flatMap((p) => p.files);

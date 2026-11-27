@@ -58,6 +58,24 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // S-10: baseline hardening everywhere.
+        source: "/:path*",
+        headers: [
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(self), microphone=(self), geolocation=()" },
+        ],
+      },
+      {
+        // S-10: anti-clickjacking for everything except the surfaces meant to be framed (/embed/* by anyone, /shopify inside Shopify admin).
+        source: "/((?!embed|shopify).*)",
+        headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }],
+      },
+      {
+        // S-10: CSP in REPORT-ONLY mode (logs violations in the browser console, blocks nothing). Tighten script-src after reviewing real traffic.
+        source: "/((?!embed|shopify).*)",
+        headers: [{ key: "Content-Security-Policy-Report-Only", value: "frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com" }],
+      },
+      {
         // Public marketing pages only: never cache API, account or admin responses
         source: "/((?!api|ads|admin|dashboard|checkout|oauth|\\.well-known|login|register|ozzy-lab|verify-email|test-video|r/|g/|u/|m/|gift/|ad-check/|approve/|api/hub/|partners/apply|studio|s/|_next).+)",
         headers: [

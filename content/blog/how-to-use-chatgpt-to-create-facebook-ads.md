@@ -19,7 +19,7 @@ secondary_keywords:
   - "using chatgpt for facebook ads"
   - "can chatgpt create facebook ads"
   - "chatgpt facebook ads"
-answer: "To use ChatGPT to create Facebook ads, supply business facts, request angles and copy, then generate images for review.[^1][^2] Alternatively, connect Komendly to create finished ad packs from a website URL inside ChatGPT, subject to account permissions.[^3] Review the files, then publish through Meta Ads Manager or use Komendly’s one-click Meta publishing on Growth and Scale."
+answer: "To use ChatGPT to create Facebook ads, supply business facts, request angles and copy, then generate images for review.[^1][^2] Alternatively, connect Komendly to create finished ad packs from a website URL inside ChatGPT, subject to account permissions.[^3] Review the files, then publish through Meta Ads Manager or use Komendly’s Meta publishing set up with you on Growth Autopilot."
 key_takeaways:
   - "Build your brief from verified website facts, approved offers and real evidence."
   - "Choose an audience and angle before polishing individual headlines."
@@ -33,7 +33,7 @@ faq:
   - q: "Can ChatGPT make ad images?"
     a: "Yes. ChatGPT Images supports text prompts, uploaded images for editing and requested aspect ratios.[^2] Provide approved references, then inspect the result for accurate branding, product appearance, spelling and dimensions."
   - q: "Can ChatGPT post ads to Facebook?"
-    a: "ChatGPT can use write actions exposed by custom MCP servers, subject to permissions.[^3] Check whether your connected tool actually provides publishing. For this guide, use Meta Ads Manager or Komendly’s one-click Meta publishing on Growth and Scale."
+    a: "ChatGPT can use write actions exposed by custom MCP servers, subject to permissions.[^3] Check whether your connected tool actually provides publishing. For this guide, use Meta Ads Manager or Komendly’s Meta publishing set up with you on Growth Autopilot."
   - q: "What ChatGPT access do I need for the connector route?"
     a: "As of November 2026, OpenAI documents full custom MCP support for ChatGPT Business and Enterprise/Edu on the web, subject to workspace permissions.[^3] Check your eligibility before setup."
   - q: "How many free ads can I make with Komendly?"
@@ -262,7 +262,7 @@ Choose this route when website-to-creative production is the immediate job. Stay
 
 ChatGPT can use write actions exposed by custom MCP servers, subject to permissions.[^3] For this walkthrough, publish through Meta Ads Manager. Check the actual connected tool list before expecting an assistant to publish anything.
 
-Komendly offers one-click publish to Meta on Growth and Scale plans. See [pricing](/pricing) for plan details. The assistant workflow described here covers creating packs, checking status and downloading files; use that workflow to prepare your assets.
+Komendly offers Meta publishing set up with you on Growth Autopilot. See [pricing](/pricing) for plan details. The assistant workflow described here covers creating packs, checking status and downloading files; use that workflow to prepare your assets.
 
 For a manual launch, organize the setup around Meta’s campaign structure: the campaign defines the objective, the ad set groups budget, schedule and targeting, and the creative defines the ad’s appearance and content.[^4]
 

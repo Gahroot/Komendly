@@ -6,6 +6,8 @@
 //   add --delete-content to also delete the user's testimonial videos/reviews. Financial records are retained.
 import { randomBytes } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
+import { LEARNED_EVENT, purgeCustomerMemory } from "../src/lib/customer-intel/server";
+import { MEMORY_EVENT } from "../src/lib/customer-intel/memory";
 import { buildPurgePlan, EVENT_PII_KEYS, RETAINED, type PurgeStep } from "../src/lib/ops/security/privacy-purge";
 
 const arg = (n: string) => { const i = process.argv.indexOf(`--${n}`); return i > -1 ? process.argv[i + 1] : undefined; };
@@ -26,6 +28,12 @@ async function main() {
     const plan = buildPurgePlan({ userId: user.id, email, workspaceIds: ws.map((w) => w.workspaceId) });
     console.log(apply ? "APPLYING purge" : "DRY RUN (no changes). Add --apply --confirm <email> to execute.");
     console.log(`Retained (not touched): ${RETAINED.join(", ")}\n`);
+    // Customer memory (business brief + weekly "what we learned"): deleted outright, per workspace.
+    for (const w of ws) {
+      const n = await db.adsEvent.count({ where: { workspaceId: w.workspaceId, name: { in: [MEMORY_EVENT, LEARNED_EVENT] } } });
+      console.log(`${apply ? "     " : "     "}delete       AdsEvent(customer_memory,customer_learned) rows=${n}  workspace ${w.workspaceId}`);
+      if (apply && n > 0) await purgeCustomerMemory(db, w.workspaceId);
+    }
     for (const step of plan) {
       const skipped = step.optIn && !flag(step.optIn);
       const n = await count(db, step);

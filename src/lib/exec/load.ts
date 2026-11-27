@@ -4,6 +4,10 @@
 import { GROWTH_SYSTEMS, systemForTouch } from "../growth/systems";
 import { loadLedger } from "../ops/control/loader";
 import { loadRunningExperiments } from "../revenue/experiments";
+import { constraintInputsOf } from "./context";
+import { diagnoseExecConstraints } from "./constraints17";
+import { gather } from "./gather";
+import { first10Line, loadFirst10Progress } from "./first10";
 import { toLite } from "./objective-adapter";
 import { foldObjectives } from "./objectives";
 import { EXEC_EVENTS, foldOverrides, isBlockedByOverride } from "./governance";
@@ -38,12 +42,17 @@ export async function loadCycleInput(db: any, now: Date, adminUrl: string): Prom
   ]);
   const sp = asObj(snap?.props), eco = asObj(sp.economics), st = asObj(sp.stage);
   const paying = Number(eco.payingCustomers ?? 0);
-  const cons = (Array.isArray(sp.constraints) ? sp.constraints[0] : null) as any;
-  const constraint = cons ? { key: String(cons.key), label: String(cons.label), confidence: String(cons.confidence), evidence: String(cons.evidence ?? "") } : null;
+  // ONE constraint source: the strategy engine's 17-constraint diagnosis (same reader as the weekly cycle). Never the optimiser's 6-item list.
+  const gctx = await soft(() => gather(db, now), null as any);
+  const rep = gctx ? diagnoseExecConstraints(constraintInputsOf(gctx)) : null;
+  const prim = rep?.primary.id ? rep.results.find((r) => r.id === rep.primary.id) : null;
+  const constraint = rep && prim
+    ? { key: prim.id as string, label: prim.label, confidence: rep.primary.confidence, evidence: prim.evidence[0]?.text ?? rep.primary.reason }
+    : rep ? { key: "none", label: "No constraint is evidenced yet (hold and measure)", confidence: "none", evidence: rep.primary.reason } : null;
   const sends30d = klyRows.reduce((a: number, r: any) => a + r.sent, 0), replies30d = klyRows.reduce((a: number, r: any) => a + r.replies, 0);
   const sends7 = klyRows.filter((r: any) => r.day >= since(7)).reduce((a: number, r: any) => a + r.sent, 0);
   const bounces7 = klyRows.filter((r: any) => r.day >= since(7)).reduce((a: number, r: any) => a + r.bounces, 0);
-  const measured: Measured = { signups30d, first30d, unlocks, paying, sends30d, replies30d, conversations: repliedEv, metrics: { paying_customers: paying, signups: signups30d, sign_ups: signups30d, replies: replies30d, free_packs_finished: first30d, unlocks: unlocks } };
+  const measured: Measured = { signups30d, first30d, unlocks, paying, sends30d, replies30d, conversations: repliedEv, metrics: { paying_customers: paying, signups: signups30d, sign_ups: signups30d, replies: replies30d, free_packs_finished: first30d, unlocks: unlocks, "funnel steps with 30+ observations": [signups30d, first30d, sends30d, replies30d, unlocks].filter((n) => n >= 30).length } };
 
   // objectives
   const states = foldObjectives(objRows);
@@ -56,7 +65,9 @@ export async function loadCycleInput(db: any, now: Date, adminUrl: string): Prom
   const blocked = all.filter((s) => isBlockedByOverride(ov, s.spec.id)).map((s) => s.spec.id);
   // only owner/auto-approved, un-blocked objectives may be dispatched: unapproved ones are shown as "proposed" to the planner (it skips them)
   const executable = new Set(all.filter((s) => isHandoffReady(s) && !blocked.includes(s.spec.id)).map((s) => s.spec.id));
-  const objs = objectives.map((o) => (executable.has(o.id) || o.status === "done" || o.status === "abandoned" ? o : { ...o, status: (o.status === "active" || o.status === "approved" ? "proposed" : o.status) as typeof o.status }));
+  // owner-paused/vetoed/rejected objectives are not the coordinator's to plan or to nag the owner about
+  const hidden = new Set([...blocked, ...all.filter((s) => s.approval === "owner_rejected").map((s) => s.spec.id)]);
+  const objs = objectives.filter((o) => !hidden.has(o.id)).map((o) => (executable.has(o.id) || o.status === "done" || o.status === "abandoned" ? o : { ...o, status: (o.status === "active" || o.status === "approved" ? "proposed" : o.status) as typeof o.status }));
 
   const dispatched = new Set<string>(), week: Record<string, number> = {}, last: Record<string, string> = {};
   for (const r of dispRows) {
@@ -117,7 +128,7 @@ export async function loadCycleInput(db: any, now: Date, adminUrl: string): Prom
       singleReplicaServices: ["engine", "kly"], backupVerified: null,
     },
     org: { systems, decisionLatencyDays: latency, ownerInterventionsByWeek: [...byWeek.values()], ownerDecisionsOpen: openItems.length },
-    klySendsWeekly: Math.round(sends30d / 4.3), openOwnerItems: openItems,
+    klySendsWeekly: Math.round(sends30d / 4.3), openOwnerItems: openItems, first10Line: first10Line(await loadFirst10Progress(db)),
   };
   void st;
   return { input, measured, ledgerRows: systems.length, blocked };

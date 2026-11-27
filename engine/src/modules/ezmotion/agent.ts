@@ -146,8 +146,8 @@ export async function runMotionAgent(input: MotionRenderInput, ratios: Ratio[], 
   if (creds) {
     leased = await creds.lease();
     await writeFile(join(home, ".ezcoder", "auth.json"), JSON.stringify({ openai: leased }), { mode: 0o600 });
-  } else if (!process.env.OPENAI_API_KEY) {
-    return { ok: false, files: {}, error: "no Codex login or OPENAI_API_KEY for the motion agent", log: "", ms: 0, text: [], usage: { costMicros: 0, inputTokens: 0, outputTokens: 0 } };
+  } else {
+    return { ok: false, files: {}, error: "no Codex login for the motion agent", log: "", ms: 0, text: [], usage: { costMicros: 0, inputTokens: 0, outputTokens: 0 } };
   }
   // The site's own images (no faces: never altered) and the logo.
   const brand = input.brand;

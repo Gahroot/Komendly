@@ -4,7 +4,10 @@ import { HubShell } from "@/components/hubs/hub-shell";
 import { currentGiveaway } from "@/lib/growth/creative-hubs-server";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Komendly giveaways", description: "Enter the current Komendly giveaway. One entry per email.", alternates: { canonical: "/giveaways" } };
+export function generateMetadata(): Metadata {
+  const open = currentGiveaway() !== null;
+  return { title: "Komendly giveaways", description: "Enter the current Komendly giveaway. One entry per email.", alternates: { canonical: "/giveaways" }, robots: open ? undefined : { index: false, follow: true } };
+}
 
 export default function Page() {
   const g = currentGiveaway();

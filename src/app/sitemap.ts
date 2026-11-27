@@ -15,7 +15,7 @@ import { loadAdlibReport } from '@/lib/growth/adlib-report-server'
 import { loadPublicCaseStudies } from '@/lib/growth/proof-server'
 import { benchmarkPath, benchmarkTrades, BENCHMARKS_BASE } from '@/lib/growth/organic/benchmarks'
 import { organicPaths } from '@/lib/growth/organic/registry'
-import { CATEGORIES as TRADE_CATEGORIES, IDEAS_BASE, allAnglePages, ideasPath } from '@/lib/growth/trade-playbooks'
+import { CATEGORIES as TRADE_CATEGORIES, SEASONS, IDEAS_BASE, allAnglePages, ideasPath } from '@/lib/growth/trade-playbooks'
 
 function latest(dates: string[]): string | undefined {
   return dates.sort().at(-1)
@@ -46,6 +46,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...INTEGRATION_PATHS.map((p) => ({ url: `${SITE_URL}${p}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
     { url: `${SITE_URL}/ad-examples`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${SITE_URL}/tools`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${SITE_URL}/tools/competitor-ad-watch`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${SITE_URL}/seasonal`, changeFrequency: 'monthly', priority: 0.6 },
+    ...SEASONS.map((s) => ({ url: `${SITE_URL}/seasonal/${s.key}`, changeFrequency: 'monthly' as const, priority: 0.5 })),
     ...FREE_TOOLS.map((t) => ({ url: `${SITE_URL}/tools/${t.slug}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
     { url: `${SITE_URL}${CHROME_EXTENSION_PATH}`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${SITE_URL}/ad-of-the-week`, changeFrequency: 'weekly', priority: 0.6 },

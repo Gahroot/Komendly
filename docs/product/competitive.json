@@ -421,7 +421,7 @@
           "evidence": []
         }
       },
-      "note": "Not verified yet: run scripts/competitive-scan.ts and review.",
+      "note": "Not verified: canva.com/pricing returned HTTP 403 to automated fetch on 26 Nov 2026. Check in a browser; do not fill from memory.",
       "card": {
         "slug": "canva-magic-studio",
         "name": "Canva Magic Studio",
@@ -459,21 +459,33 @@
           "evidence": []
         },
         "local_focus": {
-          "score": null,
-          "evidence": []
+          "score": 0,
+          "evidence": [
+            {
+              "url": "https://www.trypencil.com/",
+              "checked": "2026-11-26",
+              "note": "Home page: \"AI Operating System for Marketing\" with enterprise governance; named customers L'Oreal, Unilever, Diageo, Salomon; CTA is Book a Demo"
+            }
+          ]
         },
         "evidence": {
-          "score": null,
-          "evidence": []
+          "score": 2,
+          "evidence": [
+            {
+              "url": "https://www.trypencil.com/",
+              "checked": "2026-11-26",
+              "note": "Vendor-stated results with named brands (e.g. 33% cost cut producing 46K AI assets); not independently verified"
+            }
+          ]
         }
       },
-      "note": "Not verified yet.",
+      "note": "Partly verified 26 Nov 2026 from the home page only. No public price (demo-led), so price is left unscored. Other dimensions not verified.",
       "card": {
         "slug": "pencil",
         "name": "Pencil",
-        "total": null,
-        "coverage": 0,
-        "scored": 0
+        "total": 22,
+        "coverage": 20,
+        "scored": 2
       }
     },
     {
@@ -513,7 +525,7 @@
           "evidence": []
         }
       },
-      "note": "Not verified yet (enterprise platform; likely a different segment).",
+      "note": "Not verified: 26 Nov 2026 fetch of smartly.io returned only a short marketing page (\"AI Advertising Platform\") with no price, segment or result claims to cite. Likely a different segment, but that is not a sourced claim.",
       "card": {
         "slug": "smartly",
         "name": "Smartly",
@@ -559,7 +571,7 @@
           "evidence": []
         }
       },
-      "note": "Not verified yet. It is the platform's own tooling, so any claim needs the current Meta page.",
+      "note": "Not verified: facebook.com/business/ads/meta-advantage-plus returned HTTP 400 to automated fetch on 26 Nov 2026. It is the platform's own tooling, so any claim needs the current Meta page opened in a browser.",
       "card": {
         "slug": "meta-advantage-plus",
         "name": "Meta Advantage+ creative",
@@ -665,7 +677,7 @@
     "theyWin": [
       "Entry price: Creatopy, Madgicx, Predis.ai score higher than us (2/3) on the verified facts.",
       "Learns / optimises from results: Madgicx score higher than us (2/3) on the verified facts.",
-      "Public proof of results: AdCreative.ai score higher than us (1/3) on the verified facts."
+      "Public proof of results: AdCreative.ai, Pencil score higher than us (1/3) on the verified facts."
     ],
     "underserved": [
       "Time to first ad: no competitor verified yet (we score 3/3, unverified against others).",

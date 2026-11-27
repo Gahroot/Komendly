@@ -60,8 +60,10 @@ describe("middleware publicPrefixes", () => {
       expect(covered(apiPath(f)), apiPath(f)).toBe(true);
     }
   });
-  it("KNOWN GAP: /api/webhooks/{fal,video-status} are not public (see docs/ops/security-audit.md S-07)", () => {
-    expect(covered("/api/webhooks/fal/")).toBe(false);
+  it("FAL + video-status webhooks are public and fail closed without a secret (S-07)", () => {
+    expect(covered("/api/webhooks/fal/")).toBe(true);
+    expect(read("src/app/api/webhooks/fal/route.ts")).toMatch(/if \(!webhookSecret\)[\s\S]{0,200}503/);
+    expect(read("src/app/api/webhooks/video-status/route.ts")).toMatch(/if \(!webhookSecret\)[\s\S]{0,200}503/);
   });
 });
 

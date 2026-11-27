@@ -42,6 +42,7 @@ COPY src/lib/ads/coach/table.ts src/lib/ads/coach/table.ts
 COPY src/lib/ads/coach/assess.ts src/lib/ads/coach/assess.ts
 COPY src/lib/ads/coach/match.ts src/lib/ads/coach/match.ts
 COPY src/lib/growth/systems.ts src/lib/growth/systems.ts
+COPY src/lib/ai-gateway/core.ts src/lib/ai-gateway/core.ts
 COPY src/lib/exec/ src/lib/exec/
 COPY src/lib/ops/finance/authority.ts src/lib/ops/finance/authority.ts
 COPY src/lib/internal-email.ts src/lib/internal-email.ts

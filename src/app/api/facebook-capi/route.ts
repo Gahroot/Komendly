@@ -10,6 +10,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { eventType, ...eventData } = body;
 
+    // S-08: revenue events must carry a real Stripe checkout session id, may be sent once per id,
+    // and cannot carry an absurd value. (The browser caller sends sessionId as transactionId.)
+    if (eventType === "Purchase" || eventType === "Subscribe") {
+      const tx = eventData.transactionId;
+      const value = Number(eventData.value);
+      if (typeof tx !== "string" || !/^cs_[A-Za-z0-9_]{8,200}$/.test(tx)) return NextResponse.json({ error: "invalid_transaction" }, { status: 400 });
+      if (!Number.isFinite(value) || value < 0 || value > 2000) return NextResponse.json({ error: "invalid_value" }, { status: 400 });
+      if (!(await rateLimit(`capi:tx:${tx}`, 1, 30 * 86400).catch(() => true))) return NextResponse.json({ success: true, deduped: true });
+    }
+
     // Get client IP and user agent from request headers
     const clientIpAddress = request.headers.get("x-forwarded-for")?.split(",")[0] ||
       request.headers.get("x-real-ip") ||

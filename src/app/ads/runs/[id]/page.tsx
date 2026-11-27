@@ -34,6 +34,14 @@ export default async function AdRunPage({ params }: { params: Promise<{ id: stri
   }
   const run = await loadRunView(id);
   if (!run) notFound();
+  // Outcome verification reads `pack_opened` ("Opened" tier). Nothing wrote it before. One row per run, finished packs only,
+  // members only (requireWorkspaceMember above). Direct insert: this is not a Meta funnel step, so no CAPI forward. Never blocks the page.
+  if (["completed", "partial"].includes(run.status)) {
+    try {
+      const seen = await prisma.adsEvent.findFirst({ where: { name: "pack_opened", runId: id }, select: { id: true } });
+      if (!seen) await prisma.adsEvent.create({ data: { name: "pack_opened", workspaceId: member.workspace.id, userId: member.user.id, runId: id, props: {} } });
+    } catch { /* analytics must never break the page */ }
+  }
   const next = await nextStepFor(member.workspace); // null unless sys_simplicity is on
   return (
     <div className="min-h-screen bg-background text-foreground">

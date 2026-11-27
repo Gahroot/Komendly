@@ -7,6 +7,8 @@ import { BENCHMARKS_BASE } from "./benchmarks";
 
 export function organicLlmsLines(adlibPath: string | null): string[] {
   return [
+    `- [Competitor ad watch](${SITE_URL}/tools/competitor-ad-watch): get a weekly email of the new Facebook and Instagram ads your local rivals started, from the public Meta Ad Library`,
+    `- [Seasonal ad ideas by industry](${SITE_URL}/seasonal): what to advertise each season, with the start window and a hand-written idea per trade`,
     ...RESOURCE_TOOLS.map((t) => `- [${t.name}](${SITE_URL}${resourcePath(t.slug)}): ${t.description}`),
     `- [Ad copy library](${SITE_URL}${COPY_LIBRARY_BASE}): hand-written ad headlines and texts for ${COPY_LIBRARY.length} local trades`,
     `- [Ad inspiration search](${SITE_URL}${INSPIRATION_PATH}): search hooks, offers, proof lines and headlines by trade`,

@@ -28,7 +28,7 @@ export function buildAgentPrompt(c: AgentContext): string {
     c.themes.length ? c.themes.slice(0, 8).map((t) => `- ${t.label}: ${t.count} (${Math.round(t.share * 100)}%). e.g. ${t.quotes.map((q) => `"${q}"`).join(" / ")}`).join("\n") : "(no signals this week)",
     `FUNNEL AND CONSTRAINT:\n${c.funnel}\n${c.constraint}`,
     `COMPETITOR OFFERS (verified public pages):\n${c.competitors.map((x) => `- ${x.name}: ${x.facts.slice(0, 3).join(" | ")}`).join("\n")}`,
-    `ALLOWED SURFACES AND SLOTS:\n${surfaces}\nTokens you may use inside text: ${Object.keys(FACT_TOKENS).join(" ")}. Unused slots: empty string. The control is the current copy and is added for you; give ONE challenger variant per proposal. metric must be one of signed_up, checkout_started, offer_clicked; minPerVariant at least 80.`,
+    `ALLOWED SURFACES AND SLOTS:\n${surfaces}\nTokens you may use inside text: ${Object.keys(FACT_TOKENS).join(" ")}. Unused slots: empty string. The control is the current copy and is added for you; give ONE challenger variant per proposal. metric must be one of signed_up, checkout_started, offer_clicked, purchased (purchased needs far more traffic: prefer checkout_started until 20+ checkouts/week); minPerVariant at least 80.`,
     `ALREADY RUNNING (do not duplicate): ${c.running.map((r) => `${r.key}@${r.surface}`).join(", ") || "none"}`,
   ].join("\n\n");
 }

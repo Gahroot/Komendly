@@ -94,6 +94,9 @@ export const PARTNER_NICHES: NicheDef[] = [
   { niche: "branding agencies", audience: "agency", tier: "agency", osm: [byName("branding agency|brand studio|brand agency|brand design")] },
   { niche: "social media agencies", audience: "agency", tier: "agency", osm: [byName("social media agency|social media management|social media marketing")] },
   { niche: "media buyers", audience: "agency", tier: "agency", osm: [byName("media buy|ppc agency|paid social|performance marketing|paid media")] },
+  { niche: "gohighlevel agencies", audience: "agency", tier: "agency", osm: [byName("gohighlevel|go high level|highlevel|marketing automation agency")] },
+  { niche: "virtual assistant agencies", audience: "agency", tier: "agency", osm: [byName("virtual assistant|virtual assistants|va services|outsourced marketing")] },
+  { niche: "business coaches", audience: "agency", tier: "agency", osm: ['nwr["office"="coaching"]', byName("business coach|business coaching|small business consult|marketing consult")] },
 ];
 
 /** ~200 largest US cities (each its own Nominatim bbox), covering the top ~150 metros plus big suburbs. */

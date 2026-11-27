@@ -82,7 +82,7 @@ describe("competitive scorecard", () => {
     expect(validateEntrants(bad).length).toBeGreaterThan(0);
   });
   it("unverified entrants are not scored; coverage shown", () => {
-    const c = ENTRANTS.find((e) => e.slug === "pencil")!;
+    const c = ENTRANTS.find((e) => e.slug === "canva-magic-studio")!;
     expect(scoreEntrant(c)).toMatchObject({ total: null, coverage: 0 });
   });
   it("is honest about where alternatives win and renders", () => {

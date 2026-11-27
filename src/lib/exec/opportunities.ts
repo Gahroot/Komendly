@@ -1,5 +1,6 @@
 // Opportunity discovery (pure parts). A weekly Codex pass proposes AT MOST 3 opportunities from real evidence; this module builds the
 // strict-JSON prompt, validates the output, scores through the allocator, filters by stage and parks anything behind a bigger constraint.
+import { stageIndexOf } from "./validation-mode";
 import { type Candidate, scoreCandidate, type Scored } from "./allocation";
 import { allowedStrategies, STRATEGIES } from "./stage";
 import { type ExecStage } from "./validation-mode";
@@ -10,7 +11,7 @@ export interface JudgedOpportunity { opp: Opportunity; score: Scored; status: "c
 
 export const MAX_OPPORTUNITIES = 3;
 /** Strategies permitted per stage: the strategy engine's allowedStrategies(stageIndex) (src/lib/exec/stage.ts) is the single source. */
-export const stageIndexOf = (s: ExecStage): number => ({ pre_revenue: 0, first_customers: 1, repeatable: 2, scaling: 3 } as const)[s];
+export { stageIndexOf };
 export const allowedStrategiesFor = (s: ExecStage): string[] => [...allowedStrategies(stageIndexOf(s))];
 
 export const OPPORTUNITY_SCHEMA = {

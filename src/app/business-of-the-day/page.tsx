@@ -4,7 +4,10 @@ import { HubShell } from "@/components/hubs/hub-shell";
 import { latestBotd, publishEnabled } from "@/lib/growth/creative-hubs-server";
 
 export const revalidate = 600;
-export const metadata: Metadata = { title: "Ozzy's business of the day", description: "A small business that opted in to be featured, with the ads it chose to share.", alternates: { canonical: "/business-of-the-day" } };
+export async function generateMetadata(): Promise<Metadata> {
+  const picks = (await publishEnabled().catch(() => false)) ? await latestBotd().catch(() => []) : [];
+  return { title: "Ozzy's business of the day", description: "A small business that opted in to be featured, with the ads it chose to share.", alternates: { canonical: "/business-of-the-day" }, robots: picks.length === 0 ? { index: false, follow: true } : undefined };
+}
 
 export default async function Page() {
   const picks = (await publishEnabled().catch(() => false)) ? await latestBotd().catch(() => []) : [];

@@ -177,7 +177,7 @@ Choose Komendly when your starting asset is a website and your immediate goal is
 
 **Pros:** Website-based static and animated creation matches a clear small-business brief. You can try 10 static ads + 1 animated ad, no card required.
 
-**Cons:** One-click publish to Meta requires Growth or Scale. If that is essential to your workflow, include the appropriate plan in your decision.
+**Cons:** Meta publishing set up with you requires Growth Autopilot. If that is essential to your workflow, include the appropriate plan in your decision.
 
 **Best-for verdict:** My first recommendation for a founder who has a website, a clear offer, and a need for static and animated ads. For a commissioned shoot, I would choose a human-production service instead.
 

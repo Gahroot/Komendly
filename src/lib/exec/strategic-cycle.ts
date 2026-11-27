@@ -18,27 +18,17 @@ export interface CycleInput {
   observations: Record<string, Pick<PerfInput, "operational" | "commercial" | "cost">>;
   lastActivity: Record<string, string | undefined>;
   running: ActiveExperiment[]; approvedTemplates: string[]; alreadyDispatched: Set<string>; dispatchedThisWeek: Record<string, number>;
-  riskFacts: RiskFacts; org: OrgFacts; klySendsWeekly: number; openOwnerItems: Array<{ question: string; recommended: string }>;
+  riskFacts: RiskFacts; org: OrgFacts; klySendsWeekly: number; first10Line?: string; openOwnerItems: Array<{ question: string; recommended: string }>;
 }
+export interface Closure { objectiveId: string; outcome: "achieved" | "not_achieved" | "inconclusive"; evidence: string; metric: string | null; current: number | null; target: number | null }
 export interface CycleOutput {
+  closures: Closure[];
   stage: ExecStage; mode: string; strategy: string; banner: string;
   tracked: ReturnType<typeof trackObjectives>; conflicts: ReturnType<typeof conflictingObjectives>;
   planned: PlannedAction[]; rejected: RejectedAction[];
   performance: RankedInitiative[]; learned: string[]; allocation: AllocationPlan; risks: Risk[];
-  org: ReturnType<typeof evaluateOrganisation>; scoreboard: EvidenceLine[]; nextObjective: ObjectiveLite | null;
+  org: ReturnType<typeof evaluateOrganisation>; scoreboard: EvidenceLine[]; next: string[];
   brief: ReturnType<typeof buildExecBrief>; spendCents: 0;
-}
-
-/** Fallback next objective when no live objective exists. Evidence-gathering only, reversible, zero spend: safe to auto-approve. */
-export function defaultObjectiveFor(stage: ExecStage, constraint: CycleInput["constraint"], now: Date, n: number): ObjectiveLite {
-  const pol = policyFor(stage);
-  const title = stage === "pre_revenue" ? "Hold and measure: run existing channels and gather buyer evidence"
-    : stage === "first_customers" ? "Learn from first customers: onboarding, outcomes and why they bought" : `Improve the constraint: ${constraint?.label ?? "funnel"}`;
-  const actions: DispatchAction[] = [
-    { type: "checkpoint", metric: stage === "pre_revenue" ? "paying_customers" : "activation_rate", dueInDays: 14, question: "Did the existing channels produce a readable signal?" },
-  ];
-  if (stage !== "pre_revenue") actions.push({ type: "owner_decision", question: "Which customer should we interview first?", options: [{ id: "a", label: "Most recent buyer" }, { id: "b", label: "Most active buyer" }], recommended: "a", why: "Recent buyers remember why they bought." });
-  return { id: `obj-${now.toISOString().slice(0, 10)}-${n}`, title, status: "approved", kind: pol.defaultStrategy, metric: stage === "pre_revenue" ? "paying_customers" : "activation_rate", constraint: constraint?.key ?? null, createdAt: now.toISOString(), actions, approvedBy: "auto: zero-spend, reversible, evidence-only" };
 }
 
 export function strategicCycle(i: CycleInput): CycleOutput {
@@ -57,24 +47,43 @@ export function strategicCycle(i: CycleInput): CycleOutput {
     const t = tracked.find((x) => x.id === o.id);
     return evaluate({ id: o.id, title: o.title, kind: "objective", operational: ob?.operational ?? { ran: planned.some((p) => p.objectiveId === o.id) || o.status === "verifying", shipped: false, failures: 0 }, commercial: ob?.commercial ?? null, cost: ob?.cost ?? { aiCalls: 0, costCents: 0 }, ageDays: t?.ageDays ?? 0 }, stage);
   });
-  const performance = rankInitiatives(results);
-  const learned = performance.filter((r) => r.confidence !== "low" || r.verdict === "commercial_win").map((r) => `${r.title}: ${r.evidence}`);
-  // learn -> next objective
-  const needNext = !live.some((o) => !dup.has(o.id)) || performance.some((r) => r.recommendation === "stop" && live.some((o) => o.id === r.id));
-  const nextObjective = needNext && !i.objectives.some((o) => o.status === "proposed") ? defaultObjectiveFor(stage, i.constraint, i.now, i.objectives.length + 1) : null;
-  const allocation = allocate({ stage, candidates: defaultCandidates(stage, { klySendsWeekly: i.klySendsWeekly }) as Candidate[], capacity: { kly_sends: i.klySendsWeekly, engine_capacity: 5, content_generation: 10, ai_calls: EXEC_AUTHORITY.execAiCallsPerWeek, owner_attention: 3 } });
+  // A hold_and_measure objective is never a "commercial win": meeting its target only means the evidence is now readable, so it hands back to the strategy cycle.
+  const holdIds = new Set(i.objectives.filter((o) => o.kind === "hold_and_measure").map((o) => o.id));
+  const hold = (r: (typeof results)[number]) => {
+    const c = i.observations[r.id]?.commercial;
+    return holdIds.has(r.id) && c && c.target !== null && c.current !== null && c.current >= c.target
+      ? { ...r, verdict: "operational_only" as const, recommendation: "modify" as const, commercialOk: null, evidence: `Evidence target met (${c.metric}: ${c.current} >= ${c.target}). The evidence is now readable: the next strategy cycle should name the constraint.`, flags: [...r.flags, "evidence target met: hand back to strategy cycle"] }
+      : r;
+  };
+  const performance = rankInitiatives(results.map(hold));
+  // verify -> close: an objective whose measurement checkpoint was reached (status "verifying") is concluded with its measured outcome, so nothing stays open forever.
+  const closures: Closure[] = i.objectives.filter((o) => o.status === "verifying").map((o) => {
+    const r = performance.find((x) => x.id === o.id), c = i.observations[o.id]?.commercial;
+    const met = r?.verdict === "commercial_win" || (holdIds.has(o.id) && !!r?.flags.includes("evidence target met: hand back to strategy cycle"));
+    const readable = !!c && c.current !== null && c.n >= c.minN;
+    const outcome: Closure["outcome"] = met ? "achieved" : readable ? "not_achieved" : "inconclusive";
+    return { objectiveId: o.id, outcome, evidence: r?.evidence ?? "no measurement available", metric: c?.metric ?? null, current: c?.current ?? null, target: c?.target ?? null };
+  });
+  const learned = performance.filter((r) => r.confidence !== "low" || r.verdict === "commercial_win" || r.flags.some((f) => f.startsWith("evidence target met"))).map((r) => `${r.title}: ${r.evidence}`);
+  // learn -> next objective. The coordinator NEVER invents objectives (that is the strategy engine's job: cycle.ts, weekly). It only reports
+  // what happens next: keep going, or hand back to the strategy engine's next cycle when nothing is live / an objective should stop.
+  const stopping = performance.filter((r) => r.recommendation === "stop" && live.some((o) => o.id === r.id)).map((r) => r.title);
+  const next = stopping.length ? [`reassess at the next strategy cycle: "${stopping[0]}" has not moved its metric`]
+    : live.length ? live.slice(0, 1).map((o) => `keep going: ${o.title}`)
+    : [i.objectives.some((o) => o.status === "proposed") ? "waiting for your decision on the proposed objective" : "the weekly strategy cycle will set the next objective"];
+  const allocation = allocate({ stage, candidates: defaultCandidates(stage, { klySendsWeekly: i.klySendsWeekly }) as Candidate[], buildAuthorised: live.some((o) => (o.actions ?? []).some((a) => (a as DispatchAction).type === "build_request")), capacity: { kly_sends: i.klySendsWeekly, engine_capacity: 5, content_generation: 10, ai_calls: EXEC_AUTHORITY.execAiCallsPerWeek, owner_attention: 3 } });
   const risks = buildRiskRegister(i.riskFacts);
   const org = evaluateOrganisation(i.org);
   const scoreboard = evidenceScoreboard(i.evidence);
   const gap = pol.mode === "commercial_validation" || pol.mode === "learn_from_customers" ? scoreboard.find((l) => !l.met) ?? null : null;
-  const decisions = [...i.openOwnerItems, ...tracked.filter((t) => t.abandoned).map((t) => ({ question: `Approve or drop the proposed objective "${t.title}" (waiting ${t.ageDays} days)?`, recommended: "drop it unless it serves the current constraint" }))];
+  const decisions = [...i.openOwnerItems, ...tracked.filter((t) => t.status === "proposed" && !t.duplicateOf).map((t) => ({ question: `Approve or drop the proposed objective "${t.title}" (waiting ${t.ageDays} days)?`, recommended: t.abandoned ? "drop it unless it serves the current constraint" : "approve it if it serves the current constraint" }))];
   const brief = buildExecBrief({
     weekLabel: i.weekLabel, adminUrl: i.adminUrl, stage, modeBanner: pol.banner, constraint: i.constraint, previousConstraint: i.previousConstraint,
     objectiveChanges: [...planned.slice(0, 3).map((p) => `Started: ${describe(p.action)}.`), ...tracked.filter((t) => t.stalled).map((t) => `Stalled: "${t.title}" has had no activity for ${t.daysSinceActivity} days.`)].slice(0, 3),
-    learned: learned.slice(0, 2), decisions, next: nextObjective ? [nextObjective.title] : live.slice(0, 1).map((o) => `keep going: ${o.title}`),
-    topRisk: risks[0] ? { title: risks[0].title, isNew: false } : null, scoreboardGap: gap,
+    learned: learned.slice(0, 2), decisions, next,
+    first10Line: i.first10Line, topRisk: risks[0] ? { title: risks[0].title, isNew: false } : null, scoreboardGap: gap,
   });
-  return { stage, mode: pol.mode, strategy: pol.defaultStrategy, banner: pol.banner, tracked, conflicts, planned, rejected, performance, learned, allocation, risks: topRisks(risks), org, scoreboard, nextObjective, brief, spendCents: 0 };
+  return { closures, stage, mode: pol.mode, strategy: pol.defaultStrategy, banner: pol.banner, tracked, conflicts, planned, rejected, performance, learned, allocation, risks: topRisks(risks), org, scoreboard, next, brief, spendCents: 0 };
 }
 
 export function describe(a: DispatchAction): string {

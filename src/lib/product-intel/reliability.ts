@@ -24,7 +24,7 @@ export interface RunRow {
   id: string; workspaceId: string; status: string; isTrial: boolean; kind: string; staticCount: number;
   createdAt: Date; confirmedAt: Date | null; firstAdAt: Date | null; completedAt: Date | null; costMicros: number; creditsCharged: number;
 }
-export interface AdRow { runId: string; workspaceId: string; kind: "static" | "motion"; status: string; template: string | null; costMicros: number }
+export interface AdRow { runId: string; workspaceId: string; /** Ad.updatedAt: last time the row changed; for a ready ad ~ when it became ready (revisions can push it later). */ readyAt?: Date | null; kind: "static" | "motion"; status: string; template: string | null; costMicros: number }
 export interface ReliabilityInput { now: Date; windowDays: number; jobs: JobRow[]; runs: RunRow[]; ads: AdRow[] }
 
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
@@ -130,10 +130,16 @@ export interface SloResult { sample: number; ok: number; rate: number | null; ta
 export function evaluateSlo(runs: RunRow[], ads: AdRow[], cfg: SloConfig = SLO_DEFAULTS): SloResult {
   const ready = new Map<string, number>();
   for (const a of ads) if (a.status === "ready") ready.set(a.runId, (ready.get(a.runId) ?? 0) + 1);
+  // Time-to-pack = time until the packMinAds-th static ad was ready, not RunRow.completedAt (which also waits for motion/bonus ads:
+  // live 26 Nov, 22/58 packs missed 10 min by completedAt but only 7/58 by the 8th ready static). Falls back to completedAt without timestamps.
+  const readyAt = new Map<string, number[]>();
+  for (const a of ads) if (a.status === "ready" && a.kind === "static" && a.readyAt) { const l = readyAt.get(a.runId) ?? []; l.push(a.readyAt.getTime()); readyAt.set(a.runId, l); }
   const eligible = runs.filter((r) => r.kind === "standard" && r.confirmedAt && r.staticCount >= cfg.packMinAds && ["completed", "partial", "failed"].includes(r.status));
   let ok = 0, failedRuns = 0, slowRuns = 0, shortRuns = 0;
   for (const r of eligible) {
-    const ms = r.completedAt && r.confirmedAt ? r.completedAt.getTime() - r.confirmedAt.getTime() : null;
+    const stamps = (readyAt.get(r.id) ?? []).sort((x, y) => x - y);
+    const nth = stamps.length >= cfg.packMinAds && r.confirmedAt ? (stamps[cfg.packMinAds - 1] ?? 0) - r.confirmedAt.getTime() : null;
+    const ms = nth !== null ? nth : r.completedAt && r.confirmedAt ? r.completedAt.getTime() - r.confirmedAt.getTime() : null;
     const n = ready.get(r.id) ?? 0;
     const fast = ms !== null && ms <= cfg.packWithinMs;
     if (r.status === "failed") failedRuns++;
@@ -204,12 +210,12 @@ export async function loadReliabilityInput(db: ReliabilityDb, now: Date, windowD
       select: { id: true, type: true, runId: true, workspaceId: true, status: true, attempts: true, maxAttempts: true, lockedAt: true, runAt: true, createdAt: true, finishedAt: true, durationMs: true, costMicros: true, lastError: true } }),
     db.adRun.findMany({ where: { createdAt: { gte: since } }, take: 5000, orderBy: { createdAt: "desc" },
       select: { id: true, workspaceId: true, status: true, isTrial: true, kind: true, staticCount: true, createdAt: true, confirmedAt: true, firstAdAt: true, completedAt: true, costMicros: true, creditsCharged: true } }),
-    db.ad.findMany({ where: { createdAt: { gte: since } }, take: 60000, select: { runId: true, workspaceId: true, kind: true, status: true, costMicros: true, visualBrief: true } }),
+    db.ad.findMany({ where: { createdAt: { gte: since } }, take: 60000, select: { runId: true, workspaceId: true, kind: true, status: true, costMicros: true, visualBrief: true, updatedAt: true } }),
   ]);
   return {
     now, windowDays,
     jobs: jobs.map((j) => ({ ...(j as object), lockedAt: d(j.lockedAt), runAt: d(j.runAt), createdAt: d(j.createdAt) ?? now, finishedAt: d(j.finishedAt), costMicros: n(j.costMicros), durationMs: typeof j.durationMs === "number" ? j.durationMs : null, lastError: str(j.lastError) } as JobRow)),
     runs: runs.map((r) => ({ ...(r as object), createdAt: d(r.createdAt) ?? now, confirmedAt: d(r.confirmedAt), firstAdAt: d(r.firstAdAt), completedAt: d(r.completedAt), costMicros: n(r.costMicros), creditsCharged: n(r.creditsCharged) } as RunRow)),
-    ads: ads.map((a) => ({ runId: String(a.runId), workspaceId: String(a.workspaceId), kind: a.kind === "motion" ? "motion" : "static", status: String(a.status), costMicros: n(a.costMicros), template: str(obj(obj(a.visualBrief).render).template) })),
+    ads: ads.map((a) => ({ runId: String(a.runId), workspaceId: String(a.workspaceId), kind: a.kind === "motion" ? "motion" : "static", status: String(a.status), readyAt: d(a.updatedAt), costMicros: n(a.costMicros), template: str(obj(obj(a.visualBrief).render).template) })),
   };
 }

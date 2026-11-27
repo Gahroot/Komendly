@@ -4,7 +4,10 @@ import { HubShell } from "@/components/hubs/hub-shell";
 import { listShowcases, publishEnabled } from "@/lib/growth/creative-hubs-server";
 
 export const revalidate = 600;
-export const metadata: Metadata = { title: "Customer showcase", description: "Ad portfolios from Komendly customers who chose to share them.", alternates: { canonical: "/showcase" } };
+export async function generateMetadata(): Promise<Metadata> {
+  const rows = (await publishEnabled().catch(() => false)) ? await listShowcases().catch(() => []) : [];
+  return { title: "Customer showcase", description: "Ad portfolios from Komendly customers who chose to share them.", alternates: { canonical: "/showcase" }, robots: rows.length === 0 ? { index: false, follow: true } : undefined };
+}
 
 export default async function Page() {
   const rows = (await publishEnabled().catch(() => false)) ? await listShowcases().catch(() => []) : [];

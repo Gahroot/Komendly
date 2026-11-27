@@ -103,7 +103,8 @@ export async function POST(request: NextRequest) {
     const unlockCredit = couponId && !ws.stripeSubscriptionId
       ? Boolean(await prisma.creditLedger.findFirst({ where: { workspaceId: ws.id, reason: "topup", note: UNLOCK_PACK_NOTE, delta: { gt: 0 } }, select: { id: true } }))
       : false;
-    const metadata = { product: "ads", workspaceId: ws.id, kind, ...(kind === "plan" || freeMonth ? { plan: freeMonth ? "starter" : key, interval: annual ? "year" : "month", ...(studioLaunch ? { offer: STUDIO_LAUNCH_OFFER.key } : {}), ...(legacySwitch ? { legacySwitch } : {}) } : offer ? { plan: offer.plan, offer: offer.key } : { topup: key }) };
+    const visitorId = request.cookies.get(VISITOR_COOKIE)?.value?.slice(0, 64); // lets the webhook count `purchased` for offer experiments
+    const metadata = { product: "ads", workspaceId: ws.id, kind, ...(visitorId ? { kmdVid: visitorId } : {}), ...(kind === "plan" || freeMonth ? { plan: freeMonth ? "starter" : key, interval: annual ? "year" : "month", ...(studioLaunch ? { offer: STUDIO_LAUNCH_OFFER.key } : {}), ...(legacySwitch ? { legacySwitch } : {}) } : offer ? { plan: offer.plan, offer: offer.key } : { topup: key }) };
     // The $9 unlock returns to the pack that was just unlocked (it used to land on billing and buyers couldn't find their ads).
     const unlockRunId = kind === "topup" && key === UNLOCK_PACK.key
       ? (await prisma.adRun.findFirst({ where: { workspaceId: ws.id, isTrial: true }, orderBy: { createdAt: "desc" }, select: { id: true } }))?.id ?? null

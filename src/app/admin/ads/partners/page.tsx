@@ -6,6 +6,7 @@ import { effectiveStatus, summarizeCommissions } from "@/lib/ads/commissions";
 import { workspaceLabels } from "@/lib/ads/growth-queries";
 import { partnerStats } from "@/lib/ads/partner-admin";
 import { prisma } from "@/lib/prisma";
+import { getAdminUser } from "@/lib/ads/billing-auth";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
 import { InputActionForm } from "../_components/input-action-form";
 import { PostActionButton } from "../_components/post-action-button";
@@ -18,6 +19,7 @@ export const dynamic = "force-dynamic";
 const API = "/api/admin/ads/partners";
 
 export default async function AdminPartnersPage() {
+  if (!(await getAdminUser())) return null;
   const now = new Date();
   const [partners, commissions] = await Promise.all([
     prisma.adsPartner.findMany({ orderBy: { createdAt: "desc" } }),

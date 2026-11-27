@@ -38,7 +38,7 @@ faq:
   - q: "Can Creatify make ads from my website?"
     a: "Yes. Creatify accepts product-page links to create video ads.[^2] Test your intended page before subscribing; its help center says some websites with firewalls can block access.[^6]"
   - q: "Can both tools publish ads to Meta?"
-    a: "Komendly offers one-click publishing to Meta on Growth and Scale plans. Creatify’s website also advertises publishing to Meta.[^4] Before buying, confirm the Creatify plan and account setup required for your publishing workflow."
+    a: "Komendly offers Meta publishing set up with you on Growth Autopilot. Creatify’s website also advertises publishing to Meta.[^4] Before buying, confirm the Creatify plan and account setup required for your publishing workflow."
 sources:
   - id: 1
     title: "Creatify pricing plans"
@@ -205,7 +205,7 @@ For this comparison, keep your main trial focused. Approve a brief for an animat
 
 ## Can both tools publish to Meta?
 
-Komendly offers one-click publishing to Meta on Growth and Scale plans. Creatify’s website also advertises publishing to Meta.[^4] Evaluate publishing against your actual campaign handoff requirements.
+Komendly offers Meta publishing set up with you on Growth Autopilot. Creatify’s website also advertises publishing to Meta.[^4] Evaluate publishing against your actual campaign handoff requirements.
 
 Write down what your team needs to complete the handoff. For a planned Facebook or Instagram campaign, your review list might include the destination URL, approved creative, campaign naming, and the person responsible for final review.
 
@@ -217,9 +217,9 @@ I would evaluate creative approval and campaign handoff separately. Check the of
 
 ### When would I recommend Komendly?
 
-**Pros:** URL-based creation through Ozzy, static and animated formats, ads for all 5 awareness stages, and a free trial with 10 static ads + 1 animated ad, no card required. Growth and Scale add one-click publishing to Meta.
+**Pros:** URL-based creation through Ozzy, static and animated formats, ads for all 5 awareness stages, and a free trial with 10 static ads + 1 animated ad, no card required. Growth Autopilot adds Meta publishing set up with you.
 
-**Cons:** Meta publishing requires Growth or Scale. The trial requires email verification and is limited to one trial per website/device/network. My judgment is that a buyer seeking a presenter-led creative should evaluate that specific requirement before choosing Komendly’s main ad product.
+**Cons:** Meta publishing requires Growth Autopilot. The trial requires email verification and is limited to one trial per website/device/network. My judgment is that a buyer seeking a presenter-led creative should evaluate that specific requirement before choosing Komendly’s main ad product.
 
 **Best for:** Small businesses, founders, and marketers who want to turn their website into branded static and animated ads and assess the result before subscribing.
 

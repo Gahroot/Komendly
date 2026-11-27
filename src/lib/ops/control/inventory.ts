@@ -26,10 +26,10 @@ export interface Capability {
 const MARKERS: Record<string, string[]> = {
   revenue_intel: ["revenue_snapshot"], revenue_digest: ["revenue_digest_sent"], optimizer: ["optimizer_cycle"], funnel_monitor: ["funnel_check"],
   reliability: ["reliability_snapshot"], reels: ["reel_ready"], success_agent: ["customer_success_finding"], offer_intel: ["offer_proposal"],
-  content_queue: ["content_queue_built"], delivery_econ: ["finance_snapshot"], ops_control: ["system_status"], ops_digest: ["ops_brief_sent"], exec_coordinator: ["exec_dispatch"], exec_brief: ["digest_sent"],
+  content_queue: ["content_queue_built"], newsletter: ["newsletter_sent"], delivery_econ: ["finance_snapshot"], ops_control: ["system_status"], ops_digest: ["ops_brief_sent"], exec_coordinator: ["exec_dispatch"], exec_brief: ["digest_sent"],
 };
 // Event-driven systems: no output is normal until the trigger happens.
-const CRON_OF: Record<string, string> = { revenue_digest: "/api/cron/revenue-digest", indexnow: "/api/cron/indexnow", content_queue: "/api/cron/content-queue", funnel_monitor: "/api/cron/funnel-monitor", incidents: "/api/cron/ops-watchdog" };
+const CRON_OF: Record<string, string> = { revenue_digest: "/api/cron/revenue-digest", indexnow: "/api/cron/indexnow", content_queue: "/api/cron/content-queue", newsletter: "/api/cron/newsletter", funnel_monitor: "/api/cron/funnel-monitor", incidents: "/api/cron/ops-watchdog" };
 const IDLE_OK = new Set(["guarantee_watch", "cancel_save", "lead_alerts", "creative_outreach", "creative_publish", "checkout_recovery", "winback", "jobber", "zapier", "shopify", "chrome_ext", "agency_ops", "activation_rescue", "reactivation", "expansion", "proof", "data_report", "ops_digest", "exec_brief"]);
 const REVENUE_CRITICAL = new Set(["checkout_recovery", "winback", "activation", "proof", "nurture", "cancel_save", "guarantee_watch", "funnel_monitor", "reliability", "review_gifts"]);
 
@@ -40,6 +40,7 @@ export const SYSTEM_CAPABILITIES: Capability[] = GROWTH_SYSTEMS.map((s) => ({
 
 const base = { flag: null, heartbeat: null, markers: [] as string[], idleOk: false, revenueCritical: false };
 export const OTHER_CAPABILITIES: Capability[] = [
+  { ...base, id: "engine:ai-gateway", kind: "engine_loop", label: "AI gateway loop", purpose: "Runs web AI requests (ai_request) on the Codex subscription, writes ai_result", area: "reliability", flag: "sys_ai_gateway", markers: ["ai_result"], cycleHours: 24, idleOk: true, revenueCritical: true, where: "engine/src/aigateway/loop.ts", noTelemetry: true },
   { ...base, id: "engine:job-runner", kind: "engine_loop", label: "Ad pack / Studio job runner", purpose: "Claims AdJob rows and renders packs, Studio turns", area: "delivery", cycleHours: 1, noTelemetry: true, revenueCritical: true, where: "engine/src/runner.ts", idleOk: true },
   { ...base, id: "engine:lifecycle", kind: "engine_loop", label: "Lifecycle emails", purpose: "Onboarding/unlock/upsell emails", area: "keep", flag: "lifecycle_email", cycleHours: 1, noTelemetry: true, revenueCritical: true, where: "engine/src/lifecycle/send.ts" },
   { ...base, id: "engine:weekly-drop", kind: "engine_loop", label: "Weekly drop", purpose: "Weekly replacement ads for subscribers", area: "keep", cycleHours: 24, idleOk: true, revenueCritical: true, where: "engine/src/jobs/weekly.ts", noTelemetry: true },

@@ -6,7 +6,7 @@ import { TRANSACTIONAL_KINDS } from "../ads/lifecycle/select";
 export const NOLAN_REPLY_TO = "nolan@prestyj.com";
 export const RL_SENT_EVENT = "rl_email_sent";
 /** AdsEvent names that are a customer-facing email send. Used by the global caps. */
-export const SEND_EVENT_NAMES = ["email_sent", "winback_email_sent", "live_nudge_sent", "first_win_email_sent", "proof_report_sent", "cancel_save_email_sent", RL_SENT_EVENT] as const;
+export const SEND_EVENT_NAMES = ["email_sent", "winback_email_sent", "live_nudge_sent", "first_win_email_sent", "proof_report_sent", "cancel_save_email_sent", "recovery_email_sent", RL_SENT_EVENT] as const;
 export const H = 3_600_000;
 export const DAY = 24 * H;
 

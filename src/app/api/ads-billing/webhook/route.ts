@@ -1,4 +1,5 @@
 // Stripe webhook for Website2ads only (separate endpoint + secret from the video product).
+import { recordWebhookFailure } from "@/lib/ops/webhook-failure";
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getAdsStripe } from "@/lib/ads/billing-stripe";
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true, handled });
   } catch (err) {
     console.error(`[ads-billing] webhook ${event.type} failed`, err);
+    await recordWebhookFailure("stripe_ads", event.type, err);
     return NextResponse.json({ error: "Handler failed" }, { status: 500 }); // Stripe retries; handlers are idempotent
   }
 }

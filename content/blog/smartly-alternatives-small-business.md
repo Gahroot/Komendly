@@ -24,7 +24,7 @@ key_takeaways:
   - "Separate creative generation, manual design control, publishing and media automation before choosing a tool."
   - "Use the same brief and approval checklist to evaluate every shortlisted product."
   - "Compare the cost of approved, usable creatives rather than treating every vendor's credit as equivalent."
-  - "Komendly turns a website URL into ad creatives, with one-click Meta publishing on Growth and Scale."
+  - "Komendly turns a website URL into ad creatives, with Meta publishing set up with you on Growth Autopilot."
   - "Komendly offers 10 static ads + 1 animated ad, no card required."
 competitors:
   - "Smartly"
@@ -41,7 +41,7 @@ faq:
   - q: "How can I evaluate an alternative before paying?"
     a: "Use one real offer, the same brand assets and a written acceptance checklist. Measure time to approved output, correction work and publishing handoffs. Confirm trial limits, renewal terms and what consumes credits before subscribing."
   - q: "Can Komendly replace Smartly's media automation?"
-    a: "Evaluate Komendly for creative production: it turns a website URL into static and animated ads, with one-click Meta publishing on Growth and Scale. If cross-channel budget allocation is required, evaluate that capability separately; Smartly documents it.[^2]"
+    a: "Evaluate Komendly for creative production: it turns a website URL into static and animated ads, with Meta publishing set up with you on Growth Autopilot. If cross-channel budget allocation is required, evaluate that capability separately; Smartly documents it.[^2]"
   - q: "What can I try free with Komendly?"
     a: "Komendly offers 10 static ads + 1 animated ad, no card required. Email verification applies, with one trial per website/device/network."
 sources:
@@ -152,7 +152,7 @@ The best Smartly alternatives for small business depend on what your team needs 
 | --- | --- | --- |
 | Creative generation | Komendly for URL-to-ad production; Pencil for generative ad assets.[^5] | Can you approve the output for your actual offer? |
 | Manual design control | Canva, which supports direct edits alongside conversational refinement.[^8] | Can your teammate make the exact correction you request? |
-| Publishing | Komendly Growth or Scale for Meta; Pencil lists Facebook and Instagram launching.[^5] | Which handoffs remain after creative approval? |
+| Publishing | Komendly Growth Autopilot (Meta set up with you); Pencil lists Facebook and Instagram launching.[^5] | Which handoffs remain after creative approval? |
 | Media automation | Smartly documents automated cross-channel budget allocation.[^2] | Which budget decisions will the software execute? |
 
 I'm Nolan Grout, founder of Komendly. It is my product, so this comparison makes its scope explicit. These recommendations come from official product pages, not a hands-on test of every tool.
@@ -191,9 +191,9 @@ The table separates documented capabilities from my editorial best-for verdicts.
 
 Komendly turns a website URL into on-brand, ready-to-run static and animated ad creatives through Ozzy, its AI ad wizard. It supports 4:5, 1:1 and 9:16, with ads for all 5 awareness stages: unaware, problem aware, solution aware, product aware and most aware.
 
-**Pros:** The starting point matches a concrete founder task: turn an existing website into ad creatives. One-click publish to Meta is available on Growth and Scale.
+**Pros:** The starting point matches a concrete founder task: turn an existing website into ad creatives. Meta publishing set up with you is available on Growth Autopilot.
 
-**Cons and scope:** Meta publishing requires Growth or Scale. For detailed manual composition, make editor control a separate buying requirement. For budget allocation or broader media operations, evaluate those requirements separately and name an accountable owner.
+**Cons and scope:** Meta publishing requires Growth Autopilot. For detailed manual composition, make editor control a separate buying requirement. For budget allocation or broader media operations, evaluate those requirements separately and name an accountable owner.
 
 **Verdict:** Choose Komendly when the missing piece is ad production from your website. Choose a design-focused workflow when precise manual composition is your main requirement.
 
@@ -273,7 +273,7 @@ Record whether they can complete it themselves, need a workaround or need specia
 
 Follow an approved creative through your intended publishing process. Identify every remaining handoff, required account connection and plan restriction. Name the person responsible for the final check.
 
-For Komendly, one-click Meta publishing belongs to Growth and Scale. If publishing is a purchase requirement, evaluate that plan requirement alongside creative production.
+For Komendly, Meta publishing set up with you belongs to Growth Autopilot. If publishing is a purchase requirement, evaluate that plan requirement alongside creative production.
 
 ### Execute: which operational task is actually automated?
 

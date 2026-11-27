@@ -1,5 +1,6 @@
 // Ads Stripe webhook handlers. Every credit effect is idempotent via CreditLedger.stripeRef.
 import type Stripe from "stripe";
+import { recordOfferConversions } from "@/lib/offer-intel/server";
 import { prisma } from "@/lib/prisma";
 import { annualCredits, intervalFromPriceId, getOffer, getPlan, getTopup, offerCreditsFor, UNLOCK_PACK, UNLOCK_PACK_NOTE, UNLIMITED_WEEK, offerFromPriceId, planFromPriceId, type AdsLaunchOffer } from "./billing-config";
 import { applyCreditMutation, endUnlimitedWeek, grantSubscriptionCredits, grantTopup, grantUnlimitedWeek, refundCredits, upgradeTopUpCredits } from "./credits";
@@ -47,6 +48,8 @@ async function onCheckoutCompleted(s: Stripe.Checkout.Session) {
       userId: ws.ownerId,
       props: { checkoutSessionId: s.id, kind: s.metadata?.kind ?? s.mode, key: s.metadata?.offer ?? s.metadata?.plan ?? s.metadata?.topup, mode: s.mode, amountCents: s.amount_total ?? 0, currency: s.currency ?? "usd" },
     });
+    // Offer experiments: a paid checkout is a `purchased` conversion for the visitor who started it (idempotent, flag-gated, never throws).
+    await recordOfferConversions("purchased", s.metadata?.kmdVid, { workspaceId: ws.id, sessionId: s.id });
     // Abandoned-checkout recovery: a payment within 14 days of a recovery email = checkout_recovered (once per checkout).
     await recordCheckoutRecovered(prisma, { userId: ws.ownerId, workspaceId: ws.id, billing: "ads", amountCents: s.amount_total ?? 0, ref: s.id });
     // Win-back: a churned customer paying again within 60 days of a winback email = winback_recovered (once per churn).

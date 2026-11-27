@@ -8,6 +8,7 @@ import { nextActions } from "@/lib/revenue/digest";
 import type { Rate } from "@/lib/revenue/economics";
 import { loadRevenueDashboard } from "@/lib/revenue/queries";
 import registryJson from "../../../../../docs/revenue/registry.json";
+import { PostActionButton } from "../_components/post-action-button";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
 import { StatCard } from "../_components/stat-card";
 
@@ -84,6 +85,20 @@ async function Revenue() {
             <div key={x.key} className="mb-3"><p className="font-medium">{x.key} · {x.concluded ? `concluded (winner ${x.concluded.winner ?? "none"})` : "running"} · {x.evaluation.verdict}</p>
               <p className="text-muted-foreground">{x.counts.map((c) => `${c.variantId}: ${c.conversions}/${c.exposures} (prob. best ${((x.evaluation.probBest[c.variantId] ?? 0) * 100).toFixed(0)}%)`).join(" · ")}</p>
               <p className="text-xs text-muted-foreground">{x.evaluation.notes.join(" ")}</p></div>
+          ))}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Offer proposals (copy/ordering tests, never prices)</CardTitle></CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <p className="text-xs text-muted-foreground">Offer intelligence flag (sys_offer_intel): {d.flags.offerIntel ? "ON" : "OFF: pages show today's copy, no exposures are logged, and no proposals are generated."}</p>
+          {d.proposals.length === 0 ? <p className="text-muted-foreground">No proposals yet.</p> : d.proposals.slice(0, 12).map((p) => (
+            <div key={p.id} className="rounded border p-3">
+              <p className="font-medium">{p.key || "(no key)"} · {p.surface} · {p.status}{p.lever ? ` · lever: ${p.lever}` : ""}</p>
+              <p className="text-muted-foreground">{p.summary}</p>
+              {p.reasons.length > 0 && <p className="text-xs text-muted-foreground">Why it needs you: {p.reasons.join("; ")}</p>}
+              {p.status === "needs_owner" && <div className="mt-2 flex gap-2"><PostActionButton url="/api/admin/ads/offer-proposals" body={{ id: p.id, action: "approve" }} label="Approve test" variant="default" /><PostActionButton url="/api/admin/ads/offer-proposals" body={{ id: p.id, action: "reject" }} label="Reject" /></div>}
+            </div>
           ))}
         </CardContent>
       </Card>

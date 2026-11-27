@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { loadCycleInput, E } from "@/lib/exec/load";
+import { FIRST10_TARGET, loadFirst10Progress } from "@/lib/exec/first10";
 import { strategicCycle } from "@/lib/exec/strategic-cycle";
 import { scoreboardSentence } from "@/lib/exec/validation-mode";
 import { prisma } from "@/lib/prisma";
@@ -24,6 +25,7 @@ async function Executive() {
   const now = new Date();
   const { input, measured, blocked } = await loadCycleInput(prisma, now, "/admin/ads/executive");
   const out = strategicCycle(input);
+  const f10 = await loadFirst10Progress(prisma);
   const [builds, opps, learned] = await Promise.all([
     prisma.adsEvent.count({ where: { name: E.build, props: { path: ["status"], equals: "pending" } } }).catch(() => 0),
     prisma.adsEvent.findMany({ where: { name: E.opportunity }, orderBy: { createdAt: "desc" }, take: 3 }).catch(() => []),
@@ -45,6 +47,15 @@ async function Executive() {
         )}
         <p className="mt-2 text-xs text-muted-foreground">Evidence thresholds are rules of thumb for reading a trend, not statistical proof.</p>
       </div>
+
+      <Card>
+        <CardHeader><CardTitle>First {FIRST10_TARGET} independent paying customers: {f10.verified}/{FIRST10_TARGET}</CardTitle></CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <p className="text-muted-foreground">{f10.note} Counted only with a live Stripe reference; internal, test, refunded, duplicate and incentivised payers are excluded.</p>
+          {f10.customers.map((c) => <p key={c.eventId}>{c.firstPaidAt.slice(0, 10)} · ${(c.amountCents / 100).toFixed(2)} · {c.what} · {c.emailDomain ?? "?"} · <span className="font-mono text-xs">{c.stripeRef.slice(0, 12)}…</span></p>)}
+          {f10.excluded.length > 0 && <details><summary className="cursor-pointer text-muted-foreground">{f10.excluded.length} excluded</summary>{f10.excluded.map((x) => <p key={x.workspaceId} className="text-xs">{x.reason}: {x.detail}</p>)}</details>}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader><CardTitle>Needs you ({items.length + proposed.length})</CardTitle></CardHeader>

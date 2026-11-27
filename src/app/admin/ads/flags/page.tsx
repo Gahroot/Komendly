@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
+import { getAdminUser } from "@/lib/ads/billing-auth";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
 import { PostActionButton } from "../_components/post-action-button";
 
@@ -14,6 +15,7 @@ const FLAGS = [
 ] as const;
 
 export default async function AdminAdsFlagsPage() {
+  if (!(await getAdminUser())) return null;
   const rows = await prisma.adsFeatureFlag.findMany();
   const enabled = new Map(rows.map((r) => [r.key, r.enabled]));
   return (

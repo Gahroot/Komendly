@@ -1,11 +1,10 @@
-// Growth system `exec_strategy` (flag sys_exec_strategy, default OFF; digest flag sys_exec_digest): the weekly strategy engine that sits ABOVE the optimiser.
+// Growth system `exec_strategy` (flag sys_exec_strategy, default OFF (the owner email is the single Monday exec_brief, see coordinate.ts)): the weekly strategy engine that sits ABOVE the optimiser.
 // Pure logic: src/lib/exec/*. This file: gather from AdsEvent/Postgres, ask Codex (strict JSON, EXEC_MAX_CALLS cap), heartbeat, auto-pause after 3 failed cycles.
 // Part 2 (execution coordinator) consumes loadActiveObjectives / markObjective from src/lib/exec/objectives.ts. Docs: docs/exec/prd/.
-import { SPEND_AUTHORITY } from "../../../src/lib/ops/finance/authority";
-import { GROWTH_SYSTEMS, parseBeat, recordSystemRun, systemEnabled, systemFlagKey, systemHeartbeatId } from "../../../src/lib/growth/systems";
-import { countBySource } from "../../../src/lib/growth/ecosystem";
+import { parseBeat, recordSystemRun, systemEnabled, systemFlagKey, systemHeartbeatId } from "../../../src/lib/growth/systems";
+import { gather } from "../../../src/lib/exec/gather";
 import { MAX_FAILED_CYCLES, failureStreak } from "../../../src/lib/optimizer/actions";
-import { buildBusinessContext, type ContextInput } from "../../../src/lib/exec/context";
+import { buildBusinessContext } from "../../../src/lib/exec/context";
 import { DEFAULT_MAX_CALLS, runExecCycle, type CycleResult } from "../../../src/lib/exec/cycle";
 import type { Actual, ExecDecision } from "../../../src/lib/exec/decisions";
 import { EXEC_EVENTS } from "../../../src/lib/exec/governance";
@@ -16,48 +15,6 @@ import type { SendMail } from "../lifecycle/mail";
 import { errMsg, log } from "../log";
 import { createProvider } from "../providers/index";
 import type { AIProvider } from "../providers/types";
-
-const since = (now: Date, days: number) => new Date(now.getTime() - days * 86_400_000);
-
-export async function gather(db: Db, now: Date): Promise<ContextInput> {
-  const ev = (name: string, take: number, days = 120) => db.adsEvent.findMany({ where: { name, createdAt: { gte: since(now, days) } }, orderBy: { createdAt: "desc" }, take });
-  const [snaps, signupEv, payEv, fin, inc, infra, status, opt, opsDec, expEv, ownerEv, proposals, learn, replies] = await Promise.all([
-    ev("revenue_snapshot", 1, 30), ev("signed_up", 3000, 90), ev("ads_payment_alerted", 500, 365), ev("finance_snapshot", 1, 30), ev("incident", 50, 30), ev("infra_check", 30, 3),
-    ev("system_status", 60, 3), ev("optimizer_action", 20, 120), ev("ops_decision", 20, 120), ev("experiment_defined", 50), ev("optimizer_owner_decision", 10, 30), ev("offer_proposal", 40), ev("learning", 20, 120), ev("reply_classified", 500, 60),
-  ]);
-  const snapshot = (snaps[0]?.props ?? null) as RevenueSnapshot | null;
-  const flagRows = await db.adsFeatureFlag.findMany({ take: 500 });
-  const flags: Record<string, boolean> = Object.fromEntries(flagRows.map((f) => [f.key, f.enabled]));
-  const payers = new Set(payEv.flatMap((e) => (e.workspaceId ? [e.workspaceId] : [])));
-  const by = countBySource(signupEv.flatMap((e) => { const p = asObj(e.props), ft = asObj(p.firstTouch); return e.workspaceId ? [{ workspaceId: e.workspaceId, utmSource: (ft.utm_source as string) ?? null, referrerHost: (ft.referrer_host as string) ?? null, klyLead: Boolean(p.klyLead) }] : []; }), payers);
-  const channels: ContextInput["channels"] = [];
-  for (const s of GROWTH_SYSTEMS) {
-    const c = by.get(s.utmSource);
-    const beat = parseBeat((await db.engineHeartbeat.findUnique({ where: { id: systemHeartbeatId(s.key) } }).catch(() => null))?.meta);
-    if (c || beat.outputs) channels.push({ source: s.utmSource, label: s.label, actions: beat.outputs, signups: c?.signups ?? 0, payments: c?.payments ?? 0, flagOn: flags[systemFlagKey(s.key)] === true });
-  }
-  // latest infra_check per row; latest system_status per capability id
-  const statuses = new Map<string, string>();
-  for (const e of status) { const p = asObj(e.props); const id = String(p.id ?? p.key ?? ""); if (id && !statuses.has(id)) statuses.set(id, String(p.status ?? "")); }
-  const openInc = inc.filter((e) => { const p = asObj(e.props); return p.status !== "resolved" && p.status !== "closed"; });
-  const classified = replies.map((e) => asObj(e.props));
-  const cls = (k: string) => classified.filter((p) => p.category === k || p.intent === k).length;
-  const customerVoice = classified.length ? { replies: classified.length, priceObjections: cls("price"), offerObjections: cls("offer") + cls("unclear"), noInterest: cls("no_need") + cls("not_interested") } : null;
-  return {
-    now, snapshot, channels, flags,
-    finance: fin[0] ? { props: asObj(fin[0].props) } : null,
-    incidents: inc.length ? { open: openInc.length, recent: openInc.slice(0, 5).map((e) => asObj(e.props)) } : null,
-    infra: infra.length ? { failures: infra.filter((e) => asObj(e.props).ok === false).length, total: infra.length } : null,
-    systemStatus: statuses.size ? [...statuses].map(([id, st]) => ({ id, status: st })) : null,
-    competitive: null, // docs/product/competitive.json is not shipped in the engine image; wire an AdsEvent when the product worker emits one
-    spendAuthority: { ...SPEND_AUTHORITY },
-    ownerDecisions: ownerEv.map((e) => ({ text: String(asObj(e.props).title ?? ""), at: e.createdAt.toISOString() })),
-    optimizerActions: opt.map((e) => asObj(e.props)), opsDecisions: opsDec.map((e) => asObj(e.props)), learnings: learn.map((e) => asObj(e.props)),
-    experiments: expEv.map((e) => ({ key: String(asObj(e.props).key ?? ""), status: "defined", hypothesis: typeof asObj(e.props).hypothesis === "string" ? String(asObj(e.props).hypothesis) : undefined })).filter((x) => x.key),
-    hypotheses: proposals.flatMap((e) => (typeof asObj(e.props).hypothesis === "string" ? [{ text: String(asObj(e.props).hypothesis) }] : [])),
-    customerVoice, outcomes: null,
-  };
-}
 
 /** Current value of a decision's metric from the latest revenue snapshot; null when unmeasurable (review then records "inconclusive"). */
 export async function measureDecision(db: Db, d: ExecDecision): Promise<Actual | null> {

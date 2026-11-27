@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { recordWebhookFailure } from "@/lib/ops/webhook-failure";
 import { prisma } from "@/lib/prisma";
 import {
   sendNotifications,
@@ -68,7 +69,11 @@ export async function POST(request: NextRequest) {
     const webhookSecret = process.env.VIDEO_WEBHOOK_SECRET;
     const signature = request.headers.get("x-webhook-signature");
 
-    if (webhookSecret) {
+    if (!webhookSecret) {
+      log.error("VIDEO_WEBHOOK_SECRET not set: rejecting webhook (fail closed)");
+      return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
+    }
+    {
       if (!verifyWebhookSignature(rawBody, signature, webhookSecret)) {
         log.warn({ videoId: body.videoId }, "Invalid webhook signature");
         return NextResponse.json(
@@ -223,6 +228,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logError(log, error, "Webhook processing error", { durationMs: timer.getDuration() });
+    if (!(error instanceof SyntaxError)) await recordWebhookFailure("video_status", "callback", error);
 
     if (error instanceof SyntaxError) {
       return NextResponse.json(

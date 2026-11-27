@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Free ad makeover for your website", 
 export default function Page() {
   return (
     <HubFormPage kind="makeover">
-      <p>How it works: you enter your own site, we make ads from it and email you a private link. We only show a makeover publicly if you tick the optional box <em>and</em> approve it, or after you claim it. It is always labelled as a Komendly makeover and has a take-down link.</p>
+      <p>How it works: you enter your own site, a person at Komendly makes ads from it and emails you a private link within 2 business days (or make your free pack now at <Link className="underline" href="/free-ads">/free-ads</Link>). We only show a makeover publicly if you tick the optional box <em>and</em> approve it, or after you claim it. It is always labelled as a Komendly makeover and has a take-down link.</p>
       <p>Already running an ad? Try <Link className="underline" href="/rescue">ad rescue</Link>. Want to remove something? <Link className="underline" href="/makeover/takedown">Take-down request</Link>.</p>
     </HubFormPage>
   );

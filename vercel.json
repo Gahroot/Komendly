@@ -5,6 +5,7 @@
     { "path": "/api/cron/revenue-digest", "schedule": "45 14 * * 1" },
     { "path": "/api/cron/botd", "schedule": "0 15 * * *" },
     { "path": "/api/cron/indexnow", "schedule": "30 15 * * *" },
+    { "path": "/api/cron/newsletter", "schedule": "0 14 * * 4" },
     { "path": "/api/cron/content-queue", "schedule": "0 13 * * 1" },
     { "path": "/api/cron/funnel-monitor", "schedule": "0 16 * * *" },
     { "path": "/api/cron/ops-watchdog", "schedule": "*/10 * * * *" }

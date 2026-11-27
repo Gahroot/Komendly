@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDate } from "@/lib/ads/billing-format";
 import { prisma } from "@/lib/prisma";
+import { getAdminUser } from "@/lib/ads/billing-auth";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
 import { AdminEmpty } from "../../_components/admin-empty";
 
@@ -11,6 +12,7 @@ export const dynamic = "force-dynamic";
 interface Props { url?: string; title?: string; text?: string; score?: number; draft?: string; source?: string; status?: string }
 
 export default async function AdminIntentPage() {
+  if (!(await getAdminUser())) return null;
   const rows = await prisma.adsEvent.findMany({ where: { name: "intent_opportunity" }, orderBy: { createdAt: "desc" }, take: 200 });
   const items = rows.map((r) => ({ id: r.id, at: r.createdAt, p: r.props as Props }));
   const open = items.filter((i) => (i.p.status ?? "new") === "new").sort((a, b) => (b.p.score ?? 0) - (a.p.score ?? 0));

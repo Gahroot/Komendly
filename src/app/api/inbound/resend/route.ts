@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordWebhookFailure } from "@/lib/ops/webhook-failure";
 import { prisma } from "@/lib/prisma";
 import { buildReplyForward, headerValue, htmlToText, parseAddress, replyForwardTo, stripQuotedReply, verifySvixSignature } from "@/lib/ads/inbound";
 import { sendAdsMail } from "@/lib/ads/mailer";
@@ -82,6 +83,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[inbound/resend]", err);
+    await recordWebhookFailure("resend", "inbound", err);
     return NextResponse.json({ error: "Failed" }, { status: 500 });
   }
 }

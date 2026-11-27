@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordWebhookFailure } from "@/lib/ops/webhook-failure";
 import { videoQueue } from "@/lib/video-queue";
 import { DURATION_OPTIONS, type Duration } from "@/lib/fal/video-generator";
 import crypto from "crypto";
@@ -67,8 +68,12 @@ export async function POST(request: NextRequest) {
     // Get webhook secret from environment
     const webhookSecret = process.env.FAL_WEBHOOK_SECRET;
 
-    // Verify signature if secret is configured
-    if (webhookSecret) {
+    // Fail closed: without a secret anyone could forge status updates (S-07).
+    if (!webhookSecret) {
+      console.error("FAL_WEBHOOK_SECRET not set: rejecting fal.ai webhook");
+      return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });
+    }
+    {
       const signature = request.headers.get("x-fal-signature") ||
                        request.headers.get("x-webhook-signature");
 
@@ -171,6 +176,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Fal.ai webhook processing error:", error);
+    await recordWebhookFailure("fal", "callback", error);
 
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";

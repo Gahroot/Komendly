@@ -31,7 +31,7 @@ const SITE: HubField = { name: "url", label: "Website", type: "url", required: t
 export const HUB_CONFIGS: Record<HubKind, HubConfig> = {
   makeover: {
     kind: "makeover", title: "Free ad makeover for your website", lead: "Enter your own website. We make ads from it. Nothing is shown publicly unless you say yes below, and you can ask us to take anything down.",
-    submit: "Request my makeover", done: "Got it. We'll make your ads and email you a private link. Nothing is published without your yes.",
+    submit: "Request my makeover", done: "Got it. A person at Komendly will review your request and email you a private link within 2 business days. Want ads right now? Make your free pack at komendly.com/free-ads. Nothing is published without your yes.",
     fields: [BIZ, SITE, EMAIL, own("owner", "I own or work for this business and can submit its website."), { name: "publicOk", label: "Optional: you may show the before/after publicly, labelled as a Komendly makeover, after I approve it.", type: "checkbox" }],
   },
   nominate: {
@@ -42,12 +42,12 @@ export const HUB_CONFIGS: Record<HubKind, HubConfig> = {
   },
   rescue: {
     kind: "rescue", title: "Ad rescue: free critique and an improved version", lead: "Send us the Facebook or Instagram ad you're running now (a link to your page or the Ad Library listing). We grade it with the same checks as the Meta Ad Check and make an improved version. Private by default.",
-    submit: "Rescue my ad", done: "Received. We'll email your critique and an improved version. It stays private.",
+    submit: "Rescue my ad", done: "Received. A person will review it and email your critique and an improved version within 2 business days. It stays private.",
     fields: [BIZ, { name: "url", label: "Your website", type: "url", required: true, max: 300 }, { name: "adLink", label: "Link to your current ad (Ad Library or post)", type: "url", max: 400 }, EMAIL, own("owner", "This is my own business's ad.")],
   },
   launch: {
     kind: "launch", title: "Startup launch gift: launch-ready ads", lead: "Launching soon? Tell us your site and launch date. We make a free launch pack from your website (the free 10 ads).",
-    submit: "Claim my launch gift", done: "Received. We'll email you when your launch pack is ready.",
+    submit: "Claim my launch gift", done: "Received. We'll email you within 2 business days. Want your 10 free ads right now? Make them at komendly.com/free-ads.",
     fields: [BIZ, SITE, EMAIL, { name: "launchDate", label: "Launch date (YYYY-MM-DD)", type: "text", max: 10 }, own("owner", "I'm part of this startup and can submit its website.")],
   },
   giveaway: {
@@ -67,12 +67,12 @@ export const HUB_CONFIGS: Record<HubKind, HubConfig> = {
   },
   review: {
     kind: "review", title: "Turn a review into an ad", lead: "Paste a review you own (about your own business) and your website. We make an ad around it. We never invent or edit reviews, and we only use ones you confirm are real and yours to use.",
-    submit: "Make my ad", done: "Received. We'll email you the ad made around your review.",
+    submit: "Make my ad", done: "Received. A person will check it and email you the ad made around your review within 2 business days.",
     fields: [BIZ, SITE, EMAIL, { name: "review", label: "The review, word for word", type: "textarea", required: true, max: 600 }, { name: "reviewer", label: "Reviewer's first name or initials (as it appeared)", type: "text", max: 40 }, { name: "platform", label: "Where it was posted (Google, Facebook...)", type: "text", max: 40 }, own("real", "This is a real review about my business and I may use it in my ads.")],
   },
   takedown: {
     kind: "takedown", title: "Take-down request", lead: "Ask us to remove anything we published about your business, or to stop contacting you. We act on it right away.",
-    submit: "Send request", done: "Done. We'll remove it and note your opt-out.",
+    submit: "Send request", done: "Received. Your opt-out is recorded now and we'll remove anything we published about you, usually within a day.",
     fields: [{ name: "ref", label: "Link or ID of the page (optional)", type: "text", max: 200 }, { name: "email", label: "Your email", type: "email", required: true, max: 160 }, { name: "note", label: "Anything else (optional)", type: "textarea", max: 400 }],
   },
 };

@@ -6,7 +6,10 @@ import { loadFeaturedAds } from "@/lib/ads/feature-actions";
 import { pairId, pairUp } from "@/lib/growth/creative-hubs";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Ad showdown: vote for the better ad", description: "Two ads, one vote. Real ads that Komendly customers agreed to feature.", alternates: { canonical: "/vote" } };
+export async function generateMetadata(): Promise<Metadata> {
+  const empty = (await loadFeaturedAds(40).catch(() => [])).length < 2;
+  return { title: "Ad showdown: vote for the better ad", description: "Two ads, one vote. Real ads that Komendly customers agreed to feature.", alternates: { canonical: "/vote" }, robots: empty ? { index: false, follow: true } : undefined };
+}
 
 export default async function Page() {
   const pairs = pairUp(await loadFeaturedAds(40));

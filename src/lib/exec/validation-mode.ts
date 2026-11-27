@@ -11,6 +11,8 @@ export function stageOf(f: StageFacts): ExecStage {
   if (f.payingCustomers < 10) return "first_customers";
   return (f.profitableMonths ?? 0) >= 3 ? "scaling" : "repeatable";
 }
+/** Maps to the index used by stage.ts (allowed strategies). The strategy engine and the coordinator therefore share ONE stage definition. */
+export const stageIndexOf = (s: ExecStage): number => ({ pre_revenue: 0, first_customers: 1, repeatable: 2, scaling: 3 } as const)[s];
 export const modeOf = (s: ExecStage): ExecMode => ({ pre_revenue: "commercial_validation", first_customers: "learn_from_customers", repeatable: "optimise", scaling: "scale" } as const)[s];
 
 export interface ModePolicy {

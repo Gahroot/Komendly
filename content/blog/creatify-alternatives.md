@@ -189,7 +189,7 @@ Komendly turns a website URL into on-brand, ready-to-run ad creatives, static an
 
 **Pros:** The website provides the starting point, and I find the awareness-stage approach a useful way to brief different messages. You can evaluate 10 static ads + 1 animated ad, no card required.
 
-**Cons:** One-click publish to Meta requires Growth or Scale. If direct publishing is essential, include that requirement in your plan decision. For a presenter-led video brief, I would evaluate the avatar workflow discussed under Creatify before choosing.
+**Cons:** Meta publishing set up with you requires Growth Autopilot. If direct publishing is essential, include that requirement in your plan decision. For a presenter-led video brief, I would evaluate the avatar workflow discussed under Creatify before choosing.
 
 Compare current plans on the [Komendly pricing page](/pricing). Komendly offers a 30-day money-back guarantee on the first month.
 

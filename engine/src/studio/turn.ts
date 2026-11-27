@@ -325,7 +325,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     if (ff) env.PATH = `${dirname(ff)}${delimiter}${env.PATH ?? ""}`;
     // Brain: Codex unless its weekly window is nearly used up (then MiMo); see ./brain.ts.
     const mimo = mimoAuth();
-    const hasCodex = Boolean(creds) || Boolean(process.env.OPENAI_API_KEY);
+    const hasCodex = Boolean(creds);
     let brain: StudioBrain = chooseStudioBrain({ forced: process.env.STUDIO_BRAIN ?? null, codexPct: mimo ? await codexWeeklyPctSeen(db) : null, atPct: mimoAtPct(), hasMimo: Boolean(mimo), hasCodex });
     const useMimo = async () => {
       await writeFile(join(home, ".ezcoder", "auth.json"), JSON.stringify({ xiaomi: mimo }), { mode: 0o600 });
@@ -335,7 +335,7 @@ export async function studioTurn(ctx: JobContext): Promise<unknown> {
     else if (creds) {
       leased = await creds.lease(studioTurnTimeoutMs() + 5 * 60_000);
       await writeFile(join(home, ".ezcoder", "auth.json"), JSON.stringify({ openai: leased }), { mode: 0o600 });
-    } else if (!process.env.OPENAI_API_KEY) {
+    } else {
       throw Object.assign(new Error("no Codex login for the studio agent"), { studioCode: "no_login" });
     }
     if (brain === "mimo") log("info", "studio turn on MiMo", { sessionId });

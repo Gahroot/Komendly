@@ -13,4 +13,4 @@
 
 **Acceptance criteria.** Dedupe, severity, allow-list, caps, closing rules, once-only escalation, maintenance undo and recurrence proposals are covered by `npx vitest run src/lib/ops/__tests__/incidents.test.ts incident-io.test.ts`. With the flag OFF neither the engine job nor the cron writes anything.
 
-**Gaps (honest).** No producer writes `webhook_failed` yet (Stripe/Resend/FAL webhook handlers were not touched); until one does, webhook failures are only caught indirectly (payment alerts, funnel checks). `ops_maintenance` is only a flag: no banner reads it yet. No live data yet: status = built, not proven.
+**Gaps (honest).** `webhook_failed` is now written by the Stripe, ads-billing, Resend inbound, FAL and video-status handlers (`src/lib/ops/webhook-failure.ts`, error paths only, return codes unchanged). The `ops_maintenance` flag now drives a site banner (`/api/ops/status` + `MaintenanceBanner`). Still open: webhooks that fail signature verification are not recorded (attacker noise), and no live data yet: status = built, not proven.

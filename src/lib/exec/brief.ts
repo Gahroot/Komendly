@@ -9,18 +9,22 @@ export interface ExecBriefInput {
   objectiveChanges: string[]; learned: string[]; decisions: Array<{ question: string; recommended: string }>; next: string[];
   topRisk: { title: string; isNew: boolean } | null; scoreboardGap: EvidenceLine | null; absorbedDigests?: string[];
   ownerWaitingOnSystem?: string[];
+  /** One factual line: verified first-10 progress. Shown as context only; it never makes the brief "have content" (no spam). */
+  first10Line?: string;
 }
 export const BRIEF_MAX_LINES = 15;
 
 export function buildExecBrief(i: ExecBriefInput): { subject: string; text: string; lines: string[]; hasContent: boolean } {
   const L: string[] = [];
-  const changedConstraint = i.constraint && i.constraint.label !== i.previousConstraint;
-  if (changedConstraint) L.push(`The one thing in the way is now: ${i.constraint!.label} (${i.constraint!.confidence} confidence).`);
+  // "no proven constraint" is the steady state in validation: it is never news on its own (no weekly spam)
+  const changedConstraint = i.constraint && i.constraint.confidence !== "none" && i.constraint.label !== i.previousConstraint;
+  if (changedConstraint) L.push(i.constraint!.confidence === "none" ? "No single constraint is proven yet (too few observations), so the plan is to keep operating the existing channels and gather evidence." : `The one thing in the way is now: ${i.constraint!.label} (${i.constraint!.confidence} confidence).`);
   for (const c of i.objectiveChanges.slice(0, 3)) L.push(c);
   for (const x of i.learned.slice(0, 2)) L.push(`Learned: ${x}`);
   if (i.topRisk?.isNew) L.push(`New risk: ${i.topRisk.title}.`);
   if (i.decisions.length) { L.push("Needs you:"); for (const d of i.decisions.slice(0, 3)) L.push(`- ${d.question} I recommend: ${d.recommended}.`); if (i.decisions.length > 3) L.push(`- (+${i.decisions.length - 3} more on the page)`); }
   const hasChange = L.length > 0;
+  if (i.first10Line) L.push(i.first10Line);
   if (i.next.length) L.push(`Next: ${i.next.slice(0, 2).join("; ")}.`);
   if (i.scoreboardGap && !i.scoreboardGap.met) L.push(`Waiting on evidence: ${scoreboardSentence(i.scoreboardGap)}.`);
   const body = L.slice(0, BRIEF_MAX_LINES - 3);

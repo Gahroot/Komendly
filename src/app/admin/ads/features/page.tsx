@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { publicFeatureImageUrl } from "@/lib/ads/feature-assets";
 import { defaultCaption } from "@/lib/ads/features";
+import { getAdminUser } from "@/lib/ads/billing-auth";
 import { AdminAdsShell } from "../_components/admin-ads-shell";
 import { FeatureQueueCard, type FeatureQueueItem } from "../_components/feature-queue-card";
 
@@ -9,6 +10,7 @@ export const dynamic = "force-dynamic";
 const TABS = ["queue", "featured", "declined"] as const;
 
 export default async function AdminFeaturesPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  if (!(await getAdminUser())) return null;
   const q = await searchParams;
   const tab = TABS.find((t) => t === q.tab) ?? "queue";
   const statuses = tab === "queue" ? ["shortlisted", "consented"] : tab === "featured" ? ["featured"] : ["declined", "withdrawn"];

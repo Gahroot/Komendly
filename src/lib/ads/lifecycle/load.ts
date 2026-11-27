@@ -3,6 +3,9 @@
 import { launchOfferReadyAt } from "../billing-config";
 import { FREE_ADS_WAYS, freeAdsWaysStart, LONG_TAIL, type LifecycleCandidate } from "./select";
 
+/** Other customer-email systems (revenue lifecycle, win-back, recovery, nudges): their sends must count toward this lifecycle's 24h gap, as the revenue lifecycle already counts ours. */
+const EXTERNAL_SEND_EVENTS: readonly string[] = ["rl_email_sent", "winback_email_sent", "recovery_email_sent", "live_nudge_sent", "first_win_email_sent", "proof_report_sent", "cancel_save_email_sent"];
+
 export interface RawQueryDb {
   $queryRawUnsafe(query: string, ...values: unknown[]): Promise<unknown>;
 }
@@ -61,7 +64,7 @@ export async function loadLifecycleCandidates(db: RawQueryDb, now: Date, userIds
     db.$queryRawUnsafe(
       `SELECT name, "userId", "workspaceId", "runId", props, "createdAt" FROM "AdsEvent"
         WHERE ("userId" = ANY($1::text[]) OR "workspaceId" = ANY($2::text[]))
-          AND name IN ('email_sent', 'email_unsubscribed', 'purchased', 'paid_converted', 'signed_up', 'trial_blocked', 'email_replied')`,
+          AND name IN ('email_sent', 'email_unsubscribed', 'purchased', 'paid_converted', 'signed_up', 'trial_blocked', 'email_replied', ${EXTERNAL_SEND_EVENTS.map((n) => `'${n}'`).join(', ')})`,
       uids,
       wids,
     ),
@@ -120,9 +123,11 @@ export async function loadLifecycleCandidates(db: RawQueryDb, now: Date, userIds
       offerReadyAt: offerReadyBy.get(wid) ?? null,
       readyAdCount: run ? Number(run.ready ?? 0) : 0,
       sent: mine
-        .filter((e) => e.name === "email_sent" && e.userId === id)
+        .filter((e) => (e.name === "email_sent" || EXTERNAL_SEND_EVENTS.includes(String(e.name))) && e.userId === id)
         .map((e) => {
           const props = (e.props && typeof e.props === "object" ? e.props : {}) as Record<string, unknown>;
+          // Sends from the other customer-email systems count toward the 24h gap (as non-transactional, prefixed so they never match a lifecycle kind).
+          if (e.name !== "email_sent") return { kind: `ext:${str(props.kind) ?? String(e.name)}`, runId: null, at: date(e.createdAt) ?? now };
           return { kind: str(props.kind) ?? "", runId: str(e.runId), at: date(e.createdAt) ?? now };
         }),
     };

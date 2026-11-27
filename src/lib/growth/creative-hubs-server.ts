@@ -7,6 +7,7 @@ import { webText } from "@/lib/ads/auto-reply-server";
 import { DEFAULT_POSTAL_ADDRESS } from "@/lib/ads/outbound/copy";
 import { renderLifecycleHtml, renderLifecycleText, unsubscribeHeaders } from "@/lib/ads/lifecycle/template";
 import { signEmailToken } from "@/lib/ads/lifecycle/tokens";
+import { guardContact } from "@/lib/ops/control/contact-web";
 import { reviewGate } from "@/lib/growth/review-gate";
 import { systemEnabled, withSystemUtm } from "@/lib/growth/systems";
 import { hashIp } from "@/lib/growth/free-tools-server";
@@ -60,8 +61,19 @@ export async function submitHub(kind: HubKind, raw: unknown, o: { ip: string; or
     await prisma.adsEvent.create({ data: { name: HUB_EVENTS.optout, props: { email, via: "takedown_form" } } });
   }
   const ev = await prisma.adsEvent.create({ data: { name, userId: o.userId ?? null, props: props as never } });
+  if (FULFILMENT_KINDS.has(kind)) await notifyOwner(kind, ev.id, d).catch((e) => console.error("[hubs] owner alert failed", e));
   if (kind === "nominate") await maybeSendNomineeEmail(ev.id, d, o.origin).catch((e) => console.error("[hubs] nominee email failed", e));
   return { ok: true };
+}
+
+/** Intake kinds a person must fulfil: there is no automatic worker, so every one alerts the owner (ADS_ALERT_EMAIL) the moment it arrives. */
+export const FULFILMENT_KINDS: ReadonlySet<HubKind> = new Set<HubKind>(["makeover", "rescue", "launch", "nonprofit", "review", "takedown"]);
+async function notifyOwner(kind: HubKind, id: string, d: Record<string, string | boolean>) {
+  const to = (process.env.ADS_ALERT_EMAIL ?? "").trim();
+  if (!to) return;
+  const lines = Object.entries(d).filter(([k]) => k !== "review" && k !== "note").map(([k, v]) => `${k}: ${String(v).slice(0, 200)}`);
+  const text = `New "${kind}" request (AdsEvent ${id}). Fulfil within 2 business days; for a takedown act right away.\n\n${lines.join("\n")}\n`;
+  await sendAdsMail({ to, subject: `[Komendly hub] new ${kind} request`, text, html: `<pre style="font-family:sans-serif;white-space:pre-wrap">${text.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</pre>` });
 }
 
 /** The one honest "someone nominated you" email. Never when: flag off, no public email, opted out, already sent, gate says no. */
@@ -69,6 +81,7 @@ async function maybeSendNomineeEmail(subId: string, d: Record<string, string | b
   const to = typeof d.nomineeEmail === "string" ? d.nomineeEmail : "";
   if (!to || !secret() || !(await outreachEnabled())) return;
   if (await isOptedOut(to)) return;
+  if (!(await guardContact(to, "cold_email", "creative_outreach")).allowed) return; // contact ledger: no double-touch inside the cooldown
   if (await prisma.adsEvent.findFirst({ where: { name: HUB_EVENTS.nomineeEmail, props: { path: ["to"], equals: to } }, select: { id: true } })) return;
   const base = appBaseUrl(origin);
   const optOutUrl = `${base}/api/hub/optout?t=${signHubToken({ a: "optout", e: to }, secret())}`;

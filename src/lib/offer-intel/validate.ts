@@ -20,7 +20,7 @@ export function validateProposal(
   if (control?.payload) reasons.push("the first variant must be the control (no payload)");
   if (def.variants.length > 3) reasons.push("at most 3 variants (volume is tiny)");
   if (def.minPerVariant < 50) reasons.push("minPerVariant under 50 is too small to learn anything");
-  if (!/^[a-z_]+$/.test(def.metric) || !["signed_up", "checkout_started", "offer_clicked"].includes(def.metric)) reasons.push(`metric "${def.metric}" is not a wired conversion event (signed_up, checkout_started, offer_clicked)`);
+  if (!/^[a-z_]+$/.test(def.metric) || !["signed_up", "checkout_started", "offer_clicked", "purchased"].includes(def.metric)) reasons.push(`metric "${def.metric}" is not a wired conversion event (signed_up, checkout_started, offer_clicked, purchased)`);
   for (const v of rest) for (const p of payloadProblems(def.surface, v.payload)) reasons.push(`variant ${v.id}: ${p}`);
   if (ctx.reviewApproved === false) reasons.push("AI review gate rejected the copy");
   if (ctx.reviewApproved === null && !reasons.length) reasons.push("AI review gate has not approved this proposal");

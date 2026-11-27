@@ -25,6 +25,7 @@ const CLASSIFIED: Record<string, { kind: Kind; why: string }> = {
   "src/lib/ads/feature-actions.ts": { kind: "marketing", why: "feature emails" },
   "src/lib/ads/leads/server.ts": { kind: "marketing", why: "lead alerts to customers (opt-out)" },
   "src/lib/growth/ad-watch-server.ts": { kind: "marketing", why: "double opt-in ad watch" },
+  "src/lib/growth/newsletter-server.ts": { kind: "marketing", why: "double opt-in Ozzy's Ad Report" },
   "src/lib/growth/creative-hubs-server.ts": { kind: "marketing", why: "creative hubs / outreach" },
   "src/app/api/inbound/resend/route.ts": { kind: "marketing", why: "forwards replies; handles unsubscribe keywords" },
   "src/app/api/ads/team/partner-request/route.ts": { kind: "internal", why: "mail to the owner" },
@@ -38,7 +39,7 @@ const CLASSIFIED: Record<string, { kind: Kind; why: string }> = {
   "src/lib/notifications.ts": { kind: "transactional", why: "testimonial video-ready notices to the account holder" },
   "src/lib/ads/verify.ts": { kind: "transactional", why: "email verification code the user asked for" },
   "src/lib/ads/partner-admin.ts": { kind: "transactional", why: "partner onboarding to the partner who applied" },
-  "src/lib/studio/invite-server.ts": { kind: "known_gap", why: "S-09: referral invite to a third party with no unsubscribe/suppression (docs/ops/security-audit.md)" },
+  "src/lib/studio/invite-server.ts": { kind: "marketing", why: "S-09 fixed: referral invite checks OutboundSuppression, 5/day cap, contact ledger, opt-out note (reply unsubscribe)" },
 };
 
 describe("email senders", () => {
@@ -64,7 +65,10 @@ describe("email senders", () => {
     expect(s).toContain("OUTBOUND_POSTAL_ADDRESS");
     expect(s).toMatch(/OutboundSuppression|suppress/i);
   });
-  it("known gaps stay visible: studio invite has no unsubscribe yet", () => {
-    expect(CLASSIFIED["src/lib/studio/invite-server.ts"]?.kind).toBe("known_gap");
+  it("studio invite checks suppression, a daily cap and the contact guard (S-09)", () => {
+    const s = readFileSync(path.join(root, "src/lib/studio/invite-server.ts"), "utf8");
+    expect(s).toMatch(/outboundSuppression/);
+    expect(s).toMatch(/rateLimit\(`studio_invite_mail/);
+    expect(s).toMatch(/guardContact/);
   });
 });

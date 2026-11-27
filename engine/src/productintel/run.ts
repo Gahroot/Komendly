@@ -36,11 +36,21 @@ async function sloConfig(db: Db) {
   return clampSlo(o);
 }
 
+export const ENGINE_PROVIDER_EVENT = "engine_provider";
+const LLM_STAGES = new Set(["extract", "plan", "qc", "render_static", "render_motion", "bonus", "bonus_generate", "coach_review"]);
+export const engineProvider = (env: NodeJS.ProcessEnv) => ({ provider: env.TEXT_BRAIN || "codex", model: env.CODEX_TEXT_MODEL || "gpt-6.2-sol" });
+
 export async function reliabilityTick(db: Db, send: SendMail | undefined, env: NodeJS.ProcessEnv, now = new Date()): Promise<{ enabled: boolean; snapshot: ReliabilitySnapshot | null; alerts: number }> {
   if (!(await systemEnabled(db, "reliability"))) return { enabled: false, snapshot: null, alerts: 0 };
   try {
-    const snap = buildReliabilitySnapshot(await loadReliabilityInput(db, now, 7), await sloConfig(db));
     const day = dayOf(now);
+    const input = await loadReliabilityInput(db, now, 7);
+    // AdJob does not record provider/model (runner.ts is off-limits). The engine runs ONE configured text provider per process,
+    // so stamp LLM-stage jobs with it, labelled "(engine-configured)": a configuration fact, not a per-job measurement.
+    const cfg = engineProvider(env);
+    for (const j of input.jobs) if (LLM_STAGES.has(j.type)) j.payload = { provider: `${cfg.provider} (engine-configured)`, model: cfg.model };
+    if (!(await eventExists(db, ENGINE_PROVIDER_EVENT, "day", day))) await db.adsEvent.create({ data: { name: ENGINE_PROVIDER_EVENT, props: { day, ...cfg } } });
+    const snap = buildReliabilitySnapshot(input, await sloConfig(db));
     let outputs = 0, alerts = 0;
     if (!(await eventExists(db, RELIABILITY_EVENT, "day", day))) { await db.adsEvent.create({ data: { name: RELIABILITY_EVENT, props: JSON.parse(JSON.stringify(snap)) } }); outputs++; }
     const fresh: Finding[] = [];

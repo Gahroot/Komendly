@@ -126,7 +126,7 @@ export function lastCappedSendAt(sent: ReadonlyArray<{ kind: string; at: Date }>
 
 // Test / internal addresses never get lifecycle email: our own domain, Resend test sinks, e2e accounts, and
 // LIFECYCLE_EXCLUDE (comma-separated emails, e.g. the owner's personal accounts).
-const TEST_RE = /(^e2e[-+].*@|@komendly\.com$|@resend\.dev$|\.test$)/i;
+const TEST_RE = /(^e2e[-+].*@|@komendly\.com$|@getkomendly\.com$|^integration-testing@zapier\.com$|@resend\.dev$|\.test$)/i; // @getkomendly.com = our own sending domain (platform-review and funnel-test accounts live there)
 export function isTestEmail(email: string, exclude: string | undefined = typeof process !== "undefined" ? process.env.LIFECYCLE_EXCLUDE : undefined): boolean {
   const e = email.trim().toLowerCase();
   if (TEST_RE.test(e)) return true;

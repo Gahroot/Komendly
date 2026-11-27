@@ -2,7 +2,7 @@
 // that, re-measure) and an honest business stage (Acquisition.com Scaling Roadmap, early stages). Pure TS, no I/O.
 // Benchmarks are ASSUMPTIONS (typical for free-to-paid self-serve), not Komendly data: replace with measured ones as they appear.
 // Small samples are shrunk toward the benchmark (prior strength PRIOR_N) so 0/12 never looks like a proven disaster.
-import type { Confidence, Economics } from "./economics";
+import { MIN_N_ESTIMATED, type Confidence, type Economics } from "./economics";
 
 export type ConstraintKey = "traffic" | "activation" | "first_purchase" | "upsell" | "delivery" | "retention" | "economics";
 export type Constraint = { key: ConstraintKey; label: string; rank: number; severity: number; observed: number | null; benchmark: number; n: number; confidence: Confidence; evidence: string; action: string };
@@ -26,8 +26,9 @@ export function diagnoseConstraint(f: FunnelFacts): Constraint[] {
   };
   const fu = f.funnel;
   const perDay = fu.visitors / Math.max(1, f.windowDays);
-  const t = severityOf(Math.round(perDay * 10), 10, BENCHMARKS.visitorsPerDay / 10);
-  out.push({ key: "traffic", label: "Traffic / sign-ups", severity: Math.min(t.severity, 5), observed: perDay, benchmark: BENCHMARKS.visitorsPerDay, n: fu.visitors, confidence: fu.visitors < 30 ? "estimated" : "measured",
+  // Visits are a measured count over the whole window, not a small-sample rate: no shrinkage (the old call mixed units and always read ~1).
+  const trafficSeverity = Math.round(Math.max(1, BENCHMARKS.visitorsPerDay / Math.max(perDay, 1)) * 100) / 100;
+  out.push({ key: "traffic", label: "Traffic / sign-ups", severity: Math.min(trafficSeverity, 5), observed: perDay, benchmark: BENCHMARKS.visitorsPerDay, n: fu.visitors, confidence: fu.visitors < 30 ? "estimated" : "measured",
     evidence: `${fu.visitors} visits in ${f.windowDays}d (${perDay.toFixed(1)}/day, target ${BENCHMARKS.visitorsPerDay}/day) and ${fu.signups} sign-ups (${pct(f.rates.visitToSignup.value)} of visits, benchmark ${pct(BENCHMARKS.visitToSignup)}).`,
     action: "Add or scale one lead getter (Core Four: more of what works, better creative, then a new channel); keep tracking first touch." });
   step("activation", "Activation (finish the free pack)", fu.activated, fu.signups, BENCHMARKS.activation, `${fu.activated}/${fu.signups} sign-ups finished a pack (${pct(f.rates.signupToActivated.value)}, benchmark ${pct(BENCHMARKS.activation)}).`, "Cut time-to-first-ad: fewer inputs, faster first render, nudge within the hour.");
@@ -37,9 +38,11 @@ export function diagnoseConstraint(f: FunnelFacts): Constraint[] {
   step("retention", "Retention (day 30)", fu.day30Retained, fu.day30Eligible, BENCHMARKS.retention30, `${fu.day30Retained}/${fu.day30Eligible} subscribers old enough are still active (${pct(f.rates.day30Retention.value)}, benchmark ${pct(BENCHMARKS.retention30)}).`, "Interview/save cancellers; deliver the first win inside 7 days.");
   const ec = f.ltgpToCac.ratio, pb = f.payback30.ratio;
   const ecoN = Math.min(f.payback30.n, f.payingCustomers);
-  const ecoSev = ec !== null || pb !== null ? Math.max(ec !== null ? BENCHMARKS.ltgpToCac / Math.max(ec, 0.01) : 1, pb !== null ? BENCHMARKS.payback30 / Math.max(pb, 0.01) : 1, 1) : 1;
-  out.push({ key: "economics", label: "Unit economics (30-day payback, LTGP:CAC)", severity: Math.round(Math.min(ecoSev, 5) * 100) / 100, observed: ec, benchmark: BENCHMARKS.ltgpToCac, n: ecoN, confidence: ec === null && pb === null ? "insufficient" : f.ltgpToCac.confidence === "measured" ? "measured" : "estimated",
-    evidence: ec === null && pb === null ? "No customer cost/profit data yet: cannot judge." : `30-day payback ${pb ?? "n/a"}x (target >= 1), LTGP:CAC ${ec ?? "n/a"} (target >= 3).`, action: "Raise first-month cash (upsell/bundle) or cut cost to acquire before scaling spend." });
+  // With fewer than MIN_N_ESTIMATED customers behind payback/LTGP:CAC, a single $9 sale vs blended cost says nothing: do not let it outrank measured steps.
+  const ecoThin = Math.min(f.payback30.n, f.payingCustomers) < MIN_N_ESTIMATED;
+  const ecoSev = ecoThin ? 1 : ec !== null || pb !== null ? Math.max(ec !== null ? BENCHMARKS.ltgpToCac / Math.max(ec, 0.01) : 1, pb !== null ? BENCHMARKS.payback30 / Math.max(pb, 0.01) : 1, 1) : 1;
+  out.push({ key: "economics", label: "Unit economics (30-day payback, LTGP:CAC)", severity: Math.round(Math.min(ecoSev, 5) * 100) / 100, observed: ec, benchmark: BENCHMARKS.ltgpToCac, n: ecoN, confidence: ecoThin || (ec === null && pb === null) ? "insufficient" : f.ltgpToCac.confidence === "measured" ? "measured" : "estimated",
+    evidence: ecoThin ? `Only ${f.payingCustomers} paying customer(s): unit economics cannot be judged yet (30-day payback ${pb ?? "n/a"}x, LTGP:CAC ${ec ?? "n/a"} shown for information).` : ec === null && pb === null ? "No customer cost/profit data yet: cannot judge." : `30-day payback ${pb ?? "n/a"}x (target >= 1), LTGP:CAC ${ec ?? "n/a"} (target >= 3).`, action: "Raise first-month cash (upsell/bundle) or cut cost to acquire before scaling spend." });
   // Weak evidence must not outrank solid evidence: insufficient-data steps sort after anything with data at equal severity.
   const weight = (c: Omit<Constraint, "rank">) => c.severity * (c.confidence === "insufficient" ? 0.5 : c.confidence === "estimated" ? 0.9 : 1);
   return out.sort((a, b) => weight(b) - weight(a)).map((c, i) => ({ ...c, rank: i + 1 }));

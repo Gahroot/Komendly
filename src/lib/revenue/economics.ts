@@ -192,7 +192,7 @@ export function computeEconomics(i: EconomicsInput): Economics {
   const ltgpToCac = { ratio: ltgpRatio, confidence: ltgpRatio === null ? ("insufficient" as Confidence) : ltv.basis === "empirical" ? confidenceFor(mature) : ("estimated" as Confidence), note: ltgpRatio === null ? "needs a subscriber and a non-zero CAC" : "target >= 3 (Hormozi LTGP:CAC)" };
 
   const cashIn = revenue.windowCents - i.refundCents;
-  const cashFlow = { inCents: cashIn, outCents: costs.totalCents, netCents: cashIn - costs.totalCents, confidence: confidenceFor(winPays.length), note: "window cash: payments - refunds - tracked costs (generation, Kly, Meta spend event, infrastructure constant); Meta spend only appears once an ad_spend event is written" };
+  const cashFlow = { inCents: cashIn, outCents: costs.totalCents, netCents: cashIn - costs.totalCents, confidence: confidenceFor(winPays.length), note: "window cash: payments - refunds - tracked costs (generation, Kly, Meta spend event, infrastructure constant); Meta spend only appears once an ad_spend event is written" + (i.infraMonthlyCents ? "" : "; INFRA_MONTHLY_CENTS is NOT set, so infrastructure cost is counted as 0 (costs understated)") + (i.metaSpendCents ? "" : "; no ad_spend events in window (Meta cost counted as 0)") };
 
   return {
     generatedAt: i.now.toISOString(), windowDays: i.windowDays, funnel, rates, byChannel, payingCustomers, revenue, costs, cacCents: cac, firstPurchaseMarginCents: firstPurchaseMargin, payback30, ltvCents: ltv, ltgpToCac, mrrCents: mrr, monthlyChurn,

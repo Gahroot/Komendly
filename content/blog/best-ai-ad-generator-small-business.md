@@ -46,7 +46,7 @@ faq:
   - q: "How should I calculate cost per usable ad?"
     a: "Add the subscription, extra generation charges, and the value of your editing time. Divide that total by the number of distinct creatives you approve. Count additional sizes separately so they do not inflate your concept count."
   - q: "Does Komendly publish ads to Meta?"
-    a: "Komendly offers one-click publish to Meta on Growth and Scale plans. Its ad sizes are 4:5, 1:1, and 9:16."
+    a: "Komendly offers Meta publishing set up with you on Growth Autopilot. Its ad sizes are 4:5, 1:1, and 9:16."
 sources:
   - id: 1
     title: "AdCreative.ai: Product Features, Pricing and Credit FAQ"
@@ -223,7 +223,7 @@ Add the criterion scores for a total out of 16. Use that total as a decision aid
 
 Komendly turns a website URL into on-brand, ready-to-run ad creatives through Ozzy, its AI ad wizard. It supports 4:5, 1:1, and 9:16, with ads for all 5 awareness stages: unaware, problem aware, solution aware, product aware, and most aware.
 
-**Pro:** The website-to-ad workflow matches this specific production job. **Con:** One-click publish to Meta requires Growth or Scale, so account for that when choosing a plan.
+**Pro:** The website-to-ad workflow matches this specific production job. **Con:** Meta publishing set up with you requires Growth Autopilot, so account for that when choosing a plan.
 
 See [Komendly pricing](/pricing) for current plans and pricing. Compare the plan cost with the distinct creatives you approve in your own test, and choose according to the work you need to produce next.
 

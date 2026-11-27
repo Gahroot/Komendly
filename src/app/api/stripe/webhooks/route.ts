@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { recordWebhookFailure } from "@/lib/ops/webhook-failure";
 import Stripe from "stripe";
 import { stripe, mapStripeStatus, minutesForStoredPlan, resolveSubscriptionPlan } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error(`Error processing webhook ${event.type}:`, error);
+    await recordWebhookFailure("stripe", event.type, error);
     return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
 }

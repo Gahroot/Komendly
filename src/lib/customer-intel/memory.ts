@@ -174,3 +174,20 @@ export function formatPromptContext(m: CustomerMemory | null | undefined, max = 
   if (out.length > max) out = `${out.slice(0, max - 1).trimEnd()}…`;
   return out;
 }
+
+/**
+ * STYLE-ONLY block for the planner. Earlier blind tests showed that putting facts (offer, services, areas) into the planner
+ * prompt lowered quality, so the planner only ever sees tone + what the customer's own choices show. Facts stay in the
+ * brief, the weekly email and the dashboard. "" when there is nothing measured to say.
+ */
+export function formatStyleContext(m: CustomerMemory | null | undefined, max = 600): string {
+  if (!m) return "";
+  const lines: string[] = [];
+  const tone = m.facts.find((x) => x.key === "tone" && x.confidence >= 0.6);
+  if (tone) lines.push(`- Tone: ${tone.value}`);
+  const g = m.guidance.filter((x) => x.strength !== "weak").slice(0, 3).map((x) => x.text);
+  if (g.length) lines.push(`- What this business's own choices show (from ${m.sampleSize} ads): ${g.join("; ")}`);
+  if (!lines.length) return "";
+  const out = `STYLE HINTS (measured from this customer's own choices; style only, never new claims):\n${lines.join("\n")}`;
+  return out.length > max ? `${out.slice(0, max - 1).trimEnd()}…` : out;
+}
