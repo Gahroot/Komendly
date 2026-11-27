@@ -12,7 +12,9 @@ import { getBlogPosts, tagSlug, type BlogPostMeta } from "@/lib/blog";
 import { loadGalleryAds, summarizeIndustries } from "@/lib/ads/gallery";
 import { MIN_INDEXABLE_INDUSTRY_ADS, getIndustry, industryGuide, industryTagSlugs, relatedIndustries, type Industry } from "@/lib/ads/industries";
 import { absoluteUrl } from "@/lib/site";
-import { MakeYoursUrlBox } from "@/components/ad-examples/url-box";
+import { HeroFreePack, MakeYoursUrlBox } from "@/components/ad-examples/url-box";
+import { SearchAdsGuide } from "@/components/ad-examples/search-ads";
+import { searchGuide } from "@/lib/growth/local-search-ads";
 import { galleryCtaHref } from "@/lib/ads/industries";
 import { MIN_INDEXABLE_SAMPLES } from "@/lib/growth/industry-examples";
 import { loadIndustryExample } from "@/lib/growth/industry-examples-server";
@@ -77,8 +79,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!data) return {};
   const { industry: i, ads, content, trade } = data;
   const path = `/ad-examples/${i.slug}`;
-  const title = trade?.title ?? `Facebook Ad Examples for ${titleCase(i.plural)}${ads.length ? ` (${ads.length} real ${ads.length === 1 ? "ad" : "ads"})` : ""}`;
-  const desc = trade?.description ?? description(i, ads.length);
+  const search = searchGuide(i.slug);
+  const title = search?.tradeTitle ?? trade?.title ?? `Facebook Ad Examples for ${titleCase(i.plural)}${ads.length ? ` (${ads.length} real ${ads.length === 1 ? "ad" : "ads"})` : ""}`;
+  const desc = search?.tradeDescription ?? trade?.description ?? description(i, ads.length);
   const first = ads[0];
   return {
     title,
@@ -95,7 +98,9 @@ export default async function IndustryPage({ params }: PageProps) {
   if (!data) notFound();
   const { industry: i, ads, available, content, trade } = data;
   const guide = industryGuide(i);
-  const faq = trade?.faq ?? guide.faq;
+  const search = searchGuide(i.slug);
+  const faq = [...(trade?.faq ?? guide.faq), ...(search?.tradeFaq ?? [])];
+  const googleCombo = search ? comboForIndustry(i.slug, "google") : undefined;
   const pb = trade?.playbook;
   const cat = pb ? tradeCategory(pb.category) : undefined;
   const path = `/ad-examples/${i.slug}`;
@@ -111,7 +116,7 @@ export default async function IndustryPage({ params }: PageProps) {
         data={graph(
           galleryPageJsonLd({
             name: h1,
-            description: trade?.description ?? description(i, ads.length),
+            description: search?.tradeDescription ?? trade?.description ?? description(i, ads.length),
             path,
             items: ads.map((a) => ({ name: a.brandName, url: path, image: { url: a.src, caption: a.headline, width: a.width, height: a.height } })),
           }),
@@ -127,7 +132,13 @@ export default async function IndustryPage({ params }: PageProps) {
             {trade ? h1 : <>Facebook ad examples for <span className="text-[var(--studio-gold)]">{i.plural}</span></>}
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-pretty text-base text-muted-foreground sm:text-lg">{trade ? trade.intro : guide.intro}</p>
+          {search && googleCombo && (
+            <p className="mt-4 text-sm text-muted-foreground">
+              Looking for Google ads? <a href="#google-ads" className="text-[var(--studio-gold)] hover:underline">See the search ad examples</a> or read the full guide to <Link href={googleCombo.path} className="text-[var(--studio-gold)] hover:underline">{googleCombo.entry.primaryQuery}</Link>.
+            </p>
+          )}
           {ads.length > 0 && <p className="mt-4 font-mono text-xs uppercase tracking-[0.14em] text-[var(--studio-gold)]">{ads.length} real {ads.length === 1 ? "ad" : "ads"} · shared with permission</p>}
+          {ads.length === 0 && <HeroFreePack href={galleryCtaHref(i.slug, "hero")} />}
         </header>
 
         <section className="mx-auto mt-12 max-w-6xl px-4 sm:px-6" aria-label={`Ad examples for ${i.plural}`}>
@@ -148,6 +159,8 @@ export default async function IndustryPage({ params }: PageProps) {
             </div>
           )}
         </section>
+
+        {search && googleCombo && <SearchAdsGuide guide={search} mode="summary" googlePath={googleCombo.path} tools={{ headline: "/tools/google-ads-headline-generator", counter: "/tools/ad-character-counter" }} />}
 
         {trade && pb && (
           <section className="mx-auto mt-20 max-w-5xl space-y-14 px-4 sm:px-6" aria-label={`${pb.term} ad playbook`}>
@@ -260,7 +273,7 @@ export default async function IndustryPage({ params }: PageProps) {
 
         <nav className="mx-auto mt-16 max-w-5xl px-4 sm:px-6" aria-label="Related ad guides">
           <ul className="flex flex-wrap gap-2">
-            {[comboForIndustry(i.slug), comboForIndustry(i.slug, "google"), galleryPage("platform:instagram"), galleryPage("platform:nextdoor"), galleryPage("occasion:grand-opening")].flatMap((p) => (p ? [p] : [])).map((p) => (
+            {[comboForIndustry(i.slug), comboForIndustry(i.slug, "google"), galleryPage("platform:instagram"), galleryPage("platform:nextdoor"), ...(search ? [galleryPage("platform:tiktok")] : []), galleryPage("occasion:grand-opening")].flatMap((p) => (p ? [p] : [])).map((p) => (
               <li key={p.key}><Link href={p.path} className="inline-flex rounded-full border border-border px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:border-[var(--studio-gold)] hover:text-foreground">{anchorText(p.key, `industry:${i.slug}`)}</Link></li>
             ))}
           </ul>

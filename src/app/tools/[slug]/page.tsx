@@ -28,6 +28,16 @@ export function generateStaticParams() {
 
 interface PageProps { params: Promise<{ slug: string }> }
 
+/** Example pages worth reading next to a tool (internal links for tools whose users are looking for ad examples). */
+const SEE_EXAMPLES: Record<string, { lead: string; links: Array<{ href: string; label: string }> }> = {
+  "ad-maker": { lead: "See what ads look like for your trade:", links: [{ href: "/ad-examples", label: "ad examples by industry" }, { href: "/ad-examples/plumbers", label: "plumbing ad examples" }, { href: "/ad-examples/hvac", label: "HVAC ad examples" }] },
+  "ad-copy-generator": { lead: "Need ideas first?", links: [{ href: "/ad-examples/plumbers", label: "plumbing ad examples" }, { href: "/ad-examples/hvac", label: "HVAC ad examples" }, { href: "/ad-examples", label: "all ad examples" }] },
+  "google-ads-headline-generator": { lead: "See finished search ads:", links: [{ href: "/ad-examples/plumbers/google", label: "Google ads for plumbers" }, { href: "/ad-examples/hvac/google", label: "Google ads for heating and cooling repair companies" }, { href: "/ad-examples/platform/google-search", label: "Google search ad examples" }] },
+  "ad-character-counter": { lead: "Counted examples:", links: [{ href: "/ad-examples/plumbers/google", label: "Google search ads for plumbers" }, { href: "/ad-examples/platform/tiktok", label: "TikTok ad examples" }] },
+  "hook-generator": { lead: "See hooks in finished ads:", links: [{ href: "/ad-examples/platform/tiktok", label: "TikTok ad examples" }, { href: "/ad-examples/ideas/home-services/hooks", label: "home service ad hooks" }] },
+  "ugc-script-generator": { lead: "See video ad ideas for local businesses:", links: [{ href: "/ad-examples/platform/tiktok", label: "TikTok ad examples" }] },
+};
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const r = resolve((await params).slug);
   if (!r) return {};
@@ -73,6 +83,12 @@ export default async function ToolPage({ params }: PageProps) {
             {t.related.map((r, i) => <span key={r}>{i > 0 && " · "}<Link href={`/tools/${r}`} className="text-[var(--studio-gold)] hover:underline">{anchorText(`tool:${r}`, `tool:${t.slug}`)}</Link></span>)}
           </p>
         ) : null}
+        {SEE_EXAMPLES[t.slug] && (
+          <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-muted-foreground">
+            {SEE_EXAMPLES[t.slug]!.lead}{" "}
+            {SEE_EXAMPLES[t.slug]!.links.map((l, i) => <span key={l.href}>{i > 0 && " · "}<Link href={l.href} className="text-[var(--studio-gold)] hover:underline">{l.label}</Link></span>)}
+          </p>
+        )}
         {t.slug === "ad-size-guide" && <SizeGuide />}
         {t.slug === "meta-ad-check" && <AdCheckRubric />}
         <section className="mx-auto mt-14 max-w-3xl" aria-labelledby="tips-title">

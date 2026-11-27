@@ -313,7 +313,7 @@ Quickads advertises a $1 trial as of November 2026.[^8] I would consider it when
 
 They are worth considering when your own test demonstrates an acceptable cost per approved creative and a workflow you can repeat. Decide what improvement would justify the subscription before you begin.
 
-For example, a local service business might prioritize accurate offer ads with minimal editing. A founder preparing a video campaign might prioritize script delivery and product depiction. Give those requirements different weights if they reflect your actual work.
+For example, a local service business might prioritize accurate offer ads with minimal editing; our [plumbing ad examples](/ad-examples/plumbers) and [HVAC ad examples](/ad-examples/hvac) show what those offers look like. A founder preparing a video campaign might prioritize script delivery and product depiction. Give those requirements different weights if they reflect your actual work.
 
 Keep production value and campaign performance in separate columns. This comparison offers no measured CTR, ROAS, or sales-lift findings. Your buying test should establish whether you can produce suitable creatives; your campaign evaluation should address business results.
 
@@ -323,6 +323,6 @@ If your brief involves Meta Ads Manager, Facebook, Instagram, or Advantage+, wri
 
 Yes. Komendly offers 10 static ads + 1 animated ad, no card required. Use that trial to assess your own website, offer, and brand before choosing a subscription.
 
-Prepare an approval checklist before starting: accurate product depiction, correct offer, readable copy, recognizable branding, and the formats your brief requires. Record each correction so you can distinguish a promising first draft from a finished creative.
+Browse [ad examples by industry](/ad-examples) first so you know what a good ad looks like for your trade. Prepare an approval checklist before starting: accurate product depiction, correct offer, readable copy, recognizable branding, and the formats your brief requires. Record each correction so you can distinguish a promising first draft from a finished creative.
 
 Before paying, review the files you approved, the corrections you made, and the time you spent. Choose the tool you can use confidently for your next real campaign.

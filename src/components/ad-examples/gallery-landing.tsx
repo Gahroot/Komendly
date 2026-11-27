@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdCard, Breadcrumbs, CtaBlock } from "@/components/ad-examples/parts";
+import { SearchAdsGuide, TikTokGuide } from "@/components/ad-examples/search-ads";
+import { HeroFreePack } from "@/components/ad-examples/url-box";
 import { JsonLd } from "@/components/json-ld";
 import { fraunces } from "@/components/studio/fonts";
 import { StudioFooter } from "@/components/studio/studio-footer";
@@ -12,6 +14,7 @@ import { getIndustry } from "@/lib/ads/industries";
 import { relatedGalleryPages, type GalleryKind, type GalleryPageDef } from "@/lib/growth/ad-pages";
 import { loadGalleryPageData, type GalleryPageData } from "@/lib/growth/ad-pages-server";
 import { FREE_TOOLS } from "@/lib/growth/free-tools";
+import { TIKTOK_FAQ, searchGuideForPage } from "@/lib/growth/local-search-ads";
 import type { SampleAd } from "@/lib/growth/industry-examples";
 import { withSystemUtm } from "@/lib/growth/systems";
 import { templatizeSample } from "@/lib/growth/trade-playbooks";
@@ -43,7 +46,7 @@ export async function galleryMetadata(key: string): Promise<Metadata> {
   const d = await loadGalleryPageData(key);
   if (!d) return {};
   const { entry, path } = d.page;
-  const description = describe(d);
+  const description = searchGuideForPage(key)?.googleDescription ?? describe(d);
   const first = d.ads[0];
   return {
     title: entry.title,
@@ -73,6 +76,12 @@ function SampleAdCard({ ad }: { ad: SampleAd }) {
   );
 }
 
+/** Hand-written questions first (they answer the searches these pages rank for), then the vocabulary ones; same question once. */
+function mergeFaq(first: ReadonlyArray<{ q: string; a: string }>, rest: ReadonlyArray<{ q: string; a: string }>): Array<{ q: string; a: string }> {
+  const seen = new Set(first.map((f) => f.q.toLowerCase()));
+  return [...first, ...rest.filter((f) => !seen.has(f.q.toLowerCase()))];
+}
+
 const chip = "inline-flex rounded-full border border-border px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:border-[var(--studio-gold)] hover:text-foreground";
 
 export async function GalleryLanding({ pageKey }: { pageKey: string }) {
@@ -85,6 +94,12 @@ export async function GalleryLanding({ pageKey }: { pageKey: string }) {
   const related = relatedGalleryPages(page);
   const tools = TOOLS_FOR[page.kind].flatMap((slug) => { const t = FREE_TOOLS.find((x) => x.slug === slug); return t ? [t] : []; });
   const also = alsoCalled(e);
+  const search = searchGuideForPage(page.key);
+  const isTikTok = page.key === "platform:tiktok";
+  const faq = search ? mergeFaq(search.googleFaq, e.faq) : isTikTok ? mergeFaq(TIKTOK_FAQ, e.faq) : e.faq;
+  const packNote = search ? (
+    <>No card. The free pack is Facebook &amp; Instagram ads made from your site, which you post yourself. Google search ads are text: write yours with the <Link href="/tools/google-ads-headline-generator" className="text-[var(--studio-gold)] hover:underline">free Google Ads headline generator</Link>.</>
+  ) : undefined;
 
   return (
     <StudioRoot className={`${fraunces.variable} min-h-screen bg-[#0c0820]`}>
@@ -92,7 +107,7 @@ export async function GalleryLanding({ pageKey }: { pageKey: string }) {
         data={graph(
           galleryPageJsonLd({ name: e.h1, description: describe(d), path: page.path, items: ads.map((a, n) => ({ name: a.brandName, url: page.path, image: { url: a.src, caption: adImageAlt(page.key, a.brandName, a.headline, n), width: a.width, height: a.height } })) }),
           breadcrumbJsonLd(crumbs),
-          faqJsonLd(e.faq, absoluteUrl(page.path)),
+          faqJsonLd(faq, absoluteUrl(page.path)),
         )}
       />
       <StudioNav signedIn={false} />
@@ -103,6 +118,7 @@ export async function GalleryLanding({ pageKey }: { pageKey: string }) {
           <p className="mx-auto mt-5 max-w-2xl text-pretty text-base text-muted-foreground sm:text-lg">{e.intro}</p>
           {also && <p className="mt-3 text-sm text-muted-foreground/80">{also}</p>}
           {ads.length > 0 && <p className="mt-4 font-mono text-xs uppercase tracking-[0.14em] text-[var(--studio-gold)]">{ads.length} real {ads.length === 1 ? "ad" : "ads"} · shared with permission</p>}
+          {ads.length === 0 && <HeroFreePack href={ctaHref(page, "hero")} note={packNote} />}
         </header>
 
         {ads.length > 0 && (
@@ -120,6 +136,9 @@ export async function GalleryLanding({ pageKey }: { pageKey: string }) {
           </ul>
         </section>
 
+        {search && <SearchAdsGuide guide={search} mode="full" googlePath={page.path} tools={{ headline: "/tools/google-ads-headline-generator", counter: "/tools/ad-character-counter" }} />}
+        {isTikTok && <TikTokGuide links={{ hook: "/tools/hook-generator", script: "/tools/ugc-script-generator", size: "/tools/ad-size-guide", plumbersGoogle: "/ad-examples/plumbers/google", hvacGoogle: "/ad-examples/hvac/google" }} />}
+
         {content ? (
           <section className="mx-auto mt-16 max-w-5xl px-4 sm:px-6" aria-labelledby="works-title">
             <h2 id="works-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-4xl">What works</h2>
@@ -127,13 +146,17 @@ export async function GalleryLanding({ pageKey }: { pageKey: string }) {
             <ul className="mt-8 grid gap-5 sm:grid-cols-2">
               {content.whatWorks.map((w) => <li key={w.title} className="rounded-xl border border-border p-5"><h3 className="font-semibold">{w.title}</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{w.detail}</p></li>)}
             </ul>
-            <h2 className="font-display mt-16 text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Sample ads to adapt</h2>
-            <p className="mt-3 text-sm text-muted-foreground">Example ads written by Ozzy, Komendly&apos;s AI ad maker, as templates: not real companies or customer ads, and no results claimed. Swap in your business name, town, offer and photos.</p>
-            <ul className="mt-6 grid gap-5 sm:grid-cols-2">{content.samples.map((a, n) => <SampleAdCard key={n} ad={templatizeSample(a)} />)}</ul>
+            {!search && (
+              <>
+                <h2 className="font-display mt-16 text-2xl font-medium tracking-[-0.02em] sm:text-3xl">Sample ads to adapt</h2>
+                <p className="mt-3 text-sm text-muted-foreground">Example ads written by Ozzy, Komendly&apos;s AI ad maker, as templates: not real companies or customer ads, and no results claimed. Swap in your business name, town, offer and photos.</p>
+                <ul className="mt-6 grid gap-5 sm:grid-cols-2">{content.samples.map((a, n) => <SampleAdCard key={n} ad={templatizeSample(a)} />)}</ul>
+              </>
+            )}
           </section>
-        ) : (
+        ) : !search && !isTikTok ? (
           <p className="mx-auto mt-12 max-w-xl px-4 text-center text-sm text-muted-foreground">Ozzy is still writing sample ads for this page. Check back soon, or make your own below.</p>
-        )}
+        ) : null}
 
         <div className="mt-16 px-4 sm:px-6">
           <CtaBlock title={industry ? `Get 10 free Facebook ads for your ${industry.singular} business` : "Make yours free from your website"} campaign={page.key} content="mid" label="Make my free ads" href={ctaHref(page, "mid")} />
@@ -142,7 +165,7 @@ export async function GalleryLanding({ pageKey }: { pageKey: string }) {
         <section className="mx-auto mt-20 max-w-3xl px-4 sm:px-6" aria-labelledby="faq-title">
           <h2 id="faq-title" className="font-display text-3xl font-medium tracking-[-0.02em] sm:text-4xl">Questions</h2>
           <div className="mt-6 divide-y divide-border rounded-xl border border-border">
-            {e.faq.map((f) => (
+            {faq.map((f) => (
               <details key={f.q} className="group px-5 py-4">
                 <summary className="cursor-pointer list-none font-medium marker:hidden">{f.q}</summary>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{f.a}</p>

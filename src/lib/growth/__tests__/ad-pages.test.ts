@@ -106,8 +106,8 @@ describe("new platform, occasion and google combo pages", () => {
     }
   });
   it("non-Meta platform pages say Komendly doesn't publish there", () => {
-    for (const s of ["linkedin", "google-search", "youtube", "pinterest", "snapchat", "reddit", "x"]) expect(galleryPage(`platform:${s}`)!.entry.intro).toMatch(/Komendly (does not|publishes only)/);
-    for (const k of Object.keys(GOOGLE_COMBOS)) expect(galleryPage(`combo:google-${k}`)!.entry.intro).toContain("publishes only to Facebook and Instagram");
+    for (const s of ["linkedin", "google-search", "youtube", "pinterest", "snapchat", "reddit", "x"]) expect(galleryPage(`platform:${s}`)!.entry.intro).toMatch(/Komendly does not/);
+    for (const k of Object.keys(GOOGLE_COMBOS)) expect(galleryPage(`combo:google-${k}`)!.entry.intro).toContain("Komendly does not run or post Google ads");
   });
   it("generation order puts high-demand new pages first and covers every page once", () => {
     const o = galleryGenerationOrder();

@@ -153,4 +153,6 @@ Use Meta Ads Manager for campaign setup and reporting.[^1] Before launch, decide
 
 Komendly offers Meta publishing set up with you on Growth Autopilot; see [pricing](/pricing) when choosing a plan.
 
+If you run a local trade, browse [ad examples by industry](/ad-examples), such as [plumbing ad examples](/ad-examples/plumbers) and [HVAC ad examples](/ad-examples/hvac), to see what to put in your first ad.
+
 For your first batch, keep the offer and destination consistent while exploring different openings. Record what each concept was intended to communicate. When you review results, use that record to decide which message deserves another iteration. Return to the website whenever the offer changes, so your next creative starts from accurate information.

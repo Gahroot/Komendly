@@ -169,7 +169,7 @@ export function pickGalleryPages(allKeys: readonly string[], existing: ReadonlyA
   return [...missing, ...stale].slice(0, room);
 }
 
-const HONEST = "Komendly makes ad creatives and copy and publishes only to Facebook and Instagram: never say or imply Komendly posts, runs or publishes ads on this platform; the owner uploads them there.";
+const HONEST = "Komendly makes ad creatives and copy and the owner posts them in their own ad account: never say or imply Komendly posts, runs or publishes ads on this platform; the owner uploads them there.";
 
 /** Per-platform sample hints (what a real ad on that platform looks like). */
 const PLATFORM_HINT: Record<string, string> = {

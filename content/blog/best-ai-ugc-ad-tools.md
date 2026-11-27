@@ -207,7 +207,7 @@ Komendly also has an AI video testimonials product that turns text reviews into 
 
 ## When should you test AI UGC instead of static or animated ads?
 
-My decision rule is to ask what the viewer needs to understand before taking the next step.
+My decision rule is to ask what the viewer needs to understand before taking the next step. If you are planning vertical video for a local business, our [TikTok ad examples](/ad-examples/platform/tiktok) show hooks, shots and ad text you can adapt.
 
 ### Does the message need an explanation?
 
