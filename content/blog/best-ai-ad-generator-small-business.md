@@ -40,13 +40,13 @@ faq:
   - q: "What is the best AI ad generator for small businesses?"
     a: "Our recommendation is Komendly for turning a website URL into on-brand static and animated ad creatives. The best choice for your business depends on your required formats, brand accuracy, budget and how much editing each creative needs."
   - q: "Is there a free AI ad generator?"
-    a: "Komendly offers a free trial with 10 static ads + 1 animated ad, no card required. Email verification is required, with one trial per website/device/network. Start at [free ads](/free-ads)."
+    a: "Komendly offers a free trial with 10 static ads + 1 animated ad, no card required. One trial per website/device/network. Start at [free ads](/free-ads)."
   - q: "Are AI ad generators worth it for small businesses?"
     a: "Evaluate them with a trial: measure production cost, editing time and how many creatives meet your quality requirements. Assess campaign performance separately; faster creative production does not establish better advertising results."
   - q: "How should I calculate cost per usable ad?"
     a: "Add subscription costs, extra generation charges and the value of your editing time, then divide by the number of distinct creatives you approve. Track size variations separately so resizing one concept does not inflate your count."
   - q: "Does Komendly publish ads to Meta?"
-    a: "Yes. Komendly offers one-click publish to Meta on Growth and Scale plans. It supports ad sizes of 4:5, 1:1 and 9:16. See [pricing](/pricing) for plan details."
+    a: "Komendly offers Meta publishing set up with you on Growth Autopilot. Its ad sizes are 4:5, 1:1 and 9:16. See [pricing](/pricing) for plan details."
 sources:
   - id: 1
     title: "AdCreative.ai: Product Features, Pricing and Credit FAQ"
@@ -227,7 +227,7 @@ Komendly turns a website URL into on-brand, ready-to-run ad creatives through Oz
 
 See [Komendly pricing](/pricing) for current plans and pricing. Compare the plan cost with the distinct creatives you approve in your own test, and choose according to the work you need to produce next.
 
-The trial includes 10 static ads + 1 animated ad, no card required. Email verification applies, with one trial per website/device/network. Use the [free ad studio](/) to evaluate your own website.
+The trial includes 10 static ads + 1 animated ad, no card required. One trial per website/device/network applies. Use the [free ad studio](/) to evaluate your own website.
 
 ### 2. When is AdCreative.ai the better pick?
 

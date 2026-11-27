@@ -14,6 +14,7 @@ import { SETTINGS_ID } from "./settings";
 import type { Rng } from "./arms";
 import type { Db } from "./db";
 import { duePolls } from "./imap";
+import { guardImap } from "./imap-guard";
 import { errMsg, log } from "./log";
 import { mapPool, tieRank, type StoredMailbox } from "./mailboxes";
 import type { Transport } from "./sender";
@@ -459,7 +460,7 @@ export interface ImapLike {
 }
 
 export function openImap(m: MailboxEnv): ImapLike {
-  return new ImapFlow({ host: m.imapHost, port: m.imapPort, secure: m.imapPort === 993, auth: { user: m.user, pass: m.appPassword }, logger: false, connectionTimeout: 20_000, greetingTimeout: 20_000, socketTimeout: 120_000 }) as unknown as ImapLike;
+  return guardImap(new ImapFlow({ host: m.imapHost, port: m.imapPort, secure: m.imapPort === 993, auth: { user: m.user, pass: m.appPassword }, logger: false, connectionTimeout: 20_000, greetingTimeout: 20_000, socketTimeout: 120_000 }), m.address) as unknown as ImapLike;
 }
 
 export interface EngageResult {

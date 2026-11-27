@@ -13,7 +13,7 @@ import { parseModelJson } from "../../engine/src/providers/json";
 import { DEFAULT_MODEL, type KlyAI } from "./ai";
 import { errMsg, log } from "./log";
 import type { Db } from "./db";
-import { normalizeUsPhone, type Place } from "./finder";
+import { normalizeUsPhone, safeDecode, type Place } from "./finder";
 
 // "adlib" (Meta Ad Library advertisers, src/adlib.ts) is listed first: planSources always runs it first when enabled.
 export const SOURCE_IDS = ["adlib", "osm", "search", "codex_search", "overture"] as const;
@@ -173,7 +173,7 @@ export function parseDuckDuckGo(html: string): SearchHit[] {
     const href = decodeEntities(m[1] ?? "");
     let url = href;
     const u = /[?&]uddg=([^&]+)/.exec(href);
-    if (u?.[1]) url = decodeURIComponent(u[1]);
+    if (u?.[1]) url = safeDecode(u[1]);
     if (/duckduckgo\.com\/y\.js|ad_domain=/.test(url)) continue;
     if (url.startsWith("//")) url = `https:${url}`;
     if (/^https?:\/\//i.test(url)) out.push({ url, title: decodeEntities(m[2] ?? "") });

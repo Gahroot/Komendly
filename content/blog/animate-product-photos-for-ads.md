@@ -41,7 +41,7 @@ faq:
   - q: "Can Canva animate an existing product photo?"
     a: "Yes. Canva lets you upload a photo, select Animate, and apply Pan or Zoom. Effects can be assigned to individual elements. Access to the full animation library requires Canva Pro.[^3]"
   - q: "Can I try an animated ad in Komendly for free?"
-    a: "Yes. Komendly’s free trial includes 10 static ads + 1 animated ad, no card required. Email verification is required, and the trial is limited to one per website/device/network."
+    a: "Yes. Komendly’s free trial includes 10 static ads + 1 animated ad, no card required. The trial is limited to one per website/device/network."
 sources:
   - id: 1
     title: "Pippit AI: Pricing & Plans"
@@ -190,7 +190,7 @@ Keep your preferred original image available separately. Using a URL does not re
 
 Open the [free ad studio](/) and use the product-page URL as the source for the ad workflow. Keep your benefit, offer, and action brief beside you when evaluating the creative.
 
-Komendly’s free trial includes 10 static ads + 1 animated ad, no card required. Email verification is required, and the trial is limited to one per website/device/network.
+Komendly’s free trial includes 10 static ads + 1 animated ad, no card required. The trial is limited to one per website/device/network.
 
 ### Review the animated creative
 

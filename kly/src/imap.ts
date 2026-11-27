@@ -3,6 +3,7 @@
 import { createHash } from "node:crypto";
 import { ImapFlow } from "imapflow";
 import { mapPool } from "./mailboxes";
+import { guardImap } from "./imap-guard";
 import { classifyInbound, type InboundClass } from "../../src/lib/ads/outbound/inbound";
 import type { MailboxEnv } from "../../src/lib/ads/outbound/policy";
 import { handleReply, suppress, type ReplyDeps } from "./replies";
@@ -57,7 +58,7 @@ export async function pollMailbox(d: InboundDeps, m: MailboxEnv): Promise<{ seen
   const { db } = d;
   const row = await db.outboundMailbox.findUnique({ where: { address: m.address } });
   if (!row) return { seen: 0, actions: [] };
-  const client = new ImapFlow({ host: m.imapHost, port: m.imapPort, secure: m.imapPort === 993, auth: { user: m.user, pass: m.appPassword }, logger: false, connectionTimeout: 20_000, greetingTimeout: 20_000, socketTimeout: 120_000 });
+  const client = guardImap(new ImapFlow({ host: m.imapHost, port: m.imapPort, secure: m.imapPort === 993, auth: { user: m.user, pass: m.appPassword }, logger: false, connectionTimeout: 20_000, greetingTimeout: 20_000, socketTimeout: 120_000 }), m.address);
   const actions: string[] = [];
   let maxUid = row.imapLastUid;
   let seen = 0;

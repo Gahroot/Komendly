@@ -253,7 +253,7 @@ For a small store launching one offer, I would begin with standalone concepts to
 
 I'm Nolan Grout, founder of Komendly. Komendly turns a website URL into on-brand, ready-to-run static and animated ad creatives through Ozzy, its AI ad wizard. It supports 4:5, 1:1, and 9:16 ads and all five awareness stages.
 
-Paste your store URL into the [free ad pack](/free-ads). The trial includes **10 static ads + 1 animated ad, no card required**. It requires email verification and is limited to one trial per website/device/network.
+Paste your store URL into the [free ad pack](/free-ads). The trial includes **10 static ads + 1 animated ad, no card required**. It is limited to one trial per website/device/network.
 
 The Shopify app, Komendly: Ad Creatives, is in review and is not on the Shopify App Store yet. Today, use your store URL to make the ad pack.
 

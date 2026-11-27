@@ -16,7 +16,7 @@ when that file can't be read. Never state any Komendly fact that is not on this 
 ## Free trial
 - 10 free ads made from the business's website, no card required. "Unlock this pack" ($9) only unlocks the bonus ads; any paid plan includes them.
 - People who sign up through a referral link get 20 free ads.
-- One trial per website/device/network; email verification.
+- One trial per website/device/network. Email confirmation never blocks downloads, so never write that email verification is required.
 
 ## Guarantee
 - 30-day money-back guarantee on the first month.

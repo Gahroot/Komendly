@@ -259,6 +259,6 @@ Prepare your KNOW brief first. Then review the resulting creative against your c
 
 For the production workflow, read [how to make Facebook ads from website URLs](/blog/make-facebook-ads-from-website). If you are still choosing a production tool, the [small-business AI ad generator guide](/blog/best-ai-ad-generator-small-business) covers that separate decision.
 
-The [free ad studio](/) includes 10 static ads + 1 animated ad, no card required. Email verification is required, with one trial per website/device/network. For paid options, see [pricing](/pricing).
+The [free ad studio](/) includes 10 static ads + 1 animated ad, no card required. One trial per website/device/network. For paid options, see [pricing](/pricing).
 
 Use the first batch to explore a deliberate message choice. Moving from unaware to most aware gives you different starting points; choose the one your evidence supports, write a clear next step, and document what you learn.

@@ -95,9 +95,18 @@ export function osmPhone(tags: Record<string, string>): string | null {
 
 const VISIBLE_PHONE = /(?<![\d-])(?:\+?1[\s.-]?)?\(?[2-9]\d{2}\)?[\s.-]?\d{3}[\s.-]\d{4}(?![\d-])/g;
 
+/** decodeURIComponent that never throws: a stray "%" in a site's tel: link ("URI malformed") used to fail the whole discovery step (prod 27 Nov 2026, twice). */
+export function safeDecode(v: string): string {
+  try {
+    return decodeURIComponent(v);
+  } catch {
+    return v;
+  }
+}
+
 /** Business phone on one of its own pages: tel: links first, else visible numbers; one distinct number or null. */
 export function extractSitePhone(html: string): string | null {
-  const tels = [...html.matchAll(/href\s*=\s*["']\s*tel:([^"']+)["']/gi)].map((m) => decodeURIComponent(m[1] ?? "").trim());
+  const tels = [...html.matchAll(/href\s*=\s*["']\s*tel:([^"']+)["']/gi)].map((m) => safeDecode(m[1] ?? "").trim());
   if (tels.length) return singlePhone(tels);
   const text = html.replace(/<(script|style|noscript)[\s\S]*?<\/\1>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ");
   return singlePhone(text.match(VISIBLE_PHONE) ?? []);

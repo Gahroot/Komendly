@@ -214,3 +214,10 @@ describe("gift by text (v1.1)", () => {
     expect(f.of("outboundVoiceEvent", "create")[0]).toMatchObject({ data: { delivery: "sms", smsPhone: "+17205559876" } });
   });
 });
+
+describe("extractSitePhone never throws on a malformed tel: link", () => {
+  it("a stray % in the href ('URI malformed') no longer fails discovery; the visible number is still found", () => {
+    expect(() => extractSitePhone('<a href="tel:%ZZ 100%">call</a>')).not.toThrow();
+    expect(extractSitePhone('<a href="tel:303%20555%201234">Call</a>')).toBe("+13035551234");
+  });
+});

@@ -96,6 +96,10 @@ describe("signal builders", () => {
     expect(s[1].severity).toBe("P3");
     expect(s[2].containment).toEqual([]);
   });
+  it("domains: a retired (replaced) listed domain raises no incident", () => {
+    const s = fromDomains([{ domain: "old.com", paused: true, pausedReason: "retired: Spamhaus DBL-listed look-alike, replaced (Nov 16)", listedOn: ["dbl"], failStreak: 0 }, { domain: "live.com", paused: true, pausedReason: "auto: listed on Spamhaus DBL", listedOn: ["dbl"], failStreak: 0 }]);
+    expect(s.map((x) => x.key)).toEqual(["deliverability:blocklist:live.com"]);
+  });
   it("payments and webhooks", () => {
     expect(fromPayments(2, [])).toEqual([]);
     expect(fromPayments(3, [{ provider: "stripe", n: 2 }]).map((x) => x.severity)).toEqual(["P1", "P1"]);

@@ -1,7 +1,8 @@
 // Pure (client-safe) rule for internal/test accounts; DB loader lives in internal-accounts.ts.
 const INTERNAL_PATTERNS: readonly RegExp[] = [
   /^e2e[-+._]/i, // e2e-adrdy+…, e2e-studio+…, e2e+hype…, e2e-live+… (any domain)
-  /@komendly\.com$/i,
+  /@(?:[a-z0-9-]+\.)*komendly\.com$/i, // also subdomains, e.g. the Shopify review account @shopify.users.komendly.com
+  /@prestyj\.com$/i, // the owner's company (Shopify test store)
   /@nolangrout\.com$/i,
   /@resend\.dev$/i,
   /@(example|tester)\.(com|org|net)$/i,

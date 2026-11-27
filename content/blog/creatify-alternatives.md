@@ -36,7 +36,7 @@ faq:
   - q: "What is the best alternative to Creatify?"
     a: "Komendly is my recommendation for turning a website URL into on-brand static and animated ads. For other priorities, consider AdCreative.ai for creative scoring, Predis.ai for social publishing, Pencil for multi-model generation, or Canva for hands-on design.[^4][^5][^7][^9]"
   - q: "Is there a free Creatify alternative?"
-    a: "Komendly offers 10 static ads + 1 animated ad, no card required, with email verification and one trial per website/device/network. Canva also offers a Free plan as of November 2026.[^8]"
+    a: "Komendly offers 10 static ads + 1 animated ad, no card required, with one trial per website/device/network. Canva also offers a Free plan as of November 2026.[^8]"
   - q: "Why do people cancel Creatify?"
     a: "The cited pages do not establish customers' cancellation motives. When assessing your own fit, consider Creatify's credit expiry rules and variable credit consumption in Agent, Ad Flow and Ad Clone.[^1][^2]"
   - q: "Can I cancel Creatify at any time?"
@@ -193,7 +193,7 @@ Komendly turns a website URL into on-brand, ready-to-run ad creatives, static an
 
 Compare current plans on the [Komendly pricing page](/pricing). Komendly offers a 30-day money-back guarantee on the first month.
 
-The trial requires email verification and allows one trial per website/device/network. For a closer comparison, read [Komendly vs Creatify](/blog/komendly-vs-creatify).
+The trial allows one trial per website/device/network. For a closer comparison, read [Komendly vs Creatify](/blog/komendly-vs-creatify).
 
 ### Is AdCreative.ai best for creative scoring?
 

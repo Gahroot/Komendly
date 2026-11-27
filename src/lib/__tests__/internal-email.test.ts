@@ -13,6 +13,10 @@ describe("isInternalEmail", () => {
       expect(isInternalEmail(e), String(e)).toBe(false);
     }
   });
+  it("flags subdomains of our domain and the owner's company (Shopify review/test accounts)", () => {
+    for (const e of ["app-review-9bdc7ee6-r1-a0-primary@shopify.users.komendly.com", "owner-test@prestyj.com"]) expect(isInternalEmail(e, {}), e).toBe(true);
+    for (const e of ["x@notkomendly.com", "x@komendly.com.evil.io", "x@myprestyj.com"]) expect(isInternalEmail(e, {}), e).toBe(false);
+  });
   it("INTERNAL_EMAILS adds exact addresses", () => {
     expect(isInternalEmail("friend@gmail.com", { INTERNAL_EMAILS: " Friend@gmail.com ,x@y.z" })).toBe(true);
   });

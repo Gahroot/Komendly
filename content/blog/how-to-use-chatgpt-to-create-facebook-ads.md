@@ -37,7 +37,7 @@ faq:
   - q: "What ChatGPT access do I need for the connector route?"
     a: "As of November 2026, OpenAI documents full custom MCP support for ChatGPT Business and Enterprise/Edu on the web, subject to workspace permissions.[^3] Check your eligibility before setup."
   - q: "How many free ads can I make with Komendly?"
-    a: "Komendly’s free trial includes 10 static ads + 1 animated ad, no card required. Email verification is required, and the trial is limited to one per website/device/network."
+    a: "Komendly’s free trial includes 10 static ads + 1 animated ad, no card required. The trial is limited to one per website/device/network."
 sources:
   - id: 1
     title: "ChatGPT for marketing teams"
@@ -254,7 +254,7 @@ Start with a request that stays within the documented ad-pack workflow:
 
 Keep your approved messaging brief nearby for review. Do not assume every instruction in a chat is a supported tool input; inspect what the connected tool actually offers.
 
-Komendly’s free trial includes **10 static ads + 1 animated ad, no card required**. Email verification is required, and the trial is limited to one per website/device/network. You can also use the [free ad studio](/) directly.
+Komendly’s free trial includes **10 static ads + 1 animated ad, no card required**. The trial is limited to one per website/device/network. You can also use the [free ad studio](/) directly.
 
 Choose this route when website-to-creative production is the immediate job. Stay with the prompt-only route when you mainly want to debate angles, revise existing copy or develop a visual direction yourself. For a broader URL workflow, see [how to make Facebook ads from website URLs](/blog/make-facebook-ads-from-website).
 

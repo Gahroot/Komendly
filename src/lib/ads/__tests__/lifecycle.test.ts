@@ -42,6 +42,10 @@ describe("dueEmail", () => {
     expect(dueEmail(cand({ email: "e2e-adrdy+x1@komendly.com" }), at(0.1))).toBeNull();
     expect(isTestEmail("E2E-ADRDY+abc@komendly.com")).toBe(true);
     expect(isTestEmail("someone@gmail.com", "")).toBe(false);
+    // Shopify review account (subdomain of our domain) and the owner's Shopify test store never get the drip
+    expect(isTestEmail("app-review-9bdc7ee6-r1-a0-primary@shopify.users.komendly.com", "")).toBe(true);
+    expect(isTestEmail("store-owner@prestyj.com", "")).toBe(true);
+    expect(isTestEmail("x@notkomendly.com", "")).toBe(false);
   });
 
   it("nudges unverified /ads sign-ups after 1h, then once more at 24h", () => {

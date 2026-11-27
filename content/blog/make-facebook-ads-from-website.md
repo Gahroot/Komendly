@@ -34,7 +34,7 @@ faq:
   - q: "Should I use my homepage or a product page?"
     a: "Use the page that most clearly supports the advertised offer. Choose a product or service page for a specific purchase or inquiry. Use the homepage when the ad introduces the business and that page explains the next step clearly."
   - q: "Can I make Facebook ad creatives from my website for free?"
-    a: "Komendly offers 10 static ads + 1 animated ad, no card required. Email verification is required, with one trial per website/device/network."
+    a: "Komendly offers 10 static ads + 1 animated ad, no card required. One trial per website/device/network."
   - q: "Does generating an ad mean it has been published?"
     a: "Treat creative generation and campaign publication as separate steps. Review your creative and campaign settings before launch. Komendly offers Meta publishing set up with you on Growth Autopilot."
 sources:
@@ -135,7 +135,7 @@ For the automated route, start with the offer page’s URL, generate the creativ
 
 When evaluating a url to ad generator, use those questions to judge whether the output is useful for your business. Our [AI ad generator guide for small businesses](/blog/best-ai-ad-generator-small-business) covers tool selection separately.
 
-You can try the workflow in the [free ad studio](/): 10 static ads + 1 animated ad, no card required. Email verification is required, with one trial per website/device/network.
+You can try the workflow in the [free ad studio](/): 10 static ads + 1 animated ad, no card required. One trial per website/device/network.
 
 ## What should you check before publishing?
 

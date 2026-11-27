@@ -41,7 +41,7 @@ faq:
   - q: "Does Arcads offer a free trial without a credit card?"
     a: "Arcads requires a card for its 72-hour trial. Unless you cancel, it automatically converts to the Starter plan when the trial ends.[^6]"
   - q: "Can I try Komendly before choosing a paid plan?"
-    a: "Yes. Komendly offers 10 static ads + 1 animated ad, no card required. Email verification applies, with one trial per website/device/network."
+    a: "Yes. Komendly offers 10 static ads + 1 animated ad, no card required. One trial per website/device/network applies."
 sources:
   - id: 1
     title: "Icon Pricing"
@@ -278,7 +278,7 @@ For a service, confirm the shoot, editing scope, revision process, and delivery 
 
 Komendly's monthly plans are Starter at $49 for 20 credits, Growth at $119 for 55 credits, and Scale at $229 for 115 credits. Choose based on your production brief and required workflow.
 
-If website-based static and animated ads are your next deliverable, start in the [free ad studio](/). You get 10 static ads + 1 animated ad, no card required. Email verification applies, with one trial per website/device/network.
+If website-based static and animated ads are your next deliverable, start in the [free ad studio](/). You get 10 static ads + 1 animated ad, no card required. One trial per website/device/network applies.
 
 ## What else should you know before choosing?
 

@@ -36,7 +36,7 @@ faq:
   - q: "Can I use the same design for feeds, Stories and Reels?"
     a: "I recommend keeping the same concept while preparing separate compositions. Reposition the headline, product and next step for each shape, then review every intended placement before launch."
   - q: "Does Komendly offer free ad creatives?"
-    a: "Yes. Komendly offers 10 static ads + 1 animated ad, no card required. The trial requires email verification and is limited to one trial per website/device/network."
+    a: "Yes. Komendly offers 10 static ads + 1 animated ad, no card required. The trial is limited to one trial per website/device/network."
 sources:
   - id: 1
     title: "Get Started: What are the specifications for ad creative?"
@@ -247,6 +247,6 @@ Komendly turns a website URL into on-brand, ready-to-run static and animated ad 
 
 For that creation workflow, see [how to make Facebook ads from website URLs](/blog/make-facebook-ads-from-website). Apply the same FRAME review to whatever you create, and confirm the final placement requirements.
 
-You can try [Komendly's free ad studio](/) with 10 static ads + 1 animated ad, no card required. The trial requires email verification and allows one trial per website/device/network.
+You can try [Komendly's free ad studio](/) with 10 static ads + 1 animated ad, no card required. The trial allows one trial per website/device/network.
 
 Start with a clear concept, build the layouts your placements need, and approve the actual files you intend to run. Keep your sizing reference beside the brief so the next creative refresh begins with a documented decision.

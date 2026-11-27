@@ -3,7 +3,7 @@
 // Part 2 (execution coordinator) consumes loadActiveObjectives / markObjective from src/lib/exec/objectives.ts. Docs: docs/exec/prd/.
 import { parseBeat, recordSystemRun, systemEnabled, systemFlagKey, systemHeartbeatId } from "../../../src/lib/growth/systems";
 import { gather } from "../../../src/lib/exec/gather";
-import { MAX_FAILED_CYCLES, failureStreak } from "../../../src/lib/optimizer/actions";
+import { MAX_FAILED_CYCLES, failureStreak, isoWeekKey } from "../../../src/lib/optimizer/actions";
 import { buildBusinessContext } from "../../../src/lib/exec/context";
 import { DEFAULT_MAX_CALLS, runExecCycle, type CycleResult } from "../../../src/lib/exec/cycle";
 import type { Actual, ExecDecision } from "../../../src/lib/exec/decisions";
@@ -26,6 +26,12 @@ export async function measureDecision(db: Db, d: ExecDecision): Promise<Actual |
   const value = /paying|customer/.test(m) ? snap!.economics.payingCustomers : /sign/.test(m) ? f.signups : /activat/.test(m) ? f.activated : /purchase|unlock/.test(m) ? f.firstPurchases : null;
   if (value === null) return null;
   return { value, n: f.signups, evidence: [{ level: "measured", text: `${d.expected.metric} = ${value} per revenue_snapshot ${snap!.day}`, eventId: "revenue_snapshot" }] };
+}
+
+/** EXEC_DRY_RUN writes no exec_cycle event, so runExecCycle's once-per-ISO-week idempotency never finds a prior cycle and every 30-min tick
+ * would re-run the whole cycle (up to EXEC_MAX_CALLS high-reasoning Codex calls). The heartbeat's lastOkAt (persisted, survives restarts) stands in for it. */
+export function dryRunCycleDoneThisWeek(beat: { lastOkAt: string | null }, now: Date): boolean {
+  return Boolean(beat.lastOkAt) && isoWeekKey(new Date(beat.lastOkAt as string)) === isoWeekKey(now);
 }
 
 export async function execCycle(o: { db: Db; provider: AIProvider; env: NodeJS.ProcessEnv; now: Date; forced: boolean }): Promise<CycleResult> {
@@ -74,6 +80,7 @@ export function startExecStrategyLoop(opts: { db: Db; send?: SendMail; env?: Nod
       const req = await opts.db.adsEvent.findFirst({ where: { name: EXEC_EVENTS.runRequest, ...(lastCycle ? { createdAt: { gt: lastCycle.createdAt } } : {}) }, orderBy: { createdAt: "desc" }, select: { id: true } });
       const beat = parseBeat((await opts.db.engineHeartbeat.findUnique({ where: { id: systemHeartbeatId("exec_strategy") } }))?.meta);
       if (beat.lastError && !req && beat.lastRunAt && now.getTime() - new Date(beat.lastRunAt).getTime() < 6 * 3_600_000) return; // back off after a failure
+      if (env.EXEC_DRY_RUN === "1" && !req && dryRunCycleDoneThisWeek(beat, now)) return; // dry run already proposed this week (see dryRunCycleDoneThisWeek)
       provider ??= createProvider("codex", { ...env, TEXT_BRAIN: "codex" }, { db: opts.db, by: "engine" });
       const r = await execCycle({ db: opts.db, provider, env, now, forced: Boolean(req) });
       if (r.status === "skipped") return;

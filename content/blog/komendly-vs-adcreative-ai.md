@@ -33,7 +33,7 @@ faq:
   - q: "How much does AdCreative.ai cost?"
     a: "On monthly billing, AdCreative.ai Starter lists $39 per month with 20 credits, and Professional lists $249 per month with 300 credits, as of November 2026.[^1] Check current pricing before subscribing."
   - q: "Is there a free alternative to AdCreative.ai?"
-    a: "Komendly offers a free trial of 10 static ads + 1 animated ad, no card required. Email verification is required, with one trial per website/device/network."
+    a: "Komendly offers a free trial of 10 static ads + 1 animated ad, no card required. One trial per website/device/network."
   - q: "Can AdCreative.ai make ads from my website?"
     a: "Yes. AdCreative.ai's Instant Ads accepts a website or product URL and generates ad copy and visuals from the page.[^3] Review the output against your actual offer and brand guidelines."
   - q: "Can Komendly and AdCreative.ai publish to Meta?"
@@ -184,7 +184,7 @@ Do not declare a cost winner from subscription fees alone. A fair verdict needs 
 
 ## Is there a free alternative to AdCreative.ai?
 
-Komendly offers a free trial of 10 static ads + 1 animated ad, no card required. It requires email verification and is limited to one trial per website/device/network.
+Komendly offers a free trial of 10 static ads + 1 animated ad, no card required. It is limited to one trial per website/device/network.
 
 AdCreative.ai's help center describes a 7-day trial requiring a credit card and says a charge can follow if you do not cancel before the trial ends.[^2]
 
@@ -253,7 +253,7 @@ That is a substantive reason to choose it. I would use those predictions to prio
 
 **Pros:** website-URL input, Ozzy, static and animated creatives, all 5 awareness stages, and 10 static ads + 1 animated ad, no card required. My best-for verdict is a founder starting with a website and a defined ad brief.
 
-**Cons:** Meta publishing set up with you requires Growth Autopilot, and the free trial is limited to one per website/device/network with email verification. Factor those conditions into your evaluation.
+**Cons:** Meta publishing set up with you requires Growth Autopilot, and the free trial is limited to one per website/device/network. Factor those conditions into your evaluation.
 
 Choose against a required job, rather than assuming the longer feature list or my own product must win.
 

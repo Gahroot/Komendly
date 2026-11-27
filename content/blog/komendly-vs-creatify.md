@@ -34,7 +34,7 @@ faq:
   - q: "How much does Creatify cost?"
     a: "As of November 2026, Creatify Standard displays $10/month beside a struck-through $15 under an annual-plan savings banner.[^1] Confirm the billing interval and total at checkout."
   - q: "Is there a free alternative to Creatify?"
-    a: "Komendly offers a free trial with 10 static ads + 1 animated ad, no card required. Email verification applies, with one trial per website/device/network. This offer is a trial."
+    a: "Komendly offers a free trial with 10 static ads + 1 animated ad, no card required. One trial per website/device/network applies. This offer is a trial."
   - q: "Can Creatify make ads from my website?"
     a: "Yes. Creatify accepts product-page links to create video ads.[^2] Test your intended page before subscribing; its help center says some websites with firewalls can block access.[^6]"
   - q: "Can both tools publish ads to Meta?"
@@ -219,7 +219,7 @@ I would evaluate creative approval and campaign handoff separately. Check the of
 
 **Pros:** URL-based creation through Ozzy, static and animated formats, ads for all 5 awareness stages, and a free trial with 10 static ads + 1 animated ad, no card required. Growth Autopilot adds Meta publishing set up with you.
 
-**Cons:** Meta publishing requires Growth Autopilot. The trial requires email verification and is limited to one trial per website/device/network. My judgment is that a buyer seeking a presenter-led creative should evaluate that specific requirement before choosing Komendly’s main ad product.
+**Cons:** Meta publishing requires Growth Autopilot. The trial is limited to one trial per website/device/network. My judgment is that a buyer seeking a presenter-led creative should evaluate that specific requirement before choosing Komendly’s main ad product.
 
 **Best for:** Small businesses, founders, and marketers who want to turn their website into branded static and animated ads and assess the result before subscribing.
 

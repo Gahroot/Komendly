@@ -43,7 +43,7 @@ faq:
   - q: "Can Komendly replace Smartly's media automation?"
     a: "Evaluate Komendly for creative production: it turns a website URL into static and animated ads, with Meta publishing set up with you on Growth Autopilot. If cross-channel budget allocation is required, evaluate that capability separately; Smartly documents it.[^2]"
   - q: "What can I try free with Komendly?"
-    a: "Komendly offers 10 static ads + 1 animated ad, no card required. Email verification applies, with one trial per website/device/network."
+    a: "Komendly offers 10 static ads + 1 animated ad, no card required. One trial per website/device/network applies."
 sources:
   - id: 1
     title: "Smartly Creative"
@@ -297,4 +297,4 @@ Start with Komendly if your immediate task is turning a website into on-brand st
 
 Use a different shortlist priority if your must-have is manual design control, managed campaign execution or automated media allocation. Make that decision before paying for production capacity.
 
-To evaluate the URL-to-ad workflow, open the [free ad studio](/) and use your actual website and offer. Komendly includes 10 static ads + 1 animated ad, no card required. Email verification applies, with one trial per website/device/network.
+To evaluate the URL-to-ad workflow, open the [free ad studio](/) and use your actual website and offer. Komendly includes 10 static ads + 1 animated ad, no card required. One trial per website/device/network applies.

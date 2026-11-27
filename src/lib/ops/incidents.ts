@@ -146,6 +146,7 @@ export interface DomainFacts { domain: string; paused: boolean; pausedReason: st
 export function fromDomains(ds: DomainFacts[]): Signal[] {
   const out: Signal[] = [];
   for (const d of ds) {
+    if (d.paused && d.pausedReason?.startsWith("retired")) continue; // retired look-alike domains (mailboxes deleted) stay listed forever: not an incident
     if (d.listedOn.length) out.push({ key: `deliverability:blocklist:${d.domain}`, type: "deliverability", severity: "P2", title: `${d.domain} is on a blocklist`, detail: `listed on ${d.listedOn.join(", ")}`, containment: d.paused ? [] : [{ kind: "pause_domain", domain: d.domain }] });
     else if (d.paused && d.pausedReason?.startsWith("auto:")) out.push({ key: `kly:paused:${d.domain}`, type: "kly", severity: "P3", title: `Kly governor paused ${d.domain}`, detail: d.pausedReason });
   }

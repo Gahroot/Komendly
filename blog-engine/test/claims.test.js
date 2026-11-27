@@ -41,3 +41,12 @@ test('claims lint catches invented stats, counts, testimonials, undated/uncited 
   assert.match(lint('Komendly can publish your ads to TikTok.'), /only publishes to Meta/);
   assert.equal(lint('79% of marketers test creatives weekly.[^2]'), '');
 });
+
+test('claims lint blocks the hard-rule regressions: one-click publishing, Growth-and-Scale tie, email verification required', () => {
+  const k = loadKnowledge();
+  const lint = (body) => claimsLint(goodPost({ body }), { knowledge: k }).join('\n');
+  assert.match(lint('Komendly offers one-click publish to Meta on Growth and Scale plans.'), /never claim one-click publishing/);
+  assert.match(lint('Komendly offers one-click publish to Meta on Growth and Scale plans.'), /Growth Autopilot/);
+  assert.match(lint('Komendly free trial: email verification is required.'), /email verification is not required/);
+  assert.doesNotMatch(lint('Komendly does not offer one-click publishing; Meta publishing is set up with you on Growth Autopilot.'), /one-click/);
+});

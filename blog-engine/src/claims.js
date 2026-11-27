@@ -75,6 +75,10 @@ export function claimsLint(post, { knowledge = loadKnowledge(), competitors = []
         if (!['10', '11', '1'].includes(n)) issues.push(`Komendly free trial is 10 static + 1 animated ad: ${short(s)}`);
       }
       if (/\b(credit card required|requires a (credit )?card)\b/i.test(s)) issues.push(`Komendly trial needs no card: ${short(s)}`);
+      // Hard rules (27 Nov 2026): one-click publishing is not approved by Meta yet; publishing is set up with the owner on Growth Autopilot; email confirmation never blocks downloads.
+      if (/\bone[- ]click\b/i.test(s) && !/\b(not|no|never|isn'?t|doesn'?t|until|without)\b/i.test(s)) issues.push(`never claim one-click publishing: ${short(s)}`);
+      if (/\bGrowth (and|or|&) Scale\b/i.test(s)) issues.push(`publishing is set up with the owner on Growth Autopilot, not tied to "Growth and Scale": ${short(s)}`);
+      if (/\bemail (verification|confirmation)\b[^.]{0,40}\b(required|requires|needed|applies)\b|\b(requires?|required|needs?)\b[^.]{0,20}\bemail (verification|confirmation)\b/i.test(s)) issues.push(`email verification is not required for the free pack: ${short(s)}`);
       if (/money-back/i.test(s) && /\b(\d+)-day\b/.test(s) && s.match(/\b(\d+)-day\b/)[1] !== '30') issues.push(`guarantee is 30 days: ${short(s)}`);
       if (/\b(tiktok|google ads|linkedin|pinterest|snapchat)\b/i.test(s) && /\b(publish|post|push|send)\w*\b/i.test(s) && !/\b(not|no|doesn'?t|does not|only)\b/i.test(s)) issues.push(`Komendly only publishes to Meta: ${short(s)}`);
     }
