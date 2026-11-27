@@ -22,3 +22,48 @@
 | Agency Allies <info@agency-allies.com> | agency | Partner page | https://agency-allies.com/partner/ | Community for service-business founders; info@ listed on partner page | 2026-11-27 |
 
 Journalists: none sent; no verified public personal email found. Needs human: none (no captcha-form-only contacts encountered). Script: outreach/send-earned.mjs.
+
+## Associations / chambers / SBDC round (27 Nov 2026, from hello@getkomendly.com, Reply-To nolan@prestyj.com)
+| Org | Type | Email | Status |
+|---|---|---|---|
+| Michigan SBDC (state network) | SBDC/SCORE | welcome@michigansbdc.org | sent |
+| Duquesne University SBDC | SBDC/SCORE | duqsbdc@duq.edu | sent |
+| UW-La Crosse SBDC | SBDC/SCORE | sbdc@uwlax.edu | sent |
+| Temple University SBDC (Fox School) | SBDC/SCORE | sbdc@temple.edu | sent |
+| San Jacinto College SBDC | SBDC/SCORE | sbdc@sjcd.edu | sent |
+| SCORE Chapter 87 Volusia Flagler | SBDC/SCORE | info@score87.org | sent |
+| Charlevoix Area Chamber of Commerce | Chamber/BID | info@charlevoix.org | sent |
+| Harbor Springs Area Chamber of Commerce | Chamber/BID | info@harborspringschamber.com | sent |
+| Findlay-Hancock County Chamber of Commerce | Chamber/BID | news@findlayhancockchamber.com | sent |
+| Cambridge Chamber of Commerce | Chamber/BID | ccinfo@cambridgechamber.org | sent |
+| Sheridan County Chamber of Commerce | Chamber/BID | kmorris@sheridanwyomingchamber.org | sent |
+| Terrell Chamber of Commerce | Chamber/BID | kj@terrelltexas.com | sent, BOUNCED (blocked) |
+| Grapevine Chamber of Commerce | Chamber/BID | info@grapevinechamber.org | sent |
+| Downtown Tucson Partnership | Chamber/BID | info@downtowntucson.org | sent |
+| Downtown Albany BID | Chamber/BID | hello@downtownalbany.org | sent |
+| Spokane Independent Metro Business Alliance (SIMBA) | Library/local group | info@spokaneindependent.org | sent |
+| Durham County Library Small Business Center | Library/local group | smallbizcenter@dconc.gov | sent |
+| BNI Atlanta | BNI | info@bniatl.com | sent |
+| BNI Michigan (Tonya Acha, Area Director) | BNI | tonyaacha@bni.com | sent |
+| New York State PHCC (plumbing, heating, cooling) | Trade association | info@nysphcc.org | sent |
+| Tennessee Association of Plumbing, Heating, Cooling Contractors | Trade association | office@taphcc.com | sent |
+| Colorado Pest Control Association | Trade association | info@coloradopca.org | sent |
+| North Carolina Pest Management Association | Trade association | info@ncpestmanagement.org | sent |
+| New England Pest Management Association | Trade association | admin@nepma.org | sent |
+| Landscape Illinois | Trade association | information@landscapeillinois.org | sent |
+| Oregon Landscape Contractors Association | Trade association | info@oregonlandscape.org | sent |
+| Home Builders Association of Metro Denver (Custom Builder & Remodeler Council) | Trade association | info@hbadenver.com | sent |
+| Automotive Service Association of Colorado | Trade association | asainfo@asacolorado.org | sent |
+| Alliance of Automotive Service Providers of Minnesota | Trade association | aasp@aaspmn.org | sent |
+| Greater Providence Board of REALTORS | Trade association | info@gprealtors.org | sent, BOUNCED (blocked) |
+| Utah Roofing Contractors Association | Trade association | info@theurca.org | reserve (not sent, 30/day cap) |
+| Connecticut PHCC | Trade association | info@ct-phcc.org | reserve (not sent, 30/day cap) |
+| Missouri Pest Management Association | Trade association | missouripest@gmail.com | reserve (not sent, 30/day cap) |
+| Maryland State Pest Control Association | Trade association | info@marylandpest.org | reserve (not sent, 30/day cap) |
+| Pismo Coast Association of REALTORS | Trade association | admin@pismocoastrealtors.com | reserve (not sent, 30/day cap) |
+| Milwaukee Downtown BID | Chamber/BID | info@milwaukeedowntown.com | reserve (not sent, 30/day cap) |
+| Rocky Point - Sound Beach Chamber of Commerce | Chamber/BID | rpsbchamber@gmail.com | reserve (not sent, 30/day cap) |
+| Brown County Ohio Chamber of Commerce | Chamber/BID | brchcom@gmail.com | reserve (not sent, 30/day cap) |
+| BNI Colorado (Donna Cole, Denver Area Director) | BNI | donnacole@bni.com | reserve (not sent, 30/day cap) |
+
+Sent 30 of 39 found. Found per type: SBDC/SCORE 6, Chamber/BID 12, library/local group 2, BNI 3, trade association 16. 2 hard bounces (both 'blocked' by the recipient server).
