@@ -5,7 +5,8 @@ const t = (iso: string) => new Date(iso);
 describe("founder copy rewrite", () => {
   it("seeds the 3 Nolan bodies + follow-up and no longer seeds the old local bodies", () => {
     const keys = seedArms().filter((a) => a.dimension === "body" || a.dimension === "followup").map((a) => a.key);
-    for (const k of ["hz-gift-outcome", "hz-which-job", "hz-headline", "hz-followup"]) expect(keys).toContain(k);
+    for (const k of ["q-who-does-ads", "q-more-jobs", "q-useful-or-not", "q-followup"]) expect(keys).toContain(k);
+    for (const k of ["hz-gift-outcome", "hz-which-job", "hz-headline", "hz-followup"]) expect(keys).not.toContain(k);
     for (const k of ["nolan-meta-live", "nolan-would-you-run", "nolan-no-agency", "nolan-followup"]) expect(keys).not.toContain(k);
     for (const k of ["made-this", "headline-hook", "oc-want-one", "still-here"]) expect(keys).not.toContain(k);
   });

@@ -252,8 +252,31 @@ describe("Hormozi rewrite (Nov 26)", () => {
       expect(e.text).not.toMatch(/\$|guarantee|results/i);
     }
   });
-  it("seeds: new arms live, old Nolan arms retired", () => {
-    expect(SEED_COPY.filter((s) => !s.retired && s.key.startsWith("hz-"))).toHaveLength(4);
+  it("seeds: hz arms retired by the Nov 27 rewrite, old Nolan arms retired", () => {
+    expect(SEED_COPY.filter((s) => s.key.startsWith("hz-")).every((s) => s.retired)).toBe(true);
     expect(SEED_COPY.filter((s) => s.key.startsWith("nolan-")).every((s) => s.retired)).toBe(true);
+  });
+});
+
+import { QUESTION_COPY } from "../copy";
+describe("question rewrite (Nov 27)", () => {
+  const base = { businessName: "Denver Gutter Company", city: "Denver, CO", niche: "gutter installers", senderName: "Ozzy at Komendly", claimUrl: "https://www.komendly.com/g/abc", unsubscribeUrl: "https://www.komendly.com/u/def", postalAddress: "2211 Cole St, Birmingham, MI 48009", headline: "Gutters that keep your basement dry" };
+  it("3 bodies + 1 follow-up + 2 subjects, all compliant, signed Nolan, no price or promised results", () => {
+    expect(QUESTION_COPY.filter((c) => c.dimension === "body")).toHaveLength(3);
+    expect(QUESTION_COPY.filter((c) => c.dimension === "followup")).toHaveLength(1);
+    for (const v of QUESTION_COPY) {
+      expect(checkVariant(v.dimension, v.template), v.key).toBeNull();
+      if (v.dimension === "subject") continue;
+      const c = { ...base, step: (v.dimension === "body" ? 1 : 2) as 1 | 2, variant: { [v.dimension]: v.template } };
+      const e = buildOutboundEmail(c);
+      expect(checkOutboundEmail(e, c), v.key).toBeNull();
+      expect(e.text).toContain(NOLAN_SIGNOFF);
+      expect(e.text).not.toMatch(/\$|guarantee|results|one-click|I made you/i);
+    }
+  });
+  it("live local seeds are the question arms; free-gift subject retired", () => {
+    const live = SEED_COPY.filter((s) => !s.retired && !s.audience && (s.dimension === "body" || s.dimension === "followup")).map((s) => s.key);
+    expect(live.filter((k) => k.startsWith("q-")).sort()).toEqual(["q-followup", "q-more-jobs", "q-useful-or-not", "q-who-does-ads"]);
+    expect(SEED_COPY.find((s) => s.key === "free-gift")?.retired).toBe(true);
   });
 });

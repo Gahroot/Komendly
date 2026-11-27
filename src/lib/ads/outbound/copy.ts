@@ -146,8 +146,22 @@ export const HORMOZI_COPY: SeedCopy[] = [
   { dimension: "followup", key: "hz-followup", timing: "any", template: ["Your Facebook ad for {business} is still here: {link}", "", "Want me to help you put it live? Reply yes. Or tell me which service you want more calls for.", "", NOLAN_SIGNOFF].join("\n") },
 ];
 
+/**
+ * Nov 27 rewrite (governor: ~744 sends, 0 positive replies on the hz arms). Each opens with a question a busy owner can
+ * answer in one word, names the gift plainly, and asks for a one-word reply. No price in the first touch. Wording is
+ * true for both gift timings ("from your website", never "I made you"). Replaces HORMOZI_COPY (retired below).
+ */
+export const QUESTION_COPY: SeedCopy[] = [
+  { dimension: "body", key: "q-who-does-ads", timing: "any", template: ["Who handles the ads for {business} right now?", "", "I ask because Komendly turns a website into ready-to-post Facebook ads. Here's one from yours, free to keep:", "", "{link}", "", "If the answer is \"nobody, no time\", that's who it's for. Reply \"more\" and I'll send the next 10, free.", "", NOLAN_SIGNOFF].join("\n") },
+  { dimension: "body", key: "q-more-jobs", timing: "any", template: ["Could {business} take on more jobs this month?", "", "If so, here's a Facebook ad drawn from your website. Free to keep, no card:", "", "{link}", "", "Reply with the one service you want more of and I'll aim the next ads at it.", "", NOLAN_SIGNOFF].join("\n") },
+  { dimension: "body", key: "q-useful-or-not", timing: "any", template: ["A Facebook ad for {business}, from your website:", "", "{link}", "", "Free to keep, no card, nothing to install. Is this useful, or not your thing? A one-word reply helps me either way.", "", NOLAN_SIGNOFF].join("\n") },
+  { dimension: "followup", key: "q-followup", timing: "any", template: ["Quick nudge on the ad for {business}: {link}", "", "Want more like it? Reply \"more\". Not for you? Reply \"no\" and I'll stop.", "", NOLAN_SIGNOFF].join("\n") },
+  { dimension: "subject", key: "q-quick-question", timing: "any", template: "quick question" },
+  { dimension: "subject", key: "q-your-website", timing: "any", template: "from your website" },
+];
+
 /** Old local-business body/follow-up seeds, retired by the Nov 21 rewrite (agency copy keeps running). */
-const RETIRED_KEYS = new Set(["made-this", "would-you-run", "headline-hook", "too-busy", "still-here", "last-note", "did-it-land", "oc-tap-to-draw", "oc-want-one", "oc-too-busy", "oc-still-ready", "oc-last-note"]);
+const RETIRED_KEYS = new Set(["free-gift", "made-this", "would-you-run", "headline-hook", "too-busy", "still-here", "last-note", "did-it-land", "oc-tap-to-draw", "oc-want-one", "oc-too-busy", "oc-still-ready", "oc-last-note"]);
 
 export const SEED_COPY: SeedCopy[] = ([
   { dimension: "subject", key: "made-you-something", timing: "prebuilt", template: DEFAULT_SUBJECT },
@@ -184,7 +198,7 @@ export const SEED_COPY: SeedCopy[] = ([
   { dimension: "body", key: "oc-agency", timing: "on-click", audience: "agency", template: ["Want to see what Ozzy makes from your website?", "", "{link}", "", "Tap it and he draws three ready-to-run Meta ads live. Then point him at any client's site. Your first 10 ads are free, no card."].join("\n") },
   { dimension: "followup", key: "oc-still-ready", timing: "on-click", template: ["Ozzy's still ready to draw your ads: {link}", "", "Takes two minutes, free either way."].join("\n") },
   { dimension: "followup", key: "oc-last-note", timing: "on-click", template: ["Last note from me. If ads aren't a priority right now, totally get it.", "", "Ozzy's offer stands: {link}"].join("\n") },
-] as SeedCopy[]).map((c): SeedCopy => (RETIRED_KEYS.has(c.key) ? { ...c, retired: true } : c)).concat(NOLAN_COPY.map((c): SeedCopy => ({ ...c, retired: true })), HORMOZI_COPY);
+] as SeedCopy[]).map((c): SeedCopy => (RETIRED_KEYS.has(c.key) ? { ...c, retired: true } : c)).concat(NOLAN_COPY.map((c): SeedCopy => ({ ...c, retired: true })), HORMOZI_COPY.map((c): SeedCopy => ({ ...c, retired: true })), QUESTION_COPY);
 
 export function renderTemplate(t: string, vars: Partial<Record<(typeof PLACEHOLDERS)[number], string>>): string {
   return t.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? (vars[k as keyof typeof vars] ?? "") : m));
