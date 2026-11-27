@@ -5,6 +5,7 @@ import { Check, ExternalLink, Quote, ShieldCheck } from "lucide-react";
 import { DeviceCookie } from "@/components/ads/device-cookie";
 import { FreeAdsDemo } from "@/components/ads/free-ads-demo";
 import { FreeAdsUrlForm } from "@/components/ads/free-ads-url-form";
+import { FreeAdsHeroText } from "@/components/experiments/free-ads-hero-text";
 import { TrackOnMount } from "@/components/analytics/track-on-mount";
 import { fraunces } from "@/components/studio/fonts";
 import { StudioFooter } from "@/components/studio/studio-footer";
@@ -110,12 +111,13 @@ export default function FreeAdsPage() {
           <p className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-1.5 text-sm font-semibold uppercase tracking-[0.1em] text-[var(--studio-gold)]">
             Free Ad Pack · no card needed
           </p>
-          <h1 id="offer-title" className="font-display mt-3 text-balance text-[2.4rem] font-medium leading-[1.08] tracking-[-0.02em] sm:text-6xl">
-            Customers asking for quotes, without you running Facebook ads. Start by seeing {FREE_TRIAL_ADS} ads, free.
-          </h1>
-          <p className="mt-3 max-w-xl text-pretty text-lg text-foreground/90 sm:text-xl">
-            For local businesses. Paste your website: your ads are ready in minutes, made from your own logo and colors. Like them? We run them on Facebook and Instagram and email you the leads.
-          </p>
+          <FreeAdsHeroText
+            h1Id="offer-title"
+            h1ClassName="font-display mt-3 text-balance text-[2.4rem] font-medium leading-[1.08] tracking-[-0.02em] sm:text-6xl"
+            headline={`Customers asking for quotes, without you running Facebook ads. Start by seeing ${FREE_TRIAL_ADS} ads, free.`}
+            subClassName="mt-3 max-w-xl text-pretty text-lg text-foreground/90 sm:text-xl"
+            sub="For local businesses. Paste your website: your ads are ready in minutes, made from your own logo and colors. Like them? We run them on Facebook and Instagram and email you the leads."
+          />
           <div id="start" className="mt-5 flex w-full justify-center"><Cta id="hero" /></div>
           <div className="mt-4 flex w-full justify-center sm:mt-8"><MaxQuote /></div>
           <FreeAdsDemo />

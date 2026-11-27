@@ -164,6 +164,20 @@ const SECTIONS: readonly LegalSection[] = [
     ),
   },
   {
+    id: "extension",
+    title: "Our Chrome extension",
+    body: (
+      <>
+        <p>The free &quot;Komendly: Remake this ad&quot; Chrome extension only runs on Meta Ad Library pages (facebook.com/ads/library). It has no account, no analytics and no tracking, and it runs no code from the internet.</p>
+        <ul>
+          <li><strong>Saved on your device:</strong> the business website you type in the extension popup, kept in your Chrome profile (chrome storage). We never receive it unless you click a button below.</li>
+          <li><strong>Sent only when you click:</strong> when you click &quot;Remake for my business&quot;, the public details of that one ad (its Ad Library link, headline, text, image link and Page name) and your saved website go in the komendly.com link that opens. The &quot;Check ads&quot; button does the same with the Facebook Page link or ID you chose. Nothing is sent in the background.</li>
+          <li><strong>What happens next:</strong> once komendly.com opens, the rest of this policy applies. We do not sell extension data or use it for anything except making your remake.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: "children",
     title: "Children",
     body: <p>Komendly is a business tool and is not for anyone under 16. We do not knowingly collect data from children; if you think a child has given us data, contact us and we will delete it.</p>,

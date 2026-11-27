@@ -1,0 +1,710 @@
+{
+  "generatedOn": "2026-11-27",
+  "rubric": [
+    {
+      "key": "time_to_first_ad",
+      "label": "Time to first ad",
+      "weight": 3,
+      "rule": "3 = finished ads from a link with no setup; 2 = guided setup, minutes to hours; 1 = build in an editor; 0 = days (brief + turnaround)."
+    },
+    {
+      "key": "effort",
+      "label": "Effort for a non-designer",
+      "weight": 3,
+      "rule": "3 = none beyond pasting a link; 2 = light review; 1 = operate a design/ads tool; 0 = manage people or learn the platform."
+    },
+    {
+      "key": "price",
+      "label": "Entry price",
+      "weight": 2,
+      "rule": "3 = free first result or <= $50/mo; 2 = <= $200/mo; 1 = <= $500/mo; 0 = above."
+    },
+    {
+      "key": "publishes_meta",
+      "label": "Publishes to Meta",
+      "weight": 2,
+      "rule": "3 = publishes to Facebook/Instagram ads from the tool; 1 = exports only; 0 = no."
+    },
+    {
+      "key": "learns_optimises",
+      "label": "Learns / optimises from results",
+      "weight": 2,
+      "rule": "3 = automated optimisation on live results; 2 = insights/reporting or rule-based pauses; 1 = manual A/B only; 0 = none."
+    },
+    {
+      "key": "local_focus",
+      "label": "Local-business focus",
+      "weight": 2,
+      "rule": "3 = built for local service businesses; 2 = SMB generalist; 1 = ecommerce/agency oriented; 0 = enterprise."
+    },
+    {
+      "key": "evidence",
+      "label": "Public proof of results",
+      "weight": 1,
+      "rule": "3 = published, verifiable customer results; 2 = vendor-stated aggregate claims; 1 = testimonials only; 0 = none."
+    }
+  ],
+  "entrants": [
+    {
+      "slug": "komendly",
+      "name": "Komendly",
+      "kind": "self",
+      "scanUrls": [],
+      "note": "Self-assessed from our own code and offer; the weakest area (public proof) is stated plainly.",
+      "scores": {
+        "time_to_first_ad": {
+          "score": 3,
+          "evidence": [
+            {
+              "url": "https://www.komendly.com/pricing",
+              "checked": "2026-11-26",
+              "note": "Own product (10 free ads from a pasted website link); see src/lib/ads/public-offer.ts"
+            }
+          ]
+        },
+        "effort": {
+          "score": 3,
+          "evidence": [
+            {
+              "url": "https://www.komendly.com/pricing",
+              "checked": "2026-11-26",
+              "note": "Own product (no editor; paste a link, review); see src/lib/ads/public-offer.ts"
+            }
+          ]
+        },
+        "price": {
+          "score": 2,
+          "evidence": [
+            {
+              "url": "https://www.komendly.com/pricing",
+              "checked": "2026-11-26",
+              "note": "Own product (free first pack, then $197/mo or $297/mo; dearer than several tools at entry); see src/lib/ads/public-offer.ts"
+            }
+          ]
+        },
+        "publishes_meta": {
+          "score": 3,
+          "evidence": [
+            {
+              "url": "https://www.komendly.com/pricing",
+              "checked": "2026-11-26",
+              "note": "Own product (launches Facebook/Instagram lead ads in the owner's own Meta account); see src/lib/ads/public-offer.ts"
+            }
+          ]
+        },
+        "learns_optimises": {
+          "score": 2,
+          "evidence": [
+            {
+              "url": "https://www.komendly.com/pricing",
+              "checked": "2026-11-26",
+              "note": "Own product (daily checks pause ads wasting money; closed-loop learning not yet proven on real customer data); see src/lib/ads/public-offer.ts"
+            }
+          ]
+        },
+        "local_focus": {
+          "score": 3,
+          "evidence": [
+            {
+              "url": "https://www.komendly.com/pricing",
+              "checked": "2026-11-26",
+              "note": "Own product (built for local service businesses); see src/lib/ads/public-offer.ts"
+            }
+          ]
+        },
+        "evidence": {
+          "score": 1,
+          "evidence": [
+            {
+              "url": "https://www.komendly.com/pricing",
+              "checked": "2026-11-26",
+              "note": "Own product (no published customer results yet: not claimed); see src/lib/ads/public-offer.ts"
+            }
+          ]
+        }
+      },
+      "card": {
+        "slug": "komendly",
+        "name": "Komendly",
+        "total": 87,
+        "coverage": 100,
+        "scored": 7
+      }
+    },
+    {
+      "slug": "creatopy",
+      "name": "Creatopy",
+      "kind": "tool",
+      "scanUrls": [
+        "https://www.creatopy.com/pricing/"
+      ],
+      "scores": {
+        "time_to_first_ad": {
+          "score": null,
+          "evidence": []
+        },
+        "effort": {
+          "score": 1,
+          "evidence": [
+            {
+              "url": "https://www.creatopy.com/pricing/",
+              "checked": "2026-11-26",
+              "note": "Ad Studio and canvas with 5,000+ templates: you operate a design tool"
+            }
+          ]
+        },
+        "price": {
+          "score": 3,
+          "evidence": [
+            {
+              "url": "https://www.creatopy.com/pricing/",
+              "checked": "2026-11-26",
+              "note": "Pro listed at $39/month billed monthly"
+            }
+          ]
+        },
+        "publishes_meta": {
+          "score": 3,
+          "evidence": [
+            {
+              "url": "https://www.creatopy.com/pricing/",
+              "checked": "2026-11-26",
+              "note": "Ultra plan lists publishing to Meta and Google Ads"
+            }
+          ]
+        },
+        "learns_optimises": {
+          "score": null,
+          "evidence": []
+        },
+        "local_focus": {
+          "score": null,
+          "evidence": []
+        },
+        "evidence": {
+          "score": null,
+          "evidence": []
+        }
+      },
+      "card": {
+        "slug": "creatopy",
+        "name": "Creatopy",
+        "total": 71,
+        "coverage": 47,
+        "scored": 3
+      }
+    },
+    {
+      "slug": "madgicx",
+      "name": "Madgicx",
+      "kind": "tool",
+      "scanUrls": [
+        "https://madgicx.com/pricing"
+      ],
+      "scores": {
+        "time_to_first_ad": {
+          "score": null,
+          "evidence": []
+        },
+        "effort": {
+          "score": null,
+          "evidence": []
+        },
+        "price": {
+          "score": 3,
+          "evidence": [
+            {
+              "url": "https://madgicx.com/pricing",
+              "checked": "2026-11-26",
+              "note": "From $45/month for spend under $1K (billed monthly)"
+            }
+          ]
+        },
+        "publishes_meta": {
+          "score": 3,
+          "evidence": [
+            {
+              "url": "https://madgicx.com/pricing",
+              "checked": "2026-11-26",
+              "note": "Built around Meta campaigns (per its pricing and positioning)"
+            }
+          ]
+        },
+        "learns_optimises": {
+          "score": 3,
+          "evidence": [
+            {
+              "url": "https://madgicx.com/pricing",
+              "checked": "2026-11-26",
+              "note": "Meta-ads optimisation and analytics platform with AI features"
+            }
+          ]
+        },
+        "local_focus": {
+          "score": 1,
+          "evidence": [
+            {
+              "url": "https://madgicx.com/pricing",
+              "checked": "2026-11-26",
+              "note": "Positioned for ecommerce and ad-spend-based tiers"
+            }
+          ]
+        },
+        "evidence": {
+          "score": null,
+          "evidence": []
+        }
+      },
+      "card": {
+        "slug": "madgicx",
+        "name": "Madgicx",
+        "total": 83,
+        "coverage": 53,
+        "scored": 4
+      }
+    },
+    {
+      "slug": "predis-ai",
+      "name": "Predis.ai",
+      "kind": "tool",
+      "scanUrls": [
+        "https://predis.ai/pricing/"
+      ],
+      "scores": {
+        "time_to_first_ad": {
+          "score": null,
+          "evidence": []
+        },
+        "effort": {
+          "score": null,
+          "evidence": []
+        },
+        "price": {
+          "score": 3,
+          "evidence": [
+            {
+              "url": "https://predis.ai/pricing/",
+              "checked": "2026-11-26",
+              "note": "Advertises ads, videos and UGC for less than $1/day; 3-day free trial"
+            }
+          ]
+        },
+        "publishes_meta": {
+          "score": 3,
+          "evidence": [
+            {
+              "url": "https://predis.ai/pricing/",
+              "checked": "2026-11-26",
+              "note": "Can publish to Facebook, Instagram and others"
+            }
+          ]
+        },
+        "learns_optimises": {
+          "score": null,
+          "evidence": []
+        },
+        "local_focus": {
+          "score": null,
+          "evidence": []
+        },
+        "evidence": {
+          "score": null,
+          "evidence": []
+        }
+      },
+      "card": {
+        "slug": "predis-ai",
+        "name": "Predis.ai",
+        "total": 100,
+        "coverage": 27,
+        "scored": 2
+      }
+    },
+    {
+      "slug": "adcreative-ai",
+      "name": "AdCreative.ai",
+      "kind": "tool",
+      "scanUrls": [
+        "https://www.adcreative.ai/"
+      ],
+      "scores": {
+        "time_to_first_ad": {
+          "score": null,
+          "evidence": []
+        },
+        "effort": {
+          "score": null,
+          "evidence": []
+        },
+        "price": {
+          "score": null,
+          "evidence": []
+        },
+        "publishes_meta": {
+          "score": null,
+          "evidence": []
+        },
+        "learns_optimises": {
+          "score": 2,
+          "evidence": [
+            {
+              "url": "https://www.adcreative.ai/",
+              "checked": "2026-11-26",
+              "note": "Lists creative insights and competitor insights"
+            }
+          ]
+        },
+        "local_focus": {
+          "score": 1,
+          "evidence": [
+            {
+              "url": "https://www.adcreative.ai/",
+              "checked": "2026-11-26",
+              "note": "Home page leans to ecommerce brands and agencies"
+            }
+          ]
+        },
+        "evidence": {
+          "score": 2,
+          "evidence": [
+            {
+              "url": "https://www.adcreative.ai/",
+              "checked": "2026-11-26",
+              "note": "States 4.2M+ businesses and $35B+ ad-spend training data (vendor's own claims)"
+            }
+          ]
+        }
+      },
+      "card": {
+        "slug": "adcreative-ai",
+        "name": "AdCreative.ai",
+        "total": 53,
+        "coverage": 33,
+        "scored": 3
+      }
+    },
+    {
+      "slug": "canva-magic-studio",
+      "name": "Canva Magic Studio",
+      "kind": "tool",
+      "scanUrls": [
+        "https://www.canva.com/pricing/",
+        "https://www.canva.com/magic-studio/"
+      ],
+      "scores": {
+        "time_to_first_ad": {
+          "score": null,
+          "evidence": []
+        },
+        "effort": {
+          "score": null,
+          "evidence": []
+        },
+        "price": {
+          "score": null,
+          "evidence": []
+        },
+        "publishes_meta": {
+          "score": null,
+          "evidence": []
+        },
+        "learns_optimises": {
+          "score": null,
+          "evidence": []
+        },
+        "local_focus": {
+          "score": null,
+          "evidence": []
+        },
+        "evidence": {
+          "score": null,
+          "evidence": []
+        }
+      },
+      "note": "Not verified yet: run scripts/competitive-scan.ts and review.",
+      "card": {
+        "slug": "canva-magic-studio",
+        "name": "Canva Magic Studio",
+        "total": null,
+        "coverage": 0,
+        "scored": 0
+      }
+    },
+    {
+      "slug": "pencil",
+      "name": "Pencil",
+      "kind": "tool",
+      "scanUrls": [
+        "https://www.trypencil.com/"
+      ],
+      "scores": {
+        "time_to_first_ad": {
+          "score": null,
+          "evidence": []
+        },
+        "effort": {
+          "score": null,
+          "evidence": []
+        },
+        "price": {
+          "score": null,
+          "evidence": []
+        },
+        "publishes_meta": {
+          "score": null,
+          "evidence": []
+        },
+        "learns_optimises": {
+          "score": null,
+          "evidence": []
+        },
+        "local_focus": {
+          "score": null,
+          "evidence": []
+        },
+        "evidence": {
+          "score": null,
+          "evidence": []
+        }
+      },
+      "note": "Not verified yet.",
+      "card": {
+        "slug": "pencil",
+        "name": "Pencil",
+        "total": null,
+        "coverage": 0,
+        "scored": 0
+      }
+    },
+    {
+      "slug": "smartly",
+      "name": "Smartly",
+      "kind": "tool",
+      "scanUrls": [
+        "https://www.smartly.io/"
+      ],
+      "scores": {
+        "time_to_first_ad": {
+          "score": null,
+          "evidence": []
+        },
+        "effort": {
+          "score": null,
+          "evidence": []
+        },
+        "price": {
+          "score": null,
+          "evidence": []
+        },
+        "publishes_meta": {
+          "score": null,
+          "evidence": []
+        },
+        "learns_optimises": {
+          "score": null,
+          "evidence": []
+        },
+        "local_focus": {
+          "score": null,
+          "evidence": []
+        },
+        "evidence": {
+          "score": null,
+          "evidence": []
+        }
+      },
+      "note": "Not verified yet (enterprise platform; likely a different segment).",
+      "card": {
+        "slug": "smartly",
+        "name": "Smartly",
+        "total": null,
+        "coverage": 0,
+        "scored": 0
+      }
+    },
+    {
+      "slug": "meta-advantage-plus",
+      "name": "Meta Advantage+ creative",
+      "kind": "tool",
+      "scanUrls": [
+        "https://www.facebook.com/business/ads/meta-advantage-plus"
+      ],
+      "scores": {
+        "time_to_first_ad": {
+          "score": null,
+          "evidence": []
+        },
+        "effort": {
+          "score": null,
+          "evidence": []
+        },
+        "price": {
+          "score": null,
+          "evidence": []
+        },
+        "publishes_meta": {
+          "score": null,
+          "evidence": []
+        },
+        "learns_optimises": {
+          "score": null,
+          "evidence": []
+        },
+        "local_focus": {
+          "score": null,
+          "evidence": []
+        },
+        "evidence": {
+          "score": null,
+          "evidence": []
+        }
+      },
+      "note": "Not verified yet. It is the platform's own tooling, so any claim needs the current Meta page.",
+      "card": {
+        "slug": "meta-advantage-plus",
+        "name": "Meta Advantage+ creative",
+        "total": null,
+        "coverage": 0,
+        "scored": 0
+      }
+    },
+    {
+      "slug": "freelancer-agency",
+      "name": "Hiring a freelancer or agency",
+      "kind": "service",
+      "scanUrls": [],
+      "scores": {
+        "time_to_first_ad": {
+          "score": null,
+          "evidence": []
+        },
+        "effort": {
+          "score": null,
+          "evidence": []
+        },
+        "price": {
+          "score": null,
+          "evidence": []
+        },
+        "publishes_meta": {
+          "score": null,
+          "evidence": []
+        },
+        "learns_optimises": {
+          "score": null,
+          "evidence": []
+        },
+        "local_focus": {
+          "score": null,
+          "evidence": []
+        },
+        "evidence": {
+          "score": null,
+          "evidence": []
+        }
+      },
+      "note": "No single public page; typical price and turnaround would be assumptions, so unscored.",
+      "card": {
+        "slug": "freelancer-agency",
+        "name": "Hiring a freelancer or agency",
+        "total": null,
+        "coverage": 0,
+        "scored": 0
+      }
+    },
+    {
+      "slug": "diy",
+      "name": "Doing it yourself",
+      "kind": "diy",
+      "scanUrls": [],
+      "scores": {
+        "time_to_first_ad": {
+          "score": null,
+          "evidence": []
+        },
+        "effort": {
+          "score": null,
+          "evidence": []
+        },
+        "price": {
+          "score": null,
+          "evidence": []
+        },
+        "publishes_meta": {
+          "score": null,
+          "evidence": []
+        },
+        "learns_optimises": {
+          "score": null,
+          "evidence": []
+        },
+        "local_focus": {
+          "score": null,
+          "evidence": []
+        },
+        "evidence": {
+          "score": null,
+          "evidence": []
+        }
+      },
+      "note": "Unscored: depends entirely on the owner's skill and time.",
+      "card": {
+        "slug": "diy",
+        "name": "Doing it yourself",
+        "total": null,
+        "coverage": 0,
+        "scored": 0
+      }
+    }
+  ],
+  "positioning": {
+    "weWin": [
+      "Effort for a non-designer: 3/3 vs best verified alternative 1/3.",
+      "Local-business focus: 3/3 vs best verified alternative 1/3."
+    ],
+    "theyWin": [
+      "Entry price: Creatopy, Madgicx, Predis.ai score higher than us (2/3) on the verified facts.",
+      "Learns / optimises from results: Madgicx score higher than us (2/3) on the verified facts.",
+      "Public proof of results: AdCreative.ai score higher than us (1/3) on the verified facts."
+    ],
+    "underserved": [
+      "Time to first ad: no competitor verified yet (we score 3/3, unverified against others).",
+      "Effort for a non-designer: every verified alternative scores <= 1/3.",
+      "Local-business focus: every verified alternative scores <= 1/3."
+    ]
+  },
+  "proposals": [
+    {
+      "id": "diff-published-results",
+      "dimension": "evidence",
+      "title": "Publish consented, measured customer results (no invented numbers)",
+      "why": "Evidence is our lowest-scored rubric line; competitors cite aggregate claims we cannot honestly match yet.",
+      "effort": "M",
+      "needs": "Real customer data and consent (proof system exists: sys_proof)."
+    },
+    {
+      "id": "diff-entry-price",
+      "dimension": "price",
+      "title": "Make the first paid step cheaper than the lowest verified tool plan",
+      "why": "Several verified tools list entry plans well under our plan prices.",
+      "effort": "S",
+      "needs": "Owner pricing decision (never automatic); the $9 unlock already exists."
+    },
+    {
+      "id": "diff-closed-loop",
+      "dimension": "learns_optimises",
+      "title": "Show the closed loop: which ad won, what we changed next week",
+      "why": "Optimisation platforms score 3; we are 2 until the loop is proven on real spend.",
+      "effort": "L",
+      "needs": "Real Meta spend data from paying customers."
+    },
+    {
+      "id": "diff-local-trade-packs",
+      "dimension": "local_focus",
+      "title": "Double down on local-trade presets (roofers, plumbers, dentists...)",
+      "why": "No verified alternative is built for local service businesses; this is the segment gap.",
+      "effort": "S",
+      "needs": "None: reuse /free-ads trade pages and Ad Library data."
+    }
+  ]
+}

@@ -24,6 +24,7 @@ import { WEEKLY_COST_CAP_MICROS, weeklyFirstTryMicros } from "./gift-policy";
 import { bestAd, emailImg } from "../lifecycle/studio-drop";
 import type { SendMail } from "../lifecycle/mail";
 import { weeklyResultsParagraphs } from "../growth/meta-results";
+import { learnedParagraphs } from "../customerintel/hook";
 
 const MAX_PER_TICK = 20;
 /** Hold the weekly email this long for the Autopilot video to finish (then send without it). */
@@ -203,7 +204,7 @@ export async function weeklyEmailTick(deps: WeeklyDeps): Promise<WeeklyEmailResu
     where: { kind: WEEKLY_KIND, status: { in: ["completed", "partial"] }, completedAt: { gte: new Date(now.getTime() - 7 * 86_400_000) } },
     orderBy: { completedAt: "asc" },
     take: 100,
-    select: { id: true, userId: true, workspaceId: true, completedAt: true, user: { select: { email: true, name: true } } },
+    select: { id: true, userId: true, workspaceId: true, brandProfileId: true, completedAt: true, user: { select: { email: true, name: true } } },
   });
   const out: WeeklyEmailResult[] = [];
   for (const r of runs) {
@@ -233,7 +234,7 @@ export async function weeklyEmailTick(deps: WeeklyDeps): Promise<WeeklyEmailResu
       appUrl: base,
       subject: copy.subject,
       preheader: copy.preheader,
-      paragraphs: [...copy.paragraphs, ...(await weeklyResultsParagraphs(deps.db, r.workspaceId, week))],
+      paragraphs: [...copy.paragraphs, ...(await weeklyResultsParagraphs(deps.db, r.workspaceId, week)), ...(await learnedParagraphs(deps.db, r.workspaceId, r.brandProfileId ?? null, now))],
       cta: { label: copy.ctaLabel, href },
       hero: best.assetId ? { src: emailImg(base, secret, best.assetId, best.expiresAt, now), alt: best.alt, href, caption: "", locked: false, position: "top" } : undefined,
       unsubscribeUrl,

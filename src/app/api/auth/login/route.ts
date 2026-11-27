@@ -5,6 +5,8 @@ import {
   createSession,
   setSessionCookie,
 } from "@/lib/auth";
+import { rateLimit } from "@/lib/ads/abuse";
+import { clientIpFromHeaders } from "@/lib/ads/meta-ip";
 import { authLogger, createRequestTimer, generateRequestId, logError } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
@@ -26,6 +28,13 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Brute-force guard: per IP and per email, fail-open if the limiter itself errors.
+    const ok = await Promise.all([
+      rateLimit(`login:ip:${clientIpFromHeaders(request.headers) ?? "unknown"}`, 20, 900),
+      rateLimit(`login:email:${String(email).toLowerCase().slice(0, 200)}`, 10, 900),
+    ]).then((r) => r.every(Boolean)).catch(() => true);
+    if (!ok) return NextResponse.json({ error: "Too many attempts. Try again in a few minutes." }, { status: 429 });
 
     log.debug({ email }, "Looking up user by email");
 

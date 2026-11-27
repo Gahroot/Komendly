@@ -154,7 +154,7 @@ export const overtureSource: LeadSource = {
     if (!db) return [];
     const { name, state } = cityParts(city);
     const rows = await db.klyPlace.findMany({
-      where: { niche, cityKey: cityKey(name), ...(state ? { state } : {}), usedAt: null, source: { not: "adlib" } }, // adlib rows: adlibSource
+      where: { niche, cityKey: cityKey(name), ...(state ? { state } : {}), usedAt: null, NOT: { OR: [{ source: "adlib" }, { source: { startsWith: "signal:" } }] } }, // adlib + signal rows: adlibSource
       orderBy: [{ confidence: "desc" }, { id: "asc" }],
       take: PLACES_PER_CALL,
       select: { id: true, name: true, website: true, phone: true, city: true, state: true, lon: true, email: true },

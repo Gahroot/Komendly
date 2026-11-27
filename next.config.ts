@@ -35,6 +35,7 @@ const nextConfig: NextConfig = {
     "/ozzy-studio/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
     "/reports/local-service-meta-ads/opengraph-image": ["./src/lib/og/fonts/**", "./public/brand/**"],
     "/admin/ads/growth": ["./docs/growth-ecosystem/learnings.md"],
+    "/admin/ads/revenue": ["./docs/revenue/learnings.md"],
   },
   // The Ads studio is the homepage; /ads (exact) is kept as a permanent alias. /ads/* routes and assets are untouched.
   async redirects() {
@@ -135,11 +136,11 @@ const nextConfig: NextConfig = {
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
-        source: "/ads/:area(app|billing|brands|runs|start|login|signup|refer|gifts|partner|coach|team)/:path*",
+        source: "/ads/:area(app|billing|brands|runs|start|login|signup|refer|gifts|partner|coach|team|agency)/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
-        source: "/ads/:area(app|billing|brands|runs|start|login|signup|refer|gifts|partner|coach|team)",
+        source: "/ads/:area(app|billing|brands|runs|start|login|signup|refer|gifts|partner|coach|team|agency)",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {

@@ -30,6 +30,7 @@ import { abandonReplacement, attemptCap, hedgeLockKey, qcObj } from "./replace";
 import { countTypeAds, fallbackFor, fallbackOf, isLocked, maxTypeAds, typographicSpec } from "./trial-fill";
 import { loadLayoutCatalog, loadMotionModule } from "./modules";
 import { loadRunSeed, seedPrompt } from "../coach/seed";
+import { memoryPromptForRun } from "../customerintel/hook";
 
 const LlmAd = z.object({
   slot: z.number().int(),
@@ -160,7 +161,8 @@ export async function planJob(ctx: JobContext): Promise<unknown> {
   const hOff = hookOffset(history);
   const slotList = slots.map((l, i) => `slot ${i}: ${l}${hOff ? ` (hook format ${(i + hOff) % 10})` : ""}`).join("\n");
   const weeklyAvoid = isWeeklyRun(run) ? await weeklyAvoidPrompt(db, run) : "";
-  const memory = [historyPrompt(history, ex.assets), weeklyAvoid].filter(Boolean).join("\n\n");
+  const customerMemory = await memoryPromptForRun(db, run); // sys_customer_memory (default off) -> "" 
+  const memory = [historyPrompt(history, ex.assets), weeklyAvoid, customerMemory].filter(Boolean).join("\n\n");
   // "Make 5 more like the winner" (Ozzy Ad Coach): planning is seeded from the winning ad.
   const seed = await loadRunSeed(db, run.id, job.payload);
   const basePrompt = `${untrusted("brand-brief", brief)}${memory ? `\n\n${untrusted("brand-history", memory)}` : ""}${seed ? `\n\n${untrusted("winner-seed", seedPrompt(seed))}` : ""}\n\nWrite ${slots.length} static ads, one per slot:\n${slotList}${hOff ? "\n(Hook format per slot is given in brackets above; it overrides the slot-number rule.)" : ""}\n\nAlso return strongestSlot: the slot whose angle is the strongest (it will also become the animated ad).`;

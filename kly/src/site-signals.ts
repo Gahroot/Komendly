@@ -27,7 +27,7 @@ export function detectNewDomain(registered: Date | null, now: Date): LeadSignal 
   if (!registered || registered > now) return null;
   const age = Math.floor((now.getTime() - registered.getTime()) / DAY);
   if (age > NEW_DOMAIN_DAYS) return null;
-  return mk("new_website", `domain registered ${registered.toISOString().slice(0, 10)} (${age} days ago, RDAP)`, "rdap", `I noticed your website is new (the domain was registered in ${monthYear(registered)}).`, now);
+  return mk("new_website", `domain registered ${registered.toISOString().slice(0, 10)} (${age} days ago, RDAP)`, "rdap", `I noticed your domain was registered in ${monthYear(registered)}.`, now);
 }
 
 interface ShopifyProduct { created_at?: string; published_at?: string; updated_at?: string }
@@ -42,10 +42,10 @@ export function detectNewShopify(json: unknown, now: Date): LeadSignal | null {
   const age = Math.floor((now.getTime() - oldest.getTime()) / DAY);
   // /products.json is paginated newest-first by default (<= 30 items): only trust "new" when the page is not full.
   if (age > NEW_SHOPIFY_DAYS || products.length >= 30) return null;
-  return mk("new_shopify_store", `Shopify store; its ${products.length} products were all created within ${age} days (oldest ${oldest.toISOString().slice(0, 10)})`, "shopify_products_json", `I noticed your Shopify store is new (your first products were added in ${monthYear(oldest)}).`, now);
+  return mk("new_shopify_store", `Shopify store; its ${products.length} products were all created within ${age} days (oldest ${oldest.toISOString().slice(0, 10)})`, "shopify_products_json", `I noticed the products in your Shopify store were all added since ${monthYear(oldest)}.`, now);
 }
 
-const OPENING_RE = /\b(grand opening|now open|we(?:'| a)?re (?:now )?open|just opened|opening soon|recently opened|newly opened)\b/i;
+const OPENING_RE = /\b(grand opening|now open|we(?:'| a)?re now open|just opened|opening soon|recently opened|newly opened)\b/i;
 const LOCATION_RE = /\b(new location|second location|now (?:open )?in [A-Z][a-z]+|we(?:'| ha)?ve moved|our newest location|now serving)\b/i;
 const NEWSITE_RE = /\b(new website|website (?:is )?(?:coming soon|under construction)|just launched)\b/i;
 
@@ -68,7 +68,7 @@ export function detectSitemapRefresh(xml: string, now: Date): LeadSignal | null 
   const recent = dates.filter((d) => now.getTime() - d.getTime() <= 21 * DAY && d <= now);
   if (recent.length < 5 || recent.length < dates.length / 2) return null;
   const newest = new Date(Math.max(...recent.map((d) => d.getTime())));
-  return mk("site_refresh", `${recent.length} of ${dates.length} sitemap pages modified in the last 21 days (newest ${newest.toISOString().slice(0, 10)})`, "sitemap_lastmod", "I noticed your website was recently updated.", now);
+  return mk("site_refresh", `${recent.length} of ${dates.length} sitemap pages modified in the last 21 days (newest ${newest.toISOString().slice(0, 10)})`, "sitemap_lastmod", null, now);
 }
 
 /** robots.txt (for `*` and KomendlyBot): may `path` be fetched? No robots / unreadable = allowed. Simple prefix rules. */

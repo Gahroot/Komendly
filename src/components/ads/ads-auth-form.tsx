@@ -31,7 +31,7 @@ export function AdsAuthForm({ mode, referrerName }: { mode: "signup" | "login"; 
       router.push(next);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : "That didn't work. Check your details and try again.");
       setBusy(false);
     }
   }
@@ -50,8 +50,8 @@ export function AdsAuthForm({ mode, referrerName }: { mode: "signup" | "login"; 
         <form onSubmit={submit} className="space-y-4">
           {isSignup && (
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input id="name" required autoComplete="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Label htmlFor="name">Name <span className="font-normal text-muted-foreground">(optional)</span></Label>
+              <Input id="name" autoComplete="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
           )}
           <div className="space-y-2">

@@ -74,8 +74,8 @@ describe("adlib priority", () => {
       },
     };
     const out = await adlibSource.find("roofers", "Denver, CO", { db, rt: { now: () => now.getTime() } } as never);
-    expect(queries[0]).toMatchObject({ source: "adlib", niche: "roofers", cityKey: "denver", state: "CO", usedAt: null });
-    expect(queries[1]).toMatchObject({ source: "adlib", niche: "roofers", usedAt: null, id: { notIn: ["adlib:1"] } });
+    expect(queries[0]).toMatchObject({ OR: [{ source: "adlib" }, { source: { startsWith: "signal:" } }], niche: "roofers", cityKey: "denver", state: "CO", usedAt: null });
+    expect(queries[1]).toMatchObject({ OR: [{ source: "adlib" }, { source: { startsWith: "signal:" } }], niche: "roofers", usedAt: null, id: { notIn: ["adlib:1"] } });
     expect(queries[1]).not.toHaveProperty("cityKey");
     expect(out.map((c) => [c.website, c.city, c.source])).toEqual([["https://a.com/", "Denver", "adlib"], ["https://b.com/", "Austin", "adlib"]]);
     expect(used).toEqual([["adlib:1", "adlib:2"]]);

@@ -1,0 +1,65 @@
+{
+  "verifiedOn": "2026-11-26",
+  "competitors": [
+    {
+      "slug": "creatopy",
+      "name": "Creatopy",
+      "site": "https://www.creatopy.com/",
+      "summary": "A design-and-production platform for ads: an ad studio with templates, AI generation, resizing and publishing to ad networks.",
+      "facts": [
+        "Pro plan listed at $39 a month billed monthly, for one seat; includes an Ad Studio and Canvas with 5,000+ templates and 5 Brand Kits.",
+        "Ultra plan listed at $99 a month billed monthly; adds ad serving to 25+ networks, publishing to Meta and Google Ads, AI translate and automated A/B testing.",
+        "Team plan listed at $59 per seat a month billed monthly, for 2 to 10 people.",
+        "Paid plans show a 7-day free trial with no card required."
+      ],
+      "sources": [
+        "https://www.creatopy.com/pricing/"
+      ]
+    },
+    {
+      "slug": "madgicx",
+      "name": "Madgicx",
+      "site": "https://madgicx.com/",
+      "summary": "A Meta-ads optimisation and analytics platform with AI features, priced by your monthly ad spend.",
+      "facts": [
+        "Madgicx Pro Complete is priced by monthly ad spend: from $45 a month (spend under $1K, billed monthly) to $99 a month ($1K to $2.5K); higher tiers go up to $329 a month for $20K to $30K spend, and above $30K the price is shown inside the app.",
+        "Quarterly and annual billing lower the monthly price shown.",
+        "Tracking Pro, a server-to-server tracking add-on, is listed at $49 a month.",
+        "A 7-day free trial is offered."
+      ],
+      "sources": [
+        "https://madgicx.com/pricing"
+      ]
+    },
+    {
+      "slug": "predis-ai",
+      "name": "Predis.ai",
+      "site": "https://predis.ai/",
+      "summary": "An AI tool for social posts, video and ad creatives, with scheduling and publishing, sold on credits.",
+      "facts": [
+        "Advertises making ads, videos and UGC \"for less than $1/day\" and a 3-day free trial; you are not charged until the trial ends.",
+        "Plans are credit-based; one higher plan lists 10,000 credits a month, described as about 2,500 images or 250 videos.",
+        "Can publish to Facebook, Instagram, LinkedIn, TikTok, Pinterest, Google Business Profile and X.",
+        "Its pricing page showed a Black Friday offer of 50% off annual plans on the verified date; promotions end, so check the page."
+      ],
+      "sources": [
+        "https://predis.ai/pricing/"
+      ]
+    },
+    {
+      "slug": "adcreative-ai",
+      "name": "AdCreative.ai",
+      "site": "https://www.adcreative.ai/",
+      "summary": "An AI ad-creative platform covering image ads, video ads, ad copy, A/B testing and creative insights.",
+      "facts": [
+        "Lists generating ad creatives, ad copy, UGC-style and product videos, social posts and buyer personas.",
+        "Lists creative insights and competitor insights, and offers a \"Try For Free\" call to action.",
+        "States it has been used by 4.2M+ businesses and is trained on $35B+ of ad spend data (the vendor's own claims, not verified by us).",
+        "Its home page did not show plan prices when we checked; see the vendor's site for current pricing."
+      ],
+      "sources": [
+        "https://www.adcreative.ai/"
+      ]
+    }
+  ]
+}

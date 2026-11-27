@@ -4,6 +4,7 @@
 import { COPY_STYLE_GUIDE } from "../../src/lib/ads/outbound/copy";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
+import { getRelevantKnowledge, knowledgeForPrompt } from "../../src/lib/optimizer/knowledge";
 import { ask, type AIProvider } from "./ai";
 import { checkArmContent, DIMENSIONS, MAX_ACTIVE, MAX_ACTIVE_SEGMENTS, posteriorMean } from "./arms";
 import type { Db } from "./db";
@@ -88,9 +89,11 @@ export async function strategistTick(db: Db, provider: AIProvider | null, now: D
   const copy = arms.filter((a) => a.dimension !== "segment").map((a) => `${stat(a)} :: ${JSON.stringify(a.content).slice(0, 300)}`);
   const segs = arms.filter((a) => a.dimension === "segment").sort((a, b) => posteriorMean(b) - posteriorMean(a) || a.key.localeCompare(b.key)).slice(0, 25).map(stat);
   const replies = await db.outboundSend.findMany({ where: { replied: true, replySnippet: { not: null } }, orderBy: { sentAt: "desc" }, take: 15, select: { replySnippet: true, lead: { select: { replyIntent: true, niche: true } } } });
+  // Collective intelligence (src/lib/optimizer/knowledge.ts): measured/assumed findings from other subsystems. Never blocks the tick.
+  const known = knowledgeForPrompt(await getRelevantKnowledge(db as never, "cold email subject body reply segment niche offer conversion", { limit: 6 }));
   const r = await ask(provider, ProposalSchema, {
     system: SYSTEM,
-    prompt: [`Copy/angle arms:\n${copy.join("\n")}`, `Top segments:\n${segs.join("\n")}`, `Recent replies:\n${replies.map((x) => `[${x.lead.replyIntent ?? "?"} ${x.lead.niche}] ${(x.replySnippet ?? "").slice(0, 200)}`).join("\n") || "(none yet)"}`].join("\n\n"),
+    prompt: [`Copy/angle arms:\n${copy.join("\n")}`, `Top segments:\n${segs.join("\n")}`, `Recent replies:\n${replies.map((x) => `[${x.lead.replyIntent ?? "?"} ${x.lead.niche}] ${(x.replySnippet ?? "").slice(0, 200)}`).join("\n") || "(none yet)"}`, ...(known ? [known] : [])].join("\n\n"),
     reasoning: "medium",
   });
   await addCost(db, null, r.costMicros, now);

@@ -19,8 +19,10 @@ const COPY = {
 } as const;
 
 /** First screen: sky, headline, spell bar. Everything needed to convert is above the fold. */
-export function StudioHero({ signedIn, variant }: { signedIn: boolean; variant: string }) {
-  const copy = variant === "companion" ? COPY.companion : COPY.control;
+export function StudioHero({ signedIn, variant, offer = null }: { signedIn: boolean; variant: string; offer?: Record<string, string> | null }) {
+  const base = variant === "companion" ? COPY.companion : COPY.control;
+  // Offer experiment (src/lib/offer-intel): pre-approved, linted copy only; null = control.
+  const copy = { title: offer?.headline ?? base.title, sub: offer?.sub ?? base.sub };
   return (
     <section className="relative isolate min-h-[100svh] overflow-hidden pb-40 sm:pb-48" aria-labelledby="hero-title">
       <StudioParallax className="absolute inset-0">

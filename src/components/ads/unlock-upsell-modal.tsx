@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { AUTOPILOT_FIRST_MONTH_LINE, AUTOPILOT_GUARANTEE_LINE, AUTOPILOT_LAUNCH_NOTE, AD_SPEND_LINE, DIY_STEP_DOWN, HERO_INCLUDES, NO_GUARANTEE_LINE, PUBLIC_OFFER } from "@/lib/ads/public-offer";
 import { postOfferEvent } from "@/lib/ads/offer-client";
 import { dismissedInSession, dismissInSession, firstInSession, noopSubscribe } from "@/lib/ads/offer-session";
+import { convertOffer, useExperiment } from "@/components/experiments/use-experiment";
 import { AUTOPILOT_FIRST_MONTH_CENTS, AUTOPILOT_LAUNCH, LAUNCH_QUARTER } from "@/lib/ads/billing-config";
 
 const PLACEMENT = "unlock_upsell";
@@ -27,13 +28,18 @@ export function UnlockUpsellModal({ runId, spotsLeft, stepDownOpen }: { runId: s
   const justBought = params.get("bought") === "unlock_pack";
   const dismissKey = `unlock_upsell:${runId}`;
   const dismissed = useSyncExternalStore(subscribeNone, () => dismissedInSession(dismissKey), () => true);
+  // Offer experiments (copy only; control = today's copy). Wait for the answer so the text never flips.
+  const framing = useExperiment("upsell_first_month_framing", false);
+  const lead = useExperiment("upsell_lead_outcome_vs_effort", false);
+  const ready = framing.ready && lead.ready;
   const [phase, setPhase] = useState<"offer" | "stepdown" | "closed">("offer");
   const wanted = (justBought || fromEmail) && (fromEmail || !dismissed);
-  const open = wanted && phase !== "closed";
+  const open = wanted && phase !== "closed" && ready;
 
   useEffect(() => {
     if (!open || phase !== "offer" || !firstInSession(`unlock_upsell_shown:${runId}`)) return;
     postOfferEvent("upsell_shown", { placement: PLACEMENT, offer: AUTOPILOT_LAUNCH.key, runId });
+    for (const k of ["upsell_first_month_framing", "upsell_lead_outcome_vs_effort"]) void fetch("/api/experiments", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ type: "exposure", key: k }), keepalive: true }).catch(() => undefined);
   }, [open, phase, runId]);
 
   function notNow() {
@@ -54,18 +60,18 @@ export function UnlockUpsellModal({ runId, spotsLeft, stepDownOpen }: { runId: s
       <DialogContent className="max-w-md">
         {phase === "offer" ? (
           <>
-            <DialogTitle>Want us to put these live in your Facebook for you?</DialogTitle>
+            <DialogTitle>{lead.variant?.payload?.title ?? "Want us to put these live in your Facebook for you?"}</DialogTitle>
             <DialogDescription>
-              Your pack is unlocked. Growth Autopilot is done for you: {HERO_INCLUDES}.
+              {lead.variant?.payload?.lead ?? `Your pack is unlocked. Growth Autopilot is done for you: ${HERO_INCLUDES}.`}
             </DialogDescription>
             <div className="rounded-xl bg-primary/10 px-4 py-3">
-              <p className="text-2xl font-semibold">{AUTOPILOT_FIRST_MONTH_LINE}</p>
+              <p className="text-2xl font-semibold">{framing.variant?.payload?.firstMonth ?? AUTOPILOT_FIRST_MONTH_LINE}</p>
               <p className="text-sm text-muted-foreground">{AUTOPILOT_LAUNCH_NOTE}</p>
               {spotsLeft !== null && <p className="mt-1 text-sm font-medium">{spotsLeft} of {PUBLIC_OFFER.foundingSpots} founding spots left.</p>}
             </div>
             <p className="flex items-start gap-1.5 text-xs text-muted-foreground"><ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden />{AUTOPILOT_GUARANTEE_LINE}</p>
             <p className="text-xs text-muted-foreground">{AD_SPEND_LINE} {NO_GUARANTEE_LINE}</p>
-            <div onClickCapture={() => postOfferEvent("offer_clicked", { placement: PLACEMENT, offer: AUTOPILOT_LAUNCH.key, runId })}>
+            <div onClickCapture={() => { postOfferEvent("offer_clicked", { placement: PLACEMENT, offer: AUTOPILOT_LAUNCH.key, runId }); convertOffer("offer_clicked"); }}>
               <BillingActionButton endpoint="/api/ads-billing/checkout" body={{ kind: "offer", key: AUTOPILOT_LAUNCH.key, placement: PLACEMENT }} label={`Start for $${AUTOPILOT_FIRST_MONTH_CENTS / 100}`} />
             </div>
             <Button type="button" variant="ghost" className="w-full text-muted-foreground" onClick={notNow}>Not now</Button>

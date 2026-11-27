@@ -2,15 +2,20 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { AdsBrandList } from "@/components/ads/ads-brand-list";
+import { getOrCreateWorkspace } from "@/lib/ads/workspace";
+import { agencyEnabled, isAgencyWorkspace } from "@/lib/customer-intel/agency-server";
 import { AdsNav } from "@/components/ads/ads-nav";
 
 export const metadata = { title: "Brand profiles", robots: { index: false, follow: false } };
 
 export default async function AdsBrandsPage() {
-  if (!(await getCurrentUser())) redirect(`/ads/login?next=${encodeURIComponent("/ads/brands")}`);
+  const user = await getCurrentUser();
+  if (!user) redirect(`/ads/login?next=${encodeURIComponent("/ads/brands")}`);
+  const ws = await getOrCreateWorkspace(user);
+  const agency = isAgencyWorkspace(ws) && (await agencyEnabled());
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <AdsNav signedIn />
+      <AdsNav signedIn extraLinks={agency ? [{ href: "/ads/agency", label: "Your clients" }] : []} />
       <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">Brand profiles</h1>

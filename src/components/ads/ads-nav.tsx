@@ -20,8 +20,9 @@ const SIGNED_OUT: AdsNavLink[] = [
 ];
 const TRY: AdsNavLink = { href: "/ads/signup", label: "Try free" };
 
-export function AdsNav({ signedIn }: { signedIn: boolean }) {
-  const links = signedIn ? SIGNED_IN : SIGNED_OUT;
+export function AdsNav({ signedIn, extraLinks = [] }: { signedIn: boolean; extraLinks?: AdsNavLink[] }) {
+  const base = signedIn ? SIGNED_IN : SIGNED_OUT;
+  const links = extraLinks.length ? [...base.slice(0, 4), ...extraLinks, ...base.slice(4)] : base;
   return (
     <header className="sticky top-0 z-40 border-b bg-background/70 backdrop-blur-xl">
       <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">

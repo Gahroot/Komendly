@@ -7,7 +7,7 @@ const INTERNAL_PATTERNS: readonly RegExp[] = [
   /@(example|tester)\.(com|org|net)$/i,
   /\.test$/i,
 ];
-const INTERNAL_EXACT = ["test@gmail.com", "ngrout71@gmail.com"];
+const INTERNAL_EXACT = ["test@gmail.com", "ngrout71@gmail.com", "hello+funnel-test@getkomendly.com"];
 
 function extraEmails(env: Record<string, string | undefined> = process.env): string[] {
   return (env.INTERNAL_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);

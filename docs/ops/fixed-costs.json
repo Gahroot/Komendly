@@ -1,0 +1,126 @@
+{
+  "_readme": "Owner-editable fixed monthly costs. monthlyCents null = UNKNOWN (never guessed): fill in cents per month (annual bills / 12). The finance page lists every null as 'needs your input'. If env INFRA_MONTHLY_CENTS is set it REPLACES all items with category 'infra' (avoids double counting). Optional per item: outcomeKey ('kly_sends' | 'ad_runs') = measured output in the last 30 days; cost with zero output is listed as a cancel candidate. cancelIfUnused: true = always listed for owner review.",
+  "items": [
+    {
+      "id": "vercel",
+      "name": "Vercel (web hosting)",
+      "category": "infra",
+      "monthlyCents": null,
+      "renewsOn": null,
+      "usedBy": "web app",
+      "note": ""
+    },
+    {
+      "id": "railway",
+      "name": "Railway (engine, kly, blog-engine, their Postgres)",
+      "category": "infra",
+      "monthlyCents": null,
+      "renewsOn": null,
+      "usedBy": "engine, kly, blog-engine",
+      "note": "usage-based; use the last invoice"
+    },
+    {
+      "id": "postgres",
+      "name": "Main Postgres (Neon/Supabase/Railway: confirm which)",
+      "category": "infra",
+      "monthlyCents": null,
+      "renewsOn": null,
+      "usedBy": "everything",
+      "note": "Provider not confirmed in repo"
+    },
+    {
+      "id": "aws-s3",
+      "name": "AWS S3 (ad media)",
+      "category": "infra",
+      "monthlyCents": null,
+      "renewsOn": null,
+      "usedBy": "Website2ads",
+      "note": ""
+    },
+    {
+      "id": "maildoso-100",
+      "name": "Maildoso mailboxes (100 on joinkomendly.com + hellokomendly.com, paused: Spamhaus DBL)",
+      "category": "email",
+      "monthlyCents": null,
+      "renewsOn": null,
+      "usedBy": "kly",
+      "note": "cancel-if-unused candidate while paused",
+      "cancelIfUnused": true
+    },
+    {
+      "id": "maildoso-200",
+      "name": "Maildoso mailboxes (200 warming, ready 26-27 Nov)",
+      "category": "email",
+      "monthlyCents": null,
+      "renewsOn": null,
+      "usedBy": "kly",
+      "note": "",
+      "outcomeKey": "kly_sends"
+    },
+    {
+      "id": "google-workspace",
+      "name": "Google Workspace (ozzy@/hello@getkomendly.com)",
+      "category": "email",
+      "monthlyCents": null,
+      "renewsOn": null,
+      "usedBy": "support + outreach",
+      "note": ""
+    },
+    {
+      "id": "resend",
+      "name": "Resend / transactional email",
+      "category": "email",
+      "monthlyCents": null,
+      "renewsOn": null,
+      "usedBy": "lifecycle emails",
+      "note": ""
+    },
+    {
+      "id": "domains",
+      "name": "Domains (komendly.com, getkomendly.com, joinkomendly.com, hellokomendly.com)",
+      "category": "domains",
+      "monthlyCents": null,
+      "renewsOn": null,
+      "usedBy": "brand + sending",
+      "note": "annual / 12"
+    },
+    {
+      "id": "codex",
+      "name": "Codex / ChatGPT subscription (all AI text)",
+      "category": "ai",
+      "monthlyCents": null,
+      "renewsOn": null,
+      "usedBy": "engine AI provider",
+      "note": "flat fee: AI per-pack cost is an estimate, see engine cost tables",
+      "outcomeKey": "ad_runs"
+    },
+    {
+      "id": "fal",
+      "name": "FAL / media vendors (testimonial videos)",
+      "category": "ai",
+      "monthlyCents": null,
+      "renewsOn": null,
+      "usedBy": "testimonials",
+      "note": "usage-based",
+      "outcomeKey": "ad_runs"
+    },
+    {
+      "id": "stripe",
+      "name": "Stripe fees",
+      "category": "payments",
+      "monthlyCents": null,
+      "renewsOn": null,
+      "usedBy": "billing",
+      "note": "per-transaction, not fixed: usually ~2.9% + 30c"
+    },
+    {
+      "id": "pinterest-tools",
+      "name": "Other tools (Zapier, Pinterest, analytics, Media Master)",
+      "category": "tools",
+      "monthlyCents": null,
+      "renewsOn": null,
+      "usedBy": "growth",
+      "note": "list each when known"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildScript, hookLibrary } from "../../../src/lib/growth/reels-core";
-import { reelFrames, reelKey, reelsCycle } from "./reels";
+import { SAFE_BOTTOM, SAFE_TOP, reelFrames, reelKey, reelVideoArgs, reelsCycle } from "./reels";
 
 describe("reels render + cycle", () => {
   it("frames: one per scene, caption + AI label burned in, 1080x1920", () => {
@@ -13,6 +13,31 @@ describe("reels render + cycle", () => {
     }
     expect(f[0]!.svg).toContain("Roofers:");
     expect(reelKey("a", "silent.mp4")).toBe("reels/a/silent.mp4");
+  });
+
+  it("frames: every text/image sits inside the platform safe zone, brand labels visible, end card has the URL", () => {
+    for (const cta of [true, false]) for (const h of hookLibrary()) {
+      const f = reelFrames(buildScript(h, cta), { "ozzy-classic-happy.png": "data:image/png;base64,AA", poster: "data:image/jpeg;base64,AA" });
+      for (const fr of f) {
+        for (const m of fr.svg.matchAll(/<text x="[\d.]+" y="([\d.]+)"/g)) { const y = Number(m[1]); expect(y).toBeGreaterThan(SAFE_TOP); expect(y).toBeLessThanOrEqual(SAFE_BOTTOM); }
+        for (const m of fr.svg.matchAll(/<image [^>]*y="([\d.]+)" width="[\d.]+" height="([\d.]+)"/g)) { expect(Number(m[1])).toBeGreaterThanOrEqual(SAFE_TOP); expect(Number(m[1]) + Number(m[2])).toBeLessThanOrEqual(SAFE_BOTTOM); }
+        expect(fr.svg).not.toMatch(/hormozi/i);
+      }
+      const last = f[f.length - 1]!.svg;
+      expect(last).toContain("Made by Ozzy, AI");
+      expect(last).toContain("From Komendly");
+      expect(last).toContain("Free ads from your"); expect(last).toContain("website: komendly.com");
+      expect(f[0]!.svg).toContain("From Komendly");
+    }
+  });
+  it("ffmpeg args: 30fps yuv420p faststart H.264 + a silent AAC track mapped, length = scenes minus fades", () => {
+    const a = reelVideoArgs(["a.png", "b.png", "c.png"], [3, 4, 2], "o.mp4");
+    expect(a).toContain("anullsrc=r=44100:cl=stereo");
+    expect(a).toEqual(expect.arrayContaining(["-c:a", "aac", "-pix_fmt", "yuv420p", "+faststart", "libx264"]));
+    expect(a[a.indexOf("-t") + 1]).toBe("8.20");
+    expect(a[a.indexOf("-map", a.indexOf("-map") + 1) + 1]).toBe("3:a");
+    expect(a.join(" ")).toContain("zoompan");
+    expect(a).not.toContain("-an");
   });
 
   const mkDb = (spend = 0, rejected = false) => {

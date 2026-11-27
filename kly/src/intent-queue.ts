@@ -178,5 +178,5 @@ export async function runIntentDiscovery(o: { fetch: IntentFetch; file: string; 
 /** AdsEvent props for an opportunity (name "intent_opportunity"); the caller writes it if it has a DB. */
 export const INTENT_EVENT = "intent_opportunity" as const;
 export function intentEventProps(o: IntentOpportunity): Record<string, unknown> {
-  return { id: o.id, source: o.source, url: o.url, title: o.title, intentScore: o.intentScore, matched: o.matched, replyDraft: o.replyDraft };
+  return { id: o.id, source: o.source, url: o.url, title: o.title, text: o.text, score: o.intentScore, intentScore: o.intentScore, matched: o.matched, draft: o.replyDraft, replyDraft: o.replyDraft, postedAt: o.postedAt, status: "new" };
 }

@@ -1,5 +1,7 @@
 // Kly tick orchestration. Every step is isolated (try/catch + log); ticks never overlap; all state that matters lives
 // in Postgres (settings, arms, decisions, leads), so a restart just resumes. In-memory state is only for timing/health.
+import { WARM_SOURCE } from "./adlib";
+import { signalTick, type SignalRuntime } from "./signal-tick";
 import { seasonalPriority } from "./seasonal";
 import { audienceOf } from "./targets";
 import type { Db } from "./db";
@@ -122,6 +124,8 @@ export interface LoopState {
   governor?: string | null;
   /** Growth systems run by Kly (review_gifts, new_business): last cycle time + CT cursor. */
   growth: { lastAt: Partial<Record<KlySystem, number>>; newBiz: NewBizRuntime };
+  /** Intent-signal scans (signal-tick.ts): last run times; both default OFF (env). */
+  signals?: SignalRuntime;
 }
 
 export function newLoopState(): LoopState {
@@ -195,7 +199,7 @@ export function pickCities(cities: readonly string[], n: number, rng: Rng): stri
  * places' cities ("City, ST"). Null when none wait or no arm matches the niche.
  */
 export async function adlibSegment(db: Db, rng: Rng): Promise<{ arm: Awaited<ReturnType<typeof chooseArm>> & object; cities: string[] } | null> {
-  const groups = await db.klyPlace.groupBy({ by: ["niche"], where: { source: "adlib", usedAt: null }, _count: { _all: true } });
+  const groups = await db.klyPlace.groupBy({ by: ["niche"], where: { ...WARM_SOURCE, usedAt: null }, _count: { _all: true } });
   if (!groups.length) return null;
   const arms = await db.klyArm.findMany({ where: { dimension: "segment", status: { not: "retired" } } });
   const byNiche = new Map<string, (typeof arms)[number]>();
@@ -209,7 +213,7 @@ export async function adlibSegment(db: Db, rng: Rng): Promise<{ arm: Awaited<Ret
   // Mostly the biggest backlog, sometimes the next ones, so one niche can't starve the rest.
   const pick = ranked[Math.min(ranked.length - 1, Math.floor(rng() * rng() * Math.min(ranked.length, 4)))];
   if (!pick) return null;
-  const places = await db.klyPlace.findMany({ where: { source: "adlib", usedAt: null, niche: pick.niche }, select: { city: true, state: true }, orderBy: [{ confidence: "desc" }, { id: "asc" }], take: 60 });
+  const places = await db.klyPlace.findMany({ where: { ...WARM_SOURCE, usedAt: null, niche: pick.niche }, select: { city: true, state: true }, orderBy: [{ confidence: "desc" }, { id: "asc" }], take: 60 });
   const cities = pickCities([...new Set(places.map((p) => `${p.city}, ${p.state}`))], CITIES_PER_DISCOVERY, rng);
   return cities.length ? { arm: byNiche.get(pick.niche)!, cities } : null;
 }
@@ -409,6 +413,12 @@ export async function runTick(d: LoopDeps, state: LoopState): Promise<void> {
       if ("posted" in r) log("info", "kly social", r);
     });
   }
+  // Intent signals (default OFF: KLY_SIGNALS_ENABLED=1 / KLY_INTENT_ENABLED=1). Read-only public fetches; never sends.
+  await step(state, "signals", async () => {
+    state.signals ??= { siteAt: 0, intentAt: 0 };
+    const r = await signalTick({ db, env, now, rt: state.signals });
+    if (r.site || r.intent) log("info", "kly signals", { ...r });
+  });
   await step(state, "autoscale", async () => {
     state.dailyVolume = await autoscaleTick(db, s, now);
   });

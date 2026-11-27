@@ -1,0 +1,239 @@
+{
+  "_readme": "Obligations registry. dueDate/lastDone are YYYY-MM-DD; null = unknown (needs your input), never guessed. recurrence: once|weekly|monthly|quarterly|annual. trigger 'revenue' = only tracked once there is revenue. needsProfessional = get an accountant/lawyer: this system gives no legal or tax advice. Edit lastDone when you complete one.",
+  "items": [
+    {
+      "id": "sales-tax-nexus",
+      "title": "Sales tax / nexus review (which states, registration thresholds)",
+      "category": "tax",
+      "owner": "professional",
+      "recurrence": "annual",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": true,
+      "note": "Start once there is revenue. Needs a tax professional: this system gives no tax advice.",
+      "trigger": "revenue"
+    },
+    {
+      "id": "stripe-tax-settings",
+      "title": "Review Stripe Tax settings (registrations, product tax codes, invoices)",
+      "category": "tax",
+      "owner": "owner",
+      "recurrence": "annual",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": false,
+      "note": "Check in the Stripe dashboard once first payments exist; confirm with the tax professional.",
+      "trigger": "revenue"
+    },
+    {
+      "id": "meta-business-verification",
+      "title": "Meta business verification",
+      "category": "platform",
+      "owner": "owner",
+      "recurrence": "once",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": false,
+      "note": "Required for Meta app review / one-click publishing."
+    },
+    {
+      "id": "meta-app-review",
+      "title": "Meta app review (ads_management/ads_read/leads_retrieval) and approval follow-up",
+      "category": "platform",
+      "owner": "owner",
+      "recurrence": "once",
+      "dueDate": "2026-12-09",
+      "lastDone": null,
+      "needsProfessional": false,
+      "note": "MEMORY: approval expected ~9 Dec 2026 (approximate, Meta controls the date).",
+      "dateApproximate": true
+    },
+    {
+      "id": "chrome-web-store-fee",
+      "title": "Chrome Web Store developer registration ($5 one-time)",
+      "category": "platform",
+      "owner": "owner",
+      "recurrence": "once",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": false,
+      "note": "Needed before publishing packages/komendly-extension."
+    },
+    {
+      "id": "zapier-marketplace",
+      "title": "Zapier app marketplace submission steps",
+      "category": "platform",
+      "owner": "owner",
+      "recurrence": "once",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": false,
+      "note": "Integration exists; finish the public listing steps."
+    },
+    {
+      "id": "jobber-marketplace",
+      "title": "Jobber app marketplace submission steps",
+      "category": "platform",
+      "owner": "owner",
+      "recurrence": "once",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": false,
+      "note": "sys_jobber is live; finish the marketplace listing steps."
+    },
+    {
+      "id": "domain-komendly",
+      "title": "Domain renewal: komendly.com",
+      "category": "renewal",
+      "owner": "owner",
+      "recurrence": "annual",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": false,
+      "note": "Expiry date comes from RDAP (src/lib/ops/infra.ts parseRdapExpiry) once scheduled; enter it here meanwhile."
+    },
+    {
+      "id": "domain-getkomendly",
+      "title": "Domain renewal: getkomendly.com",
+      "category": "renewal",
+      "owner": "owner",
+      "recurrence": "annual",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": false,
+      "note": ""
+    },
+    {
+      "id": "domain-joinkomendly",
+      "title": "Domain renewal: joinkomendly.com (sending domain)",
+      "category": "renewal",
+      "owner": "owner",
+      "recurrence": "annual",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": false,
+      "note": "Spamhaus DBL listed; renew only if kept."
+    },
+    {
+      "id": "domain-hellokomendly",
+      "title": "Domain renewal: hellokomendly.com (sending domain)",
+      "category": "renewal",
+      "owner": "owner",
+      "recurrence": "annual",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": false,
+      "note": "Spamhaus DBL listed; renew only if kept."
+    },
+    {
+      "id": "ssl-certs",
+      "title": "SSL certificate expiry check (Vercel auto-renews; verify custom domains)",
+      "category": "renewal",
+      "owner": "system",
+      "recurrence": "monthly",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": false,
+      "note": "Covered by the infra expiry worker."
+    },
+    {
+      "id": "privacy-tos-review",
+      "title": "Privacy policy and Terms review cadence",
+      "category": "legal",
+      "owner": "owner",
+      "recurrence": "annual",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": true,
+      "note": "Have a lawyer review at least once; re-read after any new data use (e.g. Meta, partners)."
+    },
+    {
+      "id": "can-spam-address",
+      "title": "CAN-SPAM postal address still valid and in every cold email",
+      "category": "compliance",
+      "owner": "owner",
+      "recurrence": "quarterly",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": false,
+      "note": "Only address in use: Kly OUTBOUND_POSTAL_ADDRESS. Confirm it still receives mail. Never use an invented address."
+    },
+    {
+      "id": "gdpr-ccpa-deletions",
+      "title": "Handle GDPR/CCPA deletion and access requests (respond within the legal window)",
+      "category": "compliance",
+      "owner": "owner",
+      "recurrence": "monthly",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": true,
+      "note": "Check the inbox for deletion requests; confirm the legal deadline with a professional."
+    },
+    {
+      "id": "trademark",
+      "title": "Trademark search/registration for 'Komendly'",
+      "category": "legal",
+      "owner": "professional",
+      "recurrence": "once",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": true,
+      "note": "Needs an IP attorney; no filing is made by this system."
+    },
+    {
+      "id": "business-insurance",
+      "title": "Business insurance review (general liability / cyber)",
+      "category": "insurance",
+      "owner": "professional",
+      "recurrence": "annual",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": true,
+      "note": ""
+    },
+    {
+      "id": "llc-annual-report",
+      "title": "LLC annual report / registered agent renewal",
+      "category": "legal",
+      "owner": "professional",
+      "recurrence": "annual",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": true,
+      "note": "State and date unknown: needs the owner and an accountant."
+    },
+    {
+      "id": "accounting-monthly",
+      "title": "Send monthly records pack to the accountant (scripts/ops-export-records.ts)",
+      "category": "accounting",
+      "owner": "owner",
+      "recurrence": "monthly",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": false,
+      "note": "Generated into docs/ops/records/."
+    },
+    {
+      "id": "vendor-inventory-review",
+      "title": "Subscription/vendor inventory review: fill renewal dates, cancel unused (docs/ops/fixed-costs.json)",
+      "category": "vendors",
+      "owner": "owner",
+      "recurrence": "quarterly",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": false,
+      "note": "Finance page lists cancel-if-unused candidates."
+    },
+    {
+      "id": "partner-payouts",
+      "title": "Review and manually pay approved partner commissions (owner approves; nothing is sent automatically)",
+      "category": "partners",
+      "owner": "owner",
+      "recurrence": "monthly",
+      "dueDate": null,
+      "lastDone": null,
+      "needsProfessional": false,
+      "note": "See docs/ops/prd.md manual payout flow."
+    }
+  ]
+}

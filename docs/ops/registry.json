@@ -1,0 +1,282 @@
+[
+  {
+    "area": 1,
+    "slug": "autonomous-operations",
+    "name": "Autonomous operational management",
+    "file": "docs/ops/prd/01-autonomous-operations.md",
+    "capabilities": []
+  },
+  {
+    "area": 2,
+    "slug": "coordination",
+    "name": "Business-wide coordination",
+    "file": "docs/ops/prd/02-coordination.md",
+    "capabilities": [
+      {
+        "id": "coord-contact",
+        "name": "Contact guard (canContact / recordContact / loadContacts)",
+        "status": "experimenting",
+        "code_refs": [
+          "src/lib/ops/control/contact.ts"
+        ]
+      },
+      {
+        "id": "coord-priority",
+        "name": "Constraint-driven priority weights",
+        "status": "operational",
+        "code_refs": [
+          "src/lib/ops/control/coordination.ts"
+        ]
+      },
+      {
+        "id": "coord-contention",
+        "name": "Reels vs pack contention + AI budget throttle proposals",
+        "status": "experimenting",
+        "code_refs": [
+          "src/lib/ops/control/coordination.ts"
+        ]
+      },
+      {
+        "id": "coord-experiments",
+        "name": "Conflicting experiments detector",
+        "status": "operational",
+        "code_refs": [
+          "src/lib/ops/control/coordination.ts"
+        ]
+      },
+      {
+        "id": "coord-decisions",
+        "name": "ops_decision log",
+        "status": "experimenting",
+        "code_refs": [
+          "src/lib/ops/control/memory.ts",
+          "scripts/ops-build-knowledge.ts"
+        ]
+      }
+    ]
+  },
+  {
+    "area": 3,
+    "slug": "support",
+    "name": "Support",
+    "file": "docs/ops/prd/03-support.md",
+    "capabilities": []
+  },
+  {
+    "area": 4,
+    "slug": "finance",
+    "name": "Financial intelligence",
+    "file": "docs/ops/prd/04-finance.md",
+    "capabilities": []
+  },
+  {
+    "area": 5,
+    "slug": "infrastructure",
+    "name": "Infrastructure",
+    "file": "docs/ops/prd/05-infrastructure.md",
+    "capabilities": []
+  },
+  {
+    "area": 6,
+    "slug": "qa",
+    "name": "Quality assurance",
+    "file": "docs/ops/prd/06-qa.md",
+    "capabilities": []
+  },
+  {
+    "area": 7,
+    "slug": "security-risk",
+    "name": "Security, privacy and risk",
+    "file": "docs/ops/prd/07-security-risk.md",
+    "capabilities": []
+  },
+  {
+    "area": 8,
+    "slug": "administration",
+    "name": "Administration",
+    "file": "docs/ops/prd/08-administration.md",
+    "capabilities": []
+  },
+  {
+    "area": 9,
+    "slug": "partner-ops",
+    "name": "Partner operations",
+    "file": "docs/ops/prd/09-partner-ops.md",
+    "capabilities": []
+  },
+  {
+    "area": 10,
+    "slug": "knowledge",
+    "name": "Organizational memory / knowledge",
+    "file": "docs/ops/prd/10-knowledge.md",
+    "capabilities": [
+      {
+        "id": "kn-index",
+        "name": "Knowledge index generator + search",
+        "status": "operational",
+        "code_refs": [
+          "scripts/ops-build-knowledge.ts",
+          "src/lib/ops/control/memory.ts"
+        ]
+      },
+      {
+        "id": "kn-manual",
+        "name": "Operating manual, boundaries, owner dependencies, kill switch docs",
+        "status": "operational",
+        "code_refs": [
+          "docs/ops/operating-manual.md",
+          "docs/ops/boundaries.md",
+          "docs/ops/owner-dependencies.md",
+          "docs/ops/kill-switch.md"
+        ]
+      },
+      {
+        "id": "kn-optimizer",
+        "name": "Ops decisions feed optimiser knowledge",
+        "status": "operational",
+        "code_refs": [
+          "src/lib/optimizer/knowledge.ts"
+        ]
+      }
+    ]
+  },
+  {
+    "area": 11,
+    "slug": "incidents",
+    "name": "Incident management",
+    "file": "docs/ops/prd/11-incidents.md",
+    "capabilities": []
+  },
+  {
+    "area": 12,
+    "slug": "resources",
+    "name": "Resource and capacity",
+    "file": "docs/ops/prd/12-resources.md",
+    "capabilities": [
+      {
+        "id": "res-queue",
+        "name": "Queue depth + contention on ops page",
+        "status": "operational",
+        "code_refs": [
+          "src/app/admin/ads/ops/page.tsx"
+        ]
+      },
+      {
+        "id": "res-ai",
+        "name": "AI calls by system",
+        "status": "awaiting_prerequisite",
+        "code_refs": [
+          "src/lib/ops/control/loader.ts"
+        ]
+      }
+    ]
+  },
+  {
+    "area": 13,
+    "slug": "scalability",
+    "name": "Scalability",
+    "file": "docs/ops/prd/13-scalability.md",
+    "capabilities": [
+      {
+        "id": "scale-model",
+        "name": "Capacity model 10/50/200",
+        "status": "operational",
+        "code_refs": [
+          "src/lib/ops/control/capacity.ts"
+        ]
+      }
+    ]
+  },
+  {
+    "area": 14,
+    "slug": "process-improvement",
+    "name": "Process improvement",
+    "file": "docs/ops/prd/14-process-improvement.md",
+    "capabilities": []
+  },
+  {
+    "area": 15,
+    "slug": "accountability",
+    "name": "System accountability",
+    "file": "docs/ops/prd/15-accountability.md",
+    "capabilities": [
+      {
+        "id": "acc-ledger",
+        "name": "System accountability ledger + system_status snapshot",
+        "status": "awaiting_prerequisite",
+        "code_refs": [
+          "src/lib/ops/control/ledger.ts",
+          "src/lib/ops/control/status.ts",
+          "src/lib/ops/control/inventory.ts",
+          "engine/src/ops/control.ts"
+        ]
+      },
+      {
+        "id": "acc-registry",
+        "name": "Registry vs reality cross-check",
+        "status": "operational",
+        "code_refs": [
+          "src/lib/ops/control/ledger.ts"
+        ]
+      },
+      {
+        "id": "acc-page",
+        "name": "/admin/ads/ops owner command center",
+        "status": "operational",
+        "code_refs": [
+          "src/app/admin/ads/ops/page.tsx"
+        ]
+      }
+    ]
+  },
+  {
+    "area": 16,
+    "slug": "owner-independence",
+    "name": "Owner independence",
+    "file": "docs/ops/prd/16-owner-independence.md",
+    "capabilities": [
+      {
+        "id": "own-stop",
+        "name": "Emergency stop / resume",
+        "status": "experimenting",
+        "code_refs": [
+          "src/app/api/admin/ops/emergency-stop/route.ts",
+          "src/lib/ops/control/emergency.ts"
+        ]
+      },
+      {
+        "id": "own-brief",
+        "name": "Weekly owner brief",
+        "status": "awaiting_prerequisite",
+        "code_refs": [
+          "src/lib/ops/control/brief.ts",
+          "engine/src/ops/control.ts"
+        ]
+      },
+      {
+        "id": "own-deps",
+        "name": "Owner dependency register",
+        "status": "operational",
+        "code_refs": [
+          "docs/ops/owner-dependencies.md"
+        ]
+      }
+    ]
+  },
+  {
+    "area": 17,
+    "slug": "operational-intelligence",
+    "name": "Operational intelligence",
+    "file": "docs/ops/prd/17-operational-intelligence.md",
+    "capabilities": [
+      {
+        "id": "oi-page",
+        "name": "Ops command center (9 questions)",
+        "status": "operational",
+        "code_refs": [
+          "src/app/admin/ads/ops/page.tsx"
+        ]
+      }
+    ]
+  }
+]

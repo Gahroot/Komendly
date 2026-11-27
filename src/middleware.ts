@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FBC_COOKIE, FIRST_TOUCH_COOKIE, FIRST_TOUCH_MAX_AGE, LAST_TOUCH_COOKIE, firstTouchFromUrl, serializeFirstTouch } from "@/lib/analytics/first-touch";
 import { ROUTE_HEADER, isRefusedForApiKey, parseBearer } from "@/lib/agent-keys/policy";
 import { assistantTouchUrl } from "@/lib/oauth/assistant-touch";
+import { VISITOR_COOKIE } from "@/lib/offer-intel/cookie";
 import { ANON_ID_COOKIE, EXP_COOKIE, EXP_COOKIE_MAX_AGE, applyOverride, completeAssignments, parseAssignments, serializeAssignments } from "@/lib/analytics/experiments";
 
 /** Give every page visitor a stable anon id + A/B assignments, visible to this same request's server render. */
@@ -19,12 +20,15 @@ function withExperiments(request: NextRequest): NextResponse {
   // The OAuth consent page counts as an ai_assistant touch (ChatGPT/Claude opened it), so the sign-up after it is traced.
   const touch = firstTouchFromUrl(assistantTouchUrl(request.nextUrl), new Date(), request.headers.get("referer"));
   const firstTouch = request.cookies.has(FIRST_TOUCH_COOKIE) ? null : touch;
-  if (!isNew && serialized === before && !touch) return NextResponse.next();
+  if (!isNew && serialized === before && !touch && request.cookies.has(VISITOR_COOKIE)) return NextResponse.next();
   request.cookies.set(ANON_ID_COOKIE, anonId);
+  // Offer experiments: a readable first-party visitor id (same value as the anon id) so client code can post exposures.
+  request.cookies.set(VISITOR_COOKIE, anonId);
   request.cookies.set(EXP_COOKIE, serialized);
   const res = NextResponse.next({ request: { headers: request.headers } });
   const opts = { path: "/", maxAge: EXP_COOKIE_MAX_AGE, sameSite: "lax" as const, secure: process.env.NODE_ENV === "production" };
   res.cookies.set(ANON_ID_COOKIE, anonId, { ...opts, httpOnly: true });
+  res.cookies.set(VISITOR_COOKIE, anonId, opts);
   res.cookies.set(EXP_COOKIE, serialized, opts);
   if (firstTouch) res.cookies.set(FIRST_TOUCH_COOKIE, serializeFirstTouch(firstTouch), { ...opts, maxAge: FIRST_TOUCH_MAX_AGE, httpOnly: true });
   if (touch) res.cookies.set(LAST_TOUCH_COOKIE, serializeFirstTouch(touch), { ...opts, maxAge: FIRST_TOUCH_MAX_AGE, httpOnly: true });
@@ -38,6 +42,7 @@ const publicRoutes = ["/", "/testimonials", "/login", "/register", "/pricing", "
 
 // Routes that start with these prefixes are public
 const publicPrefixes = [
+  "/api/experiments",      // Offer experiments: assign + exposure/conversion events (cookie kmd_vid, flag sys_offer_intel)
   "/blog",                 // Blog pages, hubs and /blog/feed.xml (RSS)
   "/api/auth/",
   "/api/stripe/webhooks",  // Stripe webhooks must be public
@@ -57,6 +62,7 @@ const publicPrefixes = [
   "/u/",                   // Kly short unsubscribe link (same as /api/outbound/unsubscribe)
   "/api/ads/gift-public/", // Gift pack page beacon + token-checked ad images (public /gift/<token>)
   "/api/reels/",          // Ozzy reels: public video redirect for Meta to pull; queue route checks its own bearer token
+  "/api/intent/",         // Media Master agent: intent opportunity queue; the route checks its own bearer token (INTENT_AGENT_TOKEN)
   "/api/ad-of-the-week/",  // Public images of consented ads only (Ad of the week, /ad-examples)
   "/api/ads-billing/webhook", // Stripe webhook for ads billing (signature-verified)
   "/api/meta-webhooks/",   // Meta leadgen webhook (X-Hub-Signature-256 verified; GET verify-token handshake)

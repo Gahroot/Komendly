@@ -42,6 +42,13 @@ COPY src/lib/ads/coach/table.ts src/lib/ads/coach/table.ts
 COPY src/lib/ads/coach/assess.ts src/lib/ads/coach/assess.ts
 COPY src/lib/ads/coach/match.ts src/lib/ads/coach/match.ts
 COPY src/lib/growth/systems.ts src/lib/growth/systems.ts
+COPY src/lib/exec/ src/lib/exec/
+COPY src/lib/ops/finance/authority.ts src/lib/ops/finance/authority.ts
+COPY src/lib/internal-email.ts src/lib/internal-email.ts
+COPY src/lib/revenue/experiments.ts src/lib/revenue/experiments.ts
+COPY src/lib/revenue/economics.ts src/lib/revenue/economics.ts
+COPY src/lib/revenue/constraints.ts src/lib/revenue/constraints.ts
+COPY src/lib/revenue/snapshot.ts src/lib/revenue/snapshot.ts
 COPY src/lib/growth/reels-core.ts src/lib/growth/reels-core.ts
 COPY src/lib/growth/reels-learning.ts src/lib/growth/reels-learning.ts
 COPY src/lib/kly/social-core.ts src/lib/kly/social-core.ts
@@ -50,7 +57,11 @@ COPY src/lib/shopify/store-data.ts src/lib/shopify/store-data.ts
 COPY src/lib/kly/review-video.ts src/lib/kly/review-video.ts
 COPY src/lib/growth/checkout-recovery.ts src/lib/growth/checkout-recovery.ts
 COPY src/lib/growth/winback.ts src/lib/growth/winback.ts
+COPY src/lib/offer-intel/ src/lib/offer-intel/
+COPY src/lib/customer-intel/ src/lib/customer-intel/
 COPY src/lib/growth/proof.ts src/lib/growth/proof.ts
+COPY src/lib/growth/trade-playbooks-data.ts src/lib/growth/trade-playbooks-data.ts
+COPY src/lib/revenue-lifecycle/ src/lib/revenue-lifecycle/
 COPY src/lib/first-video-offer.ts src/lib/first-video-offer.ts
 COPY src/lib/growth/free-tools.ts src/lib/growth/free-tools.ts
 COPY src/lib/growth/industry-examples.ts src/lib/growth/industry-examples.ts
@@ -62,6 +73,12 @@ COPY src/lib/growth/viral-branding.ts src/lib/growth/viral-branding.ts
 COPY src/lib/growth/ad-watch.ts src/lib/growth/ad-watch.ts
 COPY src/lib/ads/outbound/copy.ts src/lib/ads/outbound/copy.ts
 COPY src/lib/growth/review-gate.ts src/lib/growth/review-gate.ts
+COPY src/lib/growth/ecosystem.ts src/lib/growth/ecosystem.ts
+COPY src/lib/optimizer/ src/lib/optimizer/
+COPY src/lib/ops/control/ src/lib/ops/control/
+COPY src/lib/exec/ src/lib/exec/
+COPY src/lib/product-intel/ src/lib/product-intel/
+COPY src/lib/growth/organic/compare.ts src/lib/growth/organic/compare.ts
 COPY src/lib/growth/adlib-scan.ts src/lib/growth/adlib-scan.ts
 COPY src/lib/growth/adlib-report.ts src/lib/growth/adlib-report.ts
 COPY src/lib/ads/billing-gates.ts src/lib/ads/billing-gates.ts
@@ -69,6 +86,8 @@ COPY src/lib/ads/results/insights.ts src/lib/ads/results/insights.ts
 # Ozzy's AI marketing team (prd.md): shared rules, report wording, lead forms/alerts/retention.
 COPY src/lib/ads/team/ src/lib/ads/team/
 COPY src/lib/ads/leads/ src/lib/ads/leads/
+COPY src/lib/ops/ src/lib/ops/
+COPY docs/ops/fixed-costs.json docs/ops/obligations.json docs/ops/
 COPY src/lib/ads/meta/readiness.ts src/lib/ads/meta/readiness.ts
 COPY src/lib/ads/leads/retention.ts src/lib/ads/leads/retention.ts
 COPY engine/package.json engine/package-lock.json engine/

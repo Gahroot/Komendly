@@ -153,6 +153,9 @@ export async function adlibSignalsFor(db: NonNullable<Parameters<LeadSource["fin
   return out;
 }
 
+/** KlyPlace sources handled by adlibSource: Ad Library advertisers and signal-detected places ("signal:new_shopify" ...). */
+export const WARM_SOURCE: { OR: Array<{ source: string } | { source: { startsWith: string } }> } = { OR: [{ source: "adlib" }, { source: { startsWith: "signal:" } }] };
+
 /** Adlib places handed out per call (fewer than Overture: these are scarce, and unprocessed ones are lost). */
 export const ADLIB_PER_CALL = 25;
 
@@ -164,10 +167,10 @@ export const adlibSource: LeadSource = {
     const { name, state } = cityParts(city);
     const select = { id: true, name: true, website: true, phone: true, city: true, state: true, lon: true, email: true } as const;
     const orderBy = [{ confidence: "desc" as const }, { id: "asc" as const }];
-    const here = await db.klyPlace.findMany({ where: { source: "adlib", niche, cityKey: cityKey(name), ...(state ? { state } : {}), usedAt: null }, orderBy, take: ADLIB_PER_CALL, select });
+    const here = await db.klyPlace.findMany({ where: { ...WARM_SOURCE, niche, cityKey: cityKey(name), ...(state ? { state } : {}), usedAt: null }, orderBy, take: ADLIB_PER_CALL, select });
     // Warm advertisers shouldn't wait for their city's turn: top up from the same niche anywhere.
     const rest = here.length < ADLIB_PER_CALL
-      ? await db.klyPlace.findMany({ where: { source: "adlib", niche, usedAt: null, id: { notIn: here.map((r) => r.id) } }, orderBy, take: ADLIB_PER_CALL - here.length, select })
+      ? await db.klyPlace.findMany({ where: { ...WARM_SOURCE, niche, usedAt: null, id: { notIn: here.map((r) => r.id) } }, orderBy, take: ADLIB_PER_CALL - here.length, select })
       : [];
     const rows = [...here, ...rest];
     if (rows.length) await db.klyPlace.updateMany({ where: { id: { in: rows.map((r) => r.id) } }, data: { usedAt: new Date(ctx.rt.now()) } });

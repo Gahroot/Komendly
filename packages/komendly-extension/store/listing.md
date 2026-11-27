@@ -40,6 +40,7 @@ Komendly is not affiliated with, endorsed by or sponsored by Meta. Facebook, Ins
 - Screenshot 1 (1280x800): `store/screenshot-1-ad-library-1280x800.png`
 - Screenshot 2 (1280x800): `store/screenshot-2-popup-1280x800.png`
 - Small promo tile (440x280): `store/promo-tile-440x280.png`
+- Marquee (1400x560, optional): `store/marquee-1400x560.png`
 
 ## Privacy practices tab
 
@@ -68,7 +69,7 @@ Adds a "Remake for my business" button to ads in the Meta Ad Library that opens 
 - I do not use or transfer user data for purposes that are unrelated to my item's single purpose.
 - I do not use or transfer user data to determine creditworthiness or for lending purposes.
 
-**Privacy policy URL:** https://www.komendly.com/tools/chrome-extension#privacy
+**Privacy policy URL:** https://www.komendly.com/privacy#extension
 
 ## Distribution
 - Visibility: Public. Regions: all (the product targets US businesses).

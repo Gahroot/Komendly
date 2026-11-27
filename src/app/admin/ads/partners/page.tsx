@@ -10,6 +10,7 @@ import { AdminAdsShell } from "../_components/admin-ads-shell";
 import { InputActionForm } from "../_components/input-action-form";
 import { PostActionButton } from "../_components/post-action-button";
 import { StatCard } from "../_components/stat-card";
+import { PartnerOpsSection } from "./_ops-section";
 import { AdminEmpty } from "../../_components/admin-empty";
 
 export const dynamic = "force-dynamic";
@@ -39,6 +40,8 @@ export default async function AdminPartnersPage() {
         <StatCard label="Payable now" value={formatCents(all.payableCents)} tone={all.payableCents ? "good" : "default"} />
         <StatCard label="Paid out" value={formatCents(all.paidCents)} hint={`${formatCents(all.voidCents)} voided by refunds`} />
       </div>
+
+      <PartnerOpsSection />
 
       <Card>
         <CardHeader><CardTitle>Applications</CardTitle></CardHeader>

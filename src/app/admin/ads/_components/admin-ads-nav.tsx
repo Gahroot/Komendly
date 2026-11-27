@@ -6,13 +6,20 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { href: "/admin/ads", label: "Overview" },
+  { href: "/admin/ads/executive", label: "Executive" },
   { href: "/admin/ads/scoreboard", label: "Scoreboard" },
   { href: "/admin/ads/funnel", label: "Funnel" },
   { href: "/admin/ads/signups", label: "Sign-ups" },
   { href: "/admin/ads/growth", label: "Growth" },
+  { href: "/admin/ads/ops", label: "Ops" },
+  { href: "/admin/ads/revenue", label: "Revenue" },
+  { href: "/admin/ads/finance", label: "Finance" },
+  { href: "/admin/ads/product", label: "Product" },
+  { href: "/admin/ads/outcomes", label: "Outcomes" },
   { href: "/admin/ads/referrals", label: "Referrals" },
   { href: "/admin/ads/gifts", label: "Gifts" },
   { href: "/admin/ads/outbound", label: "Kly" },
+  { href: "/admin/ads/intent", label: "Intent" },
   { href: "/admin/ads/partners", label: "Partners" },
   { href: "/admin/ads/features", label: "Ad of week" },
   { href: "/admin/ads/workspaces", label: "Workspaces" },
@@ -24,6 +31,8 @@ const TABS = [
   { href: "/admin/ads/flags", label: "Flags" },
   { href: "/admin/ads/emails", label: "Emails" },
   { href: "/admin/ads/inbox", label: "Inbox" },
+  { href: "/admin/ads/support", label: "Support" },
+  { href: "/admin/ads/incidents", label: "Incidents" },
 ];
 
 export function AdminAdsNav() {

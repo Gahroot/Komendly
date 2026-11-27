@@ -40,6 +40,22 @@ async function pausedPlatforms(db: Db): Promise<Set<string>> {
   return new Set(REEL_PLATFORMS.filter((p) => isPaused(ev, p)));
 }
 
+/** First-run safety: AdsFeatureFlag key a human sets ON to let the very first reel go out. */
+export const FIRST_APPROVED_FLAG = "reels_first_approved";
+export const FIRST_AWAITING_EVENT = "reel_awaiting_approval";
+
+/** The first reel ever (no reel_published event yet) needs the explicit approval flag. Fails closed: unreadable = not approved. */
+export async function firstReelGate(db: Db): Promise<{ firstReel: boolean; approved: boolean }> {
+  try {
+    const prior = await db.adsEvent.findMany({ where: { name: REEL_EVENTS.published }, take: 1, select: { createdAt: true } });
+    if (prior.length > 0) return { firstReel: false, approved: true };
+    const approved = (await db.adsFeatureFlag.findUnique({ where: { key: FIRST_APPROVED_FLAG } }))?.enabled === true;
+    return { firstReel: true, approved };
+  } catch {
+    return { firstReel: true, approved: false };
+  }
+}
+
 const readyProps = (e: { props: unknown }) => e.props as ReelReadyProps;
 
 /** For the static post: has a reel gone out today / is one ready and waiting (so the static post should wait or skip)? */
@@ -85,6 +101,13 @@ export async function reelsTick(d: ReelsDeps): Promise<ReelsResult> {
     if (!slot || !reelDue(etMinutes(now), d.settings.socialHourEt, day, platform, slot)) continue;
     const reel = ready.find((r) => !claimed.some((c) => c.sourceRef === r.reelId && (parseSlotPlatform(c.platform)?.platform === platform)));
     if (!reel) continue;
+    const first = await firstReelGate(db);
+    if (first.firstReel && !first.approved) {
+      log("warn", `kly reels: FIRST reel ${reel.reelId} is waiting for approval: turn ON AdsFeatureFlag '${FIRST_APPROVED_FLAG}' after reviewing reels/${reel.reelId}/silent.mp4`, { reelId: reel.reelId });
+      const seen = await db.adsEvent.findMany({ where: { name: FIRST_AWAITING_EVENT }, take: 1, select: { createdAt: true } }).catch(() => [] as Array<{ createdAt: Date }>);
+      if (seen.length === 0) await db.adsEvent.create({ data: { name: FIRST_AWAITING_EVENT, props: { reelId: reel.reelId, flag: FIRST_APPROVED_FLAG } } }).catch(() => undefined);
+      return { skipped: `first reel awaiting approval (flag ${FIRST_APPROVED_FLAG})` };
+    }
     const caption = reel.captions?.[platform] ?? "";
     const bad = checkReelCaption(caption, platform, { withCta: reel.withCta, hookId: reel.hookId });
     if (bad) {
@@ -152,6 +175,10 @@ export async function reelInsightsTick(d: ReelsDeps): Promise<InsightsResult> {
   const ins = await db.adsEvent.findMany({ where: { name: REEL_EVENTS.insights }, orderBy: { createdAt: "desc" }, take: 500, select: { props: true, createdAt: true } });
   const perfs = perfsFromEvents(ready, ins.map((e) => ({ ...(e.props as { reelId: string; platform: string; metrics?: Record<string, number> }), at: e.createdAt })));
   const md = learningMarkdown(week, perfs);
-  await db.adsEvent.create({ data: { name: REEL_EVENTS.learning, props: { week, title: md.title, note: md.note, measured, unavailable } } });
+  const first = await firstReelGate(db);
+  const waiting = first.firstReel && !first.approved && ready.length > 0;
+  const note = waiting ? `${md.note} FIRST REEL IS WAITING FOR APPROVAL: nothing has been published yet; turn ON AdsFeatureFlag '${FIRST_APPROVED_FLAG}' after reviewing it.` : md.note;
+  if (waiting) log("warn", `kly reels digest: first reel awaiting approval (flag ${FIRST_APPROVED_FLAG})`);
+  await db.adsEvent.create({ data: { name: REEL_EVENTS.learning, props: { week, title: md.title, note, measured, unavailable, firstReelAwaitingApproval: waiting } } });
   return { measured, unavailable };
 }

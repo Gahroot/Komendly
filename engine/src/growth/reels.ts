@@ -1,14 +1,14 @@
 // Growth system `reels` (flag sys_reels, default OFF): Ozzy's daily vertical short video. Each cycle (default 6h) keeps a small
-// backlog of rendered, reviewed reels: next hook (70% winners / 30% new, src/lib/growth/reels-learning) -> Hormozi script
+// backlog of rendered, reviewed reels: next hook (70% winners / 30% new, src/lib/growth/reels-learning) -> script
 // (hook / retain / reward, soft CTA every 10th) -> checks + AI review gate -> sharp SVG frames + ffmpeg (captions burned in,
-// silent, 1080x1920, 15-30s) -> S3 `reels/<id>/silent.mp4` + `script.txt` -> AdsEvent `reel_ready` + `social_queue` rows for the
+// silent audio track, 1080x1920, 15-30s) -> S3 `reels/<id>/silent.mp4` + `script.txt` -> AdsEvent `reel_ready` + `social_queue` rows for the
 // platforms without an API we can use. Kly publishes to Facebook/Instagram. External voice: see docs/growth-ecosystem/reels.md.
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import sharp from "sharp";
 import {
-  QUEUE_PLATFORMS, REEL_EVENTS, REEL_TRADES, SITE, buildCaption, buildQueueItem, buildScript, checkReelCaption, checkScript, ctaDue, dailyCap, reelHash, reelId, withinCostCap,
+  AI_LABEL, QUEUE_PLATFORMS, REEL_EVENTS, REEL_TRADES, SITE, buildCaption, buildQueueItem, buildScript, checkReelCaption, checkScript, ctaDue, dailyCap, reelHash, reelId, withinCostCap,
   type ReelReadyProps, type ReelScript,
 } from "../../../src/lib/growth/reels-core";
 import { nextHook, perfsFromEvents, type ReadyLite } from "../../../src/lib/growth/reels-learning";
@@ -21,7 +21,7 @@ import type { AIProvider } from "../providers/types";
 import type { Storage } from "../storage/s3";
 import { runFfmpeg } from "../testimonial/ffmpeg";
 import { gate } from "./review-gate";
-import { H, W, inkFor, quoteVideoArgs, wrap } from "./review-video";
+import { FADE, H, W, wrap } from "./review-video";
 
 const FONT = "DejaVu Sans, Liberation Sans, Noto Sans, sans-serif";
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -31,21 +31,71 @@ const GATE_COST_MICROS = 20_000;
 
 export interface Art { ozzy?: string; poster?: string }
 
-/** Pure: one SVG frame per scene, caption burned in, AI label on every frame. */
+// Brand palette (DESIGN.md): night ink background, violet card, gold emphasis, white text (all >= 7:1 on the ink).
+const INK = "#0c0820";
+const VIOLET = "#7b3cf0";
+const GOLD = "#ffcf4a";
+const WHITE = "#FFFFFF";
+/** Platform UI safe zone (Instagram/TikTok/Reels): nothing important above y=SAFE_TOP (~12%) or below y=SAFE_BOTTOM (~20%), nor wider than the side margins. */
+export const SAFE_TOP = 240;
+export const SAFE_BOTTOM = 1530;
+export const SAFE_X = 110;
+const FROM_LINE = "From Komendly";
+const END_URL = "Free ads from your website: komendly.com";
+
+/** Pure: one SVG frame per scene, caption burned in, AI + brand label on every frame, everything inside the safe zone. */
 export function reelFrames(s: ReelScript, art: Record<string, string | undefined> = {}): Array<{ svg: string; seconds: number }> {
-  const bg = "#1F2A44";
-  const ink = inkFor(bg);
+  const t = (x: number, y: number, str: string, size: number, weight: number, fill: string, opacity = 1) =>
+    `<text x="${x}" y="${y}" text-anchor="middle" font-family="${FONT}" font-size="${size}" font-weight="${weight}" fill="${fill}" fill-opacity="${opacity}">${esc(str)}</text>`;
+  const bgSvg = `<rect width="100%" height="100%" fill="${INK}"/><circle cx="${W}" cy="${SAFE_TOP}" r="620" fill="${VIOLET}" fill-opacity="0.22"/><circle cx="0" cy="${SAFE_BOTTOM}" r="520" fill="${VIOLET}" fill-opacity="0.14"/>`;
   return s.scenes.map((sc) => {
-    const big = sc.kind === "hook" || sc.kind === "cta";
-    const lines = wrap(sc.text, big ? 16 : 20);
-    const size = big ? 92 : 72;
-    const top = 760 - (lines.length * size * 1.25) / 2;
-    const img = sc.art ? art[sc.art === "poster" ? "poster" : sc.art] : undefined;
-    const image = img ? `<image href="${img}" x="${sc.art === "poster" ? 290 : 340}" y="${sc.art === "poster" ? 1080 : 1100}" width="${sc.art === "poster" ? 500 : 400}" height="${sc.art === "poster" ? 620 : 400}" preserveAspectRatio="xMidYMid meet"/>` : "";
-    const text = lines.map((l, i) => `<text x="${W / 2}" y="${top + i * size * 1.25}" text-anchor="middle" font-family="${FONT}" font-size="${size}" font-weight="${big ? 800 : 600}" fill="${ink}">${esc(l)}</text>`).join("");
-    const label = `<text x="${W / 2}" y="${H - 90}" text-anchor="middle" font-family="${FONT}" font-size="38" fill="${ink}" fill-opacity="0.75">${esc(sc.kind === "end" && sc.text === "Made by Ozzy, AI" ? "Komendly" : "Made by Ozzy, AI")}</text>`;
-    return { svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="100%" height="100%" fill="${bg}"/>${text}${image}${label}</svg>`, seconds: sc.seconds };
+    const isEnd = sc.text === AI_LABEL;
+    const hook = sc.kind === "hook";
+    const big = hook || sc.kind === "cta";
+    const poster = sc.art === "poster";
+    const img = sc.art ? art[poster ? "poster" : sc.art] : undefined;
+    const label = isEnd ? "" : t(W / 2, SAFE_BOTTOM - 20, `${AI_LABEL} · ${FROM_LINE}`, 34, 600, WHITE, 0.8);
+    if (isEnd) {
+      const ozzy = img ? `<image href="${img}" x="${W / 2 - 230}" y="${SAFE_TOP + 20}" width="460" height="460" preserveAspectRatio="xMidYMid meet"/>` : "";
+      const body = ozzy + t(W / 2, 880, AI_LABEL, 76, 800, WHITE) + t(W / 2, 990, FROM_LINE, 76, 800, GOLD)
+        + `<rect x="${SAFE_X}" y="1090" width="${W - 2 * SAFE_X}" height="190" rx="36" fill="${VIOLET}"/>`
+        + wrap(END_URL, 24).map((l, i) => t(W / 2, 1175 + i * 62, l, 50, 700, WHITE)).join("")
+        + t(W / 2, 1400, "Animated cartoon. AI-made.", 36, 500, WHITE, 0.75);
+      return { svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${bgSvg}${body}</svg>`, seconds: sc.seconds };
+    }
+    const size = big ? 92 : 68;
+    const lines = wrap(sc.text, big ? 15 : 22);
+    const lineH = size * 1.22;
+    const textTop = poster ? SAFE_TOP + 90 : hook ? 930 : 800;
+    const textSvg = lines.map((l, i) => t(W / 2, textTop + i * lineH, l, size, big ? 800 : 700, hook && i === 0 ? GOLD : WHITE)).join("");
+    let image = "";
+    if (img && poster) image = `<rect x="${W / 2 - 250}" y="900" width="500" height="${SAFE_BOTTOM - 900 - 90}" rx="28" fill="${VIOLET}"/><image href="${img}" x="${W / 2 - 240}" y="910" width="480" height="${SAFE_BOTTOM - 910 - 110}" preserveAspectRatio="xMidYMid meet"/>`;
+    else if (img) image = `<image href="${img}" x="${W / 2 - 200}" y="${SAFE_TOP + (hook ? 60 : 20)}" width="${hook ? 440 : 400}" height="${hook ? 440 : 400}" preserveAspectRatio="xMidYMid meet" ${hook ? `transform="translate(-20 0)"` : ""}/>`;
+    const bar = hook ? `<rect x="${W / 2 - 90}" y="${textTop - size - 70}" width="180" height="12" rx="6" fill="${GOLD}"/>` : "";
+    return { svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">${bgSvg}${bar}${image}${textSvg}${label}</svg>`, seconds: sc.seconds };
   });
+}
+
+/** ffmpeg args (pure): each still gets a slow zoom-in, crossfades, plus a silent AAC track (some platforms reject video without audio). */
+export function reelVideoArgs(files: readonly string[], seconds: readonly number[], output: string): string[] {
+  const FPS = 30;
+  const inputs = files.flatMap((f) => ["-i", f]);
+  const parts = files.map((_f, i) => {
+    const frames = Math.ceil((seconds[i] ?? 3) * FPS);
+    return `[${i}:v]scale=${W * 2}:${H * 2},zoompan=z='min(1+0.0004*on,1.05)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${frames}:s=${W}x${H}:fps=${FPS},format=yuv420p,setsar=1[v${i}]`;
+  });
+  let last = "v0";
+  let offset = 0;
+  for (let i = 1; i < files.length; i++) {
+    offset += (seconds[i - 1] ?? 0) - FADE;
+    const out = i === files.length - 1 ? "vout" : `x${i}`;
+    parts.push(`[${last}][v${i}]xfade=transition=fade:duration=${FADE}:offset=${offset.toFixed(2)}[${out}]`);
+    last = out;
+  }
+  if (files.length === 1) parts.push("[v0]null[vout]");
+  const total = seconds.reduce((a, b) => a + b, 0) - FADE * (files.length - 1);
+  return ["-y", ...inputs, "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo", "-filter_complex", parts.join(";"), "-map", "[vout]", "-map", `${files.length}:a`,
+    "-t", total.toFixed(2), "-c:v", "libx264", "-preset", "veryfast", "-crf", "22", "-pix_fmt", "yuv420p", "-r", String(FPS), "-c:a", "aac", "-b:a", "64k", "-ar", "44100", "-movflags", "+faststart", output];
 }
 
 async function dataUri(url: string, fetchFn: typeof fetch): Promise<string | undefined> {
@@ -75,7 +125,7 @@ export async function renderReel(s: ReelScript, signal?: AbortSignal, fetchFn: t
       files.push(p);
     }
     const out = path.join(dir, "out.mp4");
-    await runFfmpeg(quoteVideoArgs(files, frames.map((f) => f.seconds), out), signal);
+    await runFfmpeg(reelVideoArgs(files, frames.map((f) => f.seconds), out), signal);
     return await readFile(out);
   } finally {
     await rm(dir, { recursive: true, force: true });

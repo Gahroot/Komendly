@@ -6,6 +6,7 @@ import { getLaunchOfferState } from "@/lib/ads/launch-offer";
 import { getAutopilotLaunchState } from "@/lib/ads/autopilot-launch";
 import { appUrl, getAdsStripe } from "@/lib/ads/billing-stripe";
 import { trackAdsEvent } from "@/lib/ads/events";
+import { recordOfferConversions, VISITOR_COOKIE } from "@/lib/offer-intel/server";
 import { prisma } from "@/lib/prisma";
 import { adsErrorResponse, getOrCreateWorkspace, requireUser } from "@/lib/ads/workspace";
 import { FREE_MONTH_KIND, freeMonthCheckoutParams } from "@/lib/ads/referral-billing";
@@ -124,6 +125,7 @@ export async function POST(request: NextRequest) {
     });
     const trade = await workspaceTrade(ws.id);
     await trackAdsEvent("checkout_started", { workspaceId: ws.id, userId: user.id, props: { kind, key, sessionId: session.id, ...(trade ? { trade } : {}), ...(studioLaunch ? { offer: STUDIO_LAUNCH_OFFER.key, app: "studio", amountCents: item.priceCents, currency: "USD" } : {}), ...(annual ? { interval: "year" } : {}), ...(placement ? { placement } : {}), ...(unlockCredit ? { coupon: "unlock_pack_credit" } : {}) } });
+    void recordOfferConversions("checkout_started", request.cookies.get(VISITOR_COOKIE)?.value, { workspaceId: ws.id, key });
     if (studioLaunch) await trackAdsEvent("studio_checkout_started", { workspaceId: ws.id, userId: user.id, props: { offer: STUDIO_LAUNCH_OFFER.key, plan: key, amountCents: item.priceCents } });
     const downsell = placement === "downsell" || placement === "unlock_pack";
     if (kind === "offer" || studioLaunch || (placement && !downsell)) await trackAdsEvent("upsell_accepted", { workspaceId: ws.id, userId: user.id, props: { kind, key, ...(placement ? { placement } : {}) } });

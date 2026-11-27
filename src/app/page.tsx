@@ -20,6 +20,8 @@ import { planCheckoutPath } from "@/lib/ads/plan-checkout";
 import { TeamOffer } from "@/components/billing/team-offer";
 import { foundingSpotsLeft } from "@/lib/ads/founding-spots";
 import { prisma } from "@/lib/prisma";
+import { serveVariantForVisitor } from "@/lib/offer-intel/server";
+import { ExposeOnMount } from "@/components/experiments/expose-on-mount";
 
 export const metadata: Metadata = {
   title: { absolute: `Komendly — ${DREAM_HEADLINE}` },
@@ -31,7 +33,7 @@ const jsonLd = graph(softwareApplicationJsonLd());
 const hirePath = planCheckoutPath("autopilot", false);
 
 export default async function HomePage() {
-  const [user, heroVariant, spotsLeft] = await Promise.all([getCurrentUser(), getVariant("home_hero"), foundingSpotsLeft(prisma).catch(() => null)]);
+  const [user, heroVariant, spotsLeft, offerExp] = await Promise.all([getCurrentUser(), getVariant("home_hero"), foundingSpotsLeft(prisma).catch(() => null), serveVariantForVisitor("home_headline_outcome_vs_free_first")]);
   const signedIn = Boolean(user);
   return (
     <StudioRoot className={`${fraunces.variable} min-h-screen`}>
@@ -40,7 +42,8 @@ export default async function HomePage() {
       <TrackOnMount event="landing_view" params={{ signed_in: signedIn }} />
       <div className="absolute inset-x-0 top-0 z-20"><StudioNav signedIn={signedIn} /></div>
       <main>
-        <StudioHero signedIn={signedIn} variant={heroVariant} />
+        <StudioHero signedIn={signedIn} variant={heroVariant} offer={offerExp?.payload ?? null} />
+        {offerExp && <ExposeOnMount experimentKey="home_headline_outcome_vs_free_first" />}
         <div className="relative bg-[linear-gradient(180deg,#140818,#0c0820_30%)]">
           <section className="mx-auto max-w-6xl px-4 pt-16 sm:px-6 sm:pt-20">
             <TeamOffer hireHref={signedIn ? hirePath : `/ads/signup?next=${encodeURIComponent(hirePath)}`} freeHref="/#studio-url" spotsLeft={spotsLeft} />

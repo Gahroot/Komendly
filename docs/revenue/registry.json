@@ -1,0 +1,274 @@
+[
+  {
+    "id": "rev-gso-offer-facts",
+    "area": 1,
+    "name": "Single source of offer facts (price, founding spots, guarantee)",
+    "status": "operational",
+    "evidence": "src/lib/ads/public-offer.ts is the one place offer facts live (MEMORY 20 Nov, commit 338fad9).",
+    "code_refs": [
+      "src/lib/ads/public-offer.ts"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-gso-intel",
+    "area": 1,
+    "name": "Grand Slam Offer intelligence (value-equation scoring of the ladder, bonus/guarantee tests)",
+    "status": "awaiting_prerequisite",
+    "evidence": "Offer/CRO worker builds this in parallel; verify its code refs before treating as live. No offer has been scored on real buyer data (1 buyer).",
+    "code_refs": [
+      "src/lib/revenue/experiments.ts"
+    ],
+    "owner_action": "Decide which offer lever to test first once the diagnosis names the constraint."
+  },
+  {
+    "id": "rev-money-model",
+    "area": 2,
+    "name": "Money-model tracking (attraction -> upsell -> downsell -> continuity) per step",
+    "status": "awaiting_prerequisite",
+    "evidence": "Per-step counts exist in src/lib/revenue/economics.ts (upsell_shown / upsell_accepted / purchased); needs flag sys_revenue_intel on and the engine deployed.",
+    "code_refs": [
+      "src/lib/revenue/economics.ts",
+      "engine/src/revenue/snapshot.ts"
+    ],
+    "owner_action": "Turn on sys_revenue_intel after deploy."
+  },
+  {
+    "id": "rev-payback",
+    "area": 2,
+    "name": "30-day payback and LTGP:CAC with confidence labels",
+    "status": "experimenting",
+    "evidence": "computeEconomics returns payback30 and ltgpToCac with measured/estimated/insufficient; with 1 buyer everything reads insufficient by design.",
+    "code_refs": [
+      "src/lib/revenue/economics.ts"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-ad-spend-feed",
+    "area": 11,
+    "name": "Daily Meta ad-spend event (ad_spend) feeding CAC",
+    "status": "awaiting_prerequisite",
+    "evidence": "Economics reads AdsEvent 'ad_spend' {amountCents}; no job writes it yet, so CAC excludes Meta spend until one does (src/lib/ads/meta-insights.ts loadMetaCampaignSpend can supply it).",
+    "code_refs": [
+      "src/lib/revenue/economics.ts",
+      "src/lib/ads/meta-insights.ts"
+    ],
+    "owner_action": "Approve a small daily job that writes ad_spend, or set INFRA_MONTHLY_CENTS now."
+  },
+  {
+    "id": "rev-cro",
+    "area": 3,
+    "name": "Conversion-rate optimisation on landing, free pack and checkout",
+    "status": "awaiting_prerequisite",
+    "evidence": "Offer/CRO worker in progress; experiments framework ready for it.",
+    "code_refs": [
+      "src/lib/revenue/experiments.ts"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-experiments",
+    "area": 12,
+    "name": "Experiment framework: assign, expose, convert, Bayesian evaluate, conclude",
+    "status": "operational",
+    "evidence": "Unit-tested (src/lib/revenue/__tests__/revenue.test.ts); logs to AdsEvent; never calls winner under minPerVariant or <95% probability best.",
+    "code_refs": [
+      "src/lib/revenue/experiments.ts"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-activation",
+    "area": 4,
+    "name": "Activation / time-to-value (free pack finished, live-in-7-days nudges)",
+    "status": "experimenting",
+    "evidence": "Growth system 'activation' exists (src/lib/growth/proof.ts); activation rate is measured in the snapshot.",
+    "code_refs": [
+      "src/lib/growth/proof.ts",
+      "src/lib/revenue/economics.ts"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-nurture",
+    "area": 5,
+    "name": "Lead nurture (lifecycle emails to sign-ups who have not bought)",
+    "status": "awaiting_prerequisite",
+    "evidence": "Lifecycle worker in parallel; existing lifecycle emails in src/lib/ads/lifecycle.",
+    "code_refs": [
+      "src/lib/ads/lifecycle/template.ts"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-checkout-recovery",
+    "area": 5,
+    "name": "Abandoned-checkout recovery",
+    "status": "experimenting",
+    "evidence": "Growth system checkout_recovery, review-gated, flag sys_checkout_recovery.",
+    "code_refs": [
+      "engine/src/growth/checkout-recovery.ts"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-retention",
+    "area": 6,
+    "name": "Retention: day-30 retention measured; cancel-save note",
+    "status": "experimenting",
+    "evidence": "day30Retention rate in snapshot; cancel_save system exists. No subscribers yet so n=0.",
+    "code_refs": [
+      "src/lib/revenue/economics.ts",
+      "src/lib/growth/systems.ts"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-expansion",
+    "area": 7,
+    "name": "Expansion and referrals (referral credits, gifts, partners)",
+    "status": "experimenting",
+    "evidence": "Referral/gift/partner programs live (see /admin/ads/growth); revenue impact unmeasured.",
+    "code_refs": [
+      "src/lib/ads/referral-code.ts"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-reactivation",
+    "area": 8,
+    "name": "Reactivation / win-back of churned and failed-payment customers",
+    "status": "experimenting",
+    "evidence": "Growth system winback (flag sys_winback); nobody has churned yet.",
+    "code_refs": [
+      "engine/src/growth/winback.ts"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-customer-success",
+    "area": 9,
+    "name": "Autonomous customer success",
+    "status": "awaiting_prerequisite",
+    "evidence": "Lifecycle worker in parallel; guarantee_watch alerts exist.",
+    "code_refs": [
+      "src/lib/growth/systems.ts"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-market-intel",
+    "area": 10,
+    "name": "Market and product intelligence (Ad Library data, competitor watch)",
+    "status": "experimenting",
+    "evidence": "Ad Library scan/report and competitor ad watch run; not yet tied to offer decisions.",
+    "code_refs": [
+      "engine/src/growth/adlib-scan.ts",
+      "engine/src/growth/ad-watch.ts"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-constraint",
+    "area": 11,
+    "name": "Constraint diagnosis (ranked, shrunk toward benchmarks)",
+    "status": "operational",
+    "evidence": "diagnoseConstraint unit-tested; benchmarks are stated assumptions (BENCHMARKS).",
+    "code_refs": [
+      "src/lib/revenue/constraints.ts"
+    ],
+    "owner_action": "Replace benchmarks with measured numbers as data accrues."
+  },
+  {
+    "id": "rev-snapshot",
+    "area": 11,
+    "name": "Daily revenue_snapshot AdsEvent (history)",
+    "status": "awaiting_prerequisite",
+    "evidence": "Engine loop written and typechecks; needs deploy and AdsFeatureFlag sys_revenue_intel ON.",
+    "code_refs": [
+      "engine/src/revenue/snapshot.ts",
+      "src/lib/revenue/snapshot.ts"
+    ],
+    "owner_action": "After Nolan's approval: set flag sys_revenue_intel ON and deploy engine."
+  },
+  {
+    "id": "rev-profitability",
+    "area": 13,
+    "name": "Profitability and cash flow (revenue, refunds, tracked costs, infra constant)",
+    "status": "experimenting",
+    "evidence": "cashFlow in economics; costs from AdRun.costMicros, OutboundLead.costMicros, ad_spend events, INFRA_MONTHLY_CENTS.",
+    "code_refs": [
+      "src/lib/revenue/economics.ts"
+    ],
+    "owner_action": "Set INFRA_MONTHLY_CENTS in engine and Vercel env."
+  },
+  {
+    "id": "rev-collective",
+    "area": 14,
+    "name": "Collective intelligence with the acquisition ecosystem",
+    "status": "operational",
+    "evidence": "Same first-touch -> system mapping (systemForTouch); owner page shows the ecosystem registry next to revenue.",
+    "code_refs": [
+      "src/lib/growth/systems.ts",
+      "src/lib/revenue/economics.ts"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-autonomy",
+    "area": 15,
+    "name": "Autonomous operation (optimiser loop acting on experiments)",
+    "status": "awaiting_prerequisite",
+    "evidence": "Optimiser agent loop worker in parallel (engine/src/optimizer). Nothing changes prices/billing by itself.",
+    "code_refs": [
+      "engine/src/optimizer/run.ts"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-stage",
+    "area": 16,
+    "name": "Business-stage awareness (Scaling Roadmap stage from evidence)",
+    "status": "operational",
+    "evidence": "businessStage returns 'Monetize' (stage 1) for 1 paying customer; lists what not to do yet.",
+    "code_refs": [
+      "src/lib/revenue/constraints.ts"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-command-center",
+    "area": 15,
+    "name": "Owner command center /admin/ads/revenue",
+    "status": "operational",
+    "evidence": "Page shows stage, constraint, funnel, economics, experiments, learnings, registry, needs-you, next actions.",
+    "code_refs": [
+      "src/app/admin/ads/revenue/page.tsx"
+    ],
+    "owner_action": ""
+  },
+  {
+    "id": "rev-digest",
+    "area": 15,
+    "name": "Monday revenue digest email (flag sys_revenue_digest)",
+    "status": "awaiting_prerequisite",
+    "evidence": "Cron /api/cron/revenue-digest written; OFF until flag set.",
+    "code_refs": [
+      "src/app/api/cron/revenue-digest/route.ts"
+    ],
+    "owner_action": "Turn on sys_revenue_digest when ready."
+  },
+  {
+    "id": "rev-learnings",
+    "area": 12,
+    "name": "Append-only evidence vs assumption log",
+    "status": "operational",
+    "evidence": "docs/revenue/learnings.md + appendRevenueLearning helper.",
+    "code_refs": [
+      "src/lib/revenue/learnings.ts",
+      "docs/revenue/learnings.md"
+    ],
+    "owner_action": ""
+  }
+]

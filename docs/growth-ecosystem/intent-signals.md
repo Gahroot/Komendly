@@ -26,3 +26,13 @@ Pure detectors + wiring. No schema change. Signals live in `OutboundLead.qualifi
 - **Google Ads Transparency Center:** JS app, no API, Google ToS bars automated access. Needs a licensed provider.
 - **Kickstarter / Indiegogo:** no public listing API; ToS bar scraping; creators are mostly individuals. Option: Webrobots Kickstarter datasets joined to own sites.
 - **New Google Business listings:** no free dated source in the repo (Overture/FSQ/OSM lack creation dates).
+
+## Scheduling (Kly loop, default OFF)
+`kly/src/signal-tick.ts`, called from `loop.ts` step "signals". Both switches are env on the Kly service (unset = off):
+- `KLY_SIGNALS_ENABLED=1`: every 2 h scans up to 8 unused Overture places (not rescanned for 60 days; marker `AdsEvent signal_scan`) with `detectSiteSignals`. A hit writes `KlyPlace id signal:<domain>` (source `signal:new_website|new_shopify|grand_opening|...`, picked up by `adlibSource` like adlib rows, so the lead carries `qualification.signals`) + `AdsEvent lead_signal`, and marks the Overture row used (no double lead).
+- `KLY_INTENT_ENABLED=1`: every 6 h runs the intent discovery and writes `AdsEvent intent_opportunity` (`props: url,title,text,score,draft,status:"new"`; deduped by `props.id`, max 50/run).
+- Seasonal needs no switch: already applied at discovery (`finder.ts`, `adlibSegment`).
+- All fetches go through `polite-fetch.ts`: UA `KomendlyBot/1.0 (+https://www.komendly.com)`, robots.txt per host (disallowed = not fetched), 1.5-2 s gap. Reddit's robots.txt disallows generic bots, so Reddit is skipped automatically; HN Algolia + RSS remain. No login, nothing posted.
+- Copy honesty: openers state only evidence ("I noticed your domain was registered in Oct 2026."; Shopify: "products ... all added since <month>"; quoted homepage phrase). Sitemap refresh has no opener; "we're open" hours no longer match.
+
+Queue UI/API: `/admin/ads/intent` (admin); `GET/POST /api/intent/queue` with `Bearer INTENT_AGENT_TOKEN` (or `CRON_SECRET`): GET lists `status:"new"` best score first; POST `{action:"done"|"skip", id, outcome?, replyUrl?}`. Set `INTENT_AGENT_TOKEN` on Vercel and in Media Master.

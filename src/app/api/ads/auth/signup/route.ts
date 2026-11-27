@@ -1,3 +1,4 @@
+import { recordOfferConversions, VISITOR_COOKIE } from "@/lib/offer-intel/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createSession, createUser, getUserByEmail, setSessionCookie } from "@/lib/auth";
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
     const rawTrade = request.cookies.get(TRADE_COOKIE)?.value;
     const tradePicked = Boolean(trade) || rawTrade === OTHER_TRADE;
     const signals = businessSignals({ email: user.email, website: safeDecode(request.cookies.get(SITE_COOKIE)?.value), tradePicked });
+    void recordOfferConversions("signed_up", request.cookies.get(VISITOR_COOKIE)?.value, { workspaceId: workspace.id });
     await trackAdsEvent("signed_up", { workspaceId: workspace.id, userId: user.id, props: { firstTouch, ...(trade ? { trade } : {}), ...(rawTrade === OTHER_TRADE ? { trade_other: true } : {}), ...signals, ...(klyLead ? { klyLead } : {}), anonId: request.cookies.get(ANON_ID_COOKIE)?.value, exp: parseAssignments(request.cookies.get(EXP_COOKIE)?.value) } });
     await recordReferralAtSignup({
       code: request.cookies.get(REFERRAL_COOKIE)?.value ?? parsed.data.ref,

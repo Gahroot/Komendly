@@ -163,8 +163,8 @@ export function parseLearnings(md: string): ParsedLearning[] {
   const out: ParsedLearning[] = [];
   for (const block of md.split(/^## /m).slice(1)) {
     const [head, ...rest] = block.split("\n");
-    const m = head.match(/^(\d{4}-\d{2}-\d{2}) \[(EVIDENCE|ASSUMPTION)\] (.*)$/);
-    if (m) out.push({ date: m[1], kind: m[2] as ParsedLearning["kind"], title: m[3], body: rest.join("\n").trim() });
+    const m = (head ?? "").match(/^(\d{4}-\d{2}-\d{2}) \[(EVIDENCE|ASSUMPTION)\] (.*)$/);
+    if (m) out.push({ date: m[1] ?? "", kind: m[2] as ParsedLearning["kind"], title: m[3] ?? "", body: rest.join("\n").trim() });
   }
   return out;
 }

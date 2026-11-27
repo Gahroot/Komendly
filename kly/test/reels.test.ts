@@ -128,6 +128,22 @@ describe("reelsTick", () => {
     const two = await reelsTick({ db: mk().db, ...base, env: { ADS_TOKEN_KEY: KEY, REELS_PER_DAY: "2" }, now: new Date("2026-11-14T04:50:00Z"), fetch: mkFetch(calls) });
     expect("posted" in two && two.posted.map((p) => p.slot)).toEqual([2, 2]);
   });
+  it("FIRST reel ever (no reel_published) waits for the reels_first_approved flag; nothing is claimed or posted", async () => {
+    const calls: string[] = [];
+    const d = fakeDb(handlers({ adsFeatureFlag: { findUnique: (a: unknown) => ({ enabled: (a as { where: { key: string } }).where.key !== "reels_first_approved" }) } }));
+    const r = await reelsTick({ db: d.db, ...base, now: new Date("2026-11-13T23:50:00Z"), fetch: mkFetch(calls) });
+    expect(r).toEqual({ skipped: "first reel awaiting approval (flag reels_first_approved)" });
+    expect(calls).toHaveLength(0);
+    expect(d.of("klySocialPost", "create")).toHaveLength(0);
+    expect((d.of("adsEvent", "create") as Array<{ data: { name: string } }>).map((e) => e.data.name)).toEqual(["reel_awaiting_approval"]);
+  });
+  it("once a reel was published, no approval flag is needed", async () => {
+    const calls: string[] = [];
+    const d = fakeDb(handlers({ adsFeatureFlag: { findUnique: (a: unknown) => ({ enabled: (a as { where: { key: string } }).where.key !== "reels_first_approved" }) },
+      adsEvent: { findMany: (a: unknown) => { const n = (a as { where: { name: string } }).where.name; return n === "reel_ready" ? [{ props: readyProps() }] : n === "reel_published" ? [{ createdAt: new Date() }] : []; }, create: () => ({}) } }));
+    const r = await reelsTick({ db: d.db, ...base, now: new Date("2026-11-13T23:50:00Z"), fetch: mkFetch(calls) });
+    expect("posted" in r && r.posted.every((p) => p.ok)).toBe(true);
+  });
   it("a lost claim race posts nothing", async () => {
     const calls: string[] = [];
     const d = fakeDb(handlers({ klySocialPost: { create: () => { throw new Error("Unique constraint failed"); } } }));

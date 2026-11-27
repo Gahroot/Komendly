@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { NextStepBanner } from "@/components/ads/next-step-banner";
+import { nextStepFor } from "@/lib/customer-intel/state-server";
 import { AdsNav } from "@/components/ads/ads-nav";
 import { CheckoutReturnTracker } from "@/components/analytics/checkout-return-tracker";
 import { CheckoutPending } from "@/components/ads/team/checkout-pending";
@@ -27,6 +29,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
   const access = await requireTeamAccess();
   const ws = access.workspace;
   const status = await loadTeamStatus(access);
+  const nextStep = await nextStepFor(ws); // null unless sys_simplicity is on
 
   let offer: TeamOfferProps | null = null;
   if (!status.hired) {
@@ -52,6 +55,7 @@ export default async function TeamPage({ searchParams }: { searchParams: Promise
       <AdsNav signedIn />
       <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6">
         {checkout === "success" && <CheckoutReturnTracker outcome="success" pixel={await loadCheckoutPixel(session_id, ws.id)} />}
+        {nextStep && <NextStepBanner action={nextStep} />}
         {status.hired && <LiveTracker workspaceId={ws.id} />}
         {status.hired ? <TeamApp initial={status} /> : checkout === "success" ? <CheckoutPending /> : offer && <TeamOffer {...offer} />}
       </main>

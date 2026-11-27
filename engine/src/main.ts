@@ -14,11 +14,16 @@ import { startBonusLoop } from "./bonuses/loop";
 import { startWeeklyLoop } from "./jobs/weekly";
 import { startCheckoutRecoveryLoop } from "./growth/checkout-recovery";
 import { startWinbackLoop } from "./growth/winback";
+import { startOfferIntelLoop } from "./offerintel/weekly";
 import { startProofLoop } from "./growth/proof";
+import { startCustomerSuccessLoop } from "./customersuccess/loop";
 import { startFreeToolsLoop } from "./growth/free-tools";
 import { startIndustryExamplesLoop } from "./growth/industry-examples";
 import { startViralBrandingLoop } from "./growth/viral-branding";
 import { startReelsLoop } from "./growth/reels";
+import { startOptimizerLoop } from "./optimizer/run";
+import { startExecStrategyLoop } from "./exec/strategy";
+import { startProductIntelLoop } from "./productintel/loop";
 import { startAiAssistantLoop } from "./growth/ai-assistant";
 import { startShopifyLoop } from "./growth/shopify";
 import { startAdWatchLoop } from "./growth/ad-watch";
@@ -26,7 +31,13 @@ import { startAdCheckLoop } from "./growth/ad-check";
 import { startAdlibReportLoop } from "./growth/adlib-report";
 import { startMonitorLoop } from "./jobs/monitor";
 import { startMetaResultsLoop } from "./growth/meta-results";
+import { startRevenueSnapshotLoop } from "./revenue/snapshot";
+import { startProductEngineLoop } from "./productintel/run";
 import { startTeamOpsLoop } from "./jobs/team-ops";
+import { startOpsLoop } from "./ops/loop";
+import { startExecLoop } from "./exec/coordinate";
+import { startOpsControlLoop } from "./ops/control";
+import { startBusinessOpsLoop } from "./ops/business";
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -58,6 +69,12 @@ async function main(): Promise<void> {
   const stopIndustryExamples = startIndustryExamplesLoop({ db });
   // reels (sys_reels): Ozzy short videos rendered + reviewed for kly to publish (off until flagged on).
   const stopReels = startReelsLoop({ db, storage });
+  // optimizer (sys_optimizer; digest sys_optimizer_digest): weekly diagnose/decide/act business loop, allow-listed actions only (docs/revenue/optimizer.md).
+  const stopOptimizer = startOptimizerLoop({ db, send });
+  // exec strategy (sys_exec_strategy; digest sys_exec_digest): business context, stage, constraint, objectives above the optimiser; hold_and_measure by default (docs/exec/prd/).
+  const stopExecStrategy = startExecStrategyLoop({ db, send });
+  // product intel (sys_creative_qa, sys_outcome_verify): report-only creative scores/findings, customer outcome failures, effectiveness ledger (docs/product/outcomes.md).
+  const stopProductIntel = startProductIntelLoop({ db, storage, send });
   // viral_branding (sys_viral_branding): hourly made_with visits/sign-ups + "free renders carry the mark" check.
   const stopViral = startViralBrandingLoop(db);
   // ai_assistant (sys_ai_assistant): hourly real MCP check against production + assistant sign-ups/tool calls.
@@ -72,8 +89,12 @@ async function main(): Promise<void> {
   const stopRecovery = startCheckoutRecoveryLoop({ db, provider, send });
   // Churn & failed-payment win-back (growth system winback; off until AdsFeatureFlag sys_winback).
   const stopWinback = startWinbackLoop({ db, provider, send });
+  // Offer intelligence (growth system offer_intel; off until AdsFeatureFlag sys_offer_intel): weekly objection map, offer gap, copy experiments, coherence check.
+  const stopOfferIntel = startOfferIntelLoop({ db, provider });
   // Live-in-7-days nudges, first wins, day-14/30 measured results + consent, cancel save, guarantee alerts (each off until its sys_ flag).
   const stopProof = startProofLoop({ db, send });
+  // Revenue lifecycle: nurture, activation rescue, reactivation, expansion, daily customer-success agent (each off until its sys_ flag).
+  const stopCustomerSuccess = startCustomerSuccessLoop({ db, provider, send });
   // Meta Ad Check grader (sys_ad_check): fills AdJob adlib_scan rows from the public Ad Library. Stopped on process exit.
   const stopAdCheck = startAdCheckLoop({ db, provider, worker: config.workerId });
   const stopAdWatch = startAdWatchLoop({ db, provider, send }); // Competitor ad watch (sys_ad_watch): Monday opt-in emails
@@ -81,6 +102,17 @@ async function main(): Promise<void> {
   const stopMetaResults = startMetaResultsLoop({ db, provider });
   // Ozzy's team campaign operations (sys_team_ops; team_ops_kill pauses everything): launch, budget guard, daily analyst.
   const stopTeamOps = startTeamOpsLoop({ db, storage });
+  // Revenue intelligence (sys_revenue_intel): one revenue_snapshot AdsEvent per UTC day (economics, #1 constraint, stage).
+  const stopRevenue = startRevenueSnapshotLoop(db);
+  const stopOps = startOpsLoop({ db, send }); // support tickets, infra watch, incidents (flags sys_support_ops / sys_infra_watch / sys_incidents, OFF)
+  // Ops control (sys_ops_control / sys_ops_digest): daily system_status ledger snapshot + Monday owner brief (docs/ops/operating-manual.md).
+  const stopOpsControl = startOpsControlLoop({ db, send });
+  // Executive coordinator + weekly exec brief (sys_exec_coordinator / sys_exec_brief, OFF): routes approved objectives to allow-listed reversible actions (docs/exec/operating-model.md).
+  const stopExec = startExecLoop({ db, send });
+  // Business ops (sys_finance_intel, sys_biz_admin, sys_partner_ops): P&L snapshots + Meta ad_spend capture, weekly obligations digest, partner statements/health. Never moves money (docs/ops/prd.md).
+  const stopBusinessOps = startBusinessOpsLoop({ db, send });
+  // Product intelligence (sys_reliability, sys_delivery_econ, sys_competitive, sys_product_loop): SLO snapshot, cost-to-deliver, scorecard proposals, weekly product backlog.
+  const stopProductEngine = startProductEngineLoop({ db, send });
   log("info", "engine started", { worker: config.workerId, port: config.port, provider: provider.name, concurrency: config.concurrency, providerOk: runner.providerHealthy });
 
   let shutting = false;
@@ -96,12 +128,23 @@ async function main(): Promise<void> {
       stopWeekly();
       stopRecovery();
       stopWinback();
+      stopOfferIntel();
       stopProof();
+      stopCustomerSuccess();
       stopAdCheck();
+      stopRevenue();
+      stopOps();
+      stopOpsControl();
+      stopExec();
+      stopBusinessOps();
+      stopProductEngine();
       stopAdWatch();
       stopFreeTools();
       stopIndustryExamples();
       stopReels();
+      stopOptimizer();
+      stopExecStrategy();
+      stopProductIntel();
       stopViral();
       stopAiAssistant();
       stopShopify();

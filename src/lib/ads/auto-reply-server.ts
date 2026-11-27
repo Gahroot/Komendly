@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { founderFrom } from "./lifecycle/founder";
 import { sendAdsMail } from "./mailer";
 import { reviewGate, type TextFn } from "@/lib/growth/review-gate";
+import { kbAnswer } from "@/lib/ops/kb";
 import { getSelfRefundEligibility } from "./self-refund";
 import { ANSWER_FACTS, AUTO_HEADER, buildAutoReply, CLASSIFY_SCHEMA, CLASSIFY_SYSTEM, classifyByRules, guardrailBlock, loopSkipReason, needsHuman, parseCategory, repliesTo, SENDER_WINDOW_MS, threadKey, type ReplyCategory } from "./auto-reply";
 
@@ -81,7 +82,8 @@ export async function handleAutoReply(r: InboundReply, text: TextFn = webText): 
     const run = r.userId ? await prisma.adRun.findFirst({ where: { userId: r.userId }, orderBy: { createdAt: "desc" }, select: { id: true } }) : null;
     const ctx = { category, firstName: (user?.name ?? r.fromName ?? "").trim().split(/\s+/)[0] || null, runUrl: run ? `${base}/ads/runs/${run.id}` : null, pricingUrl: `${base}/pricing`, billingUrl: `${base}/ads/billing`, paying, answer: null as string | null };
     if (category === "how_to" || category === "interested" || category === "objection") {
-      ctx.answer = await text({
+      // Deterministic knowledge-base answer first (src/lib/ops/kb.ts, facts from public-offer.ts); the model only answers what the KB does not cover.
+      ctx.answer = kbAnswer(r.text)?.answer.slice(0, 600) ?? await text({
         system: "You write ONE short paragraph (max 60 words, plain text, no greeting, no sign-off, no links) answering a customer's email as Nolan, Komendly's founder. Warm, honest. Use ONLY the facts given. Never promise leads, sales or results. If unsure, say you'll check.",
         prompt: `FACTS:\n${ANSWER_FACTS}\n\nTheir email:\n${r.text.slice(0, 2000)}`,
       }).then((x) => x.text.trim().slice(0, 600) || null).catch(() => null);

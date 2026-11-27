@@ -1,0 +1,175 @@
+[
+  {
+    "id": "prod-01",
+    "area": 1,
+    "name": "Creative quality",
+    "status": "partial",
+    "evidence": "QC/critique events per ad; src/lib/product-intel/creative.ts, critique.ts tests. Measurable: Share of generated ads passing QC and the critique rubric on first render; no unsupported claims.",
+    "code_refs": [
+      "src/lib/product-intel/creative.ts",
+      "src/lib/product-intel/critique.ts",
+      "engine/src/jobs/qc.ts"
+    ],
+    "owner_action": "Needs real packs and customer ratings to calibrate the rubric."
+  },
+  {
+    "id": "prod-02",
+    "area": 2,
+    "name": "Advertising effectiveness",
+    "status": "partial",
+    "evidence": "src/lib/product-intel/effectiveness.ts tests; Meta insights. Measurable: Cost per lead / CTR of published ads vs the customer's own baseline.",
+    "code_refs": [
+      "src/lib/product-intel/effectiveness.ts",
+      "engine/src/growth/meta-results.ts"
+    ],
+    "owner_action": "Needs real Meta spend from paying customers (currently ~1 buyer)."
+  },
+  {
+    "id": "prod-03",
+    "area": 3,
+    "name": "Self-learning campaigns",
+    "status": "awaiting_prerequisite",
+    "evidence": "Optimizer/outcome events; src/lib/optimizer tests. Measurable: Next week's ads change because of last week's results.",
+    "code_refs": [
+      "src/lib/optimizer/cycle.ts",
+      "src/lib/product-intel/outcomes.ts"
+    ],
+    "owner_action": "Needs live spend and results to learn from."
+  },
+  {
+    "id": "prod-04",
+    "area": 4,
+    "name": "Complete customer problem solving",
+    "status": "partial",
+    "evidence": "engine/src/customersuccess; product_loop ingests customer_success_finding. Measurable: Share of customer problems (support replies, stuck states) resolved without the founder.",
+    "code_refs": [
+      "src/lib/revenue-lifecycle/success.ts",
+      "engine/src/productintel/run.ts"
+    ],
+    "owner_action": "Needs real replies and failures to cluster."
+  },
+  {
+    "id": "prod-05",
+    "area": 5,
+    "name": "Radical simplicity",
+    "status": "partial",
+    "evidence": "docs/product/friction-map.md; reliability snapshot time_to_first_ad. Measurable: Steps and minutes from link to first ad; fewer decisions asked of the owner.",
+    "code_refs": [
+      "docs/product/friction-map.md",
+      "src/lib/product-intel/reliability.ts"
+    ],
+    "owner_action": "Needs funnel volume for drop-off rates."
+  },
+  {
+    "id": "prod-06",
+    "area": 6,
+    "name": "Customer-specific intelligence",
+    "status": "partial",
+    "evidence": "docs/product/customer-intel.md; tests in src/lib/customer-intel. Measurable: Ads and advice reflect the customer's trade, area and history.",
+    "code_refs": [
+      "src/lib/customer-intel/",
+      "docs/product/customer-intel.md"
+    ],
+    "owner_action": "Needs real customers to validate relevance."
+  },
+  {
+    "id": "prod-07",
+    "area": 7,
+    "name": "Agency product excellence",
+    "status": "documented",
+    "evidence": "docs/product/agency-gaps.md. Measurable: Agency-grade deliverables (reporting, multi-brand, white-label gaps) identified and closed.",
+    "code_refs": [
+      "docs/product/agency-gaps.md"
+    ],
+    "owner_action": "Needs agency users to confirm priorities."
+  },
+  {
+    "id": "prod-08",
+    "area": 8,
+    "name": "Competitive superiority",
+    "status": "operational_pending_flag",
+    "evidence": "src/lib/product-intel/__tests__/reliability-econ-loop.test.ts (competitive block); npx tsx scripts/competitive-scan.ts. Measurable: Transparent scorecard vs alternatives from public facts; differentiators proposed, not claimed.",
+    "code_refs": [
+      "src/lib/product-intel/competitive.ts",
+      "scripts/competitive-scan.ts",
+      "docs/product/competitive.md",
+      "engine/src/productintel/run.ts (competitiveTick)"
+    ],
+    "owner_action": "Canva, Pencil, Smartly, Meta Advantage+ not yet verified (run scan with --fetch and review); customer-win evidence needs real results."
+  },
+  {
+    "id": "prod-09",
+    "area": 9,
+    "name": "Outcome verification",
+    "status": "partial",
+    "evidence": "docs/product/outcomes.md; outcome tests. Measurable: Claims about results are verified against measured data before they are shown.",
+    "code_refs": [
+      "src/lib/product-intel/outcomes.ts",
+      "docs/product/outcomes.md"
+    ],
+    "owner_action": "Needs measured customer results."
+  },
+  {
+    "id": "prod-10",
+    "area": 10,
+    "name": "Autonomous product improvement",
+    "status": "built_flag_off",
+    "evidence": "vitest: product loop block; AdsEvent product_backlog / product_digest / product_auto_applied. Measurable: Weekly ranked backlog and plain-English what-to-build-next; config-only auto-apply within an allow-list.",
+    "code_refs": [
+      "src/lib/product-intel/backlog.ts",
+      "engine/src/productintel/run.ts (productLoopCycle)",
+      "src/app/admin/ads/product/_cards/backlog-card.tsx"
+    ],
+    "owner_action": "Ranking quality needs real signals; turn on sys_product_loop after deploy. Owner approves backlog status changes."
+  },
+  {
+    "id": "prod-11",
+    "area": 11,
+    "name": "Reliability",
+    "status": "built_flag_off",
+    "evidence": "vitest: reliability block; admin card /admin/ads/product. Measurable: SLO: >= 97% of standard packs finish with >= 8 ads within 10 minutes; outages and stuck jobs detected same day.",
+    "code_refs": [
+      "src/lib/product-intel/reliability.ts",
+      "engine/src/productintel/run.ts (reliabilityTick)",
+      "src/app/admin/ads/product/_cards/reliability-card.tsx"
+    ],
+    "owner_action": "SLO needs >= 10 finished packs per window; provider/model split needs the engine to record provider in AdJob result (today often 'unknown')."
+  },
+  {
+    "id": "prod-12",
+    "area": 12,
+    "name": "Delivery economics",
+    "status": "built_flag_off",
+    "evidence": "vitest: delivery economics block; admin card. Measurable: Known cost to deliver per pack/ad/video/Studio turn and gross margin per plan and offer ($9 unlock, $97 first month, $297 plan, free pack as acquisition cost).",
+    "code_refs": [
+      "src/lib/product-intel/delivery-econ.ts",
+      "engine/src/productintel/run.ts (deliveryEconTick)",
+      "engine/src/providers/cost.ts"
+    ],
+    "owner_action": "Costs are API-list equivalents (Codex is flat-rate): margins conservative. Utilisation (share of credits used) needs real subscriber data."
+  },
+  {
+    "id": "prod-13",
+    "area": 13,
+    "name": "Collective intelligence",
+    "status": "awaiting_prerequisite",
+    "evidence": "Not yet built here. Measurable: Patterns learned across customers (trade, template, hook) improve everyone's output without leaking one customer's data.",
+    "code_refs": [
+      "docs/growth-ecosystem/learnings.md"
+    ],
+    "owner_action": "Needs many customers; privacy review before any cross-customer use."
+  },
+  {
+    "id": "prod-14",
+    "area": 14,
+    "name": "Autonomous operation",
+    "status": "partial",
+    "evidence": "src/lib/growth/systems.ts health; flags page. Measurable: Systems run, heartbeat, alert on failure and stop safely without the founder.",
+    "code_refs": [
+      "src/lib/growth/systems.ts",
+      "engine/src/jobs/monitor.ts",
+      "engine/src/productintel/run.ts"
+    ],
+    "owner_action": "Needs a deployed engine and flags turned on by the owner."
+  }
+]

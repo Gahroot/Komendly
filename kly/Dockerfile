@@ -19,6 +19,7 @@ COPY src/lib/kly/social-core.ts src/lib/kly/social-core.ts
 COPY src/lib/growth/systems.ts src/lib/growth/systems.ts
 COPY src/lib/growth/reels-core.ts src/lib/growth/reels-core.ts
 COPY src/lib/growth/reels-learning.ts src/lib/growth/reels-learning.ts
+COPY src/lib/optimizer/knowledge.ts src/lib/optimizer/knowledge.ts
 COPY src/lib/kly/review-video.ts src/lib/kly/review-video.ts
 COPY src/lib/testimonial/contracts.ts src/lib/testimonial/contracts.ts
 COPY src/lib/ads/outbound/copy.ts src/lib/ads/outbound/policy.ts src/lib/ads/outbound/inbound.ts src/lib/ads/outbound/

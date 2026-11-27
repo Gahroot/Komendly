@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { rateLimit } from "@/lib/ads/abuse";
 import { sendPurchaseEvent, sendLeadEvent, sendSubscribeEvent } from "@/lib/facebook-capi";
 
 export async function POST(request: NextRequest) {
   try {
+    // Any cookie passes the middleware, so cap what an anonymous caller can push into Meta's purchase signal.
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    if (!(await rateLimit(`capi:${ip}`, 10, 3600).catch(() => true))) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
     const body = await request.json();
     const { eventType, ...eventData } = body;
 

@@ -2,8 +2,11 @@
   "crons": [
     { "path": "/api/cron/scoreboard-digest", "schedule": "0 14 * * 1" },
     { "path": "/api/cron/growth-review", "schedule": "30 14 * * 1" },
+    { "path": "/api/cron/revenue-digest", "schedule": "45 14 * * 1" },
     { "path": "/api/cron/botd", "schedule": "0 15 * * *" },
     { "path": "/api/cron/indexnow", "schedule": "30 15 * * *" },
-    { "path": "/api/cron/content-queue", "schedule": "0 13 * * 1" }
+    { "path": "/api/cron/content-queue", "schedule": "0 13 * * 1" },
+    { "path": "/api/cron/funnel-monitor", "schedule": "0 16 * * *" },
+    { "path": "/api/cron/ops-watchdog", "schedule": "*/10 * * * *" }
   ]
 }
