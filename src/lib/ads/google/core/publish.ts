@@ -28,6 +28,78 @@ export function youtubeId(url: string | undefined | null): string | null {
   return m?.[1] ?? null;
 }
 
+/** What the web route knows when it enqueues publish_google (already validated against every limit). */
+export interface GooglePublishPayloadInput extends GooglePublishPayload {
+  requestedBy?: string;
+  mode?: string;
+  loginCustomerId?: string | null;
+  currency?: string | null;
+}
+
+/**
+ * The ONE way to build a publish_google AdJob payload (web route). Output always passes parseGooglePublishPayload
+ * (the engine's parser, same module); throws the same "Invalid publish_google payload: ..." error when it wouldn't.
+ */
+export function buildGooglePublishPayload(i: GooglePublishPayloadInput): Record<string, unknown> {
+  const yt = i.youtubeVideoUrl?.trim() || undefined;
+  const payload: Record<string, unknown> = {
+    adIds: [...new Set(i.adIds)],
+    customerId: i.customerId,
+    campaigns: [...new Set(i.campaigns)],
+    dailyBudget: i.dailyBudget, // major units, per campaign (the engine converts to micros)
+    geo: i.geo,
+    keywords: i.keywords.map((k) => ({ text: keywordText(k.text), match: k.match })),
+    search: { headlines: i.search.headlines.map((h) => h.trim()), descriptions: i.search.descriptions.map((d) => d.trim()), path1: i.search.path1.trim(), path2: i.search.path2.trim() },
+    finalUrl: i.finalUrl.trim(),
+    ...(yt ? { youtubeVideoUrl: yt, youtubeVideoId: youtubeId(yt) ?? undefined } : {}),
+    ...(i.maxCpc ? { maxCpc: i.maxCpc } : {}),
+    ...(i.bidding ? { bidding: i.bidding } : {}),
+    ...(i.requestedBy ? { requestedBy: i.requestedBy } : {}),
+    ...(i.mode ? { mode: i.mode } : {}),
+    ...(i.loginCustomerId ? { loginCustomerId: i.loginCustomerId } : {}),
+    ...(i.currency ? { currency: i.currency } : {}),
+  };
+  parseGooglePublishPayload(payload);
+  return payload;
+}
+
+export interface GoogleActivatePayload { publishId: string; action: "enable" | "pause"; requestedBy?: string }
+
+/** activate_google payload (web route builds, engine parses; same module). Extra keys are context for admins. */
+export function buildGoogleActivatePayload(i: GoogleActivatePayload & { customerId?: string; campaignResource?: string | null; mode?: string; loginCustomerId?: string | null }): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    publishId: i.publishId, action: i.action,
+    ...(i.requestedBy ? { requestedBy: i.requestedBy } : {}),
+    ...(i.customerId ? { customerId: i.customerId } : {}),
+    ...(i.campaignResource ? { campaignResource: i.campaignResource } : {}),
+    ...(i.mode ? { mode: i.mode } : {}),
+    ...(i.loginCustomerId ? { loginCustomerId: i.loginCustomerId } : {}),
+  };
+  parseGoogleActivatePayload(payload);
+  return payload;
+}
+
+export function parseGoogleActivatePayload(raw: Record<string, unknown>): GoogleActivatePayload {
+  const publishId = isStr(raw.publishId) && raw.publishId ? raw.publishId : "";
+  const action = raw.action === "enable" || raw.action === "pause" ? raw.action : null;
+  if (!publishId || !action) throw new Error("Invalid activate_google payload: needs publishId and action");
+  return { publishId, action, ...(isStr(raw.requestedBy) ? { requestedBy: raw.requestedBy } : {}) };
+}
+
+/** sync_google payload: scoped to some publish rows, or (null) to everything the job's runId/workspaceId covers. */
+export interface GoogleSyncPayload { publishIds: string[] | null }
+
+export function buildGoogleSyncPayload(i: { publishIds?: string[]; runId?: string } = {}): Record<string, unknown> {
+  const payload: Record<string, unknown> = { ...(i.runId ? { runId: i.runId } : {}), ...(i.publishIds ? { publishIds: [...new Set(i.publishIds)] } : {}) };
+  parseGoogleSyncPayload(payload);
+  return payload;
+}
+
+export function parseGoogleSyncPayload(raw: Record<string, unknown> | null | undefined): GoogleSyncPayload {
+  const ids = raw && Array.isArray(raw.publishIds) ? raw.publishIds.filter(isStr) : null;
+  return { publishIds: ids };
+}
+
 /** Throws on anything the engine must not send (the web route validates first; this is the last line). */
 export function parseGooglePublishPayload(raw: Record<string, unknown>): GooglePublishPayload {
   const fail = (m: string): never => { throw new Error(`Invalid publish_google payload: ${m}`); };

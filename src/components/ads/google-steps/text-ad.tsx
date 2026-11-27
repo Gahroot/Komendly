@@ -49,7 +49,6 @@ export function GooglePreview({ businessName, finalUrl, search }: { businessName
       </div>
       <p className="mt-1.5 break-words text-lg leading-snug text-[#1a0dab]">{heads.join(" | ") || "Your headline"}</p>
       <p className="mt-1 break-words text-sm leading-snug text-[#4d5156]">{desc || "Your description"}</p>
-      <figcaption className="sr-only">Google mixes your headlines and descriptions, so the real ad may look a bit different.</figcaption>
     </figure>
   );
 }

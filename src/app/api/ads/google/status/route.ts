@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { enqueueJob } from "@/lib/ads/jobs";
 import { googleAccess } from "@/lib/ads/google/access";
-import { GOOGLE_JOBS, GOOGLE_JOB_TYPES, SYNC_STALE_MS, canCreateAccounts, oauthVerified } from "@/lib/ads/google/config";
+import { GOOGLE_JOBS, SYNC_STALE_MS, canCreateAccounts, oauthVerified } from "@/lib/ads/google/config";
+import { buildGoogleSyncPayload } from "@/lib/ads/google/core/publish";
+import { googleJobView, plainGoogleError } from "@/lib/ads/google/job-view";
 import { readinessFor } from "@/lib/ads/google/connection";
 import { googleAdsUrl } from "@/lib/ads/google/core/ops";
 import { AdsHttpError, adsErrorResponse, requireWorkspaceMember } from "@/lib/ads/workspace";
@@ -21,7 +23,11 @@ export async function GET(request: Request) {
     const [conn, rows, job] = await Promise.all([
       prisma.googleAdsConnection.findUnique({ where: { workspaceId: workspace.id } }),
       prisma.googlePublish.findMany({ where: { runId, workspaceId: workspace.id }, orderBy: { createdAt: "desc" } }),
-      prisma.adJob.findFirst({ where: { runId, workspaceId: workspace.id, type: { in: GOOGLE_JOB_TYPES } }, orderBy: { createdAt: "desc" }, select: { type: true, status: true, lastError: true } }),
+      // The job the owner is waiting on (publish or start/pause). Background sync jobs never mask it.
+      prisma.adJob.findFirst({
+        where: { runId, workspaceId: workspace.id, type: { in: [GOOGLE_JOBS.publish, GOOGLE_JOBS.activate] } }, orderBy: { createdAt: "desc" },
+        select: { id: true, type: true, status: true, attempts: true, maxAttempts: true, lastError: true },
+      }),
     ]);
 
     // Stale serving/policy/metrics: queue a sync, never wait for it.
@@ -29,7 +35,7 @@ export async function GET(request: Request) {
     const stale = rows.some((r) => r.status === "published" && (!r.metricsAt || now - r.metricsAt.getTime() > SYNC_STALE_MS));
     if (stale) {
       const inFlight = await prisma.adJob.findFirst({ where: { runId, workspaceId: workspace.id, type: GOOGLE_JOBS.sync, status: { in: ["queued", "running"] } }, select: { id: true } });
-      if (!inFlight) await enqueueJob({ type: GOOGLE_JOBS.sync, runId, workspaceId: workspace.id, payload: { runId }, priority: 1, maxAttempts: 1 }).catch(() => undefined);
+      if (!inFlight) await enqueueJob({ type: GOOGLE_JOBS.sync, runId, workspaceId: workspace.id, payload: buildGoogleSyncPayload({ runId }), priority: 1, maxAttempts: 1 }).catch(() => undefined);
     }
 
     const readiness = conn ? await readinessFor(conn) : null;
@@ -46,9 +52,9 @@ export async function GET(request: Request) {
         adCount: r.kind === "search" ? 1 : Math.max(1, strings(r.adIds).length),
         serving: r.serving, policy: r.policy, policyIssues: strings(r.policyIssues),
         metrics: r.metrics ? { ...(r.metrics as object), since: (r.metrics as { since?: string }).since ?? r.createdAt.toISOString() } : undefined,
-        googleAdsUrl: googleAdsUrl(r.customerId, r.campaignId), error: r.error ?? undefined, updatedAt: r.updatedAt.toISOString(),
+        googleAdsUrl: googleAdsUrl(r.customerId, r.campaignId), error: r.status === "failed" ? plainGoogleError(r.error) ?? "We couldn't create this campaign. Nothing was charged." : plainGoogleError(r.error) ?? undefined, updatedAt: r.updatedAt.toISOString(),
       })),
-      job: job ? { type: job.type, status: job.status, error: job.status === "failed" ? job.lastError?.slice(0, 300) ?? undefined : undefined } : undefined,
+      job: job ? googleJobView(job, rows) : undefined,
     });
   } catch (error) {
     return adsErrorResponse(error);

@@ -9,8 +9,9 @@ import { formatCustomerId, formatMoney, monthlyEstimate } from "./logic";
 export type ConfirmPhase = "review" | "sending" | "done";
 
 export function ConfirmStep({
-  phase, status, accountName, customerId, imageCount, hasVideo, keywordCount, geo, dailyBudget, currency, campaigns, blockers, onAction, onRetry,
+  phase, status, accountName, customerId, imageCount, hasVideo, keywordCount, geo, dailyBudget, currency, campaigns, blockers, onAction, onRetry, hideLastFailure,
 }: {
+  hideLastFailure?: boolean;
   phase: ConfirmPhase;
   status: GoogleStatus;
   accountName: string;
@@ -56,7 +57,7 @@ export function ConfirmStep({
   const where = geo.map((g) => (g.kind === "location" ? g.name : `within ${g.miles} miles of ${g.label}`)).join(", ");
   return (
     <div className="space-y-4 text-sm">
-      {status.job?.status === "failed" && status.job.type.includes("publish") && (
+      {!hideLastFailure && status.job?.status === "failed" && status.job.type.includes("publish") && (
         <ErrorNote message="Last time Google didn't accept the campaign. Nothing was charged. Check the details and try again." />
       )}
       <dl className="grid gap-x-4 gap-y-2 rounded-md border border-border bg-card/50 px-3 py-3 sm:grid-cols-[auto_1fr]">

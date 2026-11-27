@@ -3,6 +3,7 @@
 // runner every 15 min (unscoped: rows due by cadence, hourly while live/under review, daily otherwise).
 import { esc } from "../../../src/lib/ads/lifecycle/template";
 import { googleAdsUrl } from "../../../src/lib/ads/google/core/ops";
+import { parseGoogleSyncPayload } from "../../../src/lib/ads/google/core/publish";
 import { syncCampaigns } from "../../../src/lib/ads/google/core/sync";
 import type { GoogleAdsClient } from "../../../src/lib/ads/google/core/client";
 import type { Db } from "../db";
@@ -39,7 +40,7 @@ function defaultSend(): SendMail {
 export async function handleSyncGoogle(ctx: JobContext, deps: { client?: (workspaceId: string) => Promise<GoogleAdsClient>; send?: SendMail } = {}): Promise<unknown> {
   const { job, db } = ctx;
   const now = ctx.now();
-  const ids = Array.isArray(job.payload.publishIds) ? job.payload.publishIds.filter((x): x is string => typeof x === "string") : null;
+  const ids = parseGoogleSyncPayload(job.payload).publishIds;
   const where = {
     status: "published", campaignResource: { not: null },
     ...(ids ? { id: { in: ids } } : {}), ...(job.workspaceId ? { workspaceId: job.workspaceId } : {}), ...(job.runId ? { runId: job.runId } : {}),

@@ -6,6 +6,7 @@ import { enqueueJob } from "@/lib/ads/jobs";
 import { requireGoogleAccess } from "@/lib/ads/google/access";
 import { GOOGLE_JOBS } from "@/lib/ads/google/config";
 import { requireGoogleConnection } from "@/lib/ads/google/connection";
+import { buildGoogleActivatePayload } from "@/lib/ads/google/core/publish";
 import { AdsHttpError, adsErrorResponse, requireWorkspaceMember } from "@/lib/ads/workspace";
 
 const Body = z.object({ publishId: z.string().min(1), action: z.enum(["enable", "pause"]) });
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
     if (!(await rateLimit(`google_activate:${workspace.id}`, 20, 3600))) throw new AdsHttpError(429, "rate_limited", "Too many changes. Please wait a while and try again.");
     const job = await enqueueJob({
       type: GOOGLE_JOBS.activate, runId: row.runId, workspaceId: workspace.id, priority: 5, maxAttempts: 2,
-      payload: { publishId: row.id, action: parsed.data.action, customerId: row.customerId, loginCustomerId: conn.loginCustomerId, mode: conn.mode, campaignResource: row.campaignResource, requestedBy: user.id },
+      payload: buildGoogleActivatePayload({ publishId: row.id, action: parsed.data.action, customerId: row.customerId, loginCustomerId: conn.loginCustomerId, mode: conn.mode, campaignResource: row.campaignResource, requestedBy: user.id }),
     });
     return NextResponse.json({ jobId: job.id }, { status: 202 });
   } catch (error) {

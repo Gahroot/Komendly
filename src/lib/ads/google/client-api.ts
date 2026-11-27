@@ -45,7 +45,7 @@ export type GooglePublishView = {
   updatedAt: string;
 };
 
-export type GoogleJob = { type: string; status: "queued" | "running" | "succeeded" | "failed"; error?: string };
+export type GoogleJob = { id?: string; type: string; status: "queued" | "running" | "succeeded" | "failed"; error?: string; canRetry?: boolean };
 
 export type GoogleStatus = {
   available: boolean;

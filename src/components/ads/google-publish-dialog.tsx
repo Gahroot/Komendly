@@ -56,7 +56,9 @@ export function GooglePublishDialog({ runId, adIds }: { runId: string; adIds: st
   const [phase, setPhase] = useState<ConfirmPhase>("review");
   const [publishing, setPublishing] = useState(false);
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
-  const sawBusy = useRef(false);
+  // The publish job this dialog is waiting on (null after a 409: follow whatever publish job is in flight).
+  const [jobId, setJobId] = useState<string | null>(null);
+  const publishRef = useRef<() => Promise<void>>(async () => undefined);
 
   const conn = status?.connection ?? null;
   const ok = !!status?.available;
@@ -127,7 +129,8 @@ export function GooglePublishDialog({ runId, adIds }: { runId: string; adIds: st
     try {
       const d = await googleApi.draft(runId, adIds);
       setDraft(d);
-      setSelected(previewsByAd(d.images).map((p) => p.adId));
+      // Image ads are opt-in: search ads are the core for local businesses, the owner ticks images to add them.
+      setSelected([]);
       setGeo(d.geo.suggested ? [d.geo.suggested] : []);
       setBudget(String(Math.max(d.budget.suggestedDaily, d.budget.min)));
       setSearch(d.search);
@@ -150,14 +153,21 @@ export function GooglePublishDialog({ runId, adIds }: { runId: string; adIds: st
   }, [phase, refresh]);
   useEffect(() => {
     if (phase !== "sending" || !status) return;
-    if (busyJob) { sawBusy.current = true; return; }
-    if (!sawBusy.current || !status.job) return;
-    if (status.job.status === "succeeded" || status.publishes.length > 0) setPhase("done");
-    else {
+    const j = status.job;
+    if (!j || !j.type.includes("publish")) return;
+    if (jobId && j.id && j.id !== jobId) return; // status still shows an older job
+    if (j.status === "queued" || j.status === "running") return;
+    if (j.status === "succeeded") { setPhase("done"); return; }
+    const message = plainServerError(j.error, "We couldn't create your campaign. Nothing was charged.");
+    if (j.canRetry !== false) {
       setPhase("review");
-      setError({ message: plainServerError(status.job.error, "Google didn't accept the campaign. Nothing was charged."), action: { label: "Get help", href: HELP_PATH } });
+      setError({ message, action: { label: "Try again", onClick: () => void publishRef.current() } });
+    } else {
+      // Part of it reached Google Ads and couldn't be removed: show what is there, no automatic retry.
+      setPhase("done");
+      setError({ message, action: { label: "Open Google Ads", href: status.publishes.find((p) => p.status === "published")?.googleAdsUrl ?? "https://ads.google.com" } });
     }
-  }, [phase, status, busyJob]);
+  }, [phase, status, jobId]);
 
   if (hidden) return null;
 
@@ -189,7 +199,7 @@ export function GooglePublishDialog({ runId, adIds }: { runId: string; adIds: st
     setConfirmDisconnect(false);
     if (!o) { setError(null); return; }
     void refresh();
-    if (status?.publishes.length && status.connection) { setStep("confirm"); setPhase(busyJob ? "sending" : "done"); sawBusy.current = busyJob; }
+    if (status?.publishes.length && status.connection) { setStep("confirm"); setPhase(busyJob ? "sending" : "done"); setJobId(null); }
   };
 
   const createAccount = async (input: { email: string; currency: string; timeZone: string }) => {
@@ -225,22 +235,25 @@ export function GooglePublishDialog({ runId, adIds }: { runId: string; adIds: st
   const publish = async () => {
     if (!conn?.customerId || allBlockers.length) return;
     setPublishing(true); setError(null);
-    sawBusy.current = false;
     try {
       const yt = youtubeUrl.trim();
-      await googleApi.publish({
+      const r = await googleApi.publish({
         runId, adIds: selected, customerId: conn.customerId, campaigns, dailyBudget: daily, geo, keywords, search: { ...search, headlines: search.headlines.map((h) => h.trim()), descriptions: search.descriptions.map((d) => d.trim()) },
         finalUrl: finalUrl.trim(), ...(yt ? { youtubeVideoUrl: yt } : {}),
       });
+      setJobId(r.jobId);
       setPhase("sending");
       await refresh();
     } catch (e) {
-      if (e instanceof GoogleApiError && e.status === 409) { setPhase("sending"); await refresh(); }
+      if (e instanceof GoogleApiError && e.status === 409 && e.code === "publish_in_progress") { setJobId(null); setPhase("sending"); await refresh(); }
+      else if (e instanceof GoogleApiError && e.code === "partial_publish") setError({ message: e.message, action: { label: "Open Google Ads", href: status?.publishes.find((p) => p.status === "published")?.googleAdsUrl ?? "https://ads.google.com" } });
       else setError({ message: msg(e, "We couldn't send your ads to Google."), action: { label: "Try again", onClick: () => void publish() } });
     } finally {
       setPublishing(false);
     }
   };
+
+  publishRef.current = publish;
 
   const locked = status && !status.available;
   const draftStep = ["ads", "area", "budget", "text"].includes(step) || (step === "confirm" && phase === "review");
@@ -324,7 +337,7 @@ export function GooglePublishDialog({ runId, adIds }: { runId: string; adIds: st
           ) : (
             <ConfirmStep phase={phase} status={status} accountName={conn.accountName ?? "Your Google Ads account"} customerId={conn.customerId ?? ""}
               imageCount={selected.length} hasVideo={!!youtubeId(youtubeUrl)} keywordCount={keywords.length} geo={geo} dailyBudget={daily} currency={currency}
-              campaigns={campaigns.length} blockers={allBlockers} onAction={(id, a) => runGoogleAction(runId, id, a)}
+              campaigns={campaigns.length} blockers={allBlockers} hideLastFailure={!!error} onAction={(id, a) => runGoogleAction(runId, id, a)}
               onRetry={() => { setPhase("review"); setStep("text"); }} />
           )}
         </div>

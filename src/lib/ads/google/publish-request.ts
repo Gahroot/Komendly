@@ -4,9 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { enqueueJob } from "@/lib/ads/jobs";
 import { AdsHttpError } from "@/lib/ads/workspace";
 import { qcPassed } from "@/lib/ads/meta/publish-request";
-import { budgetSuggestion, toMicros } from "./core/draft";
+import { budgetSuggestion } from "./core/draft";
+import { buildGooglePublishPayload } from "./core/publish";
 import { keywordText, searchCopyErrors } from "./core/text";
-import { CAMPAIGN_KINDS, LIMITS, type CampaignKind, type GeoPick, type KeywordPick } from "./core/types";
+import { CAMPAIGN_KINDS, LIMITS, type CampaignKind } from "./core/types";
 import { GOOGLE_JOBS, GOOGLE_JOB_TYPES } from "./config";
 
 const Geo = z.discriminatedUnion("kind", [
@@ -57,8 +58,31 @@ export function publishRequestErrors(req: GooglePublishRequest, currency: string
   return [...new Set(errs)];
 }
 
+/** The publish_google AdJob payload for a validated request (shared core builder; the engine parses it with the same module). */
+export function googlePublishPayloadFor(
+  req: GooglePublishRequest,
+  ctx: { mode: string; customerId: string; loginCustomerId: string | null; currency: string | null; userId: string; adIds?: string[] },
+): Record<string, unknown> {
+  try {
+    return buildGooglePublishPayload({
+      adIds: ctx.adIds ?? [...new Set(req.adIds)], customerId: ctx.customerId, campaigns: [...new Set(req.campaigns)], dailyBudget: req.dailyBudget,
+      geo: req.geo, keywords: req.keywords, search: req.search, finalUrl: req.finalUrl, youtubeVideoUrl: req.youtubeVideoUrl,
+      requestedBy: ctx.userId, mode: ctx.mode, loginCustomerId: ctx.loginCustomerId, currency: ctx.currency,
+    });
+  } catch (e) {
+    throw new AdsHttpError(400, "invalid", "Check your ad details and try again.", { problems: [e instanceof Error ? e.message : String(e)] });
+  }
+}
+
 export async function publishJobInFlight(runId: string, workspaceId: string): Promise<boolean> {
   return !!(await prisma.adJob.findFirst({ where: { runId, workspaceId, type: GOOGLE_JOBS.publish, status: { in: ["queued", "running"] } }, select: { id: true } }));
+}
+
+/** A failed publish job that still left a campaign in Google Ads (rollback failed): retrying would duplicate it. */
+export async function partialPublishLeft(runId: string, workspaceId: string): Promise<boolean> {
+  const last = await prisma.adJob.findFirst({ where: { runId, workspaceId, type: GOOGLE_JOBS.publish }, orderBy: { createdAt: "desc" }, select: { id: true, status: true } });
+  if (!last || last.status === "succeeded") return false;
+  return !!(await prisma.googlePublish.findFirst({ where: { jobId: last.id, status: "published", serving: { not: "removed" } }, select: { id: true } }));
 }
 
 export async function enqueueGooglePublish(
@@ -68,6 +92,9 @@ export async function enqueueGooglePublish(
   const run = await prisma.adRun.findUnique({ where: { id: req.runId }, select: { workspaceId: true } });
   if (!run || run.workspaceId !== ctx.workspaceId) throw new AdsHttpError(404, "not_found", "Not found.");
   if (await publishJobInFlight(req.runId, ctx.workspaceId)) throw new AdsHttpError(409, "publish_in_progress", "Your ads are already being created. Give it a minute.");
+  if (await partialPublishLeft(req.runId, ctx.workspaceId)) {
+    throw new AdsHttpError(409, "partial_publish", "Part of your last try is still in Google Ads (paused). Remove that campaign in Google Ads first, so you don't pay for the same ads twice.");
+  }
   const errs = publishRequestErrors(req, ctx.conn.currency);
   if (errs.length) throw new AdsHttpError(400, "invalid", errs[0]!, { problems: errs });
   const adIds = [...new Set(req.adIds)];
@@ -77,16 +104,8 @@ export async function enqueueGooglePublish(
       throw new AdsHttpError(400, "ads_not_ready", "Only finished ads that passed our quality checks can go to Google.");
     }
   }
-  const geo: GeoPick[] = req.geo;
-  const keywords: KeywordPick[] = req.keywords.map((k) => ({ text: keywordText(k.text), match: k.match }));
   const campaigns = [...new Set(req.campaigns)];
-  const payload = {
-    customerId: ctx.conn.customerId, loginCustomerId: ctx.conn.loginCustomerId, mode: ctx.conn.mode, campaigns,
-    dailyBudgetMicros: toMicros(req.dailyBudget), currency: ctx.conn.currency, geo, keywords,
-    search: { headlines: req.search.headlines.map((h) => h.trim()), descriptions: req.search.descriptions.map((d) => d.trim()), path1: req.search.path1.trim(), path2: req.search.path2.trim() },
-    finalUrl: req.finalUrl.trim(), adIds, youtubeVideoUrl: req.youtubeVideoUrl?.trim() || undefined,
-    youtubeVideoId: req.youtubeVideoUrl?.trim() ? youtubeVideoId(req.youtubeVideoUrl) : undefined, requestedBy: ctx.userId,
-  };
+  const payload = googlePublishPayloadFor(req, { ...ctx.conn, userId: ctx.userId, adIds });
   const job = await enqueueJob({ type: GOOGLE_JOBS.publish, runId: req.runId, workspaceId: ctx.workspaceId, payload, priority: 5, maxAttempts: 1 });
   await prisma.googlePublish.createMany({
     data: campaigns.map((kind) => ({ runId: req.runId, workspaceId: ctx.workspaceId, kind, customerId: ctx.conn.customerId, adIds: kind === "demand_gen" ? adIds : [], jobId: job.id })),
