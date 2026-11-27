@@ -25,6 +25,7 @@ WORKDIR /app
 COPY prisma/schema.prisma prisma/schema.prisma
 COPY src/lib/ads/contracts.ts src/lib/ads/contracts.ts
 COPY src/lib/ads/meta/core/ src/lib/ads/meta/core/
+COPY src/lib/ads/google/core/ src/lib/ads/google/core/
 COPY src/lib/ads/trial-confirm.ts src/lib/ads/trial-confirm.ts
 COPY src/lib/testimonial/contracts.ts src/lib/testimonial/contracts.ts
 COPY src/lib/studio/contracts.ts src/lib/studio/contracts.ts

@@ -26,7 +26,7 @@ const SECTIONS: readonly LegalSection[] = [
     id: "who",
     title: "Who we are",
     body: (
-      <p>Komendly runs komendly.com and its two products: Komendly Ads (turns your website into ad creatives and can publish them to your Meta ad account) and Komendly Testimonials (turns customer reviews into AI-avatar videos). Komendly is operated by Grout Global LLC. In this policy &quot;we&quot; means Komendly (Grout Global LLC), the controller of the personal data described here. To contact us about privacy, email <a href="mailto:nolan@komendly.com">nolan@komendly.com</a> or reply to any email we have sent you.</p>
+      <p>Komendly runs komendly.com and its two products: Komendly Ads (turns your website into ad creatives and can publish them to your Meta or Google Ads account) and Komendly Testimonials (turns customer reviews into AI-avatar videos). Komendly is operated by Grout Global LLC. In this policy &quot;we&quot; means Komendly (Grout Global LLC), the controller of the personal data described here. To contact us about privacy, email <a href="mailto:nolan@komendly.com">nolan@komendly.com</a> or reply to any email we have sent you.</p>
     ),
   },
   {
@@ -138,6 +138,23 @@ const SECTIONS: readonly LegalSection[] = [
     ),
   },
   {
+    id: "google-data",
+    title: "Google user data and how to delete it",
+    body: (
+      <>
+        <p>If you connect Google Ads to publish ads, you either sign in with Google or link your account to Komendly&apos;s Google Ads manager account. With sign-in, Google gives us your email address and a token for the Google Ads permission you approve (https://www.googleapis.com/auth/adwords). We use it to list the Google Ads accounts you can reach (name, id, currency, time zone, status), check that your chosen account is active and has billing set up, create the paused campaigns, ad groups, keywords, ads, images and location targeting you ask for, turn them on or off when you click to, and read their review status and totals (impressions, clicks, cost, conversions) to show you in Komendly.</p>
+        <p>We store only the token (encrypted at rest), your email, the account you pick and the ids and status of what we published. We use this data only to run the Google Ads features you use in Komendly. We don&apos;t sell it, use it for advertising, use it to train AI models, or let people read it, except with your permission, for security, or when the law requires it.</p>
+        <p>Komendly&apos;s use and transfer of information received from Google APIs to any other app will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+        <p>To delete it:</p>
+        <ul>
+          <li>Click <strong>Disconnect</strong> in the Publish to Google dialog. We delete the token and your chosen account right away, ask Google to revoke our access and, if you linked through our manager account, remove that link.</li>
+          <li>Or remove Komendly at <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">myaccount.google.com/permissions</a>, or remove the Komendly manager in Google Ads under Admin &gt; Access and security &gt; Managers. Our access stops immediately.</li>
+          <li>To delete everything, including the record of what we published, email <a href="mailto:nolan@komendly.com">nolan@komendly.com</a> from your account address and we will do it within 30 days. Campaigns already in your Google Ads account stay yours; remove them there if you want them gone.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: "ad-leads",
     title: "Leads from ads we run for you",
     body: (
@@ -190,7 +207,7 @@ const SECTIONS: readonly LegalSection[] = [
   {
     id: "security",
     title: "Security",
-    body: <p>We use HTTPS, hash passwords, encrypt Meta access tokens at rest and give out file download links that expire within minutes. No system is perfectly secure, but we work to protect your data.</p>,
+    body: <p>We use HTTPS, hash passwords, encrypt Meta and Google access tokens at rest and give out file download links that expire within minutes. No system is perfectly secure, but we work to protect your data.</p>,
   },
   {
     id: "changes",
@@ -205,7 +222,7 @@ export default function PrivacyPage() {
       title="Privacy Policy"
       intro={<p>Plain English: what we collect when you use Komendly, why, who helps us process it, how long we keep it and how to opt out.</p>}
       sections={SECTIONS}
-      effectiveDate="19 November 2026"
+      effectiveDate="27 November 2026"
     />
   );
 }

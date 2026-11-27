@@ -480,20 +480,22 @@ model AdsWorkspace {
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
-  members        AdsWorkspaceMember[]
-  studioSessions StudioSession[]
-  brandProfiles  BrandProfile[]
-  runs           AdRun[]
-  ads            Ad[]
-  ledger         CreditLedger[]
-  abuseFlags     AbuseFlag[]
-  refunds        AdsRefund[]
-  metaConnection MetaConnection?
-  autopilot      AdsAutopilot?
-  mandate        MarketingMandate?
-  teamActions    MarketingAction[]
-  adPerformance  AdPerformanceDay[]
-  metaLeads      MetaLead[]
+  members             AdsWorkspaceMember[]
+  studioSessions      StudioSession[]
+  brandProfiles       BrandProfile[]
+  runs                AdRun[]
+  ads                 Ad[]
+  ledger              CreditLedger[]
+  abuseFlags          AbuseFlag[]
+  refunds             AdsRefund[]
+  metaConnection      MetaConnection?
+  autopilot           AdsAutopilot?
+  mandate             MarketingMandate?
+  teamActions         MarketingAction[]
+  adPerformance       AdPerformanceDay[]
+  metaLeads           MetaLead[]
+  googleAdsConnection GoogleAdsConnection?
+  googlePublishes     GooglePublish[]
 
   @@index([ownerId])
   @@index([adsPlan])
@@ -1889,4 +1891,75 @@ model MetaLead {
   workspace AdsWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId, receivedAt])
+}
+
+// Google Ads publishing (paid + AdsFeatureFlag google_publish). Spend is on the customer's own Google account.
+// mode oauth: the customer's refresh token (encrypted, ADS_TOKEN_KEY); mode manager: Komendly's manager account
+// (GOOGLE_ADS_MANAGER_ID) acts through an accepted link or a client account it created (encryptedToken null).
+model GoogleAdsConnection {
+  id                  String   @id @default(cuid())
+  workspaceId         String   @unique
+  mode                String // oauth | manager
+  encryptedToken      String?
+  email               String?
+  customerId          String? // 10 digits, no dashes
+  loginCustomerId     String? // manager the customer is reached through (oauth), else null
+  accountName         String?
+  currency            String?
+  timeZone            String?
+  managerLinkResource String? // customers/{manager}/customerClientLinks/{client}~{linkId}
+  managerLinkStatus   String? // pending | active | rejected (manager mode)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  workspace AdsWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+}
+
+// One row per campaign Komendly created (or tried to) on Google Ads. Everything is created PAUSED.
+model GooglePublish {
+  id               String    @id @default(cuid())
+  runId            String
+  workspaceId      String
+  adIds            Json      @default("[]")
+  kind             String // search | demand_gen
+  status           String    @default("pending") // pending | published | failed
+  customerId       String
+  campaignId       String?
+  campaignResource String?
+  budgetResource   String?
+  adGroupResource  String?
+  adResources      Json      @default("[]")
+  campaignName     String?
+  serving          String    @default("paused") // paused | enabled | removed | unknown
+  policy           String    @default("unknown") // approved | under_review | disapproved | limited | unknown
+  policyIssues     Json      @default("[]")
+  policyNotified   String? // policy value the owner was last emailed about (approved | disapproved)
+  metrics          Json?
+  metricsAt        DateTime?
+  error            String?
+  jobId            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  workspace AdsWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([workspaceId, createdAt])
+  @@index([jobId])
+  @@index([status, metricsAt])
+}
+
+// Server-side OAuth state + PKCE verifier for "Sign in with Google" (short-lived, single use).
+model GoogleOAuthState {
+  state        String   @id
+  workspaceId  String
+  userId       String
+  codeVerifier String
+  returnTo     String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([expiresAt])
 }

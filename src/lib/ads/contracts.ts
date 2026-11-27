@@ -111,6 +111,9 @@ export const JOB_TYPES = [
   "qc",
   "publish_meta",
   "activate_meta",
+  "publish_google",
+  "activate_google",
+  "sync_google",
   "cleanup",
 ] as const;
 export type JobType = (typeof JOB_TYPES)[number];

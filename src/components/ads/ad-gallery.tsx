@@ -20,6 +20,8 @@ import { AwarenessGroupHeader } from "./awareness-group-header";
 import { AdSkeletonCard } from "./ad-skeleton-card";
 import { FirstAdTimer } from "./first-ad-timer";
 import { MetaPublishDialog } from "./meta-publish-dialog";
+import { GooglePublishDialog } from "./google-publish-dialog";
+import { GoogleRunPanel } from "./google-publish-status";
 
 export function AdGallery({ run, offerOpen = false, remainingMs = null, unlockPack = false, offerReady = true, unlockAvailable = false, lockedUpsell = true }: { run: RunView; offerOpen?: boolean; remainingMs?: number | null; unlockPack?: boolean; offerReady?: boolean; unlockAvailable?: boolean; lockedUpsell?: boolean }) {
   const ratios = RATIOS.filter((r) => run.ratios.includes(r));
@@ -64,6 +66,7 @@ export function AdGallery({ run, offerOpen = false, remainingMs = null, unlockPa
             </Tabs>
           )}
           {done && <MetaPublishDialog runId={run.id} />}
+          {done && <GooglePublishDialog runId={run.id} adIds={live.filter((a) => a.status === "ready").map((a) => a.id)} />}
           <Button asChild disabled={ready === 0}>
             <a href={ready ? `/api/ads/runs/${run.id}/download` : undefined} aria-disabled={ready === 0} onClick={(e) => {
               if (!ready) return;
@@ -79,6 +82,7 @@ export function AdGallery({ run, offerOpen = false, remainingMs = null, unlockPa
           </Button>
         </div>
       </div>
+      {done && <GoogleRunPanel runId={run.id} />}
       {run.status === "failed" && <p className="text-sm text-destructive">{run.error ?? "This run failed. Unused credits were refunded."}</p>}
       {groups.map(([level, ads]) => (
         <div key={level} className="space-y-4">

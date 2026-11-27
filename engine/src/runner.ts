@@ -20,6 +20,9 @@ import { failRun, maybeFinalizeRun, syncRunCost } from "./jobs/finalize";
 import { planJob } from "./jobs/plan";
 import { handlePublishMeta } from "./jobs/publish-meta";
 import { handleActivateMeta } from "./jobs/activate-meta";
+import { handlePublishGoogle } from "./jobs/publish-google";
+import { handleActivateGoogle } from "./jobs/activate-google";
+import { handleSyncGoogle, scheduleGoogleSync } from "./jobs/sync-google";
 import { handleTeamPause } from "./jobs/team-ops";
 import { TEAM_PAUSE_JOB } from "../../src/lib/ads/team/contracts";
 import { qcJob } from "./jobs/qc";
@@ -50,6 +53,9 @@ export const HANDLERS: Record<string, JobHandler> = {
   cleanup: cleanupJob,
   publish_meta: (c) => handlePublishMeta(c),
   activate_meta: (c) => handleActivateMeta(c),
+  publish_google: (c) => handlePublishGoogle(c),
+  activate_google: (c) => handleActivateGoogle(c),
+  sync_google: (c) => handleSyncGoogle(c),
   [TEAM_PAUSE_JOB]: (c) => handleTeamPause(c),
   [TESTIMONIAL_JOB_TYPE]: testimonialJob,
   [TESTIMONIAL_RECOMMEND_JOB_TYPE]: recommendActorsJob,
@@ -63,7 +69,7 @@ export const HANDLERS: Record<string, JobHandler> = {
 /** Job types that need the AI provider. */
 export const AI_TYPES = ["extract", "plan", "render_static", "render_motion", "qc", "bonus", BONUS_JOB_TYPE, STUDIO_TURN_JOB_TYPE, COACH_JOB_TYPE];
 // Testimonial jobs degrade to the free template without Codex, so they never wait on provider health.
-export const NON_AI_TYPES = ["cleanup", "publish_meta", "activate_meta", TEAM_PAUSE_JOB, TESTIMONIAL_JOB_TYPE, TESTIMONIAL_RECOMMEND_JOB_TYPE, STUDIO_PROBE_JOB_TYPE, STUDIO_INGEST_JOB_TYPE, STUDIO_CAPTURE_JOB_TYPE, REVIEW_QUOTE_JOB_TYPE];
+export const NON_AI_TYPES = ["cleanup", "publish_meta", "activate_meta", "publish_google", "activate_google", "sync_google", TEAM_PAUSE_JOB, TESTIMONIAL_JOB_TYPE, TESTIMONIAL_RECOMMEND_JOB_TYPE, STUDIO_PROBE_JOB_TYPE, STUDIO_INGEST_JOB_TYPE, STUDIO_CAPTURE_JOB_TYPE, REVIEW_QUOTE_JOB_TYPE];
 const START_TYPES = new Set(DEFAULT_FAIRNESS.start);
 
 export interface RunnerDeps {
@@ -173,6 +179,8 @@ export class Runner {
     every(60_000, () => sweepDeadTestimonials(this.d.db).then((n) => n && log("warn", "released minutes of dead testimonial jobs", { n })), "testimonial-sweep");
     every(2_000, () => sweepConfirmations(this.d.db).then((r) => (r.confirmed || r.planned) && log("info", "confirm sweep", r)), "sweeper");
     if (!this.d.scopeRunId) every(this.d.config.cleanupEveryMs, () => this.scheduleCleanup(), "cleanup");
+    // Google Ads: refresh serving/policy/metrics of published campaigns (hourly while live/under review, daily otherwise).
+    if (!this.d.scopeRunId) every(15 * 60_000, () => scheduleGoogleSync(this.d.db), "google-sync");
     await recoverStaleJobs(this.d.db, this.d.config.staleLockMs);
     // Jobs of a dead worker (e.g. the container this deploy replaced): retry now, not after the stale window.
     const orphanDeadMs = Math.max(3 * this.d.config.heartbeatMs, 90_000);
