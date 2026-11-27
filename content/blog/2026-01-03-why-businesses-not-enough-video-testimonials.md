@@ -1,228 +1,215 @@
 ---
-title: "Why 91% of Businesses Still Don't Have Enough Video Testimonials (And What's Changing in 2025)"
-description: "Discover why most businesses struggle with video testimonial production, the hidden costs of manual creation, and how AI automation is changing the game in 2025."
-publishDate: "2026-01-03"
-author: "Komendly Team"
-tags: [video testimonials, social proof, AI marketing, customer reviews, video production]
-keywords: "video testimonials, customer testimonials, social proof, video marketing 2025, AI avatars, testimonial production"
-slug: "why-businesses-not-enough-video-testimonials"
-featured: false
+title: "Why Businesses Still Don't Have Enough Video Testimonials"
+slug: "2026-01-03-why-businesses-not-enough-video-testimonials"
+description: "Why businesses lack video testimonials, how to find production bottlenecks, and a practical checklist for presenting real reviews with AI avatars."
+author: "Nolan Grout"
+type: "question"
+tags:
+  - "video testimonials"
+  - "social proof"
+  - "AI marketing"
+  - "customer reviews"
+  - "video production"
+published: false
+status: "draft"
+primary_keyword: "video testimonials"
+secondary_keywords:
+  - "customer testimonials"
+  - "AI video testimonials"
+  - "testimonial production"
+  - "AI avatars"
+  - "customer reviews"
+answer: "Businesses can fall short of video testimonials when recruiting customers, recording, editing and approvals have no clear owner. Start by finding the unfinished step in your own process. Then decide whether you need a customer on camera or a clearly identified AI-avatar presentation of an existing review."
+key_takeaways:
+  - "Define enough testimonials by the buyer questions you want to answer."
+  - "Audit unfinished stories before investing in more production."
+  - "Use the PROOF checklist to review permission, source records, ownership, presentation and relevance."
+  - "Clearly distinguish an AI presenter from a recording of the customer."
+  - "Evaluate your own results rather than assuming a universal conversion lift."
+cta: "ads"
+faq:
+  - q: "How many video testimonials does a small business need?"
+    a: "Start with coverage rather than a fixed quantity. Identify the buyer questions your current stories leave unanswered, then request material for those gaps."
+  - q: "Should every customer be asked to appear on camera?"
+    a: "My recommendation is to offer a choice: a written account, a recording or an explicitly agreed AI-avatar presentation. Respect the customer’s preferred format."
+  - q: "Does a real review automatically make an AI-avatar video acceptable?"
+    a: "No. The FTC explains that avatar use could be deceptive under the FTC Act even apart from whether the underlying testimonial is fake or false.[^3]"
+  - q: "Do AI-avatar testimonials guarantee better conversions?"
+    a: "Do not assume a lift. Define the audience, placement and intended action, then evaluate the presentation against your existing version."
+  - q: "Should a business replace all customer recordings with AI avatars?"
+    a: "I would choose the format story by story. Keep customer recordings when personal delivery matters, and consider labeled avatar presentations for approved written accounts."
+sources:
+  - id: 1
+    title: "Getting Started with Video Testimonials"
+    publisher: "Wistia"
+    url: "https://wistia.com/blog/getting-started-video-testimonials"
+    accessed: ""
+  - id: 2
+    title: "FTC’s Endorsement Guides: What People Are Asking"
+    publisher: "Federal Trade Commission"
+    url: "https://www.ftc.gov/business-guidance/resources/ftcs-endorsement-guides-what-people-are-asking"
+    accessed: ""
+  - id: 3
+    title: "The Consumer Reviews and Testimonials Rule: Questions and Answers"
+    publisher: "Federal Trade Commission"
+    url: "https://www.ftc.gov/business-guidance/resources/consumer-reviews-testimonials-rule-questions-answers"
+    accessed: ""
+claims:
+  - text: "Wistia’s testimonial guide covers recruiting participants, preparing conversations and using the resulting footage."
+    source: 1
+  - text: "Wistia recommends sharing high-level concepts before the conversation instead of providing the exact question list."
+    source: 1
+  - text: "The FTC’s Endorsement Guides guidance says endorsements must reflect the endorser’s truthful experiences and opinions."
+    source: 2
+  - text: "FTC guidance says that, without evidence an endorser’s experience represents generally achievable results, the ad must explain the generally expected results."
+    source: 2
+  - text: "The FTC says its Consumer Reviews and Testimonials Rule contains no blanket prohibition on AI-generated avatars in marketing."
+    source: 3
+  - text: "An avatar testimonial can violate the Consumer Reviews and Testimonials Rule if the underlying testimonial is fake or false."
+    source: 3
+  - text: "The FTC explains that avatar use could be deceptive under the FTC Act even apart from whether the underlying testimonial is fake or false."
+    source: 3
 ---
 
-You know the stat: video testimonials drive 77% conversion lift, 39% higher conversion rates, and 27x more engagement than text reviews.
+Businesses can fall short of video testimonials when recruiting customers, recording, editing and approvals have no clear owner. Start by finding the unfinished step in your own process. Then decide whether you need a customer on camera or a clearly identified AI-avatar presentation of an existing review.
 
-So why isn't every business flooding their website with video testimonials?
+I’m Nolan Grout, founder of Komendly. My recommendation is to define which buyer questions need evidence before setting a production target. “Enough” should mean useful coverage, rather than an arbitrary library size.
 
-The answer is brutal: **87% of businesses recognize video testimonials are essential, but only 9% actually have a sustainable process for creating them.** They're stuck between knowing what works and being able to execute it.
+## What is the hidden cost of manual testimonial production?
 
-This isn't a strategy problem. It's a **production problem**.
+Before commissioning a shoot, map the work from invitation to publication. Wistia’s testimonial guide covers recruiting participants, preparing conversations and using the resulting footage.[^1]
 
-## The Real Barrier: The Hidden Cost of Manual Testimonial Production
+Use your own records to estimate the work:
 
-Let's do some math on what it actually costs to create video testimonials the traditional way.
+- **Recruitment:** Who identifies customers and follows up?
+- **Preparation:** Who agrees on topics and checks the intended use?
+- **Recording:** Who handles the interview and captures usable sound?
+- **Editing:** Who selects excerpts and checks their meaning?
+- **Approval:** Who confirms the finished version can be published?
+- **Distribution:** Who puts the approved story where buyers need it?
 
-Say you're a SaaS company wanting to collect 12 video testimonials per year (just one per month). Here's your actual cost breakdown:
+For an internal production budget, combine actual supplier quotes with recorded staff hours. Keep customer waiting time separate from work your team performs.
 
-**Direct Costs:**
-- Professional videographer: $1,500-3,000 per video = **$18,000-36,000/year**
-- Video editor: $500-1,500 per video = **$6,000-18,000/year**
-- Licensing/music/graphics: $200-500 per video = **$2,400-6,000/year**
+Assign an owner and a next action to every unfinished story. If recordings exist but remain unpublished, another filming tool would not be my first purchase. I would examine editing and approval first.
 
-**Indirect Costs That Nobody Counts:**
-- Sales team time recruiting customers: 4 hours per testimonial = 48 hours/year at $150/hr = **$7,200**
-- Customer time (scheduling, filming, approvals): 2 hours per customer = 24 hours/year average at $75/hr = **$1,800**
-- Project management/coordination: 30 minutes per video = 6 hours/year = **$900**
-- Revisions and re-editing: 1-2 rounds per video = 12 hours/year = **$1,800**
+## Why should you define “enough” before making more videos?
 
-**Your "Real" Total Cost: $38,700-$68,700 per year for 12 testimonials**
+Treat your testimonial library as a set of answers to buyer questions.
 
-That's **$3,225-$5,725 per video**—and that's assuming everything goes smoothly with no delays.
+For a local service business, those questions might concern communication, reliability and what the completed job involved. For software, start with setup, the previous workflow and the customer’s experience after adoption. These are suggested interview topics, not claims about what every buyer values.
 
-Now consider the timeline. From identifying a willing customer to publishing the video? **4-8 weeks is standard.** That's a long wait, especially when:
+Build a coverage sheet with columns for audience, question, approved customer story and intended placement. Mark the gaps before requesting new material.
 
-- Customers are most enthusiastic 48 hours after completing your service
-- Timing slips and your advocate loses momentum
-- Approval processes drag (especially in B2B)
-- The testimonial feels stale by the time it's published
+You can also organize that sheet around awareness stages. As a planning exercise, pair a problem-aware buyer’s question with a story about the original difficulty. Pair a product-aware buyer’s question with a customer’s account of using the product.
 
-**You end up with 12 videos per year when you actually need 50-100.** The ROI math breaks down when you can only produce a fraction of what your business needs.
+My editorial rule: commission the next story to answer a missing question. Do not commission it simply to make the folder bigger.
 
-## Why This Matters More in 2025
+## How do you turn a text review into an AI-avatar video?
 
-The pressure to scale testimonials just increased. Here's why:
+Komendly’s AI video testimonials product turns text reviews into AI-avatar videos. It is my product, so treat the following as a recommended workflow rather than an independent evaluation.
 
-**Consumers Trust Video More Than Ever (But Also More Skeptical)**
+### Start with the source review
 
-While 47% of consumers trust peer testimonials on social media, 23.7% of reviews on platforms like Zillow are now AI-generated. The playing field is changing. Authentic video—where it's hard to fake—has become more valuable as a trust signal.
+Save the original wording and where it came from. Confirm with the customer how you intend to use it, including whether an AI presenter will read it. Record the agreed attribution and intended placements.
 
-But there's a catch: **78% of marketing teams still require 4+ weeks per testimonial.** The faster your competitors move, the more stale your testimonial library becomes.
+If you cannot establish the source, pause the project. Do not ask a model to supply the missing customer experience.
 
-**The Volume Problem is Getting Worse**
+### Prepare the presentation
 
-From our research:
-- 87% of businesses use video testimonials (adoption is high)
-- But only **9% have a sustainable, repeatable process**
-- 73% of marketers say they'd produce **50% more testimonials if it were faster**
-- 31% of SMBs have given up on video testimonials entirely because the process is too complex
+Select an excerpt that preserves the review’s meaning. Keep the original beside the working script, and flag any proposed changes for review.
 
-The expectation is there. The tools aren't meeting the need.
+The FTC’s Endorsement Guides guidance says endorsements must reflect the endorser’s truthful experiences and opinions.[^2] Use that principle when checking the script.
 
-**AI Avatar Technology Just Changed the Game (In 2025)**
+### Review the finished video
 
-This is the shift nobody expected. AI avatar technology isn't just cheaper—it's addressing the exact friction points that prevent businesses from scaling testimonials:
+Check the spoken words against the approved excerpt. Review the captions, attribution and description of the presenter.
 
-1. **No customer camera anxiety** - Customers don't have to appear on video; you transform their text review into a professional video
-2. **No scheduling friction** - No need to coordinate calendars, book studios, or schedule filming sessions
-3. **No editing delays** - Professional videos in minutes, not weeks
-4. **Cost drops 80%+** - From $3,000-5,000 per video to $50-200 per video (or less)
-5. **Speed increases dramatically** - From 4-8 weeks to 24-48 hours
+My suggested label is: “AI presenter reading an actual customer review.” Use it only when it accurately describes the content. Ask the customer to review the finished version before publication.
 
-One insurance company using AI avatars for training videos cut production time by 62%. A pet care company (Whole Life Pet) saved $2,900 per video. Companies using AI tools report 68% better ROI on their video content marketing.
+This is a production checklist, not a promise of a particular turnaround time or conversion result.
 
-The math changes everything when you can produce 100 testimonials per year instead of 12.
+## Can an AI-avatar testimonial be authentic?
 
-## How This Works: Turning a Text Review Into a Professional Video Testimonial
+Separate the underlying customer account from its presentation.
 
-This is where the shift gets tangible. Instead of asking customers for video testimonials (which 60% refuse), you're asking for something much easier: **a review or brief testimonial quote.**
+The FTC says its Consumer Reviews and Testimonials Rule contains no blanket prohibition on AI-generated avatars in marketing. It also explains that an avatar testimonial can violate the rule if the underlying testimonial is fake or false, and that avatar use could be deceptive under the FTC Act.[^3]
 
-Then you:
+For that reason, I would never present an avatar as footage of the customer. A genuine source review does not settle every question about the finished presentation.
 
-1. **Extract the insight** - Take their written review, testimonial quote, or detailed feedback
-2. **Generate the video** - AI avatar platforms create a professional video with the exact testimonial text, avatar of your choice, proper pacing, and professional production quality
-3. **Customize the presentation** - Add your branding, adjust the avatar's appearance, choose presentation style (professional, casual, energetic)
-4. **Publish in minutes** - No waiting for editing cycles, approvals, or revisions (unless you want them)
+My recommendation is to use customer recordings when the person’s delivery is central to the story. Consider a clearly labeled avatar presentation when your aim is to present an approved written account.
 
-For example: If you collected 5-star reviews from 20 customers this month on G2 or Trustpilot, you could transform all 20 into professional video testimonials within a day. Same authentic message, but in a format that drives 27x more engagement.
+Choose the format with the customer. Keep a written version available for readers who prefer it.
 
-**The conversion math becomes:**
-- Time to produce: 2-3 hours total (not 4-8 weeks)
-- Cost per video: $50-100 (not $3,000-5,000)
-- Scale you can achieve: 200+ videos/year instead of 12
+## What should change in your testimonial process now?
 
-## The Authenticity Question: Does AI Avatar Video Actually Work?
+Replace universal performance promises with a specific question: does this story help this audience make the intended decision?
 
-This is the concern stopping most companies. "Won't customers prefer real humans?"
+For a customer interview, prepare topics rather than a polished endorsement for the participant to recite. Wistia recommends sharing high-level concepts before the conversation instead of providing the exact question list.[^1]
 
-The research is nuanced:
+Try prompts such as:
 
-**AI avatars work best when:**
-- You're focusing on the **product/service message** (not pure emotion)
-- The testimonial is **based on real customer words** (extracted from reviews or interviews)
-- You're using it for **scalable social proof** (testimonial wall, landing page banners)
-- Speed and cost are **critical factors** (startups, SMBs, fast-growing companies)
+- What were you trying to accomplish?
+- What was difficult before?
+- What did you actually use?
+- What changed in your experience?
+- What would you tell someone considering it?
 
-**Real video testimonials work better when:**
-- You're telling a **deep brand story** (founder journey, transformation narrative)
-- You need **pure emotional connection** (nonprofits, luxury brands)
-- You're running **high-stakes campaigns** (enterprise deals, thought leadership)
+If a customer describes an exceptional result, review how you present it. FTC guidance says that, without evidence the experience represents generally achievable results, the ad must explain the generally expected results.[^2]
 
-Most companies benefit from a **hybrid approach**: 80% AI avatar testimonials (for scale), 20% real human videos (for emotional impact). Think of AI avatars as your high-volume social proof engine and real videos as your premium trust-building tool.
+Avoid converting a customer’s individual outcome into a promise for everyone. Preserve relevant context when editing.
 
-And here's the thing: **If the testimonial is based on a real customer review or statement, it IS authentic.** You're not fabricating the message; you're just changing the delivery format. The substance is genuine.
+## How can the PROOF checklist make production repeatable?
 
-## What's Changing in 2025-2026
+Use **PROOF** as a publication checklist. This is my proposed framework, not a validated industry benchmark.
 
-Three major forces are converging:
+| Check | Question to answer before publication |
+| --- | --- |
+| Permission | Has the customer agreed to this use and presentation? |
+| Record | Can you retrieve the original review or recording? |
+| Ownership | Does someone own each remaining action? |
+| On-screen clarity | Does the video accurately identify the speaker or AI presenter? |
+| Fit | Does the story answer a defined buyer question? |
 
-**1. AI Video Quality Is Now Indistinguishable from Professional Production**
+Treat a missing answer as an action item. Do not average away a missing source or unresolved permission.
 
-HeyGen's latest avatars have natural speech patterns, facial expressions, and emotional nuance. Google's Veo 2 and OpenAI's Sora (launching with Disney in early 2026) represent the frontier of human-quality video generation. The "AI-generated" look is becoming a non-issue.
+### How should you distribute the approved story?
 
-**2. Enterprise Adoption is Accelerating**
+Choose a placement based on the question the story answers. For example, test a setup story beside onboarding information or a service-experience story beside the relevant service description.
 
-The AI avatar market is growing at 33% annually (CAGR through 2032), projected to reach $5.93 billion by 2032. Adobe partnered with Runway. Disney is betting on user-generated AI video. Enterprise adoption legitimizes the approach.
+Consider email, sales follow-ups and social posts as additional uses, subject to what the customer agreed to. Recheck the meaning and attribution whenever you shorten an excerpt.
 
-**3. The Authenticity Crisis is Making AI Avatars More Valuable**
+### How should you measure the process?
 
-As 23.7% of Zillow reviews and increasing percentages of social proof become AI-generated, consumers are becoming skeptical. But video testimonials—especially those transparently created from real customer quotes—stand out as credible proof. **Paradoxically, professional AI video testimonials are becoming a trust signal precisely because they're harder to fake than text reviews.**
+Track invitations, responses, approved scripts and published videos. Record where each project waits and why.
 
-## How to Start: A Practical Framework for Scaling Your Testimonials
+For marketing evaluation, define the desired action before publishing: an inquiry, signup or purchase. Where practical, compare versions of the same page with and without the testimonial while keeping other elements consistent.
 
-If you're ready to move from "we need more testimonials" to "we're building a testimonial machine," here's the framework:
+Use your results to decide what to produce next. Do not substitute a borrowed conversion statistic for evidence from your own campaign.
 
-**Step 1: Collect Raw Testimonials (Easier Than Before)**
-- Don't ask customers for video
-- Ask them for a quote, review, or brief story
-- Collect from: your existing review sites, NPS surveys, customer interviews, email feedback
+## What questions come up about video testimonials?
 
-**Step 2: Identify High-Impact Testimonials**
-- Look for testimonials that mention specific results (revenue, time saved, satisfaction)
-- Prioritize customers from your target market segments
-- Pick diverse voices: different industries, company sizes, use cases
+### How many video testimonials does a small business need?
 
-**Step 3: Generate Your Videos**
-- Input the testimonial text into an AI avatar platform
-- Choose your presentation style and branding
-- Generate the video (takes minutes)
+Start with coverage rather than a fixed quantity. Identify the buyer questions your current stories leave unanswered, then request material for those gaps.
 
-**Step 4: Distribute and Repurpose**
-- Landing pages (especially high-conversion placement near pricing)
-- Email campaigns (2.1x higher click-to-purchase rate)
-- Social media (LinkedIn, TikTok, Instagram Reels)
-- Sales decks (especially powerful for B2B deals)
+### Should every customer be asked to appear on camera?
 
-**Step 5: Measure and Iterate**
-- Track which testimonials drive conversions
-- Note which avatar styles, messages, and placements perform best
-- Scale what works, drop what doesn't
+My recommendation is to offer a choice: a written account, a recording or an explicitly agreed AI-avatar presentation. Respect the customer’s preferred format.
 
-The key: **You can now produce 50-100 testimonials per year instead of 12.** That's the game changer.
+### Does a real review automatically make an AI-avatar video acceptable?
 
-## FAQ: Questions About Video Testimonials and AI Avatars
+No. The FTC explains that avatar use could be deceptive under the FTC Act even apart from whether the underlying testimonial is fake or false.[^3]
 
-**Q: Won't customers feel deceived if we use an AI avatar instead of a real video?**
+### Do AI-avatar testimonials guarantee better conversions?
 
-A: Only if you're deceptive about it. If you're transparent ("We turned your review into a professional video using AI") and the message is authentically their words, customers generally appreciate the effort to showcase their feedback professionally. Plus, you can always offer real video testimonials to customers who prefer it.
+Do not assume a lift. Define the audience, placement and intended action, then evaluate the presentation against your existing version.
 
-**Q: What's the conversion impact of AI avatar testimonials specifically?**
+### Should a business replace all customer recordings with AI avatars?
 
-A: Limited direct research exists (it's still emerging), but video testimonials in general drive 39% conversion lift. Hybrid approaches (80% AI, 20% real) let you scale faster while maintaining trust. The conversion impact is heavily dependent on placement and message quality, not the video format.
+I would choose the format story by story. Keep customer recordings when personal delivery matters, and consider labeled avatar presentations for approved written accounts.
 
-**Q: Isn't this still expensive? We're bootstrapped.**
+## What is the next practical step?
 
-A: Not anymore. Enterprise platforms cost $50-200/video. Some newer tools cost even less. Compare that to $3,000-5,000 for traditional production. Bootstrapped founders are finding that AI-powered testimonials are finally affordable.
+Audit your unfinished stories and choose a gap to close. Confirm the source, permission, owner, presentation and intended placement before starting another production.
 
-**Q: How do we handle legal/compliance around AI-generated testimonials?**
-
-A: Disclose that the testimonial is AI-generated if required by FTC guidelines (rules vary by context). Many platforms make this easy with watermarks or transparent disclaimers. The key is not misrepresenting the origin of the testimonial—the message itself should always be real customer words.
-
-**Q: Should we replace all our testimonials with AI versions?**
-
-A: No. Build a portfolio: real video testimonials for key use cases, AI avatar testimonials for scalable social proof. Think of it as a hybrid content engine: AI handles volume, real videos handle trust.
-
----
-
-## The Bottom Line: The Window is Open (But Not for Long)
-
-Right now, most of your competitors still don't have a scalable testimonial process. 91% of businesses still don't have "enough" testimonials. The tools to change this just became accessible.
-
-In 6-12 months, adoption will accelerate. The companies that move first—building a library of 100+ professional video testimonials while others are still stuck at 12—will have a significant competitive advantage in conversion rates, trust signals, and social proof.
-
-The barrier was never "do you know video testimonials work?"
-
-The barrier was "can you actually produce them at scale without breaking the budget or your team's back?"
-
-That barrier just came down.
-
-**Ready to build your testimonial machine?**
-
-[→ Try Komendly for Free](https://komendly.com/register)
-
----
-
-## Internal Linking Opportunities
-
-- Link to [Pricing page](/pricing) - "See how much you'll save vs. traditional production"
-- Link to [Create page](/dashboard/create) - "Start turning reviews into videos"
-- Cross-link to future blog posts on: ROI measurement, repurposing testimonials across channels, authenticity and trust
-
-## Suggested Social Media Posts
-
-**LinkedIn (Professional/B2B):**
-"87% of businesses know video testimonials drive conversions. But only 9% have a sustainable process. Why? The traditional approach costs $3,000-5,000 per video and takes 4-8 weeks. That's changing. Here's what AI-powered testimonial production means for your team in 2025 → [link] #VideoMarketing #SocialProof"
-
-**Twitter/X (Punchy):**
-"Video testimonials are 27x more engaging than text. But only 9% of businesses can produce them at scale. Enter AI avatars: $50-200/video instead of $5,000, generated in 48 hours instead of 8 weeks. The gap between knowing and doing just closed. #MarTech"
-
-**Instagram/Pinterest (Visual angle):**
-"Your reviews are gold. Your customers want to recommend you. But asking them to appear on camera? 60% say no. What if you could turn their written review into a professional testimonial video without a single camera? Now you can. Swipe up to learn more."
+For the separate task of creating ads, Komendly turns a website URL into on-brand, ready-to-run static and animated ad creatives through Ozzy, its AI ad wizard. The [free ad studio](/) offers 10 static ads + 1 animated ad, no card required. See [ad pricing](/pricing) for ad plans.
