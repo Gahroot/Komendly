@@ -3,7 +3,7 @@ title: "Best AI Ad Generator (2026): Picks & Free Trial"
 slug: "best-ai-ad-generator-small-business"
 description: "Compare AI ad generators for small businesses by format, budget and editing time. Try Komendly: 10 static ads + 1 animated ad, no card required."
 date: 2026-11-09
-updated: 2026-11-09
+updated: 2026-11-27
 author: "Nolan Grout"
 type: "listicle"
 tags:
@@ -11,8 +11,9 @@ tags:
   - "Small business"
   - "Ad creatives"
   - "Marketing tools"
-published: false
-status: "draft"
+published: true
+status: "approved"
+approved_by: "auto-review (Komendly blog engine)"
 primary_keyword: "best ai ad generator for small business"
 secondary_keywords:
   - "ai ad generator"
