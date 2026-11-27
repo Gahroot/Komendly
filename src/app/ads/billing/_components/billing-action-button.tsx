@@ -7,7 +7,7 @@ import { track } from "@/lib/analytics/track";
 
 interface Props {
   endpoint: "/api/ads-billing/checkout" | "/api/ads-billing/portal";
-  body?: { kind: "plan" | "topup" | "offer"; key: string; interval?: "month" | "year"; offer?: "studio_launch"; placement?: "trial_upsell" | "downsell" | "early_ready" | "early_offer" | "unlock_pack" | "unlock_pack_next" | "trial_done" | "post_download" | "locked_bonus" | "studio_launch" | "autopilot_offer" | "unlock_upsell" };
+  body?: { kind: "plan" | "topup" | "offer"; key: string; interval?: "month" | "year"; offer?: "studio_launch"; placement?: "trial_upsell" | "downsell" | "early_ready" | "early_offer" | "unlock_pack" | "unlock_pack_next" | "trial_done" | "post_download" | "locked_bonus" | "studio_launch" | "autopilot_offer" | "unlock_upsell" | "bfcm_run" | "bfcm_page"; promo?: "bfcm" };
   label: string;
   disabled?: boolean;
   variant?: "default" | "outline";

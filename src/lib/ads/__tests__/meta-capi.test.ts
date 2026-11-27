@@ -19,10 +19,10 @@ describe("meta capi", () => {
     expect(metaEventId("TrialCompleted", { runId: "r1", workspaceId: "w1" }, now)).toBe("TrialCompleted:r1");
     expect(metaEventId("Purchase", { workspaceId: "w1" }, now)).toBe("Purchase:w1");
   });
-  it("sends Purchase/Subscribe for subscription checkouts only, never one-off payments", () => {
+  it("sends Purchase for every paid checkout (the $9 unlock too), Subscribe only for subscriptions", () => {
     expect(metaEventsFor("purchased", { mode: "subscription" })).toEqual(["Purchase", "Subscribe"]);
-    expect(metaEventsFor("purchased", { mode: "payment", key: "unlock_pack" })).toEqual([]);
-    expect(metaEventsFor("purchased", {})).toEqual([]);
+    expect(metaEventsFor("purchased", { mode: "payment", key: "unlock_pack" })).toEqual(["Purchase"]);
+    expect(metaEventsFor("purchased", {})).toEqual(["Purchase"]);
     expect(metaEventsFor("signed_up")).toEqual(["CompleteRegistration"]);
     expect(metaEventsFor("paid_converted")).toEqual([]);
   });

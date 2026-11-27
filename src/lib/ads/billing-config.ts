@@ -336,13 +336,33 @@ export function annualPriceIdFor(plan: AdsPlanTier, env: Record<string, string |
   return plan.annualPriceEnv ? env[plan.annualPriceEnv] || null : null;
 }
 
+/**
+ * Black Friday to Cyber Monday 2026 annual prepay (owner brief 2026-11-27): yearly prices sold only until the BFCM
+ * deadline (src/lib/ads/bfcm.ts, enforced at checkout). Renewals keep the same price, so these price ids must stay in
+ * env for good (the webhook maps them to the plan + 12 months of credits). Created by `ads-stripe-setup.ts --only bfcm`.
+ */
+export interface PromoAnnualPrice { plan: AdsPlanKey; priceCents: number; priceEnv: string }
+export const BFCM_ANNUAL_PRICES: readonly PromoAnnualPrice[] = [
+  { plan: "ad_department", priceCents: 149700, priceEnv: "STRIPE_ADS_BFCM_AD_DEPARTMENT_ANNUAL_PRICE_ID" },
+  { plan: "autopilot", priceCents: 249700, priceEnv: "STRIPE_ADS_BFCM_AUTOPILOT_ANNUAL_PRICE_ID" },
+];
+
+export function bfcmAnnualFor(planKey: string): PromoAnnualPrice | undefined {
+  return BFCM_ANNUAL_PRICES.find((x) => x.plan === planKey);
+}
+
+function promoPlanFromPriceId(priceId: string, env: Record<string, string | undefined>): AdsPlanTier | undefined {
+  const promo = BFCM_ANNUAL_PRICES.find((x) => (env[x.priceEnv] || null) === priceId);
+  return promo ? getPlan(promo.plan) : undefined;
+}
+
 /** Billing interval of a plan price id ("year" for annual prepay prices), else null. */
 export function intervalFromPriceId(priceId: string, env: Record<string, string | undefined> = process.env): BillingInterval | null {
   for (const p of ADS_PLANS) {
     if (priceIdFor(p, env) === priceId) return "month";
     if (annualPriceIdFor(p, env) === priceId) return "year";
   }
-  return null;
+  return promoPlanFromPriceId(priceId, env) ? "year" : null;
 }
 
 export const ADS_TOPUPS: readonly AdsTopupPack[] = [
@@ -387,7 +407,7 @@ export function priceIdFor(item: { priceEnv: string }, env: Record<string, strin
 }
 
 export function planFromPriceId(priceId: string, env: Record<string, string | undefined> = process.env): AdsPlanTier | undefined {
-  return ADS_PLANS.find((p) => priceIdFor(p, env) === priceId || annualPriceIdFor(p, env) === priceId);
+  return ADS_PLANS.find((p) => priceIdFor(p, env) === priceId || annualPriceIdFor(p, env) === priceId) ?? promoPlanFromPriceId(priceId, env);
 }
 
 /** Monthly price for MRR maths; unknown plans count as 0. */

@@ -2,6 +2,8 @@
 // server; per-user parts (grandfathered plan notice, Launch Kit claim after registration) are client components.
 import { Suspense } from "react";
 import { ShieldCheck } from "lucide-react";
+import { BfcmBanner } from "@/components/ads/bfcm-offer";
+import { BFCM_ENDS_AT, bfcmPricingLine, isBfcmActive } from "@/lib/ads/bfcm";
 import { PricingBeacon } from "@/components/analytics/pricing-beacon";
 import { OzzyPricing } from "@/components/billing/ozzy-pricing";
 import { SiteHeader } from "@/components/site-header";
@@ -21,6 +23,8 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
     <div className="min-h-screen text-foreground">
       <SiteHeader />
       <PricingBeacon page="/pricing" />
+      {/* CDN-cached page: the strip hides itself at the deadline; the checkout enforces it. */}
+      {isBfcmActive() && <div className="px-4"><BfcmBanner endsAt={BFCM_ENDS_AT.toISOString()} serverNow={new Date().toISOString()} text={bfcmPricingLine()} href="/ads/bfcm" cta="See the Black Friday prices" /></div>}
       <OzzyPricing
         yearly={yearly}
         basePath="/pricing"

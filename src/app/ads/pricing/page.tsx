@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { BfcmBanner } from "@/components/ads/bfcm-offer";
+import { BFCM_ENDS_AT, bfcmPricingLine, isBfcmActive } from "@/lib/ads/bfcm";
 import { PricingBeacon } from "@/components/analytics/pricing-beacon";
 import { AdsNav } from "@/components/ads/ads-nav";
 import { OzzyPricing, TestimonialPackLinks } from "@/components/billing/ozzy-pricing";
@@ -25,6 +27,7 @@ export default async function AdsPricingPage({ searchParams }: { searchParams: P
     <div className="min-h-screen">
       <AdsNav signedIn={signedIn} />
       <PricingBeacon page="/ads/pricing" />
+      {isBfcmActive() && <div className="px-4"><BfcmBanner endsAt={BFCM_ENDS_AT.toISOString()} serverNow={new Date().toISOString()} text={bfcmPricingLine()} href="/ads/bfcm" cta="See the Black Friday prices" /></div>}
       <OzzyPricing
         yearly={yearly}
         basePath="/ads/pricing"

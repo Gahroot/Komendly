@@ -5,6 +5,7 @@ import { trackAdsEvent } from "@/lib/ads/events";
 import { getAutopilotLaunchState } from "@/lib/ads/autopilot-launch";
 import { getLaunchOfferState } from "@/lib/ads/launch-offer";
 import { AUTOPILOT_LAUNCH, getPlan, offerCouponId, priceIdFor, UNLOCK_PACK } from "@/lib/ads/billing-config";
+import { getBfcmState } from "@/lib/ads/bfcm-server";
 import { AUTOPILOT_PLAN_KEY, autopilotForSale, usesAutopilotOffer } from "@/lib/ads/roofer-offer";
 import { workspaceTrade } from "@/lib/ads/trade-server";
 import { foundingSpotsLeft } from "@/lib/ads/founding-spots";
@@ -28,10 +29,12 @@ export async function GET() {
     const launchConfigured = Boolean(priceIdFor(AUTOPILOT_LAUNCH) && offerCouponId(AUTOPILOT_LAUNCH));
     const launchSpots = launchState?.open && launchConfigured ? await foundingSpotsLeft(prisma).catch(() => null) : null;
     const autopilotLaunch = Boolean(launchState?.open && launchConfigured && launchSpots !== 0);
+    // Black Friday to Cyber Monday (server clock, real deadline): $9 unlock + bonus until bought, then the annual prepay plans.
+    const bfcm = await getBfcmState(ws);
     // serverNow lets the client run a real countdown against server time (expiresAt = 3rd ready trial ad + 72h).
     // unlockPack = the $9 downsell can be bought (the run screen shows it only after the Launch Quarter).
     return NextResponse.json(
-      { open: eligible && state.open, expiresAt: state.expiresAt?.toISOString() ?? null, serverNow: new Date().toISOString(), unlockPack: eligible && Boolean(priceIdFor(UNLOCK_PACK)), trade, autopilot, spotsLeft, autopilotLaunch, autopilotLaunchExpiresAt: autopilotLaunch ? launchState?.expiresAt?.toISOString() ?? null : null, autopilotLaunchSpotsLeft: launchSpots },
+      { open: eligible && state.open, expiresAt: state.expiresAt?.toISOString() ?? null, serverNow: new Date().toISOString(), unlockPack: eligible && Boolean(priceIdFor(UNLOCK_PACK)), trade, autopilot, spotsLeft, autopilotLaunch, autopilotLaunchExpiresAt: autopilotLaunch ? launchState?.expiresAt?.toISOString() ?? null : null, autopilotLaunchSpotsLeft: launchSpots, bfcm },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {

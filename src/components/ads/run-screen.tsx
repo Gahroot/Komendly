@@ -24,6 +24,7 @@ import { TrialUpsell } from "./trial-upsell";
 import { UnlockPackCard } from "./unlock-pack-offer";
 import { UnlockUpsellModal } from "./unlock-upsell-modal";
 import { AutopilotOfferCard } from "./autopilot-offer-card";
+import { BfcmOffer } from "./bfcm-offer";
 import { rooferOfferStage, usesAutopilotOffer } from "@/lib/ads/roofer-offer";
 import { LAUNCH_OFFER_MIN_READY } from "@/lib/ads/billing-config";
 import { dismissedInSession, dismissInSession, noopSubscribe } from "@/lib/ads/offer-session";
@@ -101,6 +102,10 @@ export function RunScreen({ initial }: { initial: RunView }) {
       </Card>
     );
   } else body = <AdGallery run={run} offerOpen={offerOpen} remainingMs={offer.remainingMs} unlockPack={stage === "unlock_pack"} offerReady={offerReady} unlockAvailable={trialUnpaid && unlockNow} lockedUpsell={stage !== "autopilot"} />;
+  // Black Friday to Cyber Monday (server state, real deadline): the $9 unlock + bonus is the first step once the pack is
+  // done, then annual prepay. While its $9 is on screen the older $9 card and the plan upsell card step aside.
+  const bfcm = offerReady && done && trialUnpaid && stage !== "autopilot" ? offer.bfcm : null;
+  const bfcmUnlock = Boolean(bfcm?.unlockAvailable);
   const showEarlyOffer = offerReady && offerOpen && !done && run.ads.length > 0 && ["queued", "generating"].includes(run.status);
 
   return (
@@ -123,10 +128,11 @@ export function RunScreen({ initial }: { initial: RunView }) {
         </div>
         {body}
         {done && readyMain > 0 && <LaunchGuideCard runId={run.id} ready={readyMain} defaultOpen={!trialUnpaid} />}
+        {bfcm && <BfcmOffer state={bfcm} placement="bfcm_run" />}
         {offerReady && stage === "autopilot" && <AutopilotOfferCard runId={run.id} spotsLeft={offer.spotsLeft} launch={Boolean(offer.autopilotLaunch)} onDecline={declineAutopilot} />}
         {showEarlyOffer && <OfferNudge runId={run.id} ready={readyMain} bonus={run.bonus ?? null} remainingMs={offer.remainingMs} onDismiss={dismissLaunch} valueLine={valueLine} />}
-        {offerReady && stage === "unlock_pack" && run.bonus && <UnlockPackCard runId={run.id} bonus={run.bonus} />}
-        {offerReady && done && trialUnpaid && stage !== "unlock_pack" && stage !== "autopilot" && <TrialUpsell runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} onDecline={offerOpen ? dismissLaunch : undefined} valueLine={valueLine} />}
+        {offerReady && stage === "unlock_pack" && run.bonus && !bfcmUnlock && <UnlockPackCard runId={run.id} bonus={run.bonus} />}
+        {offerReady && done && trialUnpaid && stage !== "unlock_pack" && stage !== "autopilot" && !bfcmUnlock && <TrialUpsell runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} onDecline={offerOpen ? dismissLaunch : undefined} valueLine={valueLine} />}
         {offerReady && done && trialUnpaid && <OfferDownloadModal runId={run.id} bonus={run.bonus ?? null} offerOpen={offerOpen} remainingMs={offer.remainingMs} lockedAds={run.lockedAds ?? 0} unlockAvailable={unlockNow} freeAds={run.freeAds} autopilot={stage === "autopilot" ? { spotsLeft: offer.spotsLeft, launch: Boolean(offer.autopilotLaunch), onDecline: declineAutopilot } : null} />}
         {offerReady && done && trialUnpaid && offer.autopilotLaunch && <UnlockUpsellModal runId={run.id} spotsLeft={offer.autopilotLaunchSpotsLeft} stepDownOpen={offer.open} />}
         {done && ws?.isPaid && <GenerateMoreForm url={run.url} brandProfileId={run.brandProfileId} />}

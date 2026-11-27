@@ -19,10 +19,13 @@ export const ADS_TO_META: Readonly<Record<string, readonly MetaEventName[]>> = {
   studio_first_render: ["StudioFirstVideo"],
 };
 
-/** Meta events for one AdsEvent. One-off payments (unlock pack, top-ups, unlimited week) send nothing: ads optimise for subscribers. */
+/**
+ * Meta events for one AdsEvent. Every paid checkout is a Purchase with its value (owner brief 2026-11-27: the paid
+ * campaign optimises for Purchase and the $9 unlock is the first payment); Subscribe only for subscription checkouts.
+ */
 export function metaEventsFor(name: string, props?: Record<string, unknown>): readonly MetaEventName[] {
   const events = ADS_TO_META[name] ?? [];
-  return name === "purchased" && props?.mode !== "subscription" ? [] : events;
+  return name === "purchased" && props?.mode !== "subscription" ? events.filter((e) => e !== "Subscribe") : events;
 }
 
 /** Deterministic event_id per funnel step, shared with the browser (see metaEventIdCookie / success page). */

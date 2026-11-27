@@ -2,9 +2,10 @@
 // Idempotent: reuses prices found by lookup_key. Refuses live keys unless --live is passed.
 // Usage: set -a; . ./.env.local; set +a; npx tsx scripts/ads-stripe-setup.ts [--live] [--api-key sk_...] [--only unlock_pack|unlimited_week|autopilot]
 // --only autopilot: just the Growth Autopilot founding price ($297/month, product "Ozzy Growth Autopilot") (touches nothing else).
+// --only bfcm: just the Black Friday annual prepay prices (Ad Department $1,497/yr, Growth Autopilot $2,497/yr) (touches nothing else).
 // --only unlock_pack: just the $9 "Unlock this pack" price + its "$9 off the first Starter month" coupon (touches nothing else).
 import Stripe from "stripe";
-import { ADS_PLANS, ADS_TOPUPS, getPlan, annualCredits, annualPriceCents, LAUNCH_FIRST_MONTH_OFF_CENTS, LAUNCH_QUARTER, UNLIMITED_WEEK, UNLOCK_PACK, UNLOCK_PACK_COUPON_ENV } from "../src/lib/ads/billing-config";
+import { ADS_PLANS, ADS_TOPUPS, BFCM_ANNUAL_PRICES, getPlan, annualCredits, annualPriceCents, LAUNCH_FIRST_MONTH_OFF_CENTS, LAUNCH_QUARTER, UNLIMITED_WEEK, UNLOCK_PACK, UNLOCK_PACK_COUPON_ENV } from "../src/lib/ads/billing-config";
 
 const UNLOCK_COUPON_ID = `ads_unlock_pack_credit_${UNLOCK_PACK.priceCents}`;
 
@@ -61,6 +62,17 @@ function ensureAutopilot(stripe: Stripe): Promise<string> {
   return ensurePrice(stripe, { name: `${AUTOPILOT.name} (monthly, founding)`, productName: "Ozzy Growth Autopilot", priceCents: AUTOPILOT.priceCents, lookupKey: AUTOPILOT_LOOKUP_KEY, recurring: true, credits: AUTOPILOT.monthlyCredits, plan: AUTOPILOT.key });
 }
 
+/** BFCM annual prepay prices: yearly recurring, own lookup keys, on the plan's existing product name. */
+async function ensureBfcmAnnual(stripe: Stripe): Promise<string[]> {
+  const out: string[] = [];
+  for (const b of BFCM_ANNUAL_PRICES) {
+    const p = getPlan(b.plan)!;
+    const id = await ensurePrice(stripe, { name: `${p.name} (yearly, Black Friday 2026)`, productName: b.plan === "autopilot" ? "Ozzy Growth Autopilot (yearly, Black Friday 2026)" : `Website2ads ${p.name} (yearly, Black Friday 2026)`, priceCents: b.priceCents, lookupKey: `ads_${b.plan}_bfcm2026_annual_${b.priceCents}`, recurring: true, intervalCount: 12, credits: annualCredits(p), plan: b.plan });
+    out.push(`${b.priceEnv}=${id}`);
+  }
+  return out;
+}
+
 async function main() {
   const key = argValue("--api-key") ?? process.env.STRIPE_SECRET_KEY;
   if (!key) throw new Error("STRIPE_SECRET_KEY is not set: nothing to do.");
@@ -68,6 +80,10 @@ async function main() {
   if (live && !process.argv.includes("--live")) throw new Error("Refusing to run with a LIVE key. Pass --live if you really mean it.");
   const stripe = new Stripe(key, { typescript: true });
   const lines: string[] = [];
+  if (argValue("--only") === "bfcm") {
+    console.log(`# Black Friday annual prices (${live ? "LIVE" : "test"} mode). Add to your env:\n${(await ensureBfcmAnnual(stripe)).join("\n")}`);
+    return;
+  }
   const unlockId = await ensurePrice(stripe, { name: UNLOCK_PACK.name, priceCents: UNLOCK_PACK.priceCents, lookupKey: `ads_${UNLOCK_PACK.key}_${UNLOCK_PACK.priceCents}_${UNLOCK_PACK.credits}`, recurring: false, credits: UNLOCK_PACK.credits });
   lines.push(`${UNLOCK_PACK.priceEnv}=${unlockId}`, `${UNLOCK_PACK_COUPON_ENV}=${await ensureUnlockCoupon(stripe)}`);
   if (argValue("--only") === UNLIMITED_WEEK.key) {

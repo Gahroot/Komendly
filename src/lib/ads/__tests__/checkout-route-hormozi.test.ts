@@ -2,7 +2,7 @@
 // $9 unlock lands on the unlocked pack; the Growth Autopilot first month ($97) applies the coupon only to a workspace
 // with a finished free pack, inside 7 days, once, and while founding spots remain. No real Stripe call is possible.
 import { NextRequest } from "next/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const db = vi.hoisted(() => ({
   adRun: { findFirst: vi.fn() },
@@ -102,5 +102,37 @@ describe("Growth Autopilot first month (autopilot_launch)", () => {
   it("an existing subscriber cannot start another", async () => {
     ws.current = { ...ws.current, stripeSubscriptionId: "sub_1", subscriptionStatus: "active" };
     expect((await post(autopilotLaunch)).status).toBe(409);
+  });
+});
+
+describe("BFCM checkout (promo=bfcm)", () => {
+  afterEach(() => vi.useRealTimers());
+  it("$9 unlock during BFCM: card saved for later (setup_future_usage) and promo in metadata", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-28T18:00:00Z"));
+    const res = await post({ kind: "topup", key: "unlock_pack", placement: "bfcm_run", promo: "bfcm" });
+    expect(res.status).toBe(200);
+    const p = stripe.checkout.sessions.create.mock.calls[0][0];
+    expect(p.payment_intent_data.setup_future_usage).toBe("off_session");
+    expect(p.payment_intent_data.metadata.promo).toBe("bfcm");
+    expect(p.customer).toBe("cus_1");
+  });
+  it("annual autopilot uses the BFCM price; refused after Mon 30 Nov 23:59:59 PT", async () => {
+    process.env.STRIPE_ADS_BFCM_AUTOPILOT_ANNUAL_PRICE_ID = "price_bf_auto";
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-12-01T07:59:00Z"));
+    const ok = await post({ kind: "plan", key: "autopilot", interval: "year", promo: "bfcm" });
+    expect(ok.status).toBe(200);
+    const p = stripe.checkout.sessions.create.mock.calls[0][0];
+    expect(p.mode).toBe("subscription");
+    expect(p.line_items[0].price).toBe("price_bf_auto");
+    expect(p.subscription_data.metadata).toMatchObject({ plan: "autopilot", interval: "year", promo: "bfcm" });
+    vi.setSystemTime(new Date("2026-12-01T08:00:00Z"));
+    const late = await post({ kind: "plan", key: "autopilot", interval: "year", promo: "bfcm" });
+    expect(late.status).toBe(410);
+  });
+  it("promo=bfcm on something outside the offer is rejected", async () => {
+    const res = await post({ kind: "plan", key: "starter", promo: "bfcm" });
+    expect(res.status).toBe(400);
   });
 });

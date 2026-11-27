@@ -16,6 +16,8 @@ import { isLegacyTestimonialSubscriber } from "@/lib/first-video-offer";
 import { hiresTeam } from "@/lib/ads/team/rules";
 import { foundingSpotsLeft } from "@/lib/ads/founding-spots";
 import { workspaceTrade } from "@/lib/ads/trade-server";
+import { BFCM_ENDED_LINE, BFCM_PROMO, isBfcmActive } from "@/lib/ads/bfcm";
+import { bfcmAnnualFor } from "@/lib/ads/billing-config";
 
 // Studio launch offer: {plan: "growth", offer: "studio_launch"} (or {kind: "plan", key: "growth", offer: "studio_launch"}):
 // the existing Growth monthly price + bonus credits on the first invoice (webhook), only inside the 72h window.
@@ -29,6 +31,8 @@ const Body = z.preprocess(
     offer: z.literal(STUDIO_LAUNCH_OFFER.key).optional(),
     /** Grandfathered testimonial subscriber switching to an Ozzy plan: the webhook cancels the old plan at period end. */
     switchFromLegacy: z.boolean().optional(),
+    /** Black Friday to Cyber Monday: the $9 unlock with bonus credits, or a BFCM annual price. Server-checked deadline. */
+    promo: z.literal(BFCM_PROMO).optional(),
   }),
 );
 
@@ -51,10 +55,15 @@ export async function POST(request: NextRequest) {
     if (kind === "plan" && !isPlanForSale(key)) return NextResponse.json({ error: "That plan isn't available anymore.", code: "unknown_price" }, { status: 400 });
     if (kind === "offer" && key !== LAUNCH_QUARTER.key && key !== AUTOPILOT_LAUNCH.key) return NextResponse.json({ error: "This launch offer has expired.", code: "offer_expired" }, { status: 410 });
     const annual = kind === "plan" && parsed.data.interval === "year";
+    // BFCM: real deadline (Mon 30 Nov 2026 23:59:59 PT), checked here so a stale page can't buy after it.
+    const bfcm = parsed.data.promo === BFCM_PROMO;
+    const bfcmAnnual = bfcm && annual && !studioLaunch ? bfcmAnnualFor(key) : undefined;
+    if (bfcm && !(bfcmAnnual || (kind === "topup" && key === UNLOCK_PACK.key))) return NextResponse.json({ error: "That option isn't part of the Black Friday offer.", code: "invalid" }, { status: 400 });
+    if (bfcm && !isBfcmActive()) return NextResponse.json({ error: BFCM_ENDED_LINE, code: "offer_expired" }, { status: 410 });
     const freeMonth = kind === FREE_MONTH_KIND;
     const item = kind === "plan" || freeMonth ? getPlan(freeMonth ? "starter" : key) : kind === "offer" ? getOffer(key) : getTopup(key);
     const plan = kind === "plan" ? getPlan(key) : undefined;
-    const priceId = annual ? (plan ? annualPriceIdFor(plan) : null) : item ? priceIdFor(item) : null;
+    const priceId = bfcmAnnual ? process.env[bfcmAnnual.priceEnv] || null : annual ? (plan ? annualPriceIdFor(plan) : null) : item ? priceIdFor(item) : null;
     if (!item || !priceId) return NextResponse.json({ error: "That option isn't available.", code: "unknown_price" }, { status: 400 });
 
     const ws = await getOrCreateWorkspace(user);
@@ -104,7 +113,7 @@ export async function POST(request: NextRequest) {
       ? Boolean(await prisma.creditLedger.findFirst({ where: { workspaceId: ws.id, reason: "topup", note: UNLOCK_PACK_NOTE, delta: { gt: 0 } }, select: { id: true } }))
       : false;
     const visitorId = request.cookies.get(VISITOR_COOKIE)?.value?.slice(0, 64); // lets the webhook count `purchased` for offer experiments
-    const metadata = { product: "ads", workspaceId: ws.id, kind, ...(visitorId ? { kmdVid: visitorId } : {}), ...(kind === "plan" || freeMonth ? { plan: freeMonth ? "starter" : key, interval: annual ? "year" : "month", ...(studioLaunch ? { offer: STUDIO_LAUNCH_OFFER.key } : {}), ...(legacySwitch ? { legacySwitch } : {}) } : offer ? { plan: offer.plan, offer: offer.key } : { topup: key }) };
+    const metadata = { product: "ads", workspaceId: ws.id, kind, ...(visitorId ? { kmdVid: visitorId } : {}), ...(kind === "plan" || freeMonth ? { plan: freeMonth ? "starter" : key, interval: annual ? "year" : "month", ...(studioLaunch ? { offer: STUDIO_LAUNCH_OFFER.key } : {}), ...(legacySwitch ? { legacySwitch } : {}) } : offer ? { plan: offer.plan, offer: offer.key } : { topup: key }), ...(bfcm ? { promo: BFCM_PROMO } : {}) };
     // The $9 unlock returns to the pack that was just unlocked (it used to land on billing and buyers couldn't find their ads).
     const unlockRunId = kind === "topup" && key === UNLOCK_PACK.key
       ? (await prisma.adRun.findFirst({ where: { workspaceId: ws.id, isTrial: true }, orderBy: { createdAt: "desc" }, select: { id: true } }))?.id ?? null
@@ -117,7 +126,10 @@ export async function POST(request: NextRequest) {
       ...komendlyCheckoutText(autopilot ? "autopilot" : founding ? "founding" : recurring ? "plan" : "pack"),
       ...(recurring
         ? { subscription_data: { metadata, ...(freeMonth ? { trial_period_days: freeMonthCheckoutParams().trialDays } : {}) } }
-        : { payment_intent_data: { metadata } }),
+        : { payment_intent_data: { metadata, setup_future_usage: "off_session" as const } }),
+      // Card on file: one-time payments save the card on the customer (setup_future_usage above; subscriptions save it
+      // anyway), and every later Checkout shows the saved card so the next purchase is one tap.
+      saved_payment_method_options: { allow_redisplay_filters: ["always", "limited", "unspecified"] },
       ...(launchCoupon ? { discounts: [{ coupon: launchCoupon }] } : unlockCredit && couponId ? { discounts: [{ coupon: couponId }] } : {}),
       ...(freeMonth ? { payment_method_collection: freeMonthCheckoutParams().payment_method_collection } : {}),
       // Hiring Ozzy's team (Growth Autopilot / Agency) lands on the team page; everything else (Ad Department too) on billing.
@@ -125,7 +137,7 @@ export async function POST(request: NextRequest) {
       cancel_url: `${appUrl()}/ads/billing?checkout=canceled${kind === "topup" || freeMonth ? "" : `&declined=${encodeURIComponent(key)}`}`,
     });
     const trade = await workspaceTrade(ws.id);
-    await trackAdsEvent("checkout_started", { workspaceId: ws.id, userId: user.id, props: { kind, key, sessionId: session.id, ...(trade ? { trade } : {}), ...(studioLaunch ? { offer: STUDIO_LAUNCH_OFFER.key, app: "studio", amountCents: item.priceCents, currency: "USD" } : {}), ...(annual ? { interval: "year" } : {}), ...(placement ? { placement } : {}), ...(unlockCredit ? { coupon: "unlock_pack_credit" } : {}) } });
+    await trackAdsEvent("checkout_started", { workspaceId: ws.id, userId: user.id, props: { kind, key, sessionId: session.id, ...(trade ? { trade } : {}), ...(studioLaunch ? { offer: STUDIO_LAUNCH_OFFER.key, app: "studio", amountCents: item.priceCents, currency: "USD" } : {}), ...(annual ? { interval: "year" } : {}), ...(bfcm ? { promo: BFCM_PROMO } : {}), ...(placement ? { placement } : {}), ...(unlockCredit ? { coupon: "unlock_pack_credit" } : {}) } });
     void recordOfferConversions("checkout_started", request.cookies.get(VISITOR_COOKIE)?.value, { workspaceId: ws.id, key });
     if (studioLaunch) await trackAdsEvent("studio_checkout_started", { workspaceId: ws.id, userId: user.id, props: { offer: STUDIO_LAUNCH_OFFER.key, plan: key, amountCents: item.priceCents } });
     const downsell = placement === "downsell" || placement === "unlock_pack";

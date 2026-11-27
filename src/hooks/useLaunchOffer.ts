@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import useSWR from "swr";
 import { adsFetcher } from "@/lib/ads/run-client";
+import type { BfcmState } from "@/lib/ads/bfcm";
 
 /** trade + autopilot: trade workspaces (roofers) lead with Growth Autopilot (src/lib/ads/roofer-offer.ts). */
-interface OfferState { open: boolean; expiresAt: string | null; serverNow?: string; unlockPack?: boolean; trade?: string | null; autopilot?: boolean; spotsLeft?: number | null; autopilotLaunch?: boolean; autopilotLaunchSpotsLeft?: number | null }
+interface OfferState { open: boolean; expiresAt: string | null; serverNow?: string; unlockPack?: boolean; trade?: string | null; autopilot?: boolean; spotsLeft?: number | null; autopilotLaunch?: boolean; autopilotLaunchSpotsLeft?: number | null; bfcm?: BfcmState | null }
 interface OfferFetch extends OfferState { offsetMs: number }
 
 async function offerFetcher(url: string): Promise<OfferFetch> {
@@ -26,5 +27,5 @@ export function useLaunchOffer(enabled = true) {
   }, [data?.open, expiresMs]);
   const remainingMs = expiresMs === null ? null : Math.max(0, expiresMs - (now + offsetMs));
   const open = Boolean(data?.open) && (remainingMs === null || remainingMs > 0);
-  return { loaded: Boolean(data), settled: Boolean(data) || Boolean(error), open, unlockPack: Boolean(data?.unlockPack), trade: data?.trade ?? null, autopilot: Boolean(data?.autopilot), spotsLeft: data?.spotsLeft ?? null, autopilotLaunch: Boolean(data?.autopilotLaunch), autopilotLaunchSpotsLeft: data?.autopilotLaunchSpotsLeft ?? null, expiresAt: data?.expiresAt ?? null, remainingMs, refresh: mutate };
+  return { loaded: Boolean(data), settled: Boolean(data) || Boolean(error), open, unlockPack: Boolean(data?.unlockPack), trade: data?.trade ?? null, autopilot: Boolean(data?.autopilot), spotsLeft: data?.spotsLeft ?? null, autopilotLaunch: Boolean(data?.autopilotLaunch), autopilotLaunchSpotsLeft: data?.autopilotLaunchSpotsLeft ?? null, expiresAt: data?.expiresAt ?? null, remainingMs, bfcm: data?.bfcm ?? null, offsetMs, refresh: mutate };
 }

@@ -16,6 +16,7 @@ import { recordCheckoutSession } from "@/lib/growth/checkout-recovery-server";
 import { recordPaymentFailed, recordWinbackPayment } from "@/lib/growth/winback";
 import { recordTeamHired, stopTeamFor } from "./team/stop";
 import { hiresTeam } from "./team/rules";
+import { bfcmAnnualBonusFor, topupCreditsFor } from "./bfcm";
 
 
 type Meta = Stripe.Metadata | null | undefined;
@@ -73,7 +74,8 @@ async function onCheckoutCompleted(s: Stripe.Checkout.Session) {
     // unlock_pack is a topup row too, so bonus-unlock opens the locked bonus ads; its note marks it for the Starter coupon.
     // Unlimited week: no credits, unlimitedUntil +7 days (checkout success may run it too: both idempotent per session).
     if (pack?.key === UNLIMITED_WEEK.key) await grantUnlimitedWeek(ws.id, `checkout:${s.id}`);
-    else if (pack) await grantTopup(ws.id, `checkout:${s.id}`, pack.credits, pack.key === UNLOCK_PACK.key ? UNLOCK_PACK_NOTE : undefined);
+    // BFCM $9 unlock (metadata promo=bfcm): the stacked bonus credits ride on the same row, so a replay grants nothing.
+    else if (pack) await grantTopup(ws.id, `checkout:${s.id}`, topupCreditsFor(pack, s.metadata), pack.key === UNLOCK_PACK.key ? UNLOCK_PACK_NOTE : undefined);
   }
   if (s.mode === "subscription") {
     const plan = getPlan(s.metadata?.plan ?? "");
@@ -182,6 +184,9 @@ async function onInvoicePaid(inv: Stripe.Invoice) {
 async function grantInvoiceExtras(inv: Stripe.Invoice, ws: { id: string; ownerId: string }, planKey: Parameters<typeof planTestimonialsFor>[0], offer: AdsLaunchOffer | undefined) {
   if (!inv.id || inv.amount_paid <= 0) return; // $0 (free-month trial start) invoices earn nothing extra
   const meta = inv.parent?.subscription_details?.metadata;
+  // BFCM annual prepay: bonus credits once, on the first yearly invoice (own stripeRef: idempotent on webhook replays).
+  const bfcmBonus = bfcmAnnualBonusFor(meta, inv.billing_reason, invoiceIsAnnual(inv), inv.amount_paid);
+  if (bfcmBonus > 0) await applyCreditMutation({ workspaceId: ws.id, reason: "offer_bonus", delta: bfcmBonus, stripeRef: `bfcm_bonus:${inv.id}`, note: "Black Friday annual bonus" });
   if (inv.billing_reason === "subscription_create" && meta?.offer === STUDIO_LAUNCH_OFFER.key && STUDIO_LAUNCH_OFFER.bonusCredits > 0) {
     await applyCreditMutation({ workspaceId: ws.id, reason: "offer_bonus", delta: STUDIO_LAUNCH_OFFER.bonusCredits, stripeRef: `offer_bonus:${inv.id}`, note: `${STUDIO_LAUNCH_OFFER.name} bonus` });
   }
@@ -239,7 +244,7 @@ async function onChargeRefunded(ch: Stripe.Charge) {
   if (known) return; // issued from admin: credits already handled
   const ref = refundIds[0] ?? `${ch.id}:${ch.amount_refunded}`;
   const pack = ch.metadata?.kind === "topup" ? getTopup(ch.metadata.topup ?? "") : undefined;
-  const credits = pack && ch.amount > 0 ? Math.round((pack.credits * ch.amount_refunded) / ch.amount) : 0;
+  const credits = pack && ch.amount > 0 ? Math.round((topupCreditsFor(pack, ch.metadata) * ch.amount_refunded) / ch.amount) : 0;
   if (credits > 0) await refundCredits(ws.id, ref, credits);
   if (pack?.key === UNLIMITED_WEEK.key && ch.amount_refunded > 0) await endUnlimitedWeek(ws.id, ref);
   await prisma.adsRefund.upsert({

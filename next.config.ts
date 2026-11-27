@@ -96,6 +96,11 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
       {
+        // Black Friday landing (time-limited offer, real deadline): short cache so the offer disappears within a minute of it.
+        source: "/black-friday",
+        headers: [{ key: "Cache-Control", value: "public, max-age=0, s-maxage=60, must-revalidate" }],
+      },
+      {
         source: "/:area(api|ads|admin|dashboard|checkout|studio|oauth|.well-known)/:path*",
         headers: [
           {

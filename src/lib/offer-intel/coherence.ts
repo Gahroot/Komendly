@@ -1,7 +1,7 @@
 // Page-coherence checker: finds prices, guarantee days, live-in-N-days, founding-spot counts and free-ad counts in our
 // own copy that contradict public-offer.ts / billing-config.ts. Pure. Callers supply the text (script reads source
 // files, the weekly engine job fetches the live pages and reads lifecycle sources).
-import { ADS_PLANS, ADS_TOPUPS, annualPriceCents, AUTOPILOT_REGULAR_PRICE_CENTS, AUTOPILOT_FIRST_MONTH_CENTS } from "../ads/billing-config";
+import { ADS_PLANS, ADS_TOPUPS, annualPriceCents, BFCM_ANNUAL_PRICES, getPlan, AUTOPILOT_REGULAR_PRICE_CENTS, AUTOPILOT_FIRST_MONTH_CENTS } from "../ads/billing-config";
 import { PUBLIC_OFFER } from "../ads/public-offer";
 
 export interface PageText { id: string; text: string }
@@ -14,6 +14,8 @@ export function knownPrices(): Set<string> {
   const s = new Set<string>([usd(AUTOPILOT_FIRST_MONTH_CENTS), usd(AUTOPILOT_REGULAR_PRICE_CENTS)]);
   for (const p of ADS_PLANS) { s.add(usd(p.priceCents)); if (p.annualPriceEnv) s.add(usd(annualPriceCents(p))); }
   for (const t of ADS_TOPUPS) s.add(usd(t.priceCents));
+  // Black Friday annual prepay prices and the 12-monthly-payments figure they are compared with.
+  for (const b of BFCM_ANNUAL_PRICES) { s.add(usd(b.priceCents)); s.add(usd((getPlan(b.plan)?.priceCents ?? 0) * 12)); }
   for (const x of [PUBLIC_OFFER.unlockPrice, PUBLIC_OFFER.diyFirstMonth, PUBLIC_OFFER.diyPrice, PUBLIC_OFFER.heroPrice, PUBLIC_OFFER.heroRegularPrice]) s.add(x);
   return s;
 }

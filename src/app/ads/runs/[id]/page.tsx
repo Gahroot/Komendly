@@ -9,11 +9,14 @@ import { getCurrentUser } from "@/lib/auth";
 import { NextStepBanner } from "@/components/ads/next-step-banner";
 import { nextStepFor } from "@/lib/customer-intel/state-server";
 import { prisma } from "@/lib/prisma";
+import { CheckoutReturnTracker } from "@/components/analytics/checkout-return-tracker";
+import { loadCheckoutPixel } from "@/lib/ads/checkout-pixel";
 
 export const metadata = { title: "Your ads", robots: { index: false, follow: false } };
 
-export default async function AdRunPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function AdRunPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ checkout?: string; session_id?: string }> }) {
   const { id } = await params;
+  const { checkout, session_id } = await searchParams;
   let member;
   try {
     member = await requireWorkspaceMember({ runId: id });
@@ -48,6 +51,8 @@ export default async function AdRunPage({ params }: { params: Promise<{ id: stri
       <AdsNav signedIn />
       <main className="mx-auto max-w-6xl px-4 py-10">
         {next && <NextStepBanner action={next} />}
+        {/* The $9 unlock returns here: browser Purchase with the same event_id as the webhook's CAPI event (dedup). */}
+        {checkout === "success" && <CheckoutReturnTracker outcome="success" pixel={await loadCheckoutPixel(session_id, member.workspace.id)} />}
         <RunScreen initial={run} />
         <RunShareCard runId={id} />
       </main>
