@@ -4,6 +4,7 @@
 // can send, never below the floor. Admin-fixed domains (capAuto=false) are left alone.
 import { MAX_BOUNCE_RATE, sendDayStart, spamPlacementRate } from "../../src/lib/ads/outbound/policy";
 import type { Db } from "./db";
+import { CAPPED_KINDS } from "./send-kinds";
 
 export const CAP_FLOOR = 20;
 export const CAP_STEP = 1.3;
@@ -58,7 +59,7 @@ export async function domainCapTick(db: Db, boxes: readonly Box[], now: Date): P
   for (const d of due) {
     const mine = boxes.filter((b) => b.domain === d.domain);
     const ids = mine.map((b) => b.id);
-    const cold = { mailboxId: { in: ids }, dryRun: false, kind: "sequence" };
+    const cold = { mailboxId: { in: ids }, dryRun: false, kind: { in: CAPPED_KINDS } };
     const [sends7d, bounces7d, complaints7d, sentYesterday, wIn, wSpam] = await Promise.all([
       db.outboundSend.count({ where: { ...cold, sentAt: { gte: since } } }),
       db.outboundSend.count({ where: { ...cold, sentAt: { gte: since }, bounced: true } }),

@@ -14,6 +14,8 @@ WORKDIR /app
 COPY prisma/schema.prisma prisma/schema.prisma
 COPY src/lib/ads/contracts.ts src/lib/ads/contracts.ts
 COPY src/lib/ads/billing-config.ts src/lib/ads/billing-config.ts
+# The hot follow-up copy quotes the public offer (hot-followup.ts imports public-offer.ts, which imports bonus-access.ts).
+COPY src/lib/ads/public-offer.ts src/lib/ads/bonus-access.ts src/lib/ads/
 COPY src/lib/ads/meta/core/crypto.ts src/lib/ads/meta/core/crypto.ts
 COPY src/lib/kly/social-core.ts src/lib/kly/social-core.ts
 COPY src/lib/growth/systems.ts src/lib/growth/systems.ts

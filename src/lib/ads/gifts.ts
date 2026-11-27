@@ -283,11 +283,25 @@ export async function recipientHasAccount(domainHash: string): Promise<boolean> 
   return !!(await prisma.adsTrialClaim.findFirst({ where: { domainHash }, select: { id: true } }));
 }
 
-/** Public view beacon: counts humans only, never the sender. */
-export async function recordGiftView(token: string, ctx: { ua: string | null; isMetaIp: boolean; viewerUserId: string | null }): Promise<boolean> {
+/** What the page's beacon reports about the visitor (see src/lib/growth/human-signal.ts). */
+export type GiftViewSignal = "input" | "dwell";
+
+/** Reads the beacon's JSON body: `human` only when the page says a person interacted (pointer/scroll/key/touch, or 5 s visible and focused). */
+export function parseViewBeacon(body: unknown): { human: boolean; signal: GiftViewSignal | null } {
+  const b = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
+  const human = b.interacted === true;
+  return { human, signal: human && (b.signal === "input" || b.signal === "dwell") ? b.signal : null };
+}
+
+/**
+ * Public view beacon: counts humans only, never the sender. `props.human` is true only when the page reported a real
+ * interaction (mail scanners run the page's JS but do not interact); Kly's hot follow-up trusts only those views.
+ */
+export async function recordGiftView(token: string, ctx: { ua: string | null; isMetaIp: boolean; viewerUserId: string | null; human?: boolean; signal?: GiftViewSignal | null }): Promise<boolean> {
   const gift = await giftByToken(token);
   if (!gift || isBotUserAgent(ctx.ua) || ctx.isMetaIp || ctx.viewerUserId === gift.senderUserId) return false;
   await prisma.adsGift.update({ where: { id: gift.id }, data: { viewCount: { increment: 1 }, viewedAt: gift.viewedAt ?? new Date() } });
-  await trackAdsEvent("gift_viewed", { workspaceId: gift.senderWorkspaceId, props: { giftId: gift.id, first: !gift.viewedAt } });
+  const human = ctx.human === true;
+  await trackAdsEvent("gift_viewed", { workspaceId: gift.senderWorkspaceId, props: { giftId: gift.id, first: !gift.viewedAt, human, ...(human && ctx.signal ? { signal: ctx.signal } : {}) } });
   return true;
 }

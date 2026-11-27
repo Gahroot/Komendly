@@ -17,3 +17,16 @@
 | G2 | https://www.g2.com/products/new | blocked-needs-human | Blank/blocked for scripted browser; free vendor profile needs login |  |
 | Futurepedia | https://www.futurepedia.io/submit-tool | blocked-needs-human | Page did not render for scripted browser; needs login |  |
 | Pinterest verify | https://www.pinterest.com/PRESTYJ/ | blocked-needs-human | Not logged in; agent-browser has no session and Brave desktop control denied. Public profile shows an unrelated 'Presty Jain' account with no Komendly boards; board URLs require login. Pin count unverified (expected ~28) |  |
+
+## Round 2 (27 Nov 2026, email signup, no Google login)
+| Site | Status | Note |
+|---|---|---|
+| AlternativeTo | blocked-captcha | Cloudflare "verify you are human" on sign-up; not bypassed |
+| There's An AI For That | skipped-paid | only $49 / $437 review fees; free route is a monthly X-thread draw |
+| Uneed | blocked-captcha | Turnstile before "Create account" |
+| Fazier | blocked-needs-human | account hello@getkomendly.com created + email confirmed; free launch needs a Fazier badge embedded on komendly.com (site code change, owner decision) + 3 genuine comments on other products |
+| TopAI.tools | skipped-paid | Fast Track $47 / Featured $229 only |
+| Futurepedia | skipped-paid | submit page 404; paid listing only |
+| G2 (and Capterra / GetApp / Software Advice) | blocked-captcha | DataDome slide check; one G2 vendor account would unlock all four |
+| SaaSHub | pending, competitors still wrong (Figma/Inkscape) | login link emailed but never arrived; edit at https://www.saashub.com/product-changes/komendly/new once logged in |
+| Product Hunt, Indie Hackers, StackShare, Crunchbase, Startup Stash, Peerlist, LaunchingNext | not attempted | |

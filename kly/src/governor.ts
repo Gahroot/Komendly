@@ -10,6 +10,7 @@ import { MAX_BOUNCE_RATE, MIN_BOUNCE_SAMPLE, MIN_BOUNCES } from "../../src/lib/a
 import type { Db } from "./db";
 import type { AlertFn } from "./replies";
 import { decide } from "./settings";
+import { CAPPED_KINDS, SEQUENCE_KIND } from "./send-kinds";
 
 export const NO_POSITIVE_LIMIT = 2000;
 export const BOUNCE_WINDOW_MS = 7 * 86_400_000;
@@ -50,14 +51,17 @@ export async function copyLiveSince(db: Db): Promise<Date | null> {
 export async function governorStats(db: Db, now: Date, env: NodeJS.ProcessEnv = process.env): Promise<GovernorStats> {
   const resume = resumeAfter(env);
   const after = (d: Date | null): Date => new Date(Math.max(d?.getTime() ?? 0, resume?.getTime() ?? 0));
-  const cold = { dryRun: false, kind: "sequence" };
+  // Complaints and bounces count on hot follow-ups too (they are cold-ish sends from the same mailboxes); the 2,000-send
+  // "no positive reply" window counts the cold sequence only.
+  const cold = { dryRun: false, kind: { in: CAPPED_KINDS } };
+  const sequence = { dryRun: false, kind: SEQUENCE_KIND };
   const copyStart = after(await copyLiveSince(db));
   const weekStart = after(new Date(now.getTime() - BOUNCE_WINDOW_MS));
   const [complaints, sends7d, bounces7d, sendsSinceCopy, positiveSinceCopy] = await Promise.all([
     db.outboundSend.count({ where: { ...cold, complained: true, sentAt: { gte: after(null) } } }),
     db.outboundSend.count({ where: { ...cold, sentAt: { gte: weekStart } } }),
     db.outboundSend.count({ where: { ...cold, bounced: true, sentAt: { gte: weekStart } } }),
-    db.outboundSend.count({ where: { ...cold, sentAt: { gte: copyStart } } }),
+    db.outboundSend.count({ where: { ...sequence, sentAt: { gte: copyStart } } }),
     db.outboundLead.count({ where: { replyIntent: { in: POSITIVE_INTENTS }, repliedAt: { gte: copyStart } } }),
   ]);
   return { complaints, sends7d, bounces7d, sendsSinceCopy, positiveSinceCopy };

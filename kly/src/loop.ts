@@ -22,6 +22,7 @@ import { domainCapTick } from "./domain-caps";
 import { pageText, qualifyLead } from "./qualify";
 import { purgeStaleLeads } from "./retention";
 import { outboundEnv, senderTick } from "./sender";
+import { createHotRuntime, hotFollowupStep, type HotRuntime } from "./hot-followup";
 import { strategistTick } from "./strategist";
 import { socialTick } from "./social";
 import { reelInsightsTick, reelsTick } from "./reels";
@@ -126,6 +127,8 @@ export interface LoopState {
   growth: { lastAt: Partial<Record<KlySystem, number>>; newBiz: NewBizRuntime };
   /** Intent-signal scans (signal-tick.ts): last run times; both default OFF (env). */
   signals?: SignalRuntime;
+  /** Hot follow-up (hot-followup.ts, default OFF): dry-run log dedupe + retry backoff. */
+  hot?: HotRuntime;
 }
 
 export function newLoopState(): LoopState {
@@ -344,6 +347,14 @@ export async function runTick(d: LoopDeps, state: LoopState): Promise<void> {
     governed = await governorCheck(db, d.alert, now, env);
   });
   state.governor = governed;
+  // Hot follow-up (default OFF: KLY_HOT_FOLLOWUP=1 / KLY_HOT_FOLLOWUP_DRY=1): ONE note to a lead who really looked at their gift ad.
+  // Runs only while cold sending is live and refuses while the governor is tripped; before the sender so its sends count toward the same daily caps.
+  if (sendingLive) {
+    await step(state, "hot follow-up", async () => {
+      state.hot ??= createHotRuntime();
+      await hotFollowupStep({ db, env, now, boxes, transport: state.mail.pool.transport, warmup: s, rt: state.hot, governed });
+    });
+  }
   if (sendingLive && !governed) {
     await step(state, "sender", async () => {
       const sent = await senderTick({ db, provider, env, rng, dailyVolume: volume, followUpDays: s.followUpDays, maxSteps: s.maxSteps, explorationPct: s.explorationPct, now: clock, mailboxes: boxes, transport: state.mail.pool.transport, warmup: s, probeSecret: warmupSecretOf(env) || undefined });

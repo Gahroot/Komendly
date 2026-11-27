@@ -35,6 +35,14 @@ export interface OutboundEmail {
 // "$" only for the real, fixed prices (Ozzy Ad Department $97 first month then $197/mo, $9 unlock); any other amount is banned.
 const BANNED = /\b(guarantee|guaranteed|results|roi|revenue|leads? (?:will|guaranteed)|customer of ours|we work with|partner(?!s? program)|award|#1|best in|free forever|limited time|act now|urgent|last chance|congratulations|winner|100%|dear sir|to whom it may concern|i hope this (?:email|message) finds you|hi there)\b|%|\$(?!(?:97|197|9)\b(?![.,]\d))|!{2,}|https?:|www\.|@/i;
 
+/** Does `text` (placeholders already blanked, e.g. "{link}" -> "X") trip the claim/format guard? `allowPrices` are exact public
+ * price strings (e.g. "$297" from public-offer.ts) a fixed, non-arm message may carry on top of the arm price rule. */
+export function hasBannedClaim(text: string, allowPrices: readonly string[] = []): boolean {
+  let t = text;
+  for (const p of allowPrices) t = t.replace(new RegExp(`${p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b(?![.,]\\d)`, "g"), "PRICE");
+  return BANNED.test(t);
+}
+
 // ---------------------------------------------------------------------------
 // Names
 
@@ -248,7 +256,7 @@ export function bodyWordCount(text: string): number {
 }
 
 /** Final compliance gate before any send (also on fallback copy). Returns an error string or null. */
-export function checkOutboundEmail(e: OutboundEmail, c: OutboundCopyContext): string | null {
+export function checkOutboundEmail(e: OutboundEmail, c: OutboundCopyContext, o: { maxFollowUpWords?: number } = {}): string | null {
   if (!c.postalAddress.trim()) return "missing postal address";
   if (!e.text.includes(c.postalAddress)) return "postal address not in body";
   if (!e.text.includes(c.unsubscribeUrl)) return "unsubscribe link not in body";
@@ -257,7 +265,7 @@ export function checkOutboundEmail(e: OutboundEmail, c: OutboundCopyContext): st
   if (links !== 1) return `${links} links above the footer (want 1)`;
   const words = bodyWordCount(e.text);
   if (c.step === 1 && (words < 20 || words > 90)) return `body ${words} words`;
-  if (c.step === 2 && words > 70) return `follow-up ${words} words`;
+  if (c.step === 2 && words > (o.maxFollowUpWords ?? 70)) return `follow-up ${words} words`;
   if (/\b(re|fwd?):/i.test(e.subject) && c.step === 1) return "fake reply subject";
   if (/\{\w+\}/.test(e.text) || /\{\w+\}/.test(e.subject)) return "unfilled placeholder";
   if (BANNED.test(e.subject)) return "banned phrase in subject";

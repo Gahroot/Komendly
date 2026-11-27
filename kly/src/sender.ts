@@ -21,6 +21,7 @@ import { warmupGates, type WarmupSettings } from "./warmup";
 import { maybeProbe } from "./probe";
 import { verifyEnabled } from "./verify";
 import { leadSystemAllowed, isKlySystem, SYSTEM_EVENTS, systemEvent, systemVariant } from "./growth";
+import { CAPPED_KINDS } from "./send-kinds";
 
 /** Voice call outcomes that end the cold email sequence (no follow-up after the phone call settled it). */
 export const VOICE_STOP_STATUSES = ["gift_yes", "info_requested", "not_interested", "opt_out"] as const;
@@ -249,7 +250,7 @@ export async function senderTick(deps: SenderDeps): Promise<Array<{ mailbox: str
   const dayStart = sendDayStart(now);
 
   // Health: only mailboxes with a bounce/complaint in the last week can change state; paused-auto ones may resume.
-  const flagged = new Set((await db.outboundSend.groupBy({ by: ["mailboxId"], where: { mailboxId: { in: ids }, dryRun: false, kind: "sequence", sentAt: { gte: new Date(now.getTime() - 7 * DAY_MS) }, OR: [{ bounced: true }, { complained: true }] } })).map((g) => g.mailboxId));
+  const flagged = new Set((await db.outboundSend.groupBy({ by: ["mailboxId"], where: { mailboxId: { in: ids }, dryRun: false, kind: { in: CAPPED_KINDS }, sentAt: { gte: new Date(now.getTime() - 7 * DAY_MS) }, OR: [{ bounced: true }, { complained: true }] } })).map((g) => g.mailboxId));
   for (const b of boxes) {
     const autoPaused = b.row.paused && Boolean(b.row.pausedReason?.startsWith("auto:"));
     if (!flagged.has(b.id) && !autoPaused) continue;
@@ -259,13 +260,13 @@ export async function senderTick(deps: SenderDeps): Promise<Array<{ mailbox: str
 
   const domainRows = await db.outboundDomain.findMany({ where: { domain: { in: [...new Set(boxes.map((b) => b.domain))] } } });
   const domainOf = new Map(domainRows.map((d) => [d.domain, d]));
-  const counts = await db.outboundSend.groupBy({ by: ["mailboxId"], where: { mailboxId: { in: ids }, dryRun: false, kind: "sequence", sentAt: { gte: dayStart } }, _count: { _all: true } });
+  const counts = await db.outboundSend.groupBy({ by: ["mailboxId"], where: { mailboxId: { in: ids }, dryRun: false, kind: { in: CAPPED_KINDS }, sentAt: { gte: dayStart } }, _count: { _all: true } });
   const sentBy = new Map(counts.map((c) => [c.mailboxId, c._count._all]));
   const totalToday = [...sentBy.values()].reduce((a, n) => a + n, 0);
   const left = Math.min(MAX_SENDS_PER_TICK, deps.dailyVolume - totalToday);
   if (left <= 0) return [...out, { mailbox: "*", result: "daily_volume" }];
 
-  const lastIds = boxes.map((b) => b.row.lastSentAt).some(Boolean) ? await db.outboundSend.findMany({ where: { mailboxId: { in: ids }, dryRun: false, kind: "sequence", sentAt: { gte: dayStart } }, orderBy: { sentAt: "desc" }, distinct: ["mailboxId"], select: { id: true, mailboxId: true } }) : [];
+  const lastIds = boxes.map((b) => b.row.lastSentAt).some(Boolean) ? await db.outboundSend.findMany({ where: { mailboxId: { in: ids }, dryRun: false, kind: { in: CAPPED_KINDS }, sentAt: { gte: dayStart } }, orderBy: { sentAt: "desc" }, distinct: ["mailboxId"], select: { id: true, mailboxId: true } }) : [];
   const lastSendId = new Map(lastIds.map((s) => [s.mailboxId, s.id]));
   const gates = deps.warmup ? await warmupGates(db, deps.warmup, boxes, now) : new Map();
   const cands: RotationCandidate[] = [];
@@ -315,7 +316,7 @@ async function mailboxHealth(db: Db, b: StoredMailbox, now: Date): Promise<strin
     }
   }
   if (row.paused) return null;
-  const recent = await db.outboundSend.findMany({ where: { mailboxId: row.id, dryRun: false, kind: "sequence" }, orderBy: { sentAt: "desc" }, take: HEALTH_WINDOW, select: { id: true, bounced: true, complained: true, sentAt: true } });
+  const recent = await db.outboundSend.findMany({ where: { mailboxId: row.id, dryRun: false, kind: { in: CAPPED_KINDS } }, orderBy: { sentAt: "desc" }, take: HEALTH_WINDOW, select: { id: true, bounced: true, complained: true, sentAt: true } });
   // Sends from before a resume don't count again, or the same old bounces would re-pause it at once.
   const lastResume = await db.klyDecision.findFirst({ where: { kind: "resume", summary: { contains: m.address } }, orderBy: { createdAt: "desc" }, select: { createdAt: true } });
   const pause = autoPauseReason(lastResume ? recent.filter((s) => s.sentAt > lastResume.createdAt) : recent);
