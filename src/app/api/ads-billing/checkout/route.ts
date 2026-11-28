@@ -56,7 +56,9 @@ export async function POST(request: NextRequest) {
     if (kind === "offer" && key !== LAUNCH_QUARTER.key && key !== AUTOPILOT_LAUNCH.key) return NextResponse.json({ error: "This launch offer has expired.", code: "offer_expired" }, { status: 410 });
     const annual = kind === "plan" && parsed.data.interval === "year";
     // BFCM: real deadline (Mon 30 Nov 2026 23:59:59 PT), checked here so a stale page can't buy after it.
-    const bfcm = parsed.data.promo === BFCM_PROMO;
+    // Every $9 unlock bought inside the window gets the BFCM bonus, even from buttons that don't send promo (a 28 Nov
+    // buyer got 3 credits instead of 10 because the run-screen unlock button had no promo tag).
+    const bfcm = parsed.data.promo === BFCM_PROMO || (kind === "topup" && key === UNLOCK_PACK.key && isBfcmActive());
     const bfcmAnnual = bfcm && annual && !studioLaunch ? bfcmAnnualFor(key) : undefined;
     if (bfcm && !(bfcmAnnual || (kind === "topup" && key === UNLOCK_PACK.key))) return NextResponse.json({ error: "That option isn't part of the Black Friday offer.", code: "invalid" }, { status: 400 });
     if (bfcm && !isBfcmActive()) return NextResponse.json({ error: BFCM_ENDED_LINE, code: "offer_expired" }, { status: 410 });

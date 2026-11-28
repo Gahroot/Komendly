@@ -117,6 +117,15 @@ describe("BFCM checkout (promo=bfcm)", () => {
     expect(p.payment_intent_data.metadata.promo).toBe("bfcm");
     expect(p.customer).toBe("cus_1");
   });
+  it("$9 unlock from a button without promo still gets the BFCM tag during the window (not after)", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-28T18:00:00Z"));
+    await post({ kind: "topup", key: "unlock_pack", placement: "unlock_pack" });
+    expect(stripe.checkout.sessions.create.mock.calls.at(-1)[0].payment_intent_data.metadata.promo).toBe("bfcm");
+    vi.setSystemTime(new Date("2026-12-01T09:00:00Z"));
+    await post({ kind: "topup", key: "unlock_pack", placement: "unlock_pack" });
+    expect(stripe.checkout.sessions.create.mock.calls.at(-1)[0].payment_intent_data.metadata.promo).toBeUndefined();
+  });
   it("annual autopilot uses the BFCM price; refused after Mon 30 Nov 23:59:59 PT", async () => {
     process.env.STRIPE_ADS_BFCM_AUTOPILOT_ANNUAL_PRICE_ID = "price_bf_auto";
     vi.useFakeTimers({ toFake: ["Date"] });
