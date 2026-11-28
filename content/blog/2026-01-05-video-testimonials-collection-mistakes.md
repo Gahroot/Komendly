@@ -93,45 +93,21 @@ Review your invitation from the customer’s side. Does it explain what you are 
 
 I would keep the initial invitation focused on a single experience. Ask whether the customer would be comfortable answering a few questions about a completed project, a purchase, or a particular use of your product.
 
-Then provide a short recording brief:
+**What to do instead:** Prepare a short invitation the customer can assess without a call. Name the experience, explain the proposed format, and say where you hope to publish it. Leave room for the customer to ask questions or decline.
 
-- Explain the topic you would like to discuss.
-- Share the questions in advance.
-- Offer simple recording instructions or an interview option.
-- Describe the proposed publication channels.
-- Make declining an acceptable response.
+### 2. Asking at an arbitrary time
 
-For recording, suggest a quiet room, a stable phone, and a quick sound check. Treat those as practical instructions, not evidence that smartphone footage performs better than professional production.
+Choose a collection milestone based on when the customer can evaluate the experience. For a completed service, consider asking after the customer has reviewed the work. For a product, choose a point when the customer can describe an actual use rather than an expectation.
 
-**What to do instead:** Give customers a clear next step and enough information to make an informed choice. Provide prompts rather than a script praising your business.
+Before sending the invitation, ask yourself what the customer can reasonably discuss. Have they completed the task you want to ask about? Are you requesting feedback about getting started, ongoing use, or a finished result? Keep the questions aligned with that stage.
 
-### 2. Choosing an arbitrary time to ask
+**What to do instead:** Write the milestone into your collection plan. At each review, decide whether the customer has enough experience to answer the proposed questions. If they do not, revisit the request later rather than asking them to predict an outcome.
 
-Replace a universal waiting period with a question: has this customer had enough experience to describe something meaningful?
+### 3. Asking vague questions
 
-For a service business, you might choose project completion. For a product business, you might choose a follow-up after the customer has used the purchase. For software, you might choose the completion of a workflow the customer originally wanted to improve.
+Prepare questions that invite an account of what happened. Try asking: What were you trying to do? What did you use? What happened next? What would you want another buyer to understand?
 
-These are suggested collection milestones, not proven timing rules. Choose one that fits your business and review whether customers can answer your questions at that point.
-
-Assign responsibility for the invitation. Record whether it was sent, whether the customer replied, and whether they want further contact. Set a respectful follow-up policy rather than repeatedly chasing a recording.
-
-Keep private feedback and public participation as separate requests. Let customers explain what needs improvement without requiring them to agree to appear in marketing.
-
-**What to do instead:** Write down the milestone, the person responsible, and the follow-up process. Review the process when customers repeatedly say they cannot yet evaluate the experience.
-
-### 3. Asking for praise instead of a specific experience
-
-Start with questions about events and decisions. Avoid asking customers to repeat your positioning or confirm a result you have already written for them.
-
-Try these prompts:
-
-- What were you trying to accomplish?
-- What did you use or do before this?
-- Which part of the experience would you describe to someone considering it?
-- What changed, if anything?
-- What should a prospective customer know before deciding?
-
-If someone mentions a measurable result, ask what they measured, over which period, and what else changed. Keep those details with the recording. Do not turn a customer’s estimate into a verified business result.
+Follow up when an answer needs context. If someone says a project went well, ask which part they mean. If they describe a result, ask what period and circumstances they are referring to. Give them space to mention limitations as well as benefits.
 
 FTC guidance says endorsements must reflect honest opinions and cannot make claims the advertiser could not legally make.[^1] Treat the testimonial review as a claim review, not just a grammar check.
 
@@ -212,11 +188,9 @@ For the separate task of creating advertising assets from a business website, Ko
 
 Evaluate your own process instead of assigning it an unsupported revenue penalty. Track invitations, replies, approved stories, revision work, and published placements. Use those records to decide what needs attention.
 
-Keep collection outcomes separate from business outcomes. An approved testimonial is a completed asset; decide separately whether its placement contributes to the result you care about, such as qualified inquiries or purchases.
+Keep collection outcomes separate from business outcomes. An approved testimonial is a completed asset; decide separately whether a placement serves its intended purpose. Before publishing, record what you want the visitor to understand and how you will assess that goal.
 
-When evaluating a placement, document what else changed. Avoid attributing every improvement to a testimonial added during a wider page redesign. Where practical, plan a comparison before changing the page, and be cautious when drawing conclusions from limited data.
-
-My recommended starting point is one approved story answering one specific buyer question. Complete the permission, evidence, editing, and accessibility checks, then evaluate its use before expanding the process.
+For your next review, inspect the work behind each finished video. Note which invitations needed clarification, which answers required follow-up, and which edits needed another approval. Use those observations to choose a specific process change, then review it during the next collection cycle.
 
 ## What else should you know about collecting video testimonials?
 
