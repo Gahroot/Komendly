@@ -31,7 +31,7 @@ faq:
     a: "Choose a recurring review schedule and a meaningful customer milestone. Ask when customers have enough experience to describe what happened, rather than setting a universal weekly quota."
   - q: "Can I use text testimonials instead of video?"
     a: "Yes. Choose the format for the placement and the customer’s preferences. Do not assume a fixed conversion advantage for video; evaluate the formats using your own results."
-  - q: "Should I script what customers say?"
+  - q: "How should I prepare testimonial interview questions?"
     a: "Provide questions and recording instructions rather than predetermined praise. Ask customers to describe their own experience and approve the final wording."
   - q: "What should I do if a customer does not want to appear on camera?"
     a: "Offer a written response, ask whether another format would be comfortable, or accept a refusal. Do not make filming a condition of giving feedback."
@@ -228,7 +228,7 @@ Choose a recurring review schedule and a meaningful customer milestone. Ask when
 
 Yes. Choose the format for the placement and the customer’s preferences. Evaluate it against your own goals without assuming a fixed advantage for video.
 
-### Should I script what customers say?
+### How should I prepare testimonial interview questions?
 
 Provide questions and recording instructions rather than predetermined praise. Ask for the customer’s own account and approval of the final wording.
 
